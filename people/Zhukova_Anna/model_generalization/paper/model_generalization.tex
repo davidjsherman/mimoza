@@ -680,7 +680,7 @@ $\sim, M/\sim \leftarrow Maximize(\breve{\sim}, M/\breve{\sim})$ \;
 \end{algorithm} 
 
 \section*{Applications}
-We have applied our method to three metabolic models that describe the \textit{$\beta$-oxidation of fatty acids} pathway: a genome-scale metabolic model of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}), and two path2model~\cite{http://www.ebi.ac.uk/biomodels-main/path2models} pathways: fatty acid metabolism of the bacteria \textit{Escherichia coli} (\emph{BMID000000083160}) and of the yeast \textit{Saccharomyces cerevisiae} (\emph{BMID000000089673}). We have generalized these three models, and compared the results. 
+We have applied our method to three metabolic models that describe the \textit{$\beta$-oxidation of fatty acids} pathway: a genome-scale metabolic model of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}), and two path2model~\cite{Li10} pathways: fatty acid metabolism of the bacteria \textit{Escherichia coli} (\emph{BMID000000083160}) and of the yeast \textit{Saccharomyces cerevisiae} (\emph{BMID000000089673}). We have generalized these three models, and compared the results. 
 
 In \textit{Yarrowia lypolitica} fatty acid oxidation happens in the peroxisome compartment, so we have extracted a sub-model that includes only those species and reactions, that happen in the peroxisome. This submodel is attached as the additional file~1. 
 
@@ -692,7 +692,9 @@ The generalized models describe the \textit{$\beta$-oxidation} cycle in a more g
 \begin{figure}  
 \includegraphics[scale=0.13]{pics/yali_before_after.png} 
 
-      The figure shows the \textit{Yarrowia lypolitica} fatty acid oxidation model before (top) and after (bottom) generalization.
+      The figure shows the \textit{Yarrowia lypolitica} fatty acid oxidation model before (top) and after (bottom) generalization. 
+      
+      (The figure is produced using the Tulip~\cite{Auber04} graph visualization tool.)
 \caption{Generalization of the \textit{Yarrowia lypolitica} model}
 \label{fig:yali}
 \end{figure}
@@ -701,6 +703,8 @@ The generalized models describe the \textit{$\beta$-oxidation} cycle in a more g
 \includegraphics[scale=0.16]{pics/gen.png} 
 
       The figure shows the generalizations of \textit{Escherichia coli} (left) and \textit{Saccharomyces cerevisiae} (right) fatty acid oxidation models.
+      
+      (The figure is produced using the Tulip graph visualization tool.)
 \caption{Generalization of the \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} models}
 \label{fig:gen}
 \end{figure}
