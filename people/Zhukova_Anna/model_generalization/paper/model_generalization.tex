@@ -193,25 +193,26 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
+%\section*{Abstract}
+%Genome-scale metabolic models for new organisms include thousands of reactions that are automatically inferred from databases of reactions and pathways, and from existing models for similar organisms. Genomic data for the new organism is compared to the data of the similar one, to find genomic evidence of the presence of enzymes that can catalyse the conserved reactions in the new model. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement. The models produced at each iteration are putatively complete, describing all the reactions that participate in the organism's metabolism. These models are intended for computer simulation. Although automatic model inference tools and genome comparison methods are becoming more and more advanced, they still may leave gaps in the model or add erroneous reactions. Thus, model evaluation by human experts remains important at all the iteration steps. However, because of their completeness, genome-scale models are too detailed and complicated to be easily understood by a~human. The abundance of reactions in the model may hide errors.
+%
+%
+%For example, in a model of an yeast \textit{Yarrowia lypolitica}, a missing enzyme \textit{EC 2.3.1.16} would eliminate a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions may be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
+%
+%
+%We thus developed a~method for knowledge-based zooming of metabolic models, providing a~higher-level view of a~model, keeping its essential structure and omitting the details. The zooming process groups chemical species present in the model into semantically equivalent classes, based on their hierarchical relationships in the ChEBI ontology, and merges them into a generalized chemical species. Reactions that involve same generalized chemical species can then be factored together into a generalized reaction. By applying this process, we can build a simplified model that focusses on the high level relationships. Our method obeys several consistency restrictions, such as conserving the number of distinct species participating in each reaction (i.e. preserving reaction stoichiometry); and not introducing flows between pathways not connected in the initial model. We implemented our method (in Python) and applied it successfully to several genome-scale metabolic models.
 
 %%%%%%%%%%%%%%%%
 %% Background %%
 %%
-\section*{Abstract}
-Genome-scale metabolic models for new organisms include thousands of reactions that are automatically inferred from databases of reactions and pathways, and from existing models for similar organisms. Genomic data for the new organism is compared to the data of the similar one, to find genomic evidence of the presence of enzymes that can catalyse the conserved reactions in the new model. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement. The models produced at each iteration are putatively complete, describing all the reactions that participate in the organism's metabolism. These models are intended for computer simulation. Although automatic model inference tools and genome comparison methods are becoming more and more advanced, they still may leave gaps in the model or add erroneous reactions. Thus, model evaluation by human experts remains important at all the iteration steps. However, because of their completeness, genome-scale models are too detailed and complicated to be easily understood by a~human. The abundance of reactions in the model may hide errors.
+\section*{Introduction}
+Genome-scale metabolic models for new organisms include thousands of reactions that are automatically inferred from databases of reactions and pathways, and from existing models for similar organisms. Genomic data for the new organism is compared to the data of the similar one, to find genomic evidence of the presence of enzymes that can catalyse the conserved reactions in the new model. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\cite{Thiele2010}. The models produced at each iteration are putatively complete, describing all the reactions that participate in the organism's metabolism. These models are intended for computer simulation. Although automatic model inference tools and genome comparison methods are becoming more and more advanced, they still may leave gaps in the model or add erroneous reactions. Thus, model evaluation by human experts remains important at all the iteration steps. However, because of their completeness, genome-scale models are too detailed and complicated to be easily understood by a~human. The abundance of reactions in the model may hide errors.
 
 
-For example, in a model of an yeast \textit{Yarrowia lypolitica}, a missing enzyme \textit{EC 2.3.1.16} would eliminate a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions may be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
+For example, in a genome-scale model of an yeast \textit{Yarrowia lypolitica} (\emph{MODEL1111190000}~\cite{Loira12}), a missing enzyme \textit{EC 2.3.1.16} would eliminate a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway~~\cite{Metzler01}: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions may be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
 
 
-We thus developed a~method for knowledge-based zooming of metabolic models, providing a~higher-level view of a~model, keeping its essential structure and omitting the details. The zooming process groups chemical species present in the model into semantically equivalent classes, based on their hierarchical relationships in the ChEBI ontology, and merges them into a generalized chemical species. Reactions that involve same generalized chemical species can then be factored together into a generalized reaction. By applying this process, we can build a simplified model that focusses on the high level relationships. Our method obeys several consistency restrictions, such as conserving the number of distinct species participating in each reaction (i.e. preserving reaction stoichiometry); and not introducing flows between pathways not connected in the initial model. We implemented our method (in Python) and applied it successfully to several genome-scale metabolic models.
-
-\newpage
-
-\section*{Motivation}
-
-bla-bla-bla
+We thus developed a~method for knowledge-based zooming of metabolic models, providing a~higher-level view of a~model, keeping its essential structure and omitting the details. The zooming process groups chemical species present in the model into semantically equivalent classes, and merges them into a generalized chemical species. Reactions that involve same generalized chemical species can then be factored together into a generalized reaction. By applying this process, we can build a simplified model that focusses on the high level relationships. 
 
 \section*{Mathematical basis}
 \subsection*{Basic definitions}
@@ -679,20 +680,34 @@ $\sim, M/\sim \leftarrow Maximize(\breve{\sim}, M/\breve{\sim})$ \;
 \end{algorithm} 
 
 \section*{Applications}
-We have applied our method to several metabolic models that describe the fatty acid metabolism pathway:  a genome-scale metabolic model of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}~\cite{Loira12}), and two path2model~\cite{http://www.ebi.ac.uk/biomodels-main/path2models} pathways: fatty acid metabolism of the bacteria \textit{Escherichia coli} and the yeast \textit{Saccharomyces cerevisiae}. We have generalise the three models, and compared the results. 
+We have applied our method to three metabolic models that describe the \textit{$\beta$-oxidation of fatty acids} pathway: a genome-scale metabolic model of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}), and two path2model~\cite{http://www.ebi.ac.uk/biomodels-main/path2models} pathways: fatty acid metabolism of the bacteria \textit{Escherichia coli} (\emph{BMID000000083160}) and of the yeast \textit{Saccharomyces cerevisiae} (\emph{BMID000000089673}). We have generalized these three models, and compared the results. 
+
 In \textit{Yarrowia lypolitica} fatty acid oxidation happens in the peroxisome compartment, so we have extracted a sub-model that includes only those species and reactions, that happen in the peroxisome. This submodel is attached as the additional file~1. 
 
+The \textit{Yarrowia lypolitica} model before and after generalization is represented in the figure~\ref{fig:yali}.
+The two other generalized models are represented in the figure~\ref{fig:gen}.
 
+The generalized models describe the \textit{$\beta$-oxidation} cycle in a more generic way: as a transformation of \textit{fatty acyl-CoA} into \textit{dehydroacyl-CoA}, then into \textit{hydroxyacy fatty acyl-CoA}, \textit{3-ketoacyl-CoA}, and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the specific models describe the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species presented in the organisms' cells (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). The latter, more precise model, is needed for a simulation, while the more general one is clearer to a human, and reveals the main properties of the models. For example, the generalized model of  \textit{Yarrowia lypolitica} (see bottom of the figure~\ref{fig:yali}) highlights the fact that there is a particularity concerning \textit{stearoyl-CoA}: there exists a "short-cut" reaction, producing it directly from another \textit{fatty acyl-CoA}, avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}. Generalization also makes mistakes in the initial model more prominent, for example, in the generalized model of fatty acid metabolism of the yeast \textit{Saccharomyces cerevisiae} (see right part of the figure~\ref{fig:gen}), fatty oxidation is not a cycle, as the reactions operating with \textit{hydroxy fatty acyl-CoA} are missing, which was not that obvious in the specific model.
+ 
+\begin{figure}  
+\includegraphics[scale=0.13]{pics/yali_before_after.png} 
 
-\nc{
-High-level understanding of reaction networks is informative. Verification: if the higher level is crazy, then there is a problem with inferencing. 
+      The figure shows the \textit{Yarrowia lypolitica} fatty acid oxidation model before (top) and after (bottom) generalization.
+\caption{Generalization of the \textit{Yarrowia lypolitica} model}
+\label{fig:yali}
+\end{figure}
 
-Take a well-known model, say e.coli, loss/gain/alternative pathway.
+\begin{figure}
+\includegraphics[scale=0.16]{pics/gen.png} 
 
-Make a mistake in a model => easy to find.}
+      The figure shows the generalizations of \textit{Escherichia coli} (left) and \textit{Saccharomyces cerevisiae} (right) fatty acid oxidation models.
+\caption{Generalization of the \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} models}
+\label{fig:gen}
+\end{figure}
+
 
 \section*{Conclusion}
-We can merge, compare, etc. models using this technique.
+TODO: We can merge, compare, etc. models using this technique.
 
 \newpage
 %\section*{Restrictions}
@@ -721,7 +736,7 @@ We can merge, compare, etc. models using this technique.
 %			
 %			Model design principles may also vary between different models. For example, elements of an SBML/SBGN model (species, compartments, reactions) are associated with names. The names can differ from model to model in the choice of a specific synonym, e.g. \textit{lauroyl-CoA} vs \textit{dodecanoyl-CoA} for a species name.
 %			
-%			All these issues make it hard to compare metabolic models, find common parts, combine and map them. Thus, a way to scale models to the needed levels of precision is desirable. Scaling of the elements of metabolic models can be achieved with the help of ontologies. An ontology is “a~specification of a~conceptualisation"~\cite{Gruber95}, defining a controlled vocabulary in the domain of interest and representing relationships between the terms. The most common relationship is the hierarchical one (\textit{"is\_a"}) between a more specific and a more general terms. SBML format supports annotation of its elements (i.e. mapping to ontological terms); different tools and libraries for annotation are developed, e.g. libAnnotationSBML~\cite{Swainston09}.
+%			All these issues make it hard to compare metabolic models, find common parts, combine and map them. Thus, a way to scale models to the needed levels of precision is desirable. Scaling of the elements of metabolic models can be achieved with the help of ontologies. An ontology is “a~specification of a~conceptualisation"~\cite{Gruber95}, defining a controlled vocabulary in the domain of interest and representing relationships between the terms. The most common relationship is the hierarchical one (\textit{"is\_a"}) between more specific and more general terms. SBML format supports annotation of its elements (i.e. mapping to ontological terms); different tools and libraries for annotation are developed, e.g. libAnnotationSBML~\cite{Swainston09}.
 %			
 %			An example of an ontology used in metabolic modelling domain is ChEBI~\cite{deMatos10}, which classifies chemical compounds. Associating species names in a metabolic model to ChEBI terms allows for unambiguous names for species, as well as maps together synonymous names, and enriches a model with the knowledge about relationships between its species, e.g. hierarchical ones: \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA} are both descendants of \textit{fatty acyl-CoA}. For classification of enzymes the Gene Ontology~\cite{Ashburner2000} can be used. Situation with the reaction classification is less developed. To our knowledge, there is no ontology classifying broad range of reactions. Rhea database of chemical reactions~\cite{Alcantara2012} can be considered as such, but it covers only few organisms.\nc{TODO: Reactome, MetaCyc, BioPax}
 %			
