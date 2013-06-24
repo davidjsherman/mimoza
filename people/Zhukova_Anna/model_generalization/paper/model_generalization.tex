@@ -144,11 +144,11 @@
 %%                                          %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\author{Anna~Zhukova$^1$%
-	\email{Anna~Zhukova - anna.zhukova@inria.fr}%
+\author{Anna~Zhukova\correspondingauthor$^1$%
+	\email{Anna~Zhukova\correspondingauthor - anna.zhukova@inria.fr}%
 and 
-	David~James~Sherman\correspondingauthor$^1$%
-	\email{David~James~Sherman\correspondingauthor - david.sherman@inria.fr}
+	David~James~Sherman$^1$%
+	\email{David~James~Sherman - david.sherman@inria.fr}
 }
 
       
@@ -160,7 +160,7 @@ and
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \address{%
-\iid(1)INRIA / Universit\'{e} Bordeaux 1 / CNRS joint project-team MAGNOME, Talence, France
+\iid(1) Inria Bordeaux Sud-Ouest / University of Bordeaux / CNRS UMR 5800 joint project-team Magnome, Talence, France
 }%
 
 \maketitle
@@ -179,11 +179,11 @@ and
 
 \begin{abstract}
 \section*{Background}
-Genome-scale metabolic model reconstruction is a complicated process including (semi-)automatic inference of reactions participating in the organism's metabolism, followed by several iterations of network analysis and improvement. Better and better automatic model inference and analysis tools are developed, but they may still miss some reactions or add erroneous ones. That is why the human expert's analysis of the model plays an important role at all the iterations of the reconstruction process. However, the size of the genome-scale models (i.e. thousands of reactions) makes it hard for a human to analyse them.
+Genome-scale metabolic model reconstruction is a complicated process including (semi-)automatic inference of reactions participating in the organism's metabolism, followed by many iterations of network analysis and improvement. Better and better automatic model inference and analysis tools are being developed, but they may still miss some reactions or add erroneous ones. That is why the human expert's analysis of the model plays an important role at all the iterations of the reconstruction process. However, the size of the genome-scale models (i.e. thousands of reactions) makes it hard for a human to analyse them.
 \section*{Results}
-To aid a human expert in metabolic model analysis we have developed a method for knowledge-based generalization that provides a higher-level view of a metabolic model by hiding the details while preserving its essential structure. The method groups biochemical species in the model into semantically equivalent classes and generalizes them into their common parent in the ChEBI ontology. The reactions between the same generalized species are factored together into generalized reactions.
+To aid a human expert in metabolic model analysis we have developed a method for knowledge-based generalization that provides a higher-level view of a metabolic model, by masking inessential details while preserving its essential structure. The method groups biochemical species in the model into semantically equivalent classes and generalizes them into their common parent in the ChEBI ontology. The reactions between the same generalized species are factored together into generalized reactions.
 \section*{Conclusions}
-We have applied our method to several metabolic models and shown that it helps finding the peculiarities and errors, as well as facilitates model understanding and comparison.      
+We have applied our method to several metabolic models and shown that it improves understanding by helping to identify the peculiarities and potential errors, as well as facilitates model understanding and comparison.      
 \end{abstract}
 
 \ifthenelse{\boolean{publ}}{\begin{multicols}{2}}{}
@@ -324,8 +324,9 @@ For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset
 
 \end{l1}
 
+
 \begin{algorithm}[H]
-\SetAlgoVlined
+
 \TitleOfAlgo{Compute$\mathring{\sim}$}
 \caption{Computation of $\mathring{\sim}$}
 \KwData{$M=\langle{S, S^{(ub)}\subset{S}, R}\rangle: \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$ - metabolic model describing $n$ species,  $\breve{n}$ among them being ubiquitous,  and $m$ reactions.}
@@ -665,7 +666,7 @@ The generalized \textit{$\beta$-oxidation of fatty acids} models of \textit{Esch
 
 We have developed a method that provides a ``zoomed-out'' view of a metabolic model, that keeps its essential structure but hides the details. 
 
-We have implemented our method as a Python script, that is freely available for download from \url{somewhere}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces two SBML files as an output: an original file with the \emph{sbml-groups} package annotations, and an sbml file with the generalized model.
+We have implemented our method as a Python program, that is freely available for download from \url{somewhere}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces two SBML files as an output: an original file with the \emph{sbml-groups} package annotations, and an sbml file with the generalized model.
 
 We have applied our method to three metabolic models describing \emph{beta-oxidation of fatty acids} and have shown that it helps finding gaps, and peculiarities in the models, as well as compresses the information stored in the model, which can be used for model visualisation and model comparison.
 
@@ -689,12 +690,12 @@ The authors declare that they have no competing interests.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Author's contributions}
-    Text for this section \ldots    
+    AZ and DJS conceived  the method, AZ proved its correctness, implemented it and validated it on the models. AZ wrote the manuscript and DJS reviewed it.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
   \ifthenelse{\boolean{publ}}{\small}{}
-  Text for this section \ldots
+  The authors would like to thank Dr. Nicolas Le Nov\`{e}re for discussions on metabolic modelling and SBML, and Dr. Romain Bourqui and Dr. Antoine Lambert of the LaBRI MABioVis team for advice on graph layout.
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                  The Bibliography                       %%
