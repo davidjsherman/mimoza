@@ -1,87 +1,81 @@
 %% BioMed_Central_Tex_Template_v1.06
-%%                   %
-% bmc_article.tex      ver: 1.06 %
-%                    %
+%%                                      %
+%  bmc_article.tex            ver: 1.06 %
+%                                       %
 
 %%IMPORTANT: do not delete the first line of this template
-%%It must be present to~enable the BMC Submission system to~
+%%It must be present to enable the BMC Submission system to 
 %%recognise this template!!
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                   %%
-%% LaTeX template for BioMed Central %%
-%%   journal article submissions   %%
-%%                   %%
-%%     <14 August 2007>      %%
-%%                   %%
-%%                   %%
-%% Uses:                %%
-%% cite.sty, url.sty, bmc_article.cls %%
-%% ifthen.sty. multicol.sty		  %%
-%%				   	  %%
-%%                   %%
+%%                                     %%
+%%  LaTeX template for BioMed Central  %%
+%%     journal article submissions     %%
+%%                                     %%
+%%         <14 August 2007>            %%
+%%                                     %%
+%%                                     %%
+%% Uses:                               %%
+%% cite.sty, url.sty, bmc_article.cls  %%
+%% ifthen.sty. multicol.sty		   %%
+%%				      	   %%
+%%                                     %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                 %%	
-%% For instructions on how to~fill out this Tex template      %%
-%% document please refer to~Readme.pdf and the instructions for  %%
-%% authors page on the biomed central website           %%
-%% http://www.biomedcentral.com/info/authors/           %%
-%%                                 %%
-%% Please do not use \input{...} to~include other tex files.    %%
-%% Submit your LaTeX manuscript as one .tex document.       %%
-%%                                 %%
-%% All additional figures and files should be attached       %%
-%% separately and not embedded in the \TeX\ document its~elf.    %%
-%%                                 %%
-%% BioMed Central currently use the MikTex distribution of     %%
-%% TeX for Windows) of TeX and LaTeX. This is available from   %%
-%% http://www.miktex.org                      %%
-%%                                 %%
+%%                                                                 %%	
+%% For instructions on how to fill out this Tex template           %%
+%% document please refer to Readme.pdf and the instructions for    %%
+%% authors page on the biomed central website                      %%
+%% http://www.biomedcentral.com/info/authors/                      %%
+%%                                                                 %%
+%% Please do not use \input{...} to include other tex files.       %%
+%% Submit your LaTeX manuscript as one .tex document.              %%
+%%                                                                 %%
+%% All additional figures and files should be attached             %%
+%% separately and not embedded in the \TeX\ document itself.       %%
+%%                                                                 %%
+%% BioMed Central currently use the MikTex distribution of         %%
+%% TeX for Windows) of TeX and LaTeX.  This is available from      %%
+%% http://www.miktex.org                                           %%
+%%                                                                 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
-\documentclass[10pt]{bmc_article}  
+\documentclass[10pt]{bmc_article}    
 
 
 
 % Load packages
 \usepackage{cite} % Make references as [1-4], not [1,2,3,4]
-\usepackage{url} % Formatting web addresses 
-\usepackage{ifthen} % Conditional 
-\usepackage{multicol}  %Columns
+\usepackage{url}  % Formatting web addresses  
+\usepackage{ifthen}  % Conditional 
+\usepackage{multicol}   %Columns
 \usepackage[utf8]{inputenc} %unicode support
-\usepackage{graphicx}
-\usepackage{mathtools}
 %\usepackage[applemac]{inputenc} %applemac support if unicode package fails
 %\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
-\usepackage{color,soul}
-\usepackage{amsmath, amssymb}
+%extras
 \usepackage{algorithm2e}
+\usepackage{graphicx}
 \urlstyle{rm}
-
-
-\newcommand{\nc}[1]{\begin{flushleft}\hl{[#1]}\end{flushleft}}
-
  
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
-%%                       %%
-%% If you wish to~display your graphics for  %%
-%% your own use using includegraphic or    %%
-%% includegraphics, then comment out the   %%
-%% following two lines of code.        %%  
-%% NB: These line *must* be included when   %%
-%% submitting to~BMC.             %% 
-%% All figure files must be submitted as   %%
-%% separate graphics through the BMC     %%
-%% submission process, not included in the  %% 
-%% submitted article.             %% 
-%%                       %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%           
+%%                                             %%
+%%  If you wish to display your graphics for   %%
+%%  your own use using includegraphic or       %%
+%%  includegraphics, then comment out the      %%
+%%  following two lines of code.               %%   
+%%  NB: These line *must* be included when     %%
+%%  submitting to BMC.                         %% 
+%%  All figure files must be submitted as      %%
+%%  separate graphics through the BMC          %%
+%%  submission process, not included in the    %% 
+%%  submitted article.                         %% 
+%%                                             %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                     
 
 
 %\def\includegraphic{}
@@ -98,14 +92,14 @@
 \newboolean{publ}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                       %%
-%% You may change the following style settings %%
-%% Should you wish to~format your article    %%
-%% in a~publication style for printing out and %%
-%% sharing with colleagues, but ensure that   %%
-%% before submitting to~BMC that the style is  %%
-%% returned to~the Review style setting.    %%
-%%                       %%
+%%                                              %%
+%% You may change the following style settings  %%
+%% Should you wish to format your article       %%
+%% in a publication style for printing out and  %%
+%% sharing with colleagues, but ensure that     %%
+%% before submitting to BMC that the style is   %%
+%% returned to the Review style setting.        %%
+%%                                              %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
 
@@ -117,7 +111,6 @@
 
 %New style setting
 \newenvironment{bmcformat}{\baselineskip20pt\sloppy\setboolean{publ}{false}}{\baselineskip20pt\sloppy}
-
 
 % Begin ...
 \begin{document}
@@ -136,20 +129,41 @@
 %%                                          %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\title{Knowledge-based scaling of metabolic models}
+\title{Knowledge-based generalization of metabolic models}
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the authors here                   %%
+%%                                          %%
+%% Ensure \and is entered between all but   %%
+%% the last two authors. This will be       %%
+%% replaced by a comma in the final article %%
+%%                                          %%
+%% Ensure there are no trailing spaces at   %% 
+%% the ends of the lines                    %%     	
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%\author{Anna~Zhukova$^1$%
-%	\email{Anna~Zhukova - anna.zhukova@inria.fr}%
-%and 
-%	David~James~Sherman\correspondingauthor$^1$%
-%	\email{David~James~Sherman\correspondingauthor - david.sherman@inria.fr}
-%}
+\author{Anna~Zhukova$^1$%
+	\email{Anna~Zhukova - anna.zhukova@inria.fr}%
+and 
+	David~James~Sherman\correspondingauthor$^1$%
+	\email{David~James~Sherman\correspondingauthor - david.sherman@inria.fr}
+}
 
-%\address{%
-%\iid(1)INRIA / Universit\'{e} Bordeaux 1 / CNRS joint project-team MAGNOME, Talence, France
-%}%
+      
 
-%\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the authors' addresses here        %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\address{%
+\iid(1)INRIA / Universit\'{e} Bordeaux 1 / CNRS joint project-team MAGNOME, Talence, France
+}%
+
+\maketitle
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                          %%
@@ -163,14 +177,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-
-
+\begin{abstract}
+\section*{Background}
+Genome-scale metabolic model reconstruction is a complicated process including (semi-)automatic inference of reactions participating in the organism's metabolism, followed by several iterations of network analysis and improvement. Better and better automatic model inference and analysis tools are developed, but they may still miss some reactions or add erroneous ones. That is why the human expert's analysis of the model plays an important role at all the iterations of the reconstruction process. However, the size of the genome-scale models (i.e. thousands of reactions) makes it hard for a human to analyse them.
+\section*{Results}
+To aid a human expert in metabolic model analysis we have developed a method for knowledge-based generalization that provides a higher-level view of a metabolic model by hiding the details while preserving its essential structure. The method groups biochemical species in the model into semantically equivalent classes and generalizes them into their common parent in the ChEBI ontology. The reactions between the same generalized species are factored together into generalized reactions.
+\section*{Conclusions}
+We have applied our method to several metabolic models and shown that it helps finding the peculiarities and errors, as well as facilitates model understanding and comparison.      
+\end{abstract}
 
 \ifthenelse{\boolean{publ}}{\begin{multicols}{2}}{}
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                          %%
@@ -193,96 +209,93 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\section*{Abstract}
-Genome-scale metabolic models for new organisms include thousands of reactions that are automatically inferred from databases of reactions and pathways, and from existing models for similar organisms. Genomic data for the new organism is compared to the data of the similar one, to find genomic evidence of the presence of enzymes that can catalyse the conserved reactions in the new model. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement. The models produced at each iteration are putatively complete, describing all the reactions that participate in the organism's metabolism. These models are intended for computer simulation. Although automatic model inference tools and genome comparison methods are becoming more and more advanced, they still may leave gaps in the model or add erroneous reactions. Thus, model evaluation by human experts remains important at all the iteration steps. However, because of their completeness, genome-scale models are too detailed and complicated to be easily understood by a~human. The abundance of reactions in the model may hide errors.
 
-
-For example, in a model of an yeast \textit{Yarrowia lypolitica}, a missing enzyme \textit{EC 2.3.1.16} would eliminate a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions may be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
-
-
-We thus developed a~method for knowledge-based zooming of metabolic models, providing a~higher-level view of a~model, keeping its essential structure and omitting the details. The zooming process groups chemical species present in the model into semantically equivalent classes, based on their hierarchical relationships in the ChEBI ontology, and merges them into a generalized chemical species. Reactions that involve same generalized chemical species can then be factored together into a generalized reaction. By applying this process, we can build a simplified model that focusses on the high level relationships. Our method obeys several consistency restrictions, such as conserving the number of distinct species participating in each reaction (i.e. preserving reaction stoichiometry); and not introducing flows between pathways not connected in the initial model. We implemented our method (in Python) and applied it successfully to several genome-scale metabolic models.
 
 %%%%%%%%%%%%%%%%
 %% Background %%
 %%
 \section*{Introduction}
-Genome-scale metabolic models for new organisms include thousands of reactions. In most cases these reactions are automatically inferred by methods that combine databases of reactions and pathways with genomic information and existing models for similar organisms~\cite{Swainston}. Genomic data for the new organism is compared to the data of the reference organism, to find genomic evidence such as the presence of catalysing enzymes for the reactions conserved in the new organism. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\cite{Thiele2010}. The models produced at each iteration are intended for computer simulation, and so describe all the reactions thought to participate in the organism's metabolism. Although automatic model inference tools and genome comparison methods are becoming more and more advanced, they still may leave gaps in the model or add erroneous reactions. Thus, model evaluation by human experts remains important at all the iteration steps. However, because of their completeness, genome-scale models are too detailed and complicated to be easily understood by a~human. The abundance of reactions in the model may hide errors.
+Genome-scale metabolic models for new organisms include thousands of reactions. In most cases these reactions are automatically inferred by methods that combine databases of reactions and pathways with genomic information and existing models for similar organisms~\cite{Swainston2011}. Genomic data for the new organism is compared to the data of the reference organism, to find genomic evidence such as the presence of catalysing enzymes for the reactions conserved in the new organism. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\cite{Thiele2010}. The models produced at each iteration are intended for computer simulation, and so describe all the reactions thought to participate in the organism's metabolism. Although automatic model inference tools and genome comparison methods are becoming more and more advanced, they still may leave gaps in the model or add erroneous reactions. Thus, model evaluation by human experts remains important at all the iteration steps. However, because of their completeness, genome-scale models are too detailed and complicated to be easily understood by a~human. The abundance of reactions in the model may hide errors.
 
 For example, if in a genome-scale model of an yeast \textit{Yarrowia lypolitica} (\emph{MODEL1111190000}~\cite{Loira12}) the enzyme \textit{EC 2.3.1.16} were missing, a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway~\cite{Metzler01} would be eliminated: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions would be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
 
-To aid human understanding of these complete models, we developed a~method for knowledge-based generalization that provides a~higher-level view of a~model while keeping its essential structure and omitting the details. 
+To aid human understanding of these complete models, a fair amount of work has been done on dividing them into reusable modules. Examples of such modules at the highest level is separating reactions in the model into compartment they are happening in. 
+
+Lower-level approaches can be divided into two groups: series ones and parallel. The series approaches operate with chains of reactions, and generalize them as a series, thus hiding the structure of the network. An example of a series approach is representing the network as a set of metabolic pathways (KEGG\cite{Kanehisa12}, MetaCyC\cite{Caspi2008}), that can be further divided, for example, into reaction modules (conserved sequences of reactions along the metabolic pathways)\cite{Muto2013}. 
+
+The other type of approaches operates with reactions that are ``parallel'', thus keeping the steps and preserving the general view of the network. An example of this approach is grouping reactions based on EC (Enzyme Commission) numbers\cite{Tohsato2000}. The drawback of this approach is that it is not applicable to networks with no EC number assigned or reactions with no catalysing enzymes identified. 
+We developed another ``parallel''-reaction method for knowledge-based generalization of metabolic models, that does not depend on enzyme information. It provides a~higher-level view of a~model while keeping its essential structure and omitting the details. 
+
 
 \newtheorem{eq00}[def]{Definition}
 \begin{eq00}
-The \underline{model generalization} process groups chemical species present in the model into equivalence classes, and merges them into a generalized chemical species. Reactions that involve same generalized chemical species are then factored together into a generalized reaction. 
+The \emph{model generalization} process groups chemical species present in the model into equivalence classes, and merges them into a generalized chemical species. Reactions that involve same generalized chemical species are then factored together into a generalized reaction. 
 \end{eq00}
 
-By applying the model generalization process, we can build a simplified model that focusses on the high level relationships. 
+By applying the model generalization process, we can build a simplified model that focusses on the high level relationships. The simplified model can be further divided into pathways. 
+
+
 
 
 \section*{Mathematical basis}
 
 \subsection*{Basic definitions}
 
-We represent a \underline{metabolic model $M$} as a pair of two sets: a set $S$ of biochemical species, and a set $R$ of reactions between them, described in the model: 
-\begin{align*} 
-& M = \langle S, R \rangle\text{ - model},\\
-& S = \{s_1, \ldots, s_n\}\text{ - species set},\\
-& R = \{r_1, \ldots, r_m\}\text{ - reaction set}.
-\end{align*}
+We represent a \emph{metabolic model $M$} as a pair of two sets: a set $S$ of biochemical species, and a set $R$ of reactions between them, described in the model: 
 
-We represent each \underline{reaction $r \in R$} as a pair of species sets: a set of its reactant species, and a set of its product species. In a chemical reaction, reactants change into products. A chemical reaction may be represented by a balanced chemical equation, showing the formulae of the reactants and products, and the changes that take place\cite{Clugston2000}. This definition leads to the restriction~(1) that all the species participating in the reaction should be different.
-\begin{align} 
-\nonumber r = &\langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle
-\in R \subset \langle 2^S \times 2^S \rangle, \\
-&\text{where }s^{(rs)}_1 \neq \ldots \neq s^{(rs)}_k \neq s^{(ps)}_1 \neq \ldots \neq s^{(ps)}_l
-\end{align}
+\[ \begin{array}{ccll}
+\mbox{$M$} & \mbox{$=$} & \mbox{$\langle S, R \rangle$} & \mbox{- model,} \\
+\mbox{$S$} & \mbox{$=$} & \mbox{$\{s_1, \ldots, s_n\}$} &  \mbox{- species set,} \\
+\mbox{$R$} & \mbox{$=$} & \mbox{$\{r_1, \ldots, r_m\}$} &  \mbox{- reaction set.} 
+\end{array} \]
 
-To perform the model generalization, we will define an \underline{equivalence operation $\sim$} on the species set, and group species into equivalence classes: $[s_i]^{\sim} = \{s_j \in S | s_j \sim s_i\}$.
+We represent each \emph{reaction $r \in R$} as a pair of species sets: a set of its reactant species, and a set of its product species. In a chemical reaction, reactants change into products. A chemical reaction may be represented by a balanced chemical equation, showing the formulae of the reactants and products, and the changes that take place\cite{Clugston2000}. This definition leads to the restriction~(1) that all the species participating in the reaction should be different.
+
+\[ \begin{array}{llr}
+\mbox{$r = $} & \mbox{$\langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle
+\in R \subset \langle 2^S \times 2^S \rangle$}, &\\
+& \mbox{where } \mbox{$s^{(rs)}_1 \neq \ldots \neq s^{(rs)}_k \neq s^{(ps)}_1 \neq \ldots \neq s^{(ps)}_l$}  & (1)
+\end{array} \]
+
+To perform the model generalization, we will define an \emph{equivalence operation $\sim$} on the species set, and group species into equivalence classes: $[s_i]^{\sim} = \{s_j \in S | s_j \sim s_i\}$.
 
 Species equivalence imposes reaction equivalence: two reactions are equivalent if their corresponding reactant and product species are pairwise equivalent.
-\begin{center}
-$\forall r, \tilde{r} \in R:\; r = \langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle,$
-\end{center}
-\begin{center}
-$\tilde{r} = \langle\{\tilde{s}^{(rs)}_1, \ldots, \tilde{s}^{(rs)}_{\tilde{k}}\},\{\tilde{s}^{(ps)}_1, \ldots, \tilde{s}^{(ps)}_{\tilde{l}}\}\rangle$
-\end{center}
-\begin{align*} 
-r \sim \tilde{r} \iff & k = \tilde{k}, l = \tilde{l}, \\
-& \forall i\; 0\leq{i}\leq{k} \; \exists{!} \tilde{i}\; 0\leq \tilde{i}\leq \tilde{k}:\; s^{(rs)}_i \sim \tilde{s}^{(rs)}_{\tilde{i}},\\
-& \forall j\;0\leq j\leq l\;\exists{!} \tilde{j}\;0\leq \tilde{j}\leq\tilde{l}:\;s^{(ps)}_j \sim \tilde{s}^{(ps)}_{\tilde{j}}.
-\end{align*}
+\[ \begin{array}{ll}
+\mbox{$\forall r, \tilde{r} \in R:$} &  \mbox{$r = \langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle,$}\\
+& \mbox{$\tilde{r} = \langle\{\tilde{s}^{(rs)}_1, \ldots, \tilde{s}^{(rs)}_{\tilde{k}}\},\{\tilde{s}^{(ps)}_1, \ldots, \tilde{s}^{(ps)}_{\tilde{l}}\}\rangle$}\\
+\mbox{$r \sim \tilde{r} \iff $} & \mbox{$k = \tilde{k}, l = \tilde{l}$}, \\
+& \mbox{$\forall i\; 0\leq{i}\leq{k} \; \exists{!} \tilde{i}\; 0\leq \tilde{i}\leq \tilde{k}:\; s^{(rs)}_i \sim \tilde{s}^{(rs)}_{\tilde{i}}$}, \\
+& \mbox{$\forall j\;0\leq j\leq l\;\exists{!} \tilde{j}\;0\leq \tilde{j}\leq\tilde{l}:\;s^{(ps)}_j \sim \tilde{s}^{(ps)}_{\tilde{j}}$}. 
+\end{array} \]
+
 Equivalent reactions are factored together into a generalized reaction that operates with generalized species (i.e. species equivalence classes): 
 $[r]^{\sim} = \langle\{[s^{(rs)}_1]^{\sim}, \ldots, [s^{(rs)}_k]^{\sim}\}, \{[s^{(ps)}_1]^{\sim}, \ldots, [s^{(ps)}_l]^{\sim}\}\rangle$.
 
 In order to keep the number of distinct species participating in a reaction the restriction~(2), analogous to the restriction~(1), must be satisfied:
-\begin{align}
-[s^{(rs)}_1]^{\sim} \neq \ldots \neq [s^{(rs)}_k]^{\sim} \neq [s^{(ps)}_1]^{\sim} \neq \ldots \neq [s^{(ps)}_l]^{\sim}
-\end{align}
+\[ \begin{array}{lr}
+\mbox{$[s^{(rs)}_1]^{\sim} \neq \ldots \neq [s^{(rs)}_k]^{\sim} \neq [s^{(ps)}_1]^{\sim} \neq \ldots \neq [s^{(ps)}_l]^{\sim}$} & (2)
+\end{array} \]
 
-The \underline{generalized model $M/\sim$} is a pair of generalized species and reaction sets (quotient sets):
-\begin{align*} 
-&M/\sim = \langle S/\sim, R/\sim \rangle\text{ - generalized model},\\
-&S/\sim = \{[s_1]^{\sim}, \ldots, [s_{\tilde{n}}]^{\sim}\}\text{ - quotient species set},\\
-&R/\sim = \{[r_1]^{\sim}, \ldots, [r_{\tilde{m}}]^{\sim}\}\text{ - quotient reaction set}.
-\end{align*}
+The \emph{generalized model $M/\sim$} is a pair of generalized species and reaction sets (quotient sets):
+\[ \begin{array}{ccll}
+\mbox{$M/\sim$} & \mbox{$=$} & \mbox{$\langle S/\sim, R/\sim \rangle$} & \mbox{ - generalized model,} \\
+\mbox{$S/\sim$} & \mbox{$=$} & \mbox{$\{[s_1]^{\sim}, \ldots, [s_{\tilde{n}}]^{\sim}\}$} &  \mbox{ - quotient species set,} \\
+\mbox{$R/\sim$} & \mbox{$=$} & \mbox{$\{[r_1]^{\sim}, \ldots, [r_{\tilde{m}}]^{\sim}\}$} &  \mbox{ - quotient reaction set.} 
+\end{array} \]
 
 The generalized model is a "zoom out" of the initial model. It provides a higher-level view by including less species and reactions, but more generic ones. For example, \textit{3-oxodecanoyl-CoA}, \textit{3-oxolauroyl-CoA}, \textit{3-oxohexanoyl-CoA}, and \textit{3-oxooctanoyl-CoA} species of the initial model can be "zoomed out" into \textit{oxo-fatty acyl-CoA} in the generalized model. 
 
 Every reaction of the generalized model corresponds to at least one reaction of the initial model having the same topology (number of distinct reactant and product species) and operating with species that can be "zoomed out" into those participating in the generalized reaction. The model generalization process also preserves connectivity, i.e. for every pair of reactions sharing a reactant/product in the initial model, the "zoomed out" reactions share a "zoomed out" reactant/product in the generalized model.
 
 
-%\subsection*{Restriction 2}
-%In order for the generalization process not to introduce connections between pathways disconnected in the initial model, we add a restriction that for each indirected path between two reactions in the generalized model, there should exist a prototype path in the initial model.
-%$\forall [s] \in S/\sim (\exists [r_1], [r_2] \in R/\sim: [s] \in species([r_1]) \cap species([r_2]) \implies \exists s \in S, \exists r_1, r_2 \in R: s \in [s], r_1 \in [r_1], r_2 \in [r_2], s \in species(r_1) \cap species(r_2))$
-
 \subsubsection*{Ubiquitous species}
 
-We say that a \underline{ubiquitous species} is one that participates in many reactions (e.g. more than a threshold), such as water, hydrogen, oxygen, etc. They are common to most of the models, and do not need to be generalized. In the generalized model each of them forms a trivial equivalence class:
-\begin{align*}
-S^{(ub)} = \{s^{(ub)}_1, \ldots, s^{(ub)}_{\breve{n}}\} \subset S: \forall i\,[s^{(ub)}_i]^{\sim} = \{s^{ub}_i\}
-\end{align*}
-\underline{Specific species} are all the others, they are divided into non-trivial equivalence classes and generalized accordingly.  
+We say that a \emph{ubiquitous species} is one that participates in many reactions (e.g. more than a threshold), such as water, hydrogen, oxygen, etc. They are common to most of the models, and do not need to be generalized. In the generalized model each of them forms a trivial equivalence class:
+\[ \begin{array}{l}
+\mbox{$S^{(ub)} = \{s^{(ub)}_1, \ldots, s^{(ub)}_{\breve{n}}\} \subset S: \forall i\,[s^{(ub)}_i]^{\sim} = \{s^{ub}_i\}$} 
+\end{array} \]
+
+\emph{Specific species} are all the others, they are divided into non-trivial equivalence classes and generalized accordingly.  
 
 \subsection*{Model generalization problem}
 \newtheorem{p0}[pbm]{Problem}
@@ -291,20 +304,24 @@ Given a metabolic model $M=\langle S, S^{(ub)} \subset S, R \rangle$ that descri
 \end{p0}
 \newtheorem{eq0}[def]{Definition}\label{equiv0}
 \begin{eq0}
-Given a model $M=\langle S, S^{(ub)}\subset{S}, R \rangle : \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$, let us define an \underline{equivalence operation $\mathring{\sim}$} on the species set $S$ as forming $\breve{n} + 1$ equivalence classes in the quotient set $S/\mathring{\sim}$: one for each of the ubiquitous species, and one for all the other species:
-\begin{align*}
-&\forall s^{(ub)} \in S^{(ub)} \;[s^{(ub)}]^{\mathring{\sim}} = \{s^{(ub)}\}, \\
-&\forall s, \tilde{s} \in S\backslash S^{(ub)} \;[s]^{\mathring{\sim} } = [\tilde{s}]^{\mathring{\sim} } = S \backslash S^{(ub)}.
-\end{align*}
+Given a model $M=\langle S, S^{(ub)}\subset{S}, R \rangle : \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$, let us define an \emph{equivalence operation $\mathring{\sim}$} on the species set $S$ as forming $\breve{n} + 1$ equivalence classes in the quotient set $S/\mathring{\sim}$: one for each of the ubiquitous species, and one for all the other species:
+\[ \begin{array}{cl}
+\mbox{$\forall s^{(ub)} \in S^{(ub)}$} & \mbox{$[s^{(ub)}]^{\mathring{\sim}} = \{s^{(ub)}\}$}, \\
+\mbox{$\forall s, \tilde{s} \in S\backslash S^{(ub)}$} & \mbox{$[s]^{\mathring{\sim} } = [\tilde{s}]^{\mathring{\sim} } = S \backslash S^{(ub)}$}. 
+\end{array} \]
+
 \end{eq0}
 \newtheorem{l1}[lm]{Lemma}
 \begin{l1}
 For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset S, R \rangle$, the quotient species set $S/\sim$ and the quotient reaction set $R/\sim$ induced by $\sim$ are partitions of respectively the quotient species set $S/\mathring{\sim}$ and the quotient reaction set $R/\mathring{\sim} $ induced by $\mathring{\sim}$:
-\begin{align*}
-\forall \text{equivalence operation } \sim &\text{ defined on }\langle S, S^{(ub)}, R \rangle\\
-&\forall s \in S \; [s]^{\sim} \subset [s]^{\mathring{\sim}} \\
-&\forall r \in R \; [r]^{\sim} \subset [r]^{\mathring{\sim}} 
-\end{align*}
+\[ \begin{array}{c}
+\mbox{$\forall $ equivalence operation $\sim$ defined on $\langle S, S^{(ub)}, R \rangle$} \\
+\begin{array}{cl}
+\mbox{$\forall s \in S$} & \mbox{$[s]^{\sim} \subset [s]^{\mathring{\sim}}$} \\
+\mbox{$\forall r \in R$} & \mbox{$[r]^{\sim} \subset [r]^{\mathring{\sim}} $}
+\end{array}
+\end{array} \]
+
 \end{l1}
 
 \begin{algorithm}[H]
@@ -355,25 +372,20 @@ The Compute$\mathring{\sim}$ algorithm forms the equivalence classes for ubiquit
 \begin{p1}
 Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(2), find an equivalence operation $\tilde{\sim}$ that does not change the reaction equivalence classes: $R/\sim = R/\tilde{\sim}$, and maximizes the number of species equivalence classes $\sharp S/\tilde{\sim}$. 
 \end{p1}
-%To find an equivalence operation $\sim$ satisfying the restrictions described above, we will start with the operation  $\mathring{\sim}$ as the first approximation and continue improving it till all the restrictions are satisfied. 
-
-%%First of all, we will satisfy the restriction 2 for each pair of reactions violating it: \\
-%%$\forall [r_i]_{\approx}, [r_j]_{\approx} \in R/\approx: [s]_{\approx} \in species([r_i]) \cap species([r_j]),  \forall r_i \in [r_i]_{\approx} \forall r_j \in [r_j]_{\approx}:  species(r_i) \cap species(r_j) \subset S^{(ub)}$. \\
-%First of all, we will maximize the number of species equivalence classes for the equivalence operation $\mathring{\sim}$.
 \subsubsection*{Algorithm}
-To maximize the number of species equivalence classes for the equivalence operation $\sim$ we will associate each species $s$ in the initial model with a pair of reaction equivalence classes sets in the quotient reaction set $R/{\sim}$: those induced by reactions where it participates as a reactant or as a product: $s \rightarrow \langle R^{(rs)}_s = \{[r^{(rs)}_1]^{\sim}, \ldots, [r^{(rs)}_o]^{\sim}\}, R^{(ps)}_s = \{[r^{(ps)}_1]^{\sim}, \ldots, [r^{(ps)}_t]^{\sim}\}\rangle$.
+To maximize the number of species equivalence classes for the equivalence operation $\sim$ we will associate each species $s$ in the initial model with a pair of reaction equivalence classes sets in the quotient reaction set $R/{\sim}$: those induced by reactions where it participates as a reactant or as a product: \\
+$s \rightarrow \langle R^{(rs)}_s = \{[r^{(rs)}_1]^{\sim}, \ldots, [r^{(rs)}_o]^{\sim}\}, R^{(ps)}_s = \{[r^{(ps)}_1]^{\sim}, \ldots, [r^{(ps)}_t]^{\sim}\}\rangle$.
 
 \newtheorem{eq1}[def]{Definition}\label{equiv1}
 \begin{eq1}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(2), let us define an \underline{equivalence operation $\tilde{\sim}$} as forming a separate species equivalence class for each of the ubiquitous species, and putting $\sim$-equivalent non-ubiquitous species that intersect in their product or reactant reaction classes in the same equivalence class:
-\begin{alignat*}{3}
-& \forall s^{(ub)} \in S^{(ub)}, s \in S \;\; & s^{(ub)} \tilde{\sim} s \iff & s^{(ub)} = s, \\
-& \forall s, \tilde{s} \in S \backslash S^{(ub)} \; & s \tilde{\sim} \tilde{s} \iff 
-& s \sim \tilde{s}\;\land \\
-& ~ &  ~  (&R^{(rs)}_s \cap R^{(rs)}_{\tilde{s}} \neq \emptyset\;\lor \\
-& ~ &  ~ & R^{(ps)}_s \cap R^{(ps)}_{\tilde{s}} \neq \emptyset\;\lor \\
-& ~ &  ~ & \exists \dot{s} \in S:\; s \tilde{\sim} \dot{s} \land \dot{s} \tilde{\sim} \tilde{s}). 
-\end{alignat*}
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(2), let us define an \emph{equivalence operation $\tilde{\sim}$} as forming a separate species equivalence class for each of the ubiquitous species, and putting $\sim$-equivalent non-ubiquitous species that intersect in their product or reactant reaction classes in the same equivalence class:
+\[ \begin{array}{ccll}
+\mbox{$\forall s^{(ub)} \in S^{(ub)}, s \in S \;\;$} & \mbox{$s^{(ub)} \tilde{\sim} s$} & \mbox{$\iff$} & \mbox{$s^{(ub)} = s$}, \\
+\mbox{$\forall s, \tilde{s} \in S \backslash S^{(ub)} \;$} & \mbox{$s \tilde{\sim} \tilde{s}$} & \mbox{$\iff $} & \mbox{$s \sim \tilde{s}\;\land$} \\
+& & &(\mbox{$R^{(rs)}_s \cap R^{(rs)}_{\tilde{s}} \neq \emptyset\;\lor$} \\
+& & &~\mbox{$R^{(ps)}_s \cap R^{(ps)}_{\tilde{s}} \neq \emptyset\;\lor$} \\
+& & &~\mbox{$\exists \dot{s} \in S:\; s \tilde{\sim} \dot{s} \land \dot{s} \tilde{\sim} \tilde{s})$}.
+\end{array} \]
 \end{eq1}
 
 Any further partition of the quotient species set would imply the partition of the quotient reaction set. Hence the number of species equivalence classes is maximal for the current number of reaction equivalence classes. 
@@ -426,9 +438,9 @@ Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S,
 We will start with the given equivalence operation $\sim^0 = \sim$, and iteratively improve it, until the stoichiometry preserving property~(2) is obeyed. We will denote the equivalence operation obtained at the $i$-th iteration step as $\sim^i$.
 
 At each iteration, if there exists a species equivalence class that violates the stoichiometry preserving property~(2), i.e.:
-\begin{align*}
-\exists s \neq \tilde{s} \in S, r \in R: s \in species(r) \land \tilde{s} \in species(r) \land  [s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i},
-\end{align*}
+\[ \begin{array}{l}
+\mbox{$\exists s \neq \tilde{s} \in S, r \in R: s \in species(r) \land \tilde{s} \in species(r) \land  [s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i}$}, 
+\end{array} \]
 we will partition this species equivalence class $[s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i}$ into two: $[s]^{{\sim}^{i+1}}  \vee [\tilde{s}]^{{\sim}^{i+1}}  = [s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i} $ to form a new approximation ${\sim}^{i+1}$ of the equivalence operation. When no species equivalence class violating the stoichiometry preserving property~(2) can be found, the current equivalence operation is returned as result.
 
 As at each iteration one equivalence species class is partitioned, and the equality operation $=$ (each species is equivalent only to itself), that will be achieved in the worst case, obeys the stoichiometry preserving property~(2), so the process will terminate. \\
@@ -482,7 +494,7 @@ We will now describe the species equivalence class partition.
 \subsubsection*{Clique partition}
 \newtheorem{scg}[def]{Definition}
 \begin{scg}
-For a given a set of species and a set of reactions between them, we define a \underline{species compatibility graph} as a simple undirected graph with vertices representing the species, and edges linking those of the species that do not participate in the same reaction (i.e., putting them into the same equivalence class does not violate the stoichiometry preserving property~(2)).
+For a given a set of species and a set of reactions between them, we define a \emph{species compatibility graph} as a simple undirected graph with vertices representing the species, and edges linking those of the species that do not participate in the same reaction (i.e., putting them into the same equivalence class does not violate the stoichiometry preserving property~(2)).
 \end{scg}
 Note, that any set of species that can be put into the same equivalence class without violating the stoichiometry preserving property~(2), forms a clique  in the species compatibility graph, i.e. a complete subgraph: for every pair of its vertices there exists an edge linking them. Thus, the problem of partition the species equivalence class into minimum number of classes, such that all of them obey the stoichiometry preserving property~(2) is a clique partition problem.
 \newtheorem{clp}[pbm]{Problem}
@@ -494,16 +506,15 @@ Find the smallest number of cliques in a graph such that every vertex in the gra
 Clique partition problem is known to be \textit{NP}-complete~\cite{Bhasker1991}. 
 \end{rem0}
 
-%In such kind of a graph produced from a metabolic model there are usually few edges missing, often not more, than one edge per species. When this is the case, multiple solutions of the size 2 are possible, e.g. obtained by splitting all the "problematic" nodes (missing one edge) into two cliques, such that for each of these nodes its partner node (the one to which the missing edge would connect) is placed into the other clique. Each of the rest of the nodes ("non-problematic" ones, i.e. having the maximal edge degree) can be placed into any of the cliques. The choice of the clique for each of the "non-problematic" nodes leads to different solutions. I.e. the complement (inverse) of the graph G  is bipartite.
-
 \subsubsection*{Species ontology}
 In a species compatibility graph, there are usually a few edges missing, and multiple solutions of the clique partition problem exist. In order to make the choice of the species equivalence classes biologically meaningful, we will use an ontology that describes hierarchical \textit{is\_a} relationships (i.e. more specific - more general) between biochemical species. This ontology can be viewed as a directed acyclic graph, with nodes representing terms describing species, and edges representing hierarchical relationships between them. A term $T$ is an ancestor of a term $t$ if and only if there exists a path from $t$ to $T$. 
 
 \newtheorem{mt}[def]{Definition}
 \begin{mt}
-A term $t$ is a \underline{model term} if it corresponds to a non-ubiquitous species in the metabolic model. 
+A term $t$ is a \emph{model term} if it corresponds to a non-ubiquitous species in the metabolic model. 
 \end{mt}
-We will assume that no two model terms are connected by a descendant-ancestor relationship in the ontology (Otherwise, we will mark the ancestor term ubiquitous): $\forall t, T \in terms \; (\exists\, species(t), species(T) \in S \land t \in descendants(T) \implies t = T)$.
+We will assume that no two model terms are connected by a descendant-ancestor relationship in the ontology (Otherwise, we will mark the ancestor term ubiquitous): \\
+$\forall t, T \in terms \; (\exists\, species(t), species(T) \in S \land t \in descendants(T) \Rightarrow t = T)$.
 
 We will iteratively remove all the leaf terms that are not model terms from the ontology, so that all the model terms become leaves, and all the leaves become model terms. 
 
@@ -511,20 +522,21 @@ For each species equivalence class that needs to be partitioned, we will first f
 
 \newtheorem{comp}[def]{Definition}
 \begin{comp}
-Terms $ t_1, \ldots, t_k$ are \underline{compatible} if and only if their descendant model terms do not intersect:
-$ t_1, \ldots, t_k \in descendants(T) \text{ are compatible} \iff \forall i \neq j \in \{1, \ldots, k\} \; descendants(t_i) \cap descendants(t_k) \cap leaves(T) = \emptyset$.
+Terms $ t_1, \ldots, t_k$ are \emph{compatible} if and only if their descendant model terms do not intersect:
+$ t_1, \ldots, t_k \in descendants(T)$ are compatible $\iff \forall i \neq j \in \{1, \ldots, k\} \; descendants(t_i) \cap descendants(t_k) \cap leaves(T) = \emptyset$.
 \end{comp}
 
 \newtheorem{pp}[pbm]{Problem}
 \begin{pp}
 Given a term $T$, find a compatible term set of minimal size that covers all the $T$-th descendant leaf terms and satisfies the stoichiometry preserving property~(5):
-\begin{align}
-\nonumber ?\; t_1, \ldots, t_k \in descendants(T):\; & k = k_{min},\\
-&t_1, \ldots, t_k \text{ are compatible},\\
-&leaves(T) \subset descendants(t_1) \cup \ldots \cup descendants(t_k) ,\\
-&\forall i \neq j \in \{1, \ldots, k\}\; (\exists\, species(t_i), species(t_j) \in S \implies \\
-\nonumber &\indent \forall r \in R: \{species(t_i), species(t_j)\} \not \subset species(r)).
-\end{align}
+\[ \begin{array}{lllr}
+\mbox{$?\; t_1, \ldots, t_k \in descendants(T):$} & \mbox{$k = k_{min}$},&\\
+& \mbox{$t_1, \ldots, t_k$ are compatible,} & (3)\\
+& \mbox{$leaves(T) \subset descendants(t_1) \cup \ldots \cup descendants(t_k)$},  & (4)\\
+& \mbox{$\forall i \neq j \in \{1, \ldots, k\}\; (\exists\, species(t_i), species(t_j) \in S \Rightarrow$} & \\
+& \indent \mbox{$\forall r \in R: \{species(t_i), species(t_j)\} \not \subset species(r))$}. & (5)
+\end{array} \]
+
 \end{pp}
 To do so, we will first exclude all the terms that violate the stoichiometry preserving property~(5). We thus obtain an exact set cover problem. We say that a subset $S$ covers its own elements.
 
@@ -534,7 +546,7 @@ Given a set $X$ and a collection of its finite subsets $\Psi$, such that $\bigcu
 \end{setc}
 \newtheorem{rem}[rm]{Remark}
 \begin{rem}
- Set cover is \textit{NP}-complete~\cite{Cormen2001}.
+ Set cover is \textit{NP}-complete~\cite{karp72}.
 \end{rem}
 
 \newtheorem{esetc}[pbm]{Problem}
@@ -554,9 +566,7 @@ Note, that in this case an exact cover always exists, e.g. the one formed by all
 \subsubsection*{Choice of the ontology}
 We will assume that any term that violates property~(5) is removed from the ontology. Note, that the term $T$ is also removed.
 
-%by removing every such term, and moving its child terms one level up in the hierarchy, so that they become child terms of each of its parent terms. From the graph point of view, it means that for each removed vertex (corresponding to an eliminated term) an edge is added between every source vertex of its input edges and every target vertex of its output edges. 
-
-If the ontology has no multiple inheritance, i.e. $\forall S, \tilde{S} \in \Psi \; S \cap \tilde{S} \neq \emptyset \implies S \subseteq \tilde{S} \lor \tilde{S} \subseteq S$, the problem becomes trivial: The set of the root terms forms the solution. The size of the solution though depends on the characteristics of the ontology, e.g. for a completely flat ontology (i.e., a graph with no edges) the solution will consist of singleton equivalence classes.
+If the ontology has no multiple inheritance, i.e. $\forall S, \tilde{S} \in \Psi \; S \cap \tilde{S} \neq \emptyset \Rightarrow S \subseteq \tilde{S} \lor \tilde{S} \subseteq S$, the problem becomes trivial: The set of the root terms forms the solution. The size of the solution though depends on the characteristics of the ontology, e.g. for a completely flat ontology (i.e., a graph with no edges) the solution will consist of singleton equivalence classes.
 
 If the multiple inheritance is allowed, any $\Psi \subseteq 2^X$ becomes possible, and the problem becomes \textit{NP}-complete. 
 
@@ -584,15 +594,13 @@ Moreover, it turns out that using only hierarchical relationships in the ChEBI o
 
 \newtheorem{dirgent}[def]{Definition}
 \begin{dirgent}
-Term $t$ is a \underline{generalized direct descendant/ancestor} of a term $T$ if and only if $t$ or a conjugate base/acid of $t$ is a direct descendant/ancestor of $T$ or of a conjugate base/acid of $T$.
+Term $t$ is a \emph{generalized direct descendant/ancestor} of a term $T$ if and only if $t$ or a conjugate base/acid of $t$ is a direct descendant/ancestor of $T$ or of a conjugate base/acid of $T$.
 \end{dirgent} 
 
 \newtheorem{gent}[def]{Definition}
 \begin{gent}
-Term $t$ is a \underline{generalized descendant/ancestor} of a term $T$ if and only if $t$ is a generalized direct descendant/ancestor of $T$ or of any generalized descendant/ancestor of $T$.
+Term $t$ is a \emph{generalized descendant/ancestor} of a term $T$ if and only if $t$ is a generalized direct descendant/ancestor of $T$ or of any generalized descendant/ancestor of $T$.
 \end{gent} 
-
-
 
 We will extend $\Psi$ so that it has closure under the operation of relative complement: $\forall S,\tilde{S} \in \Psi \; S\backslash\tilde{S} \in \Psi$. This will allow for solving the set cover problem instead of the exact cover one:  As $\Psi$ is closed under the operation of complement intersection, we can obtain an exact set cover $\tilde{C}$ from any set cover $C = \{S_1, S_2, \ldots, S_m\}$ by replacing its elements with their relative complements with the previous elements of $C$: $\tilde{C} = \{S_1, S_2 \backslash S_1, \ldots, S_m \backslash \bigcup^{m - 1}_{i = 1}{S_i}\}$.
 
@@ -650,38 +658,17 @@ We have applied our method to three metabolic models that describe the \textit{$
 
 In \textit{Yarrowia lypolitica} fatty acid oxidation happens in the peroxisome compartment, so we have extracted a sub-model that includes only those species and reactions that occur in the peroxisome (additional file~1). 
 
-The \textit{Yarrowia lypolitica} model before and after generalization is represented in the figure~\ref{fig:yali}.
+The \textit{Yarrowia lypolitica} model before and after generalization is represented in the figures~\ref{fig:bf} and~\ref{fig:yali}.
 The generalized \textit{$\beta$-oxidation of fatty acids} models of \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} are shown in figure~\ref{fig:gen}.
- 
-\begin{figure}  
-\includegraphics[scale=1]{pics/yali.png} 
 
-      The figure shows the \textit{Yarrowia lypolitica} fatty acid oxidation model before (top right) and after (bottom left) generalization. 
-      
-      The generalized model describes the \textit{$\beta$-oxidation} cycle in a more generic way: as a transformation of \textit{fatty acyl-CoA} into \textit{dehydroacyl-CoA}, then into \textit{hydroxyacy fatty acyl-CoA}, \textit{3-ketoacyl-CoA}, and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the specific model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species presented in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). The latter, more precise model, is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{stearoyl-CoA}: there exists a "short-cut" reaction, producing it directly from another \textit{fatty acyl-CoA}, avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.
-      
-      (The figure is produced using the Tulip~\cite{Auber04} graph visualization tool.)
-\caption{Generalization of the \textit{Yarrowia lypolitica} model}
-\label{fig:yali}
-\end{figure}
+\section*{Discussions}
 
-\begin{figure}
-\includegraphics[]{pics/sace_ecoli.png} 
+We have developed a method that provides a ``zoomed-out'' view of a metabolic model, that keeps its essential structure but hides the details. 
 
-      The figure shows the generalizations of \textit{Escherichia coli} (left) and \textit{Saccharomyces cerevisiae} (right) fatty acid oxidation models.
-      
-      Generalization makes mistakes in the initial model more prominent. For example, in the generalized model of \textit{Saccharomyces cerevisiae} fatty oxidation is not a cycle, as it is in the generalized model of \textit{Escherichia coli}.  This is caused by the missing reactions operating with \textit{hydroxy fatty acyls-CoA}, present in the \textit{Escherichia coli} model.
-      
-      (The figure is produced using the Tulip graph visualization tool.)
-\caption{Generalization of the \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} models}
-\label{fig:gen}
-\end{figure}
+We have implemented our method as a Python script, that is freely available for download from \url{somewhere}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces two SBML files as an output: an original file with the \emph{sbml-groups} package annotations, and an sbml file with the generalized model.
 
+We have applied our method to three metabolic models describing \emph{beta-oxidation of fatty acids} and have shown that it helps finding gaps, and peculiarities in the models, as well as compresses the information stored in the model, which can be used for model visualisation and model comparison.
 
-\section*{Conclusion}
-TODO: We can merge, compare, etc. models using this technique.
-
-\newpage
 %	\section*{Discussion}
 %		Generalization as rules: given an ontology and a population of models, 
 %we can define a most informative set of graph rewriting rules
@@ -694,12 +681,21 @@ TODO: We can merge, compare, etc. models using this technique.
 %			
 %
 
+\bigskip
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Competing interests}
+The authors declare that they have no competing interests.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Author's contributions}
+    Text for this section \ldots    
 
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Acknowledgements}
+  \ifthenelse{\boolean{publ}}{\small}{}
+  Text for this section \ldots
+ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                  The Bibliography                       %%
 %%                                                         %%              
@@ -719,13 +715,91 @@ TODO: We can merge, compare, etc. models using this technique.
 \newpage
 {\ifthenelse{\boolean{publ}}{\footnotesize}{\small}
  \bibliographystyle{bmc_article}  % Style BST file
-  \bibliography{db}
- }     % Bibliography file (usually '*.bib' ) 
+  \bibliography{db} }     % Bibliography file (usually '*.bib' ) 
 
 %%%%%%%%%%%
 
 \ifthenelse{\boolean{publ}}{\end{multicols}}{}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Figures                       %%
+%%                               %%
+%% NB: this is for captions and  %%
+%% Titles. All graphics must be  %%
+%% submitted separately and NOT  %%
+%% included in the Tex document  %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%
+%% Do not use \listoffigures as most will included as separate files
+
+\section*{Figures}
+\subsection*{Figure 1 - \textit{Yarrowia lypolitica} model before the generalization}
+\includegraphics[scale=0.23]{pics/pero_before_colored.png} 
+      The figure shows \textit{Yarrowia lypolitica} fatty acid oxidation model before generalization. Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products. Ubiquitous species are of smaller size and coloured gray. Non-ubiquitous species are divided into six equivalence classes, and coloured accordingly. Reactions are divided into fifteen equivalence classes, also represented by different colours.
+      
+      The size of the model does not allow for readability of the species labels, thus we do not show them.
+      
+      (The figure is produced using the Tulip~\cite{Auber04} graph visualization tool.)
+\label{fig:bf}
+
+\subsection*{Figure 2 - Generalization of the \textit{Yarrowia lypolitica} model}  
+\includegraphics[scale=0.17]{pics/yali_after.png} 
+
+      The figure shows the generalization of the \textit{Yarrowia lypolitica} fatty acid oxidation model (shown in figure~\ref{fig:bf}). This model operates with quotient species and reactions. For example, the violet \textit{dehydroacyl-CoA} node is a quotient of \textit{hexadec-2-enoyl-CoA}, \textit{oleoyl-CoA}, \textit{tetradecenoyl-CoA}, \textit{trans-dec-2-enoyl-CoA}, \textit{trans-dodec-2-enoyl-CoA}, \textit{trans-hexacos-2-enoyl-CoA}, \textit{trans-octadec-2-enoyl-CoA}, and \textit{trans-tetradec-2-enoyl-CoA} (coloured violet in figure~\ref{fig:bf}). In a similar manner, the light-green \textit{acyl-CoA oxidase} quotient reaction, that converts \textit{fatty acyl-CoA} (yellow) into \textit{dehydroacyl-CoA} (violet), generalizes six corresponding light-green reactions of the initial model (figure~\ref{fig:bf}).
+      
+      The generalized model describes \textit{$\beta$-oxidation} in a more generic way: as a transformation of \textit{fatty acyl-CoA} (yellow) into \textit{dehydroacyl-CoA} (violet), then into \textit{hydroxyacy fatty acyl-CoA} (dark green), \textit{3-ketoacyl-CoA} (magenta), and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the specific model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species presented in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). That is why the \textit{beta-oxidation} chain of the reactions in the initial model, transforming step-by-step the fatty-acyl-CoA with the longest carbon chain into the one with the shortest chain, in the generalized model appears as a cycle (generalizing all the \textit{fatty-acyls-CoA} into one species, regardless the chain-length).
+      
+      The more precise model, is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (stearoyl-CoA)} (yellow): there exists a "short-cut" reaction (orange), producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.
+      
+      (The figure is produced using the Tulip graph visualization tool.)
+\label{fig:yali}
+
+\subsection*{Figure 3 - Generalization of the \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} models}
+\includegraphics[]{pics/sace_ecoli.png} 
+
+      The figure shows the generalizations of the \textit{Escherichia coli} (left) and \textit{Saccharomyces cerevisiae} (right) fatty acid oxidation models. In the generalized model of \textit{Saccharomyces cerevisiae} fatty oxidation is not a cycle, as it is in the generalized models of \textit{Escherichia coli} and of \textit{Yarrowia lypolitica} (figure~\ref{fig:yali}).  This is caused by the missing reactions operating with \textit{hydroxy fatty acyls-CoA} (green), present in the \textit{Escherichia coli} model.
+      
+      (The figure is produced using the Tulip graph visualization tool.)
+\label{fig:gen}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Tables                        %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Use of \listoftables is discouraged.
+%%
+%\section*{Tables}
+%  \subsection*{Table 1 - Sample table title}
+%    Here is an example of a \emph{small} table in \LaTeX\ using  
+%    \verb|\tabular{...}|. This is where the description of the table 
+%    should go. \par \mbox{}
+%    \par
+%    \mbox{
+%      \begin{tabular}{|c|c|c|}
+%        \hline \multicolumn{3}{|c|}{My Table}\\ \hline
+%        A1 & B2  & C3 \\ \hline
+%        A2 & ... & .. \\ \hline
+%        A3 & ..  & .  \\ \hline
+%      \end{tabular}
+%      }
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Additional Files              %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{Additional Files}
+  \subsection*{Additional file 1 --- The peroxisome compartment of the \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}) model}
+    A sub-model of the \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}) model that includes only those species and reactions that occur in the peroxisome compartment. In  SBML level 2 version 4\cite{Hucka08} format with ChEBI annotations.
 
 \end{bmcformat}
 \end{document}
