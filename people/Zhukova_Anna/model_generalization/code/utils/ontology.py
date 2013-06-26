@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-from utils.misc import add2map
+from utils.misc import add2map, removeFromMap
 
 __author__ = 'anna'
 
@@ -30,13 +30,6 @@ def addMiriamPrefix(urn):
     miriam_prefix = "http://identifiers.org/"
     chebi_prefix = "obo.chebi/"
     return "{0}{1}{2}".format(miriam_prefix, chebi_prefix, urn)
-
-
-def findChebi(annotations):
-    for annotation in annotations:
-        if annotation and annotation.lower().find("chebi") != -1:
-            return annotation
-    return None
 
 
 def inducedOntology(terms, onto, relationships={"is_a"}):
@@ -271,20 +264,6 @@ class Term:
         return "{0}({1})".format(self.getId(), self.getName())
 
 
-def addToMap(mp, key, value):
-    if key in mp:
-        mp[key].add(value)
-    else:
-        mp[key] = {value}
-
-
-def removeFromMap(mp, key, value):
-    if key in mp:
-        mp[key] -= {value}
-        if not mp[key]:
-            del mp[key]
-
-
 class Ontology:
     def __init__(self):
         self.roots = set()
@@ -301,9 +280,9 @@ class Ontology:
 
     def addRelationship(self, subj, rel, obj):
         relationship = (subj, rel, obj)
-        addToMap(self.rel_map, subj, relationship)
-        addToMap(self.rel_map, obj, relationship)
-        addToMap(self.rel_map, rel, relationship)
+        add2map(self.rel_map, subj, relationship)
+        add2map(self.rel_map, obj, relationship)
+        add2map(self.rel_map, rel, relationship)
 
     # role: 0 for any, 1 for subj, 2 for obj
     def getTermRelationships(self, term_id, rel=None, role=0):

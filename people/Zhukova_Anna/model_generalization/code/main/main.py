@@ -7,7 +7,7 @@ from libsbml import SBMLReader, SBMLDocument, writeSBMLToFile, BQB_IS
 from generalization.generalize import generalize
 from generalization.mark_ubiquitous import getUbiquitousSpeciesSet
 from utils.annotate_with_chebi import getSpecies2chebi
-from utils.ontology import parse, addMiriamPrefix, subOntology, Term
+from utils.ontology import parse, addMiriamPrefix, subOntology
 from utils.rdf_annotation_helper import addAnnotation
 from utils.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
 from utils.sbml_creation_helper import copyElements, createSpecies, createReaction, removeUnusedElements
@@ -152,6 +152,20 @@ def main(argv=None):
 def getCompartment(reaction, model):
     s_id = (getReactants(reaction) | getProducts(reaction)).pop()
     return model.getSpecies(s_id).getCompartment()
+
+
+def filterReactionByNotTransport(reaction, model):
+    c_id = None
+    for speciesId in getReactants(reaction) | getProducts(reaction):
+        species = model.getSpecies(speciesId)
+        compartment_id = species.getCompartment()
+        if not compartment_id:
+            return False
+        if not c_id:
+            c_id = compartment_id
+        if compartment_id != c_id:
+            return False
+    return True
 
 
 if __name__ == "__main__":
