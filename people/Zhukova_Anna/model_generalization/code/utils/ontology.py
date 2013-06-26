@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from utils.misc import add2map
 
 __author__ = 'anna'
 
@@ -78,8 +79,9 @@ def inducedOntology(terms, onto, relationships={"is_a"}):
     return ontology
 
 
-def subOntology(onto, terms_collection, relationships={"is_a"}, step=None):
+def subOntology(onto, terms_collection, relationships={"is_a"}, step=None, min_deepness=None):
     terms = set()
+    # level2term = {}
 
     def addT(term, step=None):
         if step is not None and step <= 0:
@@ -89,7 +91,10 @@ def subOntology(onto, terms_collection, relationships={"is_a"}, step=None):
             step = step - 1 if step else None
             if "is_a" in relationships:
                 for parent_id in term.getParentIds():
-                    addT(onto.getTerm(parent_id), step)
+                    p_term = onto.getTerm(parent_id)
+                    if not min_deepness or max(onto.getLevel(p_term)) >= min_deepness:
+                        # add2map(level2term, max(onto.getLevel(p_term)), p_term.getName())
+                        addT(p_term, step)
             for (subj, rel, obj) in onto.getTermRelationships(term.getId(), None, 0):
                 if not (rel in relationships):
                     continue
@@ -100,6 +105,9 @@ def subOntology(onto, terms_collection, relationships={"is_a"}, step=None):
 
     for t in terms_collection:
         addT(t, step)
+
+    # for level in sorted(level2term.keys()):
+    #     print level, " : ", level2term[level]
     return inducedOntology(terms, onto, relationships)
 
 

@@ -1,5 +1,6 @@
 from libsbml import BQB_IS
-from utils.ontology import removeMiriamPrefix, addMiriamPrefix
+from utils.misc import add2map
+from utils.ontology import removeMiriamPrefix, addMiriamPrefix, Term
 from utils.rdf_annotation_helper import addAnnotation, getAllQualifierValues
 
 __author__ = 'anna'
@@ -37,9 +38,16 @@ def getNames(entity):
 
 
 def getSpecies2chebi(model, species_list, chebi):
+    # a fake term to annotate species
+    # for which we'll not find any term in ChEBI
+    unknown = Term(t_id="chebi:unknown", name="unknown")
+
     species2chebi = {}
     usedTerms = set()
-    species2entity = {}
+    entity2species = {}
+
+    # process annotated ones
+    # and find those that need to be annotated
     for species in species_list:
         term = getTerm(species, chebi)
         entity = species
@@ -55,13 +63,17 @@ def getSpecies2chebi(model, species_list, chebi):
             usedTerms.add(term)
             continue
         else:
-            species2entity[species] = entity
-    for species, entity in species2entity.iteritems():
+            add2map(entity2species, entity, species)
+
+    # annotate unannotated
+    for entity, species_set in entity2species.iteritems():
         name, name_bis = getNames(entity)
         possibilities = chebi.getIdsByName(name)
         if not possibilities:
             possibilities = chebi.getIdsByName(name_bis)
         if not possibilities:
+            for species in species_set:
+                species2chebi[species.getId()] = unknown
             continue
         possibilities = {chebi.getTerm(it) for it in possibilities}
         options = set()
@@ -70,7 +82,10 @@ def getSpecies2chebi(model, species_list, chebi):
             options |= chebi.getEqualTerms(it)
         intersection = options & usedTerms
         term = intersection.pop() if intersection else possibilities.pop()
-        species2chebi[species.getId()] = term
+        for species in species_set:
+            species2chebi[species.getId()] = term
         addAnnotation(entity, BQB_IS, addMiriamPrefix(term.getId()))
         usedTerms.add(term)
+
+    chebi.addTerm(unknown)
     return species2chebi
