@@ -36,8 +36,8 @@ def getNames(entity):
     return name, name_bis
 
 
-def getSpecies2chebi_id(model, species_list, chebi):
-    species2chebi_id = {}
+def getSpecies2chebi(model, species_list, chebi):
+    species2chebi = {}
     usedTerms = set()
     species2entity = {}
     for species in species_list:
@@ -51,7 +51,7 @@ def getSpecies2chebi_id(model, species_list, chebi):
                     entity = s_type
                     term = getTerm(s_type, chebi)
         if term:
-            species2chebi_id[species.getId()] = term.getId()
+            species2chebi[species.getId()] = term
             usedTerms.add(term)
             continue
         else:
@@ -70,7 +70,7 @@ def getSpecies2chebi_id(model, species_list, chebi):
             options |= chebi.getEqualTerms(it)
         intersection = options & usedTerms
         term = intersection.pop() if intersection else possibilities.pop()
-        species2chebi_id[species.getId()] = term.getId()
+        species2chebi[species.getId()] = term
         addAnnotation(entity, BQB_IS, addMiriamPrefix(term.getId()))
         usedTerms.add(term)
-    return species2chebi_id
+    return species2chebi

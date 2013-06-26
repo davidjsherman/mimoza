@@ -78,29 +78,28 @@ def inducedOntology(terms, onto, relationships={"is_a"}):
     return ontology
 
 
-def subOntology(onto, ids, relationships={"is_a"}, step=None):
+def subOntology(onto, terms_collection, relationships={"is_a"}, step=None):
     terms = set()
 
-    def addT(term_id, step=None):
+    def addT(term, step=None):
         if step is not None and step <= 0:
             return
-        term = onto.getTerm(term_id)
         if term and not (term in terms):
             terms.add(term)
             step = step - 1 if step else None
             if "is_a" in relationships:
                 for parent_id in term.getParentIds():
-                    addT(parent_id, step)
-            for (subj, rel, obj) in onto.getTermRelationships(term_id, None, 0):
+                    addT(onto.getTerm(parent_id), step)
+            for (subj, rel, obj) in onto.getTermRelationships(term.getId(), None, 0):
                 if not (rel in relationships):
                     continue
-                addT(subj, step)
-                addT(obj, step)
+                addT(onto.getTerm(subj), step)
+                addT(onto.getTerm(obj), step)
         else:
             return
 
-    for t_id in ids:
-        addT(t_id, step)
+    for t in terms_collection:
+        addT(t, step)
     return inducedOntology(terms, onto, relationships)
 
 
@@ -506,7 +505,7 @@ class Ontology:
             # print "  draft ", [t.getName() for t in common]
         result = set(common)
         # print " common ", [t.getName() for t in common]
-        return filter(lambda it: not self.getAnyChildren(it, False) & result, common)
+        return filter(lambda it: not self.getAnyChildren(it, False, set()) & result, common)
 
     def removeRelationships(self, relationships, brutally=False):
         for (subj_id, r, o_id) in relationships:

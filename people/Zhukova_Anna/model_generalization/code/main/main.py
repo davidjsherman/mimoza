@@ -6,10 +6,10 @@ import sys
 from libsbml import SBMLReader, SBMLDocument, writeSBMLToFile, BQB_IS
 from generalization.generalize import generalize
 from generalization.mark_ubiquitous import getUbiquitousSpeciesSet
-from utils.annotate_with_chebi import getSpecies2chebi_id
+from utils.annotate_with_chebi import getSpecies2chebi
 from utils.ontology import parse, addMiriamPrefix, subOntology
 from utils.rdf_annotation_helper import addAnnotation
-from utils.reaction_filters import filterReactionByCompartmentOfAllParticipants, getReactants, getProducts, filterReactionByNotTransport
+from utils.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
 from utils.sbml_creation_helper import copyElements, createSpecies, createReaction, removeUnusedElements
 from utils.usage import Usage
 from utils.misc import add2map
@@ -27,12 +27,18 @@ usage: main.py --model model.xml --chebi chebi.obo --outmodel output_model.xml
 '''
 
 
-def main(argv=None):
-    """
+def generateOutSBMLName(inSBML, outSBML):
+    if not outSBML and inSBML:
+        extension = inSBML.find(".xml")
+        if extension == -1:
+            extension = inSBML.find(".sbml")
+        if extension == -1:
+            extension = len(inSBML)
+        outSBML = "{0}_generalized.xml".format(inSBML[:extension])
+    return outSBML
 
-    :param argv:
-    :return: :raise:
-    """
+
+def main(argv=None):
     if argv is None:
         argv = sys.argv
     try:
@@ -54,11 +60,12 @@ def main(argv=None):
             if option in ("-o", "--outmodel"):
                 outSBML = value
 
-        inSBML = "/Users/anna/Downloads/MODEL1111190000.xml"
-        outSBML = "/Users/anna/Downloads/yali_loira_gen_bis.xml"
-        chebi = "/Users/anna/Documents/PhD/gforge/pathtastic/runs/YALI/annotation/chebi.obo"
+        # inSBML = "/Users/anna/Downloads/MODEL1111190000.xml"
+        # chebi = "/Users/anna/Documents/PhD/gforge/pathtastic/runs/YALI/annotation/chebi.obo"
 
-        if not inSBML or not chebi or not outSBML:
+        outSBML = generateOutSBMLName(inSBML, outSBML)
+
+        if not inSBML or not chebi:
             raise Usage(help_message)
 
         reader = SBMLReader()
@@ -76,20 +83,17 @@ def main(argv=None):
 
         ontology = parse(chebi)
         species = inputModel.getListOfSpecies()
-        all_species_id2chebi_id = getSpecies2chebi_id(inputModel, species, ontology)
-        ontology = subOntology(ontology, set(all_species_id2chebi_id.values()),
-                               relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=5)
-        ubiquitous_chebi_ids = getUbiquitousSpeciesSet(inputModel.getListOfReactions(), all_species_id2chebi_id,
-                                                       ontology, threshold=30)
-        species_id2chebi_id = dict(
-            filter(lambda (s_id, t_id): not (t_id in ubiquitous_chebi_ids), all_species_id2chebi_id.iteritems()))
-
-        print [ontology.getTerm(u_id).getName() for u_id in ubiquitous_chebi_ids]
+        species_id2chebi = getSpecies2chebi(inputModel, species, ontology)
+        ontology = subOntology(ontology, set(species_id2chebi.values()),
+                               relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=6)
+        species_id2chebi = {s_id: ontology.getTerm(t.getId()) for (s_id, t) in species_id2chebi.iteritems()}
+        ubiquitous_chebi = getUbiquitousSpeciesSet(inputModel.getListOfReactions(), species_id2chebi, ontology,
+                                                   threshold=25)
+        print "ubiquitous: ", [it.getName() for it in ubiquitous_chebi]
         reactions = filter(lambda r: filterReactionByNotTransport(r, inputModel), inputModel.getListOfReactions())
 
-        species_id2chebi_term = {s_id: ontology.getTerm(t_id) for (s_id, t_id) in species_id2chebi_id.iteritems()}
-
-        clu2s_ids, clu2rs, s_id2clu, r2clu = generalize(reactions, species_id2chebi_term, ontology)
+        clu2s_ids, clu2rs, s_id2clu, r2clu = generalize(reactions, species_id2chebi, ubiquitous_chebi, ontology)
+        print "---saving generalized species---"
         for clu, species_ids in clu2s_ids.iteritems():
             comp2s_ids = {}
             for s_id in species_ids:
@@ -105,6 +109,7 @@ def main(argv=None):
                 else:
                     del s_id2clu[s_ids.pop()]
 
+        print "---saving generalized reactions---"
         generalize_species = lambda s_id: s_id2clu[s_id] if s_id in s_id2clu else s_id
         for clu, r_set in clu2rs.iteritems():
             comp2rs = {}
@@ -113,15 +118,19 @@ def main(argv=None):
                 add2map(comp2rs, c_id, r)
             for c_id, rs in comp2rs.iteritems():
                 representative = rs.pop()
-                reactants = [generalize_species(it) for it in getReactants(representative)]
-                products = [generalize_species(it) for it in getProducts(representative)]
-                print "+1"
-                createReaction(genModel, reactants, products,
-                               "{0}{1}".format("generalized " if len(rs) > 1 else "", representative.getName()))
+                reactants = getReactants(representative)
+                products = getProducts(representative)
+                if not rs and not (reactants | products) & set(s_id2clu.keys()):
+                    genModel.addReaction(representative)
+                else:
+                    reactants = [generalize_species(it) for it in reactants]
+                    products = [generalize_species(it) for it in products]
+                    createReaction(genModel, reactants, products,
+                                   "{0}{1}".format("generalized " if len(rs) > 1 else "", representative.getName()))
 
         # outputDocument.setModel(outputModel)
         # writeSBMLToFile(outputDocument, outSBML)
-        print "removing rubbish"
+        print "---removing unused elements---"
         removeUnusedElements(genModel)
 
         outDocument = SBMLDocument(inputModel.getSBMLNamespaces())

@@ -93,7 +93,6 @@ def maximize(reactions, term2clu, species_id2chebi_term):
             add2map(clu2s_ids, clu, s_id)
 
     r2clu = getReaction2cluster(reactions, s_id2clu)
-    print len(r2clu)
     alignToVKey(reactions, s_id2clu)
 
     for (clu, s_ids) in clu2s_ids.iteritems():
@@ -193,23 +192,28 @@ def getPsiSet(onto, terms, conflicts):
 
     psi = set()
 
+    set2score = {}
     for t in getParentOptions(terms, onto):
-        t_set = (onto.getAnyChildren(t, direct=False) | {t} | onto.getEqualTerms(t)) & terms
-        if len(t_set) <= 1:
-            continue
-        psi.add(tuple(sorted(t_set)))
+        t_set = (onto.getAnyChildren(t, False, set()) | {t} | onto.getEqualTerms(t)) & terms
+        if len(t_set) > 1:
+            element = tuple(sorted(t_set))
+            psi.add(element)
+            set2score[element] = (3, min(onto.getLevel(t)))
 
-        compl_set = terms - t_set
-        if len(compl_set) <= 1:
-            continue
-        psi.add(tuple(sorted(compl_set)))
+        # compl_set = terms - t_set
+        # if len(compl_set) > 1:
+        #     element = tuple(sorted(compl_set))
+        #     psi.add(element)
+        #     set2score[element] = 2
 
             #	print len(psi)
-    if len(psi) > 50:
-        psi = {tuple(t) for t in filter(lambda s: good(s, conflicts), [set(it) for it in psi])}
+    # if len(psi) > 50:
+    #     psi = {tuple(t) for t in filter(lambda it: good(set(it), conflicts), psi)}
 
     for t in terms:
-        psi.add((t,))
+        element = (t,)
+        psi.add(element)
+        set2score[element] = (3, min(onto.getLevel(t)))
 
     to_add = set()
     ps = list(psi)
@@ -218,19 +222,21 @@ def getPsiSet(onto, terms, conflicts):
         i += 1
         for ss in ps[i:]:
             sss = tuple(sorted(set(s) - set(ss)))
-            if sss and not sss in psi:
+            if sss:
                 to_add.add(sss)
+                set2score[sss] = (2, 0)
             sss = tuple(sorted(set(ss) - set(s)))
-            if sss and not sss in psi:
+            if sss:
                 to_add.add(sss)
+                set2score[sss] = (2, 0)
     psi |= to_add
 
-    return filter(lambda s: good(s, conflicts), [set(it) for it in psi])
+    return filter(lambda s: good(set(s), conflicts), psi), set2score
 
 
 def partition(terms, onto, conflicts):
-    psi = getPsiSet(onto, terms, conflicts)
-    parts = list(reversed(greedy(terms, psi)))
+    psi, set2score = getPsiSet(onto, terms, conflicts)
+    parts = list(reversed(greedy(terms, psi, set2score)))
     i = 1
     for part in parts:
         for o_part in parts[i:]:
@@ -240,22 +246,23 @@ def partition(terms, onto, conflicts):
     return parts
 
 
-def greedy(terms, psi):
+def greedy(terms, psi, set2score):
     phi = []
+    # for s in sorted(psi, key=lambda it:-len(it)):
+    #     if len(s) > 1:
+    #         print "?", [it.getName() for it in s]
     while terms and psi:
-        s = max(psi, key=lambda it: len(it & terms))
+        s = max(psi, key=lambda it: (len(set(it) & terms), set2score[it]))
         phi.append(s)
-        terms -= s
+        terms -= set(s)
         psi.remove(s)
-    return phi
+    return [set(it) for it in phi]
 
 
 def cluster2term(terms, onto):
     # print "ROOTS ", [t.getName() for t in onto.getRoots()]
     options = onto.commonPts(terms)
     if not options:
-        print "!!! DISASTER: no common parent for ", [t.getName() for t in terms]
-        raise BaseException()
         options = onto.getRoots()
     return options.pop()
 
@@ -307,19 +314,28 @@ def filterClu2Terms(term2clu):
 
 def printClusters(term2clu):
     clu2term = getClu2term(term2clu)
+    print "-- Species clusters: --"
     for clu, terms in clu2term.iteritems():
-        print clu, " ", [it.getName() for it in terms]
+        print [it.getName() for it in terms]
+        print
+
+
+def printFinalClusters(term2clu):
+    clu2term = getClu2term(term2clu)
+    print "-- Species clusters: --"
+    for clu, terms in clu2term.iteritems():
+        print clu.getName(), " <-> ", [it.getName() for it in terms]
         print
 
 
 def fixIncompatibilities(reactions, onto, species_id2chebi_term, interesting_terms):
     print "---eq-0---"
     term2clu = computeEq0(interesting_terms)
-    printClusters(term2clu)
+    # printClusters(term2clu)
     print "---maximize---"
     term2clu = maximize(reactions, term2clu, species_id2chebi_term)
     filterClu2Terms(term2clu)
-    printClusters(term2clu)
+    # printClusters(term2clu)
     print "---stoich---"
     term2clu = fixStoich(reactions, term2clu, species_id2chebi_term, onto)
     filterClu2Terms(term2clu)
@@ -327,16 +343,17 @@ def fixIncompatibilities(reactions, onto, species_id2chebi_term, interesting_ter
     print "---maximize---"
     term2clu = maximize(reactions, term2clu, species_id2chebi_term)
     filterClu2Terms(term2clu)
-    printClusters(term2clu)
+    # printClusters(term2clu)
     # term2clu = computeRepresentatives(term2clu, getClu2term(term2clu), onto)
     print "---update---"
     term2clu = update(term2clu, onto)
+    printFinalClusters(term2clu)
     print "---done---"
     return term2clu
 
 
-def generalize(reactions, species_id2chebi_term, onto):
-    interesting_terms = set(species_id2chebi_term.values())
+def generalize(reactions, species_id2chebi_term, ubiquitous_chebi_terms, onto):
+    interesting_terms = set(species_id2chebi_term.values()) - ubiquitous_chebi_terms
     term2clu = fixIncompatibilities(reactions, onto, species_id2chebi_term, interesting_terms)
     if not term2clu:
         return None
