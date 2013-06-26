@@ -126,7 +126,7 @@ def main(argv=None):
         ontology = parse(chebi)
         species_id2chebi = getSpecies2chebi(inputModel, species, ontology)
         ontology = subOntology(ontology, set(species_id2chebi.values()),
-                               relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=5,
+                               relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=6,
                                min_deepness=10)
         species_id2chebi = {s_id: ontology.getTerm(t.getId()) for (s_id, t) in species_id2chebi.iteritems()}
         ubiquitous_chebi = getUbiquitousSpeciesSet(inputModel.getListOfReactions(), species_id2chebi, ontology,

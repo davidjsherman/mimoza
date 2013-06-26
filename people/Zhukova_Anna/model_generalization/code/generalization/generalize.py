@@ -4,10 +4,10 @@ from utils.misc import add2map
 __author__ = 'anna'
 
 
-def getReactions2Factor(reactions, s_id2clu, s_id2chebi):
+def getReactions2Factor(reactions, term2clu, s_id2chebi):
     vk2r = {}
     for r in reactions:
-        key = getVerticalKey(r, s_id2clu, s_id2chebi)
+        key = getVerticalKey(r, term2clu, s_id2chebi)
         if key in vk2r:
             vk2r[key].append(r)
         else:
@@ -15,9 +15,9 @@ def getReactions2Factor(reactions, s_id2clu, s_id2chebi):
     return vk2r.values()
 
 
-def getVerticalKey(r, s_id2clu, s_id2chebi):
+def getVerticalKey(r, term2clu, s_id2chebi):
     ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes \
-        = getKeyElements(r, s_id2clu, s_id2chebi)
+        = getKeyElements(r, term2clu, s_id2chebi)
     if r.getReversible():
         if needToReverse(ubiquitous_reactants, ubiquitous_products, specific_reactant_classes,
                          specific_product_classes):
@@ -31,44 +31,28 @@ def needToReverse(ubiquitous_reactants, ubiquitous_products, specific_reactant_c
         not ubiquitous_reactants and not ubiquitous_products and specific_reactant_classes > specific_product_classes)
 
 
-def getKeyElements(r, s_id2clu, s_id2chebi):
+def getKeyElements(r, term2clu, s_id2chebi):
     reactants, products = getReactants(r), getProducts(r)
-    chebi_transform = lambda it: s_id2chebi[it] if it in s_id2chebi else it
-    ub_tr = lambda f: tuple(sorted([chebi_transform(it) for it in filter(lambda it: not (it in s_id2clu), f)]))
+    chebi_transform = lambda s_ids: {s_id2chebi[s_id] if s_id in s_id2chebi else s_id for s_id in s_ids}
+    ub_tr = lambda s_ids: tuple(sorted(filter(lambda t: not (t in term2clu), chebi_transform(s_ids))))
     ubiquitous_reactants, ubiquitous_products = ub_tr(reactants), ub_tr(products)
-
-    getSpecificClasses = lambda species, id2parent: [s_id2clu[s_id] if s_id in s_id2clu else chebi_transform(s_id) for
-                                                     s_id in species]
-    sp_tr = lambda f: tuple(sorted(getSpecificClasses(filter(lambda it: it in s_id2clu, f), s_id2clu)))
+    sp_tr = lambda s_ids: tuple(sorted([term2clu[term] for term in filter(lambda t: t in term2clu, chebi_transform(s_ids))]))
     specific_reactant_classes, specific_product_classes = sp_tr(reactants), sp_tr(products)
 
     return ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes
 
 
-def alignedToVKey(r, s_id2clu, s_id2chebi):
+def alignedToVKey(r, term2clu, s_id2chebi):
     if not r.getReversible():
         return True
     ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes \
-        = getKeyElements(r, s_id2clu, s_id2chebi)
+        = getKeyElements(r, term2clu, s_id2chebi)
     return not needToReverse(ubiquitous_reactants, ubiquitous_products, specific_reactant_classes,
                              specific_product_classes)
 
 
-def alignToVKey(reactions, s_id2clu, s_id2chebi):
-    for r in reactions:
-        if not alignedToVKey(r, s_id2clu, s_id2chebi):
-            reactants = list(r.getListOfReactants())
-            products = list(r.getListOfProducts())
-            for p_s in products:
-                r.addReactant(p_s)
-                r.removeProduct(0)
-            for r_s in reactants:
-                r.addProduct(r_s)
-                r.removeReactant(0)
-
-
-def getReaction2cluster(reactions, s_id2clu, s_id2chebi):
-    rs_clusters = getReactions2Factor(reactions, s_id2clu, s_id2chebi)
+def getReaction2cluster(reactions, term2clu, s_id2chebi):
+    rs_clusters = getReactions2Factor(reactions, term2clu, s_id2chebi)
     r2clu, i = {}, 0
     for rs in rs_clusters:
         for r in rs:
@@ -77,12 +61,18 @@ def getReaction2cluster(reactions, s_id2clu, s_id2chebi):
     return r2clu
 
 
-def getRReactions(s_id, reactions):
-    return filter(lambda r: s_id in getReactants(r), reactions)
+def getSpeciesIdsByTerm(term, species_id2term):
+    return set(filter(lambda s_id: species_id2term[s_id] == term, species_id2term.keys()))
 
 
-def getPReactions(s_id, reactions):
-    return filter(lambda r: s_id in getProducts(r), reactions)
+def getRReactions(term, reactions, species_id2term):
+    s_ids = getSpeciesIdsByTerm(term, species_id2term)
+    return filter(lambda r: s_ids & getReactants(r), reactions)
+
+
+def getPReactions(term, reactions, species_id2term):
+    s_ids = getSpeciesIdsByTerm(term, species_id2term)
+    return filter(lambda r: s_ids & getProducts(r), reactions)
 
 
 def getReactions(s_id, reactions):
@@ -104,33 +94,25 @@ def mergeBasedOnNeighbours(lst):
     return new_lst
 
 
-def maximize(reactions, term2clu, species_id2chebi_term):
-    s_id2clu, clu2s_ids = {}, {}
-    for s_id, term in species_id2chebi_term.iteritems():
-        if term in term2clu:
-            clu = term2clu[term]
-            s_id2clu[s_id] = clu
-            add2map(clu2s_ids, clu, s_id)
+def maximize(reactions, term2clu, species_id2term):
+    clu2terms = getClu2term(term2clu)
 
-    r2clu = getReaction2cluster(reactions, s_id2clu, species_id2chebi_term)
-    # alignToVKey(reactions, s_id2clu)
+    r2clu = getReaction2cluster(reactions, term2clu, species_id2term)
 
-    for (clu, s_ids) in clu2s_ids.iteritems():
-        if len(s_ids) <= 1:
+    for (clu, terms) in clu2terms.iteritems():
+        if len(terms) <= 1:
             continue
         neighbours2terms = {}
-        for s_id in s_ids:
-            # reactions this species participated in
-            transform_r = lambda r: ("in", r2clu[r]) if alignedToVKey(r, s_id2clu, species_id2chebi_term) else (
+        for term in terms:
+            # reactions this term participated in
+            transform_r = lambda r: ("in", r2clu[r]) if alignedToVKey(r, term2clu, species_id2term) else (
                 "out", r2clu[r])
-            transform_p = lambda r: ("out", r2clu[r]) if alignedToVKey(r, s_id2clu, species_id2chebi_term) else (
+            transform_p = lambda r: ("out", r2clu[r]) if alignedToVKey(r, term2clu, species_id2term) else (
                 "in", r2clu[r])
-            neighbours = {transform_r(r) for r in getRReactions(s_id, reactions)} | {transform_p(r) for r in
-                                                                                     getPReactions(s_id, reactions)}
-            # neighbours = {("in", r2clu[r]) for r in getRReactions(s_id, reactions)} | {("out", r2clu[r]) for r in
-            #                                                                            getPReactions(s_id, reactions)}
+            neighbours = {transform_r(r) for r in getRReactions(term, reactions, species_id2term)} | \
+                         {transform_p(r) for r in getPReactions(term, reactions, species_id2term)}
             key = tuple(sorted(neighbours))
-            add2map(neighbours2terms, key, species_id2chebi_term[s_id])
+            add2map(neighbours2terms, key, term)
         new_lst = mergeBasedOnNeighbours(neighbours2terms.iteritems())
         if len(new_lst) > 1:
             i = 0
@@ -330,7 +312,7 @@ def printClusters(term2clu):
     clu2term = getClu2term(term2clu)
     print "-- Species clusters: --"
     for clu, terms in clu2term.iteritems():
-        print [it.getName() for it in terms]
+        print len(terms), " ", [it.getName() for it in terms]
         print
 
 
@@ -338,7 +320,7 @@ def printFinalClusters(term2clu):
     clu2term = getClu2term(term2clu)
     print "-- Species clusters: --"
     for clu, terms in clu2term.iteritems():
-        print clu.getName(), " <-> ", [it.getName() for it in terms]
+        print clu.getName(), " <-> ", len(terms), " ", [it.getName() for it in terms]
         print
 
 
