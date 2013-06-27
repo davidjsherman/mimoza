@@ -1,5 +1,5 @@
 from utils.reaction_filters import getReactants, getProducts
-from utils.misc import add2map
+from utils.misc import add2map, invert
 
 __author__ = 'anna'
 
@@ -8,10 +8,7 @@ def getReactions2Factor(reactions, term2clu, s_id2chebi):
     vk2r = {}
     for r in reactions:
         key = getVerticalKey(r, term2clu, s_id2chebi)
-        if key in vk2r:
-            vk2r[key].append(r)
-        else:
-            vk2r[key] = [r]
+        add2map(vk2r, key, r)
     return vk2r.values()
 
 
@@ -36,9 +33,9 @@ def getKeyElements(r, term2clu, s_id2chebi):
     chebi_transform = lambda s_ids: {s_id2chebi[s_id] if s_id in s_id2chebi else s_id for s_id in s_ids}
     ub_tr = lambda s_ids: tuple(sorted(filter(lambda t: not (t in term2clu), chebi_transform(s_ids))))
     ubiquitous_reactants, ubiquitous_products = ub_tr(reactants), ub_tr(products)
-    sp_tr = lambda s_ids: tuple(sorted([term2clu[term] for term in filter(lambda t: t in term2clu, chebi_transform(s_ids))]))
+    sp_tr = lambda s_ids: tuple(
+        sorted([term2clu[term] for term in filter(lambda t: t in term2clu, chebi_transform(s_ids))]))
     specific_reactant_classes, specific_product_classes = sp_tr(reactants), sp_tr(products)
-
     return ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes
 
 
@@ -61,22 +58,16 @@ def getReaction2cluster(reactions, term2clu, s_id2chebi):
     return r2clu
 
 
-def getSpeciesIdsByTerm(term, species_id2term):
-    return set(filter(lambda s_id: species_id2term[s_id] == term, species_id2term.keys()))
+def getRReactions(term, reactions, term2s_ids):
+    return filter(lambda r: len(term2s_ids[term] & getReactants(r)) > 0, reactions)
 
 
-def getRReactions(term, reactions, species_id2term):
-    s_ids = getSpeciesIdsByTerm(term, species_id2term)
-    return filter(lambda r: s_ids & getReactants(r), reactions)
+def getPReactions(term, reactions, term2s_ids):
+    return filter(lambda r: len(term2s_ids[term] & getProducts(r)) > 0, reactions)
 
 
-def getPReactions(term, reactions, species_id2term):
-    s_ids = getSpeciesIdsByTerm(term, species_id2term)
-    return filter(lambda r: s_ids & getProducts(r), reactions)
-
-
-def getReactions(s_id, reactions):
-    return filter(lambda r: s_id in getReactants(r) or s_id in getProducts(r), reactions)
+def getReactions(term, reactions, term2s_ids):
+    return filter(lambda r: len(term2s_ids[term] & (getReactants(r) | getProducts(r))) > 0, reactions)
 
 
 def mergeBasedOnNeighbours(lst):
@@ -95,7 +86,8 @@ def mergeBasedOnNeighbours(lst):
 
 
 def maximize(reactions, term2clu, species_id2term):
-    clu2terms = getClu2term(term2clu)
+    clu2terms = invert(term2clu)
+    term2s_ids = invert(species_id2term)
 
     r2clu = getReaction2cluster(reactions, term2clu, species_id2term)
 
@@ -109,8 +101,14 @@ def maximize(reactions, term2clu, species_id2term):
                 "out", r2clu[r])
             transform_p = lambda r: ("out", r2clu[r]) if alignedToVKey(r, term2clu, species_id2term) else (
                 "in", r2clu[r])
-            neighbours = {transform_r(r) for r in getRReactions(term, reactions, species_id2term)} | \
-                         {transform_p(r) for r in getPReactions(term, reactions, species_id2term)}
+            # tr_r = lambda r: ("in", r.getName()) if alignedToVKey(r, term2clu, species_id2term) else (
+            #     "out", r.getName())
+            # tr_p = lambda r: ("out", r.getName()) if alignedToVKey(r, term2clu, species_id2term) else (
+            #     "in", r.getName())
+            # print term.getName(), {tr_r(r) for r in getRReactions(term, reactions, term2s_ids)} | \
+            #              {tr_p(r) for r in getPReactions(term, reactions, term2s_ids)}
+            neighbours = {transform_r(r) for r in getRReactions(term, reactions, term2s_ids)} | \
+                         {transform_p(r) for r in getPReactions(term, reactions, term2s_ids)}
             key = tuple(sorted(neighbours))
             add2map(neighbours2terms, key, term)
         new_lst = mergeBasedOnNeighbours(neighbours2terms.iteritems())
@@ -124,29 +122,22 @@ def maximize(reactions, term2clu, species_id2term):
     return term2clu
 
 
-def getClu2term(term2clusters):
-    clu2term = {}
-    for term, clu in term2clusters.iteritems():
-        add2map(clu2term, clu, term)
-    return clu2term
-
-
 def computeEq0(interesting_terms):
-    return {term: (0,) for term in interesting_terms}
+    clu = (0,)
+    return {term: clu for term in interesting_terms}
 
 
 def getConflicts(reactions, terms, species_id2chebi_term):
-    r2s_ids = {}
-    for s_id in species_id2chebi_term.keys():
-        if species_id2chebi_term[s_id] in terms:
-            for r in getReactions(s_id, reactions):
-                add2map(r2s_ids, r, s_id)
-    conflicts = [{species_id2chebi_term[s_id] for s_id in species_ids} for species_ids in r2s_ids.values()]
-    return filter(lambda sps: len(sps) > 1, conflicts)
+    r2terms = {}
+    term2s_ids = invert(species_id2chebi_term)
+    for term in terms:
+        for r in getReactions(term, reactions, term2s_ids):
+            add2map(r2terms, r, term)
+    return filter(lambda terms: len(terms) > 1, r2terms.values())
 
 
 def fixStoich(reactions, term2clu, species_id2chebi_term, onto):
-    clu2terms = getClu2term(term2clu)
+    clu2terms = invert(term2clu)
     for clu, terms in clu2terms.iteritems():
         if len(terms) <= 1:
             continue
@@ -167,10 +158,13 @@ def fixStoich(reactions, term2clu, species_id2chebi_term, onto):
 
 
 def getParentOptions(terms, onto):
-    options = set()
-    for t in terms:
-        options |= onto.getAnyParents(t, False, set()) | onto.getEqualTerms(t) | {t}
-    return options
+    options = onto.commonPts(terms)
+    if not options:
+        options = onto.getRoots()
+    result = set()
+    for t in options:
+        result |= onto.getAnyChildren(t, False, set()) | onto.getEqualTerms(t) | {t}
+    return result
 
 
 def getPsiSet(onto, terms, conflicts):
@@ -194,22 +188,22 @@ def getPsiSet(onto, terms, conflicts):
         if len(t_set) > 1:
             element = tuple(sorted(t_set))
             psi.add(element)
-            set2score[element] = (3, min(onto.getLevel(t)))
+            level = onto.getLevel(t)
+            set2score[element] = (3, max(level), min(level))
 
             compl_set = terms - t_set
             if len(compl_set) > 1:
                 element = tuple(sorted(compl_set))
                 psi.add(element)
-                set2score[element] = (1, 0)
-
-                #	print len(psi)
-                # if len(psi) > 50:
-                #     psi = {tuple(t) for t in filter(lambda it: good(set(it), conflicts), psi)}
+                set2score[element] = (2, 0, 0)
+                if len(psi) > 50:
+                    psi = {tuple(t) for t in filter(lambda it: good(set(it), conflicts), psi)}
 
     for t in terms:
         element = (t,)
         psi.add(element)
-        set2score[element] = (3, min(onto.getLevel(t)))
+        level = onto.getLevel(t)
+        set2score[element] = (3, max(level), min(level))
 
     to_add = set()
     ps = list(psi)
@@ -220,18 +214,25 @@ def getPsiSet(onto, terms, conflicts):
             sss = tuple(sorted(set(s) - set(ss)))
             if sss:
                 to_add.add(sss)
-                set2score[sss] = (2, 0)
+                set2score[sss] = avg_tup(set2score[s])
             sss = tuple(sorted(set(ss) - set(s)))
             if sss:
                 to_add.add(sss)
-                set2score[sss] = (2, 0)
+                set2score[sss] = avg_tup(set2score[ss])
     psi |= to_add
 
     return filter(lambda s: good(set(s), conflicts), psi), set2score
 
 
+def avg_tup(u):
+    i0, j0, k0 = u
+    return i0 - 1, j0, k0
+
+
 def partition(terms, onto, conflicts):
     psi, set2score = getPsiSet(onto, terms, conflicts)
+    # for s, score in set2score.iteritems():
+    #     print [t.getName() for t in s], " ", score
     parts = list(reversed(greedy(terms, psi, set2score)))
     i = 1
     for part in parts:
@@ -247,6 +248,7 @@ def greedy(terms, psi, set2score):
     # for s in sorted(psi, key=lambda it:-len(it)):
     #     if len(s) > 1:
     #         print "?", [it.getName() for it in s]
+    terms = set(terms)
     while terms and psi:
         s = max(psi, key=lambda it: (len(set(it) & terms), set2score[it]))
         phi.append(s)
@@ -293,7 +295,7 @@ def computeRepresentatives(term2clu, clu2term, onto):
 
 
 def update(term2clu, onto):
-    clu2terms = getClu2term(term2clu)
+    clu2terms = invert(term2clu)
     for clu, terms in clu2terms.iteritems():
         T = cluster2term(terms, onto)
         for t in terms:
@@ -302,14 +304,14 @@ def update(term2clu, onto):
 
 
 def filterClu2Terms(term2clu):
-    clu2term = getClu2term(term2clu)
+    clu2term = invert(term2clu)
     for clu, terms in clu2term.iteritems():
         if len(terms) <= 1:
             del term2clu[terms.pop()]
 
 
 def printClusters(term2clu):
-    clu2term = getClu2term(term2clu)
+    clu2term = invert(term2clu)
     print "-- Species clusters: --"
     for clu, terms in clu2term.iteritems():
         print len(terms), " ", [it.getName() for it in terms]
@@ -317,7 +319,7 @@ def printClusters(term2clu):
 
 
 def printFinalClusters(term2clu):
-    clu2term = getClu2term(term2clu)
+    clu2term = invert(term2clu)
     print "-- Species clusters: --"
     for clu, terms in clu2term.iteritems():
         print clu.getName(), " <-> ", len(terms), " ", [it.getName() for it in terms]
@@ -361,7 +363,5 @@ def generalize(reactions, species_id2chebi_term, ubiquitous_chebi_terms, onto):
             add2map(clu2s_ids, clu, s_id)
             s_id2clu[s_id] = clu
     r2clu = getReaction2cluster(reactions, s_id2clu, species_id2chebi_term)
-    clu2rs = {}
-    for r, clu in r2clu.iteritems():
-        add2map(clu2rs, clu, r)
+    clu2rs = invert(r2clu)
     return clu2s_ids, clu2rs, s_id2clu, r2clu

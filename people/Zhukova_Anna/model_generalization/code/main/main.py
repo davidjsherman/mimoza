@@ -127,11 +127,11 @@ def main(argv=None):
         species_id2chebi = getSpecies2chebi(inputModel, species, ontology)
         ontology = subOntology(ontology, set(species_id2chebi.values()),
                                relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=6,
-                               min_deepness=10)
+                               min_deepness=11)
         species_id2chebi = {s_id: ontology.getTerm(t.getId()) for (s_id, t) in species_id2chebi.iteritems()}
         ubiquitous_chebi = getUbiquitousSpeciesSet(inputModel.getListOfReactions(), species_id2chebi, ontology,
                                                    threshold=25)
-        print "ubiquitous: ", [it.getName() if it else "" for it in ubiquitous_chebi]
+        # print "ubiquitous: ", [it.getName() if it else "" for it in ubiquitous_chebi]
 
         # generalize
         clu2s_ids, clu2rs, s_id2clu, r2clu = generalize(reactions, species_id2chebi, ubiquitous_chebi, ontology)

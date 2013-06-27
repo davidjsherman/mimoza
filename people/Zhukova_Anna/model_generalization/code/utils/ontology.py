@@ -440,7 +440,9 @@ class Ontology:
             equals |= {subj, obj} - {term_id}
         return {self.getTerm(t_id) for t_id in equals}
 
-    def getAnyChildren(self, term, direct=True, checked=set()):
+    def getAnyChildren(self, term, direct=True, checked=None):
+        if not checked:
+            checked = set()
         terms = {term} | self.getEqualTerms(term)
         direct_kids = set()
         for it in terms:
@@ -456,7 +458,9 @@ class Ontology:
             result |= self.getAnyChildren(kid, direct, checked)
         return result
 
-    def getAnyParents(self, term, direct=True, checked=set()):
+    def getAnyParents(self, term, direct=True, checked=None):
+        if not checked:
+            checked = set()
         terms = {term} | self.getEqualTerms(term)
         direct_parents = set()
         for it in terms:

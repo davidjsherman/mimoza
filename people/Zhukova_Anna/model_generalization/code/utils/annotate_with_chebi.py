@@ -60,7 +60,6 @@ def getSpecies2chebi(model, species_list, chebi):
                     term = getTerm(s_type, chebi)
         if term:
             species2chebi[species.getId()] = term
-            print species.getName(), term.getName()
             usedTerms.add(term)
             continue
         else:
