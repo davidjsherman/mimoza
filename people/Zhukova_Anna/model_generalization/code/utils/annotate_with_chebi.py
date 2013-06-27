@@ -60,11 +60,12 @@ def getSpecies2chebi(model, species_list, chebi):
                     term = getTerm(s_type, chebi)
         if term:
             species2chebi[species.getId()] = term
+            print species.getName(), term.getName()
             usedTerms.add(term)
             continue
         else:
             add2map(entity2species, entity, species)
-
+    i = 0
     # annotate unannotated
     for entity, species_set in entity2species.iteritems():
         name, name_bis = getNames(entity)
@@ -72,20 +73,24 @@ def getSpecies2chebi(model, species_list, chebi):
         if not possibilities:
             possibilities = chebi.getIdsByName(name_bis)
         if not possibilities:
+            term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
+            i += 1
+            term.addSynonym(name_bis)
+            chebi.addTerm(term)
+            usedTerms.add(term)
             for species in species_set:
-                species2chebi[species.getId()] = unknown
+                species2chebi[species.getId()] = term
             continue
         possibilities = {chebi.getTerm(it) for it in possibilities}
         options = set()
         for it in possibilities:
             options.add(it)
-            options |= chebi.getEqualTerms(it)
         intersection = options & usedTerms
         term = intersection.pop() if intersection else possibilities.pop()
         for species in species_set:
             species2chebi[species.getId()] = term
+            print species.getName(), term.getName()
         addAnnotation(entity, BQB_IS, addMiriamPrefix(term.getId()))
         usedTerms.add(term)
 
-    chebi.addTerm(unknown)
     return species2chebi
