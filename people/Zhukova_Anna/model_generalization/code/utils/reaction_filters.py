@@ -199,15 +199,15 @@ def getReactionParticipants(reaction):
 
 
 def getReactants(reaction):
-    return set(map(lambda speciesRef: speciesRef.getSpecies(), reaction.getListOfReactants()))
+    return {speciesRef.getSpecies() for speciesRef in reaction.getListOfReactants()}
 
 
 def getProducts(reaction):
-    return set(map(lambda speciesRef: speciesRef.getSpecies(), reaction.getListOfProducts()))
+    return {speciesRef.getSpecies() for speciesRef in reaction.getListOfProducts()}
 
 
 def getModifiers(reaction):
-    return set(map(lambda speciesRef: speciesRef.getSpecies(), reaction.getListOfModifiers()))
+    return {speciesRef.getSpecies() for speciesRef in reaction.getListOfModifiers()}
 
 
 def _getPrefixedNotesValue(notes, result, prefix):

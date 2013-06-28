@@ -59,7 +59,7 @@ def getSpecies2chebi(model, species_list, chebi):
                     entity = s_type
                     term = getTerm(s_type, chebi)
         if term:
-            species2chebi[species.getId()] = term
+            species2chebi[species.getId()] = term.getId()
             usedTerms.add(term)
             continue
         else:
@@ -78,7 +78,7 @@ def getSpecies2chebi(model, species_list, chebi):
             chebi.addTerm(term)
             usedTerms.add(term)
             for species in species_set:
-                species2chebi[species.getId()] = term
+                species2chebi[species.getId()] = term.getId()
             continue
         possibilities = {chebi.getTerm(it) for it in possibilities}
         options = set()
@@ -87,8 +87,7 @@ def getSpecies2chebi(model, species_list, chebi):
         intersection = options & usedTerms
         term = intersection.pop() if intersection else possibilities.pop()
         for species in species_set:
-            species2chebi[species.getId()] = term
-            print species.getName(), term.getName()
+            species2chebi[species.getId()] = term.getId()
         addAnnotation(entity, BQB_IS, addMiriamPrefix(term.getId()))
         usedTerms.add(term)
 

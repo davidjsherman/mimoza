@@ -12,7 +12,7 @@ from utils.rdf_annotation_helper import addAnnotation
 from utils.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
 from utils.sbml_creation_helper import copyElements, createSpecies, createReaction, removeUnusedElements
 from utils.usage import Usage
-from utils.misc import add2map
+from utils.misc import add2map, invert
 
 __author__ = 'anna'
 
@@ -60,7 +60,9 @@ def processArgs(argv):
     return chebi, inSBML, outSBML
 
 
-def saveToGeneralizedModel(clu2rs, clu2s_ids, genModel, inputModel, s_id2clu):
+def saveToGeneralizedModel(genModel, inputModel, s_id2clu, clu2rs):
+    clu2s_ids = invert(s_id2clu)
+    print len(clu2rs)
     print "---saving generalized species---"
     for clu, species_ids in clu2s_ids.iteritems():
         comp2s_ids = {}
@@ -78,23 +80,26 @@ def saveToGeneralizedModel(clu2rs, clu2s_ids, genModel, inputModel, s_id2clu):
                 del s_id2clu[s_ids.pop()]
 
     print "---saving generalized reactions---"
-    generalize_species = lambda s_id: s_id2clu[s_id] if s_id in s_id2clu else s_id
+    generalize_species = lambda s_id: s_id2clu[s_id] if (s_id in s_id2clu) else s_id
+    s_id_to_generalize = set(s_id2clu.keys())
     for clu, r_set in clu2rs.iteritems():
         comp2rs = {}
         for r in r_set:
             c_id = getCompartment(r, inputModel)
             add2map(comp2rs, c_id, r)
         for c_id, rs in comp2rs.iteritems():
-            representative = rs.pop()
+            representative = list(rs)[0]
             reactants = getReactants(representative)
             products = getProducts(representative)
-            if not rs and not (reactants | products) & set(s_id2clu.keys()):
+            if (len(rs) == 1) and not ((reactants | products) & s_id_to_generalize):
                 genModel.addReaction(representative)
+                print "-", representative.getName()
             else:
-                reactants = [generalize_species(it) for it in reactants]
-                products = [generalize_species(it) for it in products]
+                reactants = {generalize_species(it) for it in reactants}
+                products = {generalize_species(it) for it in products}
                 createReaction(genModel, reactants, products,
                                "{0}{1}".format("generalized " if len(rs) > 1 else "", representative.getName()))
+                print "generalized " if len(rs) > 1 else "+", representative.getName()
 
     print "---removing unused elements---"
     removeUnusedElements(genModel)
@@ -124,20 +129,21 @@ def main(argv=None):
 
         # annotate with ChEBI
         ontology = parse(chebi)
-        species_id2chebi = getSpecies2chebi(inputModel, species, ontology)
-        ontology = subOntology(ontology, set(species_id2chebi.values()),
+        species_id2chebi_id = getSpecies2chebi(inputModel, species, ontology)
+        terms = [ontology.getTerm(t_id) for t_id in set(species_id2chebi_id.values())]
+        ontology = subOntology(ontology, terms,
                                relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=6,
                                min_deepness=11)
-        species_id2chebi = {s_id: ontology.getTerm(t.getId()) for (s_id, t) in species_id2chebi.iteritems()}
-        ubiquitous_chebi = getUbiquitousSpeciesSet(inputModel.getListOfReactions(), species_id2chebi, ontology,
+        ubiquitous_chebi_id = getUbiquitousSpeciesSet(inputModel.getListOfReactions(), species_id2chebi_id, ontology,
                                                    threshold=25)
         # print "ubiquitous: ", [it.getName() if it else "" for it in ubiquitous_chebi]
 
         # generalize
-        clu2s_ids, clu2rs, s_id2clu, r2clu = generalize(reactions, species_id2chebi, ubiquitous_chebi, ontology)
+        s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_id, ontology)
+        s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
 
         # save
-        saveToGeneralizedModel(clu2rs, clu2s_ids, genModel, inputModel, s_id2clu)
+        saveToGeneralizedModel(genModel, inputModel, s_id2clu, invert(r2clu))
 
         outDocument = SBMLDocument(inputModel.getSBMLNamespaces())
         outDocument.setModel(genModel)
