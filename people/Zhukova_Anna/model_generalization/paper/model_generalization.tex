@@ -656,7 +656,7 @@ The generalized \textit{$\beta$-oxidation of fatty acids} models of \textit{Esch
 
 We have developed a method that provides a ``zoomed-out'' view of a metabolic model, that keeps its essential structure but hides the details. 
 
-We have implemented our method as a Python program, that is freely available for download from \url{somewhere}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces two SBML files as an output: an original file with the \emph{sbml-groups} package annotations, and an sbml file with the generalized model.
+We have implemented our method as a Python program, that is available for download from \url{https://team.inria.fr/magnome/software/}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces a new SBML file, containing the generalized model, as an output.
 
 We have applied our method to three metabolic models describing \emph{beta-oxidation of fatty acids} and have shown that it helps finding gaps, and peculiarities in the models, as well as compresses the information stored in the model, which can be used for model visualisation and model comparison.
 
@@ -686,6 +686,8 @@ The authors declare that they have no competing interests.
 \section*{Acknowledgements}
   \ifthenelse{\boolean{publ}}{\small}{}
   The authors would like to thank Dr. Nicolas Le Nov\`{e}re for discussions on metabolic modelling and SBML, and Dr. Romain Bourqui and Dr. Antoine Lambert of the LaBRI MABioVis team for advice on graph layout.
+  
+  AZ was supported by a CORDI-S doctoral fellowship from Inria.
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                  The Bibliography                       %%
