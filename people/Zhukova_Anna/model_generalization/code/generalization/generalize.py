@@ -151,12 +151,12 @@ def fixStoich(reactions, term_id2clu, species_id2term_id, onto):
         conflicts = getConflicts(reactions, term_ids, species_id2term_id)
         if not conflicts:
             continue
-        print [onto.getTerm(t).getName() for t in term_ids]
-        print " >> ", [{onto.getTerm(n).getName() for n in ns} for ns in conflicts]
+        # print [onto.getTerm(t).getName() for t in term_ids]
+        # print " >> ", [{onto.getTerm(n).getName() for n in ns} for ns in conflicts]
         t_sets = partition(term_ids, onto, conflicts)
         i = 0
         for ts in t_sets:
-            print "---> ", [onto.getTerm(t).getName() for t in ts]
+            # print "---> ", [onto.getTerm(t).getName() for t in ts]
             i += 1
             n_clu = clu + (i,)
             for t in ts:
@@ -282,12 +282,12 @@ def greedy(terms, psi, set2score):
     return [set(it) for it in phi]
 
 
-def cluster2term(term_ids, onto):
-    # print "ROOTS ", [t.getName() for t in onto.getRoots()]
-    options = onto.commonPts({onto.getTerm(t) for t in term_ids})
-    if not options:
-        options = onto.getRoots()
-    return options.pop()
+# def cluster2term(term_ids, onto):
+#     # print "ROOTS ", [t.getName() for t in onto.getRoots()]
+#     options = onto.commonPts({onto.getTerm(t) for t in term_ids})
+#     if not options:
+#         options = onto.getRoots()
+#     return options.pop()
 
 
 # def computeRepresentatives(term2clu, clu2term, onto):
@@ -324,9 +324,12 @@ def update(term_id2clu, onto):
     used = set()
     i = 0
     for clu, term_ids in clu2term_ids.iteritems():
-        T = cluster2term(term_ids, onto)
-        if T in used:
-            T = Term(t_id=T.getId() + "_{0}".format(i), name=T.getName() + "(another)")
+        terms = {onto.getTerm(t) for t in term_ids}
+        options = set(onto.commonPts(terms)) - used
+        if options:
+            T = options.pop()
+        else:
+            T = Term(t_id="chebi:unknown_{0}".format(i), name=' or '.join([t.getName() for t in terms]))
             onto.addTerm(T)
             i += 1
         used.add(T)
@@ -344,56 +347,61 @@ def filterClu2Terms(term2clu):
 
 def printClusters(term_id2clu, onto):
     clu2term_id = invert(term_id2clu)
-    print "-- Species clusters: --"
+    print "   quotient species sets:"
     for clu, term_ids in clu2term_id.iteritems():
         if len(term_ids) == 1:
             continue
-        print len(term_ids), " ", [onto.getTerm(it).getName() for it in term_ids]
+        print "     (", len(term_ids), ") ", [onto.getTerm(it).getName() for it in term_ids]
         print
 
 
 def printFinalClusters(term_id2clu, onto):
     clu2term = invert(term_id2clu)
-    print "-- Species clusters: --"
+    print "result quotient species sets:"
     for clu, term_ids in clu2term.iteritems():
         if len(term_ids) == 1:
             continue
-        print onto.getTerm(clu).getName(), " <-> ", len(term_ids), " ", [onto.getTerm(it).getName() for it in term_ids]
+        print "   ", onto.getTerm(clu).getName(), " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in term_ids]
         print
 
 
-def fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids):
-    print "---eq-0---"
+def log(verbose, msg):
+    if verbose:
+        print msg
+
+
+def fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose):
+    log(verbose, "  computing eq 0...")
     term_id2clu = computeEq0(interesting_term_ids)
-    printClusters(term_id2clu, onto)
-    print "---maximize---"
+    # printClusters(term_id2clu, onto)
+    log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
     filterClu2Terms(term_id2clu)
-    printClusters(term_id2clu, onto)
-    print "---stoich---"
+    # printClusters(term_id2clu, onto)
+    log(verbose, "  preserving stoichiometry...")
     term_id2clu = fixStoich(reactions, term_id2clu, species_id2chebi_id, onto)
     filterClu2Terms(term_id2clu)
-    printClusters(term_id2clu, onto)
-    print "---maximize---"
+    # printClusters(term_id2clu, onto)
+    log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
     filterClu2Terms(term_id2clu)
-    printClusters(term_id2clu, onto)
+    # printClusters(term_id2clu, onto)
     # term_id2clu = computeRepresentatives(term_id2clu, getClu2term(term_id2clu), onto)
-    print "---done---"
     return term_id2clu
 
 
-def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto):
+def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose):
     interesting_term_ids = set(species_id2chebi_id.values()) - ubiquitous_chebi_ids
-    term_id2clu = fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids)
+    term_id2clu = fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose)
     if not term_id2clu:
         return None
 
     r2clu = getReaction2cluster(reactions, term_id2clu, species_id2chebi_id)
 
-    print "---update---"
+    log(verbose, "  annotating generalized terms...")
     term_id2clu = update(term_id2clu, onto)
-    printFinalClusters(term_id2clu, onto)
+    if verbose:
+        printFinalClusters(term_id2clu, onto)
 
     s_id2clu = {s_id: term_id2clu[t] for (s_id, t) in
                 filter(lambda (s_id, t): t in term_id2clu, species_id2chebi_id.iteritems())}

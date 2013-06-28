@@ -18,12 +18,12 @@ __author__ = 'anna'
 
 ##
 # main module generalizes the model.
-# usage: main.py --model model.xml --chebi chebi.obo --outmodel output_model.xml
+# usage: main.py --model model.xml --chebi chebi.obo --outmodel output_model.xml --verbose
 ##
 
 help_message = '''
 Generalizes the model.
-usage: main.py --model model.xml --chebi chebi.obo --outmodel output_model.xml
+usage: main.py --model model.xml --chebi chebi.obo --outmodel output_model.xml --verbose
 '''
 
 
@@ -40,10 +40,10 @@ def generateOutSBMLName(inSBML, outSBML):
 
 def processArgs(argv):
     try:
-        opts, args = getopt.getopt(argv[1:], "m:c:h:o:", ["help", "model=", "chebi=", "outmodel="])
+        opts, args = getopt.getopt(argv[1:], "m:c:h:o:v:", ["help", "model=", "chebi=", "outmodel=", "verbose"])
     except getopt.error, msg:
         raise Usage(msg)
-    inSBML, chebi, outSBML = None, None, None
+    inSBML, chebi, outSBML, verbose = None, None, None, False
     # option processing
     for option, value in opts:
         if option in ("-h", "--help"):
@@ -54,16 +54,16 @@ def processArgs(argv):
             chebi = value
         if option in ("-o", "--outmodel"):
             outSBML = value
+        if option in ("-v", "--verbose"):
+            verbose = True
     outSBML = generateOutSBMLName(inSBML, outSBML)
     if not inSBML or not chebi:
         raise Usage(help_message)
-    return chebi, inSBML, outSBML
+    return chebi, inSBML, outSBML, verbose
 
 
 def saveToGeneralizedModel(genModel, inputModel, s_id2clu, clu2rs):
     clu2s_ids = invert(s_id2clu)
-    print len(clu2rs)
-    print "---saving generalized species---"
     for clu, species_ids in clu2s_ids.iteritems():
         comp2s_ids = {}
         for s_id in species_ids:
@@ -79,7 +79,6 @@ def saveToGeneralizedModel(genModel, inputModel, s_id2clu, clu2rs):
             else:
                 del s_id2clu[s_ids.pop()]
 
-    print "---saving generalized reactions---"
     generalize_species = lambda s_id: s_id2clu[s_id] if (s_id in s_id2clu) else s_id
     s_id_to_generalize = set(s_id2clu.keys())
     for clu, r_set in clu2rs.iteritems():
@@ -93,15 +92,12 @@ def saveToGeneralizedModel(genModel, inputModel, s_id2clu, clu2rs):
             products = getProducts(representative)
             if (len(rs) == 1) and not ((reactants | products) & s_id_to_generalize):
                 genModel.addReaction(representative)
-                print "-", representative.getName()
             else:
                 reactants = {generalize_species(it) for it in reactants}
                 products = {generalize_species(it) for it in products}
                 createReaction(genModel, reactants, products,
                                "{0}{1}".format("generalized " if len(rs) > 1 else "", representative.getName()))
-                print "generalized " if len(rs) > 1 else "+", representative.getName()
 
-    print "---removing unused elements---"
     removeUnusedElements(genModel)
 
 
@@ -109,7 +105,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     try:
-        chebi, inSBML, outSBML = processArgs(argv)
+        chebi, inSBML, outSBML, verbose = processArgs(argv)
 
         # inputModel
         reader = SBMLReader()
@@ -128,21 +124,24 @@ def main(argv=None):
             inputModel.getListOfSpecies())
 
         # annotate with ChEBI
+        print "parsing ChEBI..."
         ontology = parse(chebi)
         species_id2chebi_id = getSpecies2chebi(inputModel, species, ontology)
         terms = [ontology.getTerm(t_id) for t_id in set(species_id2chebi_id.values())]
         ontology = subOntology(ontology, terms,
-                               relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=6,
+                               relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=None,
                                min_deepness=11)
         ubiquitous_chebi_id = getUbiquitousSpeciesSet(inputModel.getListOfReactions(), species_id2chebi_id, ontology,
-                                                   threshold=25)
+                                                      threshold=25)
         # print "ubiquitous: ", [it.getName() if it else "" for it in ubiquitous_chebi]
 
         # generalize
-        s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_id, ontology)
+        print "generalizing..."
+        s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_id, ontology, verbose)
         s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
 
         # save
+        print "saving..."
         saveToGeneralizedModel(genModel, inputModel, s_id2clu, invert(r2clu))
 
         outDocument = SBMLDocument(inputModel.getSBMLNamespaces())
