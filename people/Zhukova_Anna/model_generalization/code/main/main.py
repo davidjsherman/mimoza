@@ -141,7 +141,7 @@ def main(argv=None):
         s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
 
         # save
-        print "saving..."
+        print "saving to {0}...".format(outSBML)
         saveToGeneralizedModel(genModel, inputModel, s_id2clu, invert(r2clu))
 
         outDocument = SBMLDocument(inputModel.getSBMLNamespaces())
