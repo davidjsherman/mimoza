@@ -57,6 +57,8 @@ def processArgs(argv):
         if option in ("-v", "--verbose"):
             verbose = True
     outSBML = generateOutSBMLName(inSBML, outSBML)
+    if not chebi:
+        chebi = "./data/chebi.obo"
     if not inSBML or not chebi:
         raise Usage(help_message)
     return chebi, inSBML, outSBML, verbose
