@@ -16,11 +16,9 @@ def getReactions2Factor(reactions, term_id2clu, s_id2term_id):
 def getVerticalKey(r, term_id2clu, s_id2term_id):
     ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes \
         = getKeyElements(r, term_id2clu, s_id2term_id)
-    if r.getReversible():
-        if needToReverse((ubiquitous_reactants, ubiquitous_products, specific_reactant_classes,
-                          specific_product_classes,)):
-            ubiquitous_reactants, ubiquitous_products = ubiquitous_products, ubiquitous_reactants
-            specific_reactant_classes, specific_product_classes = specific_product_classes, specific_reactant_classes
+    if r.getReversible() and needToReverse(
+            (ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes,)):
+        return ubiquitous_products, ubiquitous_reactants, specific_product_classes, specific_reactant_classes
     return ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes
 
 
@@ -151,7 +149,7 @@ def fixStoich(reactions, term_id2clu, species_id2term_id, onto):
         conflicts = getConflicts(reactions, term_ids, species_id2term_id)
         if not conflicts:
             continue
-        # print [onto.getTerm(t).getName() for t in term_ids]
+            # print [onto.getTerm(t).getName() for t in term_ids]
         # print " >> ", [{onto.getTerm(n).getName() for n in ns} for ns in conflicts]
         t_sets = partition(term_ids, onto, conflicts)
         i = 0
@@ -186,6 +184,7 @@ def getPsiSet(onto, term_ids, conflicts):
                 good = False
                 break
         return good
+
     transform = lambda t: {t.getId() for t in
                            (onto.getAnyChildren(t, False, set()) | {t} | onto.getEqualTerms(t))} & term_ids
 
@@ -221,8 +220,8 @@ def getPsiSet(onto, term_ids, conflicts):
                         continue
                     psi.add(c_element)
                     set2score[c_element] = avg_tup(set2score[element])
-        # if len(psi) > 50:
-    #     psi = {tuple(t) for t in filter(lambda it: good(set(it), conflicts), psi)}
+                    # if len(psi) > 50:
+                    #     psi = {tuple(t) for t in filter(lambda it: good(set(it), conflicts), psi)}
 
     # for t in terms:
     #     element = (t,)
@@ -361,7 +360,8 @@ def printFinalClusters(term_id2clu, onto):
     for clu, term_ids in clu2term.iteritems():
         if len(term_ids) == 1:
             continue
-        print "   ", onto.getTerm(clu).getName(), " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in term_ids]
+        print "   ", onto.getTerm(clu).getName(), " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in
+                                                                                  term_ids]
         print
 
 
@@ -406,3 +406,128 @@ def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbo
     s_id2clu = {s_id: term_id2clu[t] for (s_id, t) in
                 filter(lambda (s_id, t): t in term_id2clu, species_id2chebi_id.iteritems())}
     return s_id2clu, r2clu
+
+
+def getUbRP(r, ubiquitous_ids):
+    reactants, products = getReactants(r), getProducts(r)
+    return reactants & ubiquitous_ids, products & ubiquitous_ids
+
+
+def simplifiedNeedToReverse(r, ubiquitous_ids):
+    u_rs, u_ps = getUbRP(r, ubiquitous_ids)
+    return r.getReversible() and u_rs > u_ps
+
+
+def getSimplifiedKey(r, ubiquitous_ids):
+    reactants, products = getReactants(r), getProducts(r)
+    ubiquitous_reactants, ubiquitous_products = reactants & ubiquitous_ids, products & ubiquitous_ids
+    srs_len, sps_len = len(reactants - ubiquitous_ids), len(products - ubiquitous_ids)
+    if r.getReversible() and simplifiedNeedToReverse(r, ubiquitous_ids):
+        return ubiquitous_products, ubiquitous_reactants, sps_len, srs_len
+    return ubiquitous_reactants, ubiquitous_products, srs_len, sps_len,
+
+
+def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose):
+    ubiquitous_ids = set(
+        filter(lambda k: not species_id2chebi_id[k] in ubiquitous_chebi_ids, species_id2chebi_id.keys()))
+    specific_terms = {species_id2chebi_id[s_id] for s_id in set(species_id2chebi_id.keys()) - ubiquitous_ids}
+
+    term_id2s_ids = invert(species_id2chebi_id)
+
+    def getInsOuts(t_id):
+        ins, outs = getPReactions(t_id, reactions, term_id2s_ids), getRReactions(t_id, reactions, term_id2s_ids)
+        r_ins = filter(lambda r: not simplifiedNeedToReverse(r, ubiquitous_ids), ins) + filter(
+            lambda r: simplifiedNeedToReverse(r, ubiquitous_ids), outs)
+        r_outs = filter(lambda r: not r in ins, r_ins) + filter(lambda r: not r in ins, outs)
+        return r_ins, r_outs
+
+    def getRP(r):
+        rs, ps = getReactants(r), getProducts(r)
+        if simplifiedNeedToReverse(r, ubiquitous_ids):
+            return ps, rs
+        return rs, ps
+
+    def check(t_id, checked):
+        if t_id in checked:
+            return [], None
+
+        rs = getReactions(t_id, reactions, term_id2s_ids)
+        if len(rs) != 2:
+            return [t_id], None
+        ins, outs = getInsOuts(t_id)
+        #		print graph["name"][n], len(ins), len(outs)
+        if 1 == len(ins) == len(outs):
+            r_in, r_out = ins[0], outs[0]
+            in_k, out_k = getSimplifiedKey(r_in, ubiquitous_ids), getSimplifiedKey(r_out, ubiquitous_ids)
+            #			print in_k, " vs ", out_k
+            if in_k == out_k and (in_k[0] or in_k[1]):
+                checked.add(t_id)
+                print in_k
+                #				verbose(graph.getInNodes(r_in), graph)
+                #				verbose(graph.getInNodes(r_out), graph)
+
+                in_rs, in_ps = getRP(r_in)
+                out_rs, out_ps = getRP(r_out)
+                left_t_ids = in_rs - out_rs
+                #				verbose(left_t_ids, graph)
+                if len(left_t_ids) != 1:
+                    return [t_id], in_k
+                left_id = left_t_ids.pop()
+
+                right_term_ids = out_ps - in_ps
+                #				print right_term_ids
+                if len(right_term_ids) != 1:
+                    return [t_id], in_k
+                right_id = right_term_ids.pop()
+
+                return check(left_id, checked)[0] + [t_id] + check(right_id, checked)[0], in_k
+        return [t_id], None
+
+    result = []
+    checked = set()
+    for t_id in specific_terms:
+        lst = check(t_id, checked)
+        if len(lst[0]) > 1 and onto.commonPts({onto.getTerm(t) for t in lst[0]}):
+            result.append(lst)
+
+    return result
+
+    #TODO: save this result
+    # if result:
+    #     quotient = graph.addCloneSubGraph(graph.getName() + " quotient")
+    #     clone = graph.addCloneSubGraph(graph.getName())
+    #
+    # getR = lambda rs: filter(lambda it: key == getSimplifiedKey(it, ubs, graph), rs)[0]
+    # for (lst, key,) in result:
+    #     print len(lst)
+    #     start, end = lst[0], lst[len(lst) - 1]
+    #     nds = set()
+    #     #		verbose([start, end], graph)
+    #     #		verbose(lst, graph)
+    #     for n in lst[1:]:
+    #         r = getR(graph.getInNodes(n))
+    #         nds |= {r} | set(graph.getInOutNodes(r))
+    #     start_r = getR(graph.getOutNodes(start))
+    #     nds -= set(graph.getInNodes(start_r))
+    #     end_r = getR(graph.getInNodes(end))
+    #     nds -= set(graph.getOutNodes(end_r))
+    #     #		verbose(nds, graph)
+    #
+    #     metaNode = quotient.createMetaNode(list(nds), False)
+    #     for prop in ["compartment", "outsideCompartment", \
+    #                  "reaction", "reversible", "sboTerm", "ubiquitous", \
+    #                  "viewBorderColor", "viewBorderWidth", "viewColor", "viewFont", "viewFontSize", \
+    #                  "viewLabelColor", "viewLabelPosition", "viewLayout", "viewRotation", "viewSelection", \
+    #                  "viewShape", "viewTexture"]:
+    #         quotient[prop][metaNode] = graph[prop][start_r]
+    #     quotient["id"][metaNode] = "meta_" + graph["id"][start_r]
+    #     quotient["viewSize"][metaNode] = tlp.Size(6, 6) #bb.width(), bb.height())
+    #     quotient["viewLabel"][metaNode] = "generalized\nchain\n{0}".format(graph["name"][start_r])
+    #     rs = {graph.getInNodes(m).next() for m in lst[1:]}
+    #     quotient["reversible"][metaNode] = True
+    #     for r in rs:
+    #         if not graph["reversible"][r]:
+    #             quotient["reversible"][metaNode] = False
+    #             break
+    #     quotient["geneAssociation"][metaNode] = " and ".join(graph["geneAssociation"][it] for it in rs)
+    #     quotient["ecNumber"][metaNode] = ",".join(graph["ecNumber"][it] for it in rs)
