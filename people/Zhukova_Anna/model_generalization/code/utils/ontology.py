@@ -297,6 +297,9 @@ class Ontology:
             relationships = filter(lambda (subj, r, obj): term_id == obj, relationships)
         return relationships
 
+    def getRelationshipParticipants(self, rel):
+        return set(self.rel_map[rel])
+
     def getRelationships(self):
         result = set()
         for rel_set in self.rel_map.values():
@@ -433,47 +436,48 @@ class Ontology:
             level |= set(self.getLevel(p))
         return [1 + i for i in level]
 
-    def getEqualTerms(self, term, rel=None, direction=0):
+    def getEqualTerms(self, term, rel=None, direction=0, relationships=None):
         term_id = term.getId()
         equals = set()
-        for (subj, rel, obj) in self.getTermRelationships(term_id, rel, direction):
-            equals |= {subj, obj} - {term_id}
+        for (subj, r, obj) in self.getTermRelationships(term_id, rel, direction):
+            if not relationships or r in relationships:
+                equals |= {subj, obj} - {term_id}
         return {self.getTerm(t_id) for t_id in equals}
 
-    def getAnyChildren(self, term, direct=True, checked=None):
+    def getAnyChildren(self, term, direct=True, checked=None, relationships=None):
         if not checked:
             checked = set()
-        terms = {term} | self.getEqualTerms(term)
+        terms = {term} | self.getEqualTerms(term, None, 0, relationships)
         direct_kids = set()
         for it in terms:
             children = it.getChildren(True)
             direct_kids |= children
             for ch in children:
-                direct_kids |= self.getEqualTerms(ch)
+                direct_kids |= self.getEqualTerms(ch, None, 0, relationships)
         if direct:
             return direct_kids
         checked |= terms
         result = set(direct_kids)
         for kid in direct_kids - checked:
-            result |= self.getAnyChildren(kid, direct, checked)
+            result |= self.getAnyChildren(kid, direct, checked, relationships)
         return result
 
-    def getAnyParents(self, term, direct=True, checked=None):
+    def getAnyParents(self, term, direct=True, checked=None, relationships=None):
         if not checked:
             checked = set()
-        terms = {term} | self.getEqualTerms(term)
+        terms = {term} | self.getEqualTerms(term, None, 0, relationships)
         direct_parents = set()
         for it in terms:
             parents = {self.getTerm(t_id) for t_id in it.getParentIds()}
             direct_parents |= parents
             for par in parents:
-                direct_parents |= self.getEqualTerms(par)
+                direct_parents |= self.getEqualTerms(par, None, 0, relationships)
         if direct:
             return direct_parents
         checked |= terms
         result = set(direct_parents)
         for parent in direct_parents - checked:
-            result |= self.getAnyParents(parent, direct, checked)
+            result |= self.getAnyParents(parent, direct, checked, relationships)
         return result
 
     def getRoots(self):

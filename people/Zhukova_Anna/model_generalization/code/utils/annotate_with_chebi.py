@@ -1,4 +1,4 @@
-from libsbml import BQB_IS
+from libsbml import BQB_IS, BQB_IS_DESCRIBED_BY
 from utils.misc import add2map
 from utils.ontology import removeMiriamPrefix, addMiriamPrefix, Term
 from utils.rdf_annotation_helper import addAnnotation, getAllQualifierValues
@@ -35,6 +35,17 @@ def getNames(entity):
     if end != -1 and end != 0:
         name_bis = name_bis[0:end].strip()
     return name, name_bis
+
+
+# This annotation is to be used in Tulip
+def annotateUbiquitous(model, species_id2chebi_id, ubiquitous_chebi_ids):
+    for species in model.getListOfSpecies():
+        s_id = species.getId()
+        if (s_id in species_id2chebi_id) and (species_id2chebi_id[s_id] in ubiquitous_chebi_ids):
+            st_id = species.getSpeciesType()
+            if st_id:
+                species = model.getSpeciesType(st_id)
+            addAnnotation(species, BQB_IS_DESCRIBED_BY, "ubiquitous")
 
 
 def getSpecies2chebi(model, species_list, chebi):

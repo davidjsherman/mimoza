@@ -3,10 +3,10 @@
 
 import getopt
 import sys
-from libsbml import SBMLReader, SBMLDocument, writeSBMLToFile, BQB_IS
+from libsbml import SBMLReader, SBMLDocument, writeSBMLToFile, BQB_IS, os
 from generalization.generalize import generalize
-from generalization.mark_ubiquitous import getUbiquitousSpeciesSet
-from utils.annotate_with_chebi import getSpecies2chebi
+from generalization.mark_ubiquitous import getUbiquitousSpeciesSet, getCofactors
+from utils.annotate_with_chebi import getSpecies2chebi, annotateUbiquitous
 from utils.ontology import parse, addMiriamPrefix, subOntology
 from utils.rdf_annotation_helper import addAnnotation
 from utils.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
@@ -58,7 +58,8 @@ def processArgs(argv):
             verbose = True
     outSBML = generateOutSBMLName(inSBML, outSBML)
     if not chebi:
-        chebi = "./data/chebi.obo"
+        chebi = os.getcwd() + "/../data/chebi.obo"
+        print chebi
     if not inSBML or not chebi:
         raise Usage(help_message)
     return chebi, inSBML, outSBML, verbose
@@ -99,7 +100,6 @@ def saveToGeneralizedModel(genModel, inputModel, s_id2clu, clu2rs):
                 products = {generalize_species(it) for it in products}
                 createReaction(genModel, reactants, products,
                                "{0}{1}".format("generalized " if len(rs) > 1 else "", representative.getName()))
-
     removeUnusedElements(genModel)
 
 
@@ -114,11 +114,6 @@ def main(argv=None):
         inputDocument = reader.readSBML(inSBML)
         inputModel = inputDocument.getModel()
 
-        # generalized model
-        genDocument = SBMLDocument(inputModel.getSBMLNamespaces())
-        genModel = genDocument.createModel()
-        copyElements(inputModel, genModel)
-
         # go only for reactions inside organelles
         reactions = filter(lambda r: filterReactionByNotTransport(r, inputModel), inputModel.getListOfReactions())
         species = filter(
@@ -130,20 +125,27 @@ def main(argv=None):
         ontology = parse(chebi)
         species_id2chebi_id = getSpecies2chebi(inputModel, species, ontology)
         terms = [ontology.getTerm(t_id) for t_id in set(species_id2chebi_id.values())]
+        cofactor_ids = getCofactors(ontology)
         ontology = subOntology(ontology, terms,
                                relationships={'is_a', 'is_conjugate_base_of', 'is_conjugate_acid_of'}, step=None,
                                min_deepness=11)
-        ubiquitous_chebi_id = getUbiquitousSpeciesSet(inputModel.getListOfReactions(), species_id2chebi_id, ontology,
-                                                      threshold=25)
-        # print "ubiquitous: ", [it.getName() if it else "" for it in ubiquitous_chebi]
+        cofactor_ids = set(filter(lambda t_id: ontology.getTerm(t_id), cofactor_ids))
+        ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(inputModel, species_id2chebi_id, ontology)
+
+        # print "ubiquitous: ", {ontology.getTerm(it).getName() for it in ubiquitous_chebi_ids}
+        annotateUbiquitous(inputModel, species_id2chebi_id, ubiquitous_chebi_ids)
 
         # generalize
         print "generalizing..."
-        s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_id, ontology, verbose)
+        s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
         s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
 
         # save
         print "saving to {0}...".format(outSBML)
+        # generalized model
+        genDocument = SBMLDocument(inputModel.getSBMLNamespaces())
+        genModel = genDocument.createModel()
+        copyElements(inputModel, genModel)
         saveToGeneralizedModel(genModel, inputModel, s_id2clu, invert(r2clu))
 
         outDocument = SBMLDocument(inputModel.getSBMLNamespaces())

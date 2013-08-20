@@ -1,11 +1,13 @@
 from utils.reaction_filters import getReactionParticipants
 
+COFACTOR_CHEBI_ID = 'chebi:23357'
+
 __author__ = 'anna'
 
-UBIQUITOUS_THRESHOLD = 10
+UBIQUITOUS_THRESHOLD = 14
 
 # most common ones, like water, H+, oxygen, NAD, etc.
-COMMON_UB_IDS = {'chebi:37568', 'chebi:57783', 'chebi:17625', 'chebi:37563', 'chebi:17552', 'chebi:17361',
+COMMON_UB_IDS =  {'chebi:37568', 'chebi:57783', 'chebi:17625', 'chebi:37563', 'chebi:17552', 'chebi:17361',
                  'chebi:16311', 'chebi:16192', 'chebi:15846', 'chebi:61429', 'chebi:16234', 'chebi:16174',
                  'chebi:58210', 'chebi:16171', 'chebi:36080', 'chebi:15713', 'chebi:16238', 'chebi:43474',
                  'chebi:15378', 'chebi:15379', 'chebi:58115', 'chebi:29375', 'chebi:16695', 'chebi:58342',
@@ -24,7 +26,8 @@ COMMON_UB_IDS = {'chebi:37568', 'chebi:57783', 'chebi:17625', 'chebi:37563', 'ch
 # @param threshold (Optional) A minimal number of reactions a species should participate in to become a ubiquitous one.
 # The default value is {@link #UBIQUITOUS_THRESHOLD UBIQUITOUS_THRESHOLD}.
 # @return A set of ubiquitous species identifiers.
-def getUbiquitousSpeciesSet(reactions, species_id2chebi_id, ontology, threshold=UBIQUITOUS_THRESHOLD):
+def getUbiquitousSpeciesSet(model, species_id2chebi_id, ontology, threshold=UBIQUITOUS_THRESHOLD):
+    reactions = model.getListOfReactions()
     chebi2vote = {}
     for reaction in reactions:
         participants = getReactionParticipants(reaction)
@@ -34,15 +37,17 @@ def getUbiquitousSpeciesSet(reactions, species_id2chebi_id, ontology, threshold=
             if not element in species_id2chebi_id:
                 continue
             chebi_id = species_id2chebi_id[element]
-            if chebi_id in chebi2vote:
-                chebi2vote[chebi_id] += 1
+            compartment = model.getSpecies(element).getCompartment()
+            key = chebi_id, compartment
+            if key in chebi2vote:
+                chebi2vote[key] += 1
             else:
-                chebi2vote[chebi_id] = 1
+                chebi2vote[key] = 1
 
     ubiquitous_chebi = set()
     for element, vote in chebi2vote.iteritems():
         if vote > threshold:
-            ubiquitous_chebi.add(element)
+            ubiquitous_chebi.add(element[0])
 
     ubiquitous_chebi |= COMMON_UB_IDS
 
@@ -54,3 +59,18 @@ def getUbiquitousSpeciesSet(reactions, species_id2chebi_id, ontology, threshold=
             ubiquitous_chebi_new |= {it.getId() for it in ontology.getEqualTerms(u_term)}
 
     return ubiquitous_chebi_new
+
+
+def getCofactors(ontology):
+    cofactors = set()
+    is_cofactor = lambda t_id: COFACTOR_CHEBI_ID == t_id or ontology.isA(t_id, COFACTOR_CHEBI_ID)
+    for it in ontology.getRelationshipParticipants('has_role'):
+        subj, rel, obj = it
+        if rel == 'has_role' and is_cofactor(obj):
+            subj_term = ontology.getTerm(subj)
+            children = {t.getId() for t in ontology.getAnyChildren(subj_term, False, set(), relationships={
+                'is_conjugate_base_of', 'is_conjugate_acid_of'})}
+            equals = {t.getId() for t in ontology.getEqualTerms(subj_term, relationships={
+                'is_conjugate_base_of', 'is_conjugate_acid_of'})}
+            cofactors |= {subj} | children | equals
+    return cofactors

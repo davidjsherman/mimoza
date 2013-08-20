@@ -357,12 +357,15 @@ def printClusters(term_id2clu, onto):
 def printFinalClusters(term_id2clu, onto):
     clu2term = invert(term_id2clu)
     print "result quotient species sets:"
+    blueprint = []
     for clu, term_ids in clu2term.iteritems():
         if len(term_ids) == 1:
             continue
+        blueprint.append(len(term_ids))
         print "   ", onto.getTerm(clu).getName(), " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in
                                                                                   term_ids]
         print
+    print sorted(blueprint)
 
 
 def log(verbose, msg):
