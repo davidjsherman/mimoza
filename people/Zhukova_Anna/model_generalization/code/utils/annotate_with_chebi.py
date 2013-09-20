@@ -1,7 +1,9 @@
-from libsbml import BQB_IS, BQB_IS_DESCRIBED_BY
+from libsbml import BQB_IS
 from utils.misc import add2map
 from utils.ontology import removeMiriamPrefix, addMiriamPrefix, Term
 from utils.rdf_annotation_helper import addAnnotation, getAllQualifierValues
+
+EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
 
 __author__ = 'anna'
 
@@ -44,8 +46,23 @@ def annotateUbiquitous(model, species_id2chebi_id, ubiquitous_chebi_ids):
         if (s_id in species_id2chebi_id) and (species_id2chebi_id[s_id] in ubiquitous_chebi_ids):
             st_id = species.getSpeciesType()
             if st_id:
-                species = model.getSpeciesType(st_id)
-            addAnnotation(species, BQB_IS_DESCRIBED_BY, "ubiquitous")
+                # species = model.getSpeciesType(st_id)
+                st = model.getSpeciesType(st_id)
+                st.setName(st.getName() + " ubiquitous")
+            # species.appendNotes("<html:body><html:p>SUBSYSTEM: {0}</html:p></html:body>".format("ubiquitous"))
+            # addAnnotation(species, BQB_IS_DESCRIBED_BY, "ubiquitous")
+            species.setName(species.getName() + " ubiquitous")
+
+
+def getSpeciesTerm(species, chebi, model):
+    term = getTerm(species, chebi)
+    if not term:
+        s_type_id = species.getSpeciesType()
+        if s_type_id:
+            s_type = model.getSpeciesType(s_type_id)
+            if s_type:
+                term = getTerm(s_type, chebi)
+    return term
 
 
 def getSpecies2chebi(model, species_list, chebi):

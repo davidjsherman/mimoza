@@ -7,7 +7,7 @@ __author__ = 'anna'
 UBIQUITOUS_THRESHOLD = 14
 
 # most common ones, like water, H+, oxygen, NAD, etc.
-COMMON_UB_IDS =  {'chebi:37568', 'chebi:57783', 'chebi:17625', 'chebi:37563', 'chebi:17552', 'chebi:17361',
+COMMON_UB_IDS = {'chebi:37568', 'chebi:57783', 'chebi:17625', 'chebi:37563', 'chebi:17552', 'chebi:17361',
                  'chebi:16311', 'chebi:16192', 'chebi:15846', 'chebi:61429', 'chebi:16234', 'chebi:16174',
                  'chebi:58210', 'chebi:16171', 'chebi:36080', 'chebi:15713', 'chebi:16238', 'chebi:43474',
                  'chebi:15378', 'chebi:15379', 'chebi:58115', 'chebi:29375', 'chebi:16695', 'chebi:58342',
@@ -16,7 +16,7 @@ COMMON_UB_IDS =  {'chebi:37568', 'chebi:57783', 'chebi:17625', 'chebi:37563', 'c
                  'chebi:15918', 'chebi:246422', 'chebi:28850', 'chebi:16240', 'chebi:58245', 'chebi:16908',
                  'chebi:13534', 'chebi:456216', 'chebi:456215', 'chebi:15351', 'chebi:30089', 'chebi:15422',
                  'chebi:57299', 'chebi:25805', 'chebi:26689', 'chebi:13390', 'chebi:57540', 'chebi:25524',
-                 'chebi:13389', 'chebi:13392', 'chebi:28971'}
+                 'chebi:13389', 'chebi:13392', 'chebi:28971', 'chebi:17984'}
 
 
 ## The function returns a set of identifiers of ubiquitous species participating in given reactions.
@@ -56,21 +56,27 @@ def getUbiquitousSpeciesSet(model, species_id2chebi_id, ontology, threshold=UBIQ
         u_term = ontology.getTerm(u_term_id)
         if u_term:
             ubiquitous_chebi_new.add(u_term_id)
-            ubiquitous_chebi_new |= {it.getId() for it in ontology.getEqualTerms(u_term)}
+            ubiquitous_chebi_new |= {it.getId() for it in ontology.getEquivalentTerms(u_term)}
 
     return ubiquitous_chebi_new
 
 
 def getCofactors(ontology):
     cofactors = set()
-    is_cofactor = lambda t_id: COFACTOR_CHEBI_ID == t_id or ontology.isA(t_id, COFACTOR_CHEBI_ID)
+    sub_cofactors = ontology.getTerm(COFACTOR_CHEBI_ID).getChildren(False)
+
+    def is_cofactor(t_id):
+        if COFACTOR_CHEBI_ID == t_id:
+            return True
+        return ontology.getTerm(t_id) in sub_cofactors
+
     for it in ontology.getRelationshipParticipants('has_role'):
         subj, rel, obj = it
         if rel == 'has_role' and is_cofactor(obj):
             subj_term = ontology.getTerm(subj)
             children = {t.getId() for t in ontology.getAnyChildren(subj_term, False, set(), relationships={
                 'is_conjugate_base_of', 'is_conjugate_acid_of'})}
-            equals = {t.getId() for t in ontology.getEqualTerms(subj_term, relationships={
+            equals = {t.getId() for t in ontology.getEquivalentTerms(subj_term, relationships={
                 'is_conjugate_base_of', 'is_conjugate_acid_of'})}
             cofactors |= {subj} | children | equals
     return cofactors

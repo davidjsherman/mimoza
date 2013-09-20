@@ -106,7 +106,8 @@ def filterReactionByCompartmentOfAllParticipants(c_id, reaction, model):
 
 def filterReactionByNotTransport(reaction, model):
     c_id = None
-    for speciesId in getReactants(reaction) | getProducts(reaction):
+    participants = getReactants(reaction) | getProducts(reaction)
+    for speciesId in participants:
         species = model.getSpecies(speciesId)
         compartment_id = species.getCompartment()
         if not compartment_id:
@@ -116,6 +117,7 @@ def filterReactionByNotTransport(reaction, model):
         if compartment_id != c_id:
             return False
     return True
+
 
 # by species
 def filterReactionBySpeciesIdCollection(speciesIdList, reaction):
@@ -147,6 +149,15 @@ def filterReactionByProductId(speciesId, reaction):
 def filterReactionByModifierId(speciesId, reaction):
     return speciesId in getModifiers(reaction)
 
+
+def filterReactionByBetweenSpecies(reaction, s_id1, s_id2):
+    reactants = getReactants(reaction)
+    products = getProducts(reaction)
+    if s_id1 in reactants:
+        return s_id2 in products
+    elif s_id2 in reactants:
+        return s_id1 in products
+    return False
 
 # -------------------------REACTION-INFO-----------------------------
 

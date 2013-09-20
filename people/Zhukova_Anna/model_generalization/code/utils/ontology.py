@@ -33,43 +33,49 @@ def addMiriamPrefix(urn):
 
 
 def inducedOntology(terms, onto, relationships={"is_a"}):
-    ontology = Ontology()
+    induced_ontology = Ontology()
     ids = set([it.getId() for it in terms])
     for term in terms:
         t_id = term.getId()
         new_term = Term(t_id, term.getName(), ids & term.getParentIds())
         new_term.altIds = term.getAllIds()
         new_term.synonyms = term.getSynonyms()
-        ontology.addTerm(new_term)
+        induced_ontology.addTerm(new_term)
     for term_id, rels in onto.rel_map.iteritems():
         if not term_id in ids:
             continue
         for (subj, rel, obj) in rels:
             if rel in relationships and subj in ids and obj in ids:
-                ontology.addRelationship(subj, rel, obj)
-    for term in ontology.getAllTerms():
+                induced_ontology.addRelationship(subj, rel, obj)
+    for term in induced_ontology.getAllTerms():
         for par_id in term.getParentIds():
-            ontology.getTerm(par_id).addChild(term)
+            induced_ontology.getTerm(par_id).addChild(term)
         # fix roots
-    old_roots = onto.getRoots()
-    new_roots = ontology.getRoots()
-    for root in filter(lambda it: not (it.getId() in old_roots), new_roots):
-        ancestors = set()
-        for term in ontology.getAllTerms():
-            if onto.isA(root.getId(), term.getId()):
-                ancestors.add(term)
-        # let us filter out too general ancestors
-        ancestor_set = set(ancestors)
-        for it in ancestors:
-            for that in ancestors:
-                if it != that and onto.isA(that.getId(), it.getId()):
-                    ancestor_set -= {it}
-                    break
-        for a_term in ancestor_set:
+    old_root_ids = {r.getId() for r in onto.getRoots()}
+    new_roots = induced_ontology.getRoots()
+
+    def findParents(candidate_ids, all_ids):
+        intersection = candidate_ids & all_ids
+        if intersection:
+            return intersection
+        new_candidates = set()
+        for t_id in candidate_ids:
+            new_candidates |= onto.getTerm(t_id).getParentIds()
+        if not new_candidates:
+            return set()
+        return findParents(new_candidates, all_ids)
+
+    all_ids = induced_ontology.getAllTermIds()
+    for root in filter(lambda it: not (it.getId() in old_root_ids), new_roots):
+        old_root = onto.getTerm(root.getId())
+        ancestor_ids = findParents(old_root.getParentIds(), all_ids)
+        if ancestor_ids:
+            induced_ontology.roots -= {root}
+        for a_term_id in ancestor_ids:
+            a_term = induced_ontology.getTerm(a_term_id)
             a_term.children |= {root}
-            root.parents |= {a_term.getId()}
-            ontology.roots -= {root}
-    return ontology
+            root.parents |= {a_term_id}
+    return induced_ontology
 
 
 def subOntology(onto, terms_collection, relationships={"is_a"}, step=None, min_deepness=None):
@@ -275,6 +281,9 @@ class Ontology:
     def getAllTerms(self):
         return set(self.id2term.values())
 
+    def getAllTermIds(self):
+        return set(self.id2term.keys())
+
     def getLeaves(self):
         return set(filter(lambda it: not it.getChildren(), self.id2term.values()))
 
@@ -379,10 +388,8 @@ class Ontology:
             return self.alt_id2term[term_id]
         return None
 
-    def isA(self, child_id, parent_id):
-        child = self.getTerm(child_id)
-        parent = self.getTerm(parent_id)
-        return parent in self.getParents(child, False, None, set())
+    def isA(self, child, parent):
+        return child in parent.getChildren(False)
 
     def partOf(self, part_id, whole_Ids):
         term = self.getTerm(part_id)
@@ -395,6 +402,7 @@ class Ontology:
             return result
         term_set = {term}
         result = set()
+        part = self.getTerm(part_id)
         while term_set:
             items = set()
             for term in term_set:
@@ -402,12 +410,12 @@ class Ontology:
                 wholes = partOf_(term)
                 candidates = parents | wholes
                 for it in candidates:
-                    if (it in whole_Ids) and not self.isA(part_id, it):
+                    if (it in whole_Ids) and not self.isA(part, it):
                         result.add(it)
                         continue
                     candidate = self.getTerm(it)
                     result |= whole_Ids & partOf_(candidate)
-                    result |= set(filter(lambda r: not self.isA(part_id, r), set(whole_Ids) & candidate.getParentIds()))
+                    result |= set(filter(lambda r: not self.isA(part, r), set(whole_Ids) & candidate.getParentIds()))
                     items.add(candidate)
             term_set = items
         return result
@@ -436,7 +444,7 @@ class Ontology:
             level |= set(self.getLevel(p))
         return [1 + i for i in level]
 
-    def getEqualTerms(self, term, rel=None, direction=0, relationships=None):
+    def getEquivalentTerms(self, term, rel=None, direction=0, relationships=None):
         term_id = term.getId()
         equals = set()
         for (subj, r, obj) in self.getTermRelationships(term_id, rel, direction):
@@ -447,13 +455,13 @@ class Ontology:
     def getAnyChildren(self, term, direct=True, checked=None, relationships=None):
         if not checked:
             checked = set()
-        terms = {term} | self.getEqualTerms(term, None, 0, relationships)
+        terms = {term} | self.getEquivalentTerms(term, None, 0, relationships)
         direct_kids = set()
         for it in terms:
             children = it.getChildren(True)
             direct_kids |= children
             for ch in children:
-                direct_kids |= self.getEqualTerms(ch, None, 0, relationships)
+                direct_kids |= self.getEquivalentTerms(ch, None, 0, relationships)
         if direct:
             return direct_kids
         checked |= terms
@@ -462,16 +470,20 @@ class Ontology:
             result |= self.getAnyChildren(kid, direct, checked, relationships)
         return result
 
+    def getEquivalentsAndChildren(self, term, relationships=None):
+        return {term} | self.getEquivalentTerms(term, rel=None, direction=0, relationships=relationships) | \
+               self.getAnyChildren(term, direct=False, checked=set(), relationships=relationships)
+
     def getAnyParents(self, term, direct=True, checked=None, relationships=None):
         if not checked:
             checked = set()
-        terms = {term} | self.getEqualTerms(term, None, 0, relationships)
+        terms = {term} | self.getEquivalentTerms(term, None, 0, relationships)
         direct_parents = set()
         for it in terms:
             parents = {self.getTerm(t_id) for t_id in it.getParentIds()}
             direct_parents |= parents
             for par in parents:
-                direct_parents |= self.getEqualTerms(par, None, 0, relationships)
+                direct_parents |= self.getEquivalentTerms(par, None, 0, relationships)
         if direct:
             return direct_parents
         checked |= terms
@@ -492,11 +504,11 @@ class Ontology:
             return None
         terms = set(terms)
         first = terms.pop()
-        common = self.getAnyParents(first, False, set()) | self.getEqualTerms(first) | {first}
+        common = self.getAnyParents(first, False, set()) | self.getEquivalentTerms(first) | {first}
         # print " draft ", [t.getName() for t in common]
         for t in terms:
             # print "  and ", [t.getName() for t in self.getAnyParents(t, False) | self.getEqualTerms(t) | {t}]
-            common &= self.getAnyParents(t, False, set()) | self.getEqualTerms(t) | {t}
+            common &= self.getAnyParents(t, False, set()) | self.getEquivalentTerms(t) | {t}
             # print "  draft ", [t.getName() for t in common]
         result = set(common)
         # print " common ", [t.getName() for t in common]

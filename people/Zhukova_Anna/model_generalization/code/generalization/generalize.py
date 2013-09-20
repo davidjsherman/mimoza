@@ -1,3 +1,4 @@
+from utils.logger import log
 from utils.ontology import Term
 from utils.reaction_filters import getReactants, getProducts
 from utils.misc import add2map, invert
@@ -63,16 +64,28 @@ def getReaction2cluster(reactions, term_id2clu, s_id2term_id):
     return r2clu
 
 
-def getRReactions(t_id, reactions, term_id2s_ids):
+def getRReactionsByTerm(t_id, reactions, term_id2s_ids):
     return filter(lambda r: len(term_id2s_ids[t_id] & getReactants(r)) > 0, reactions)
 
 
-def getPReactions(t_id, reactions, term_id2s_ids):
+def getPReactionsByTerm(t_id, reactions, term_id2s_ids):
     return filter(lambda r: len(term_id2s_ids[t_id] & getProducts(r)) > 0, reactions)
 
 
-def getReactions(t_id, reactions, term_id2s_ids):
+def getReactionsByTerm(t_id, reactions, term_id2s_ids):
     return filter(lambda r: len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0, reactions)
+
+
+def getRReactionsBySpecies(s_id, reactions):
+    return filter(lambda r: s_id in getReactants(r), reactions)
+
+
+def getPReactionsBySpecies(s_id, reactions):
+    return filter(lambda r: s_id in getProducts(r), reactions)
+
+
+def getReactionsBySpecies(s_id, reactions):
+    return filter(lambda r: s_id in (getReactants(r) | getProducts(r)), reactions)
 
 
 def mergeBasedOnNeighbours(lst):
@@ -106,14 +119,8 @@ def maximize(reactions, term_id2clu, species_id2term_id):
                 "out", r2clu[r])
             transform_p = lambda r: ("out", r2clu[r]) if alignedToVKey(r, term_id2clu, species_id2term_id) else (
                 "in", r2clu[r])
-            # tr_r = lambda r: ("in", r.getName()) if alignedToVKey(r, term2clu, species_id2term) else (
-            #     "out", r.getName())
-            # tr_p = lambda r: ("out", r.getName()) if alignedToVKey(r, term2clu, species_id2term) else (
-            #     "in", r.getName())
-            # print t_id.getName(), {tr_r(r) for r in getRReactions(t_id, reactions, term_id2s_ids)} | \
-            #              {tr_p(r) for r in getPReactions(t_id, reactions, term_id2s_ids)}
-            neighbours = {transform_r(r) for r in getRReactions(t_id, reactions, term_id2s_ids)} | \
-                         {transform_p(r) for r in getPReactions(t_id, reactions, term_id2s_ids)}
+            neighbours = {transform_r(r) for r in getRReactionsByTerm(t_id, reactions, term_id2s_ids)} | \
+                         {transform_p(r) for r in getPReactionsByTerm(t_id, reactions, term_id2s_ids)}
             key = tuple(sorted(neighbours))
             add2map(neighbours2term_ids, key, t_id)
         new_lst = mergeBasedOnNeighbours(neighbours2term_ids.iteritems())
@@ -136,7 +143,7 @@ def getConflicts(reactions, term_ids, species_id2term_id):
     r2term_ids = {}
     term2s_ids = invert(species_id2term_id)
     for t_id in term_ids:
-        for r in getReactions(t_id, reactions, term2s_ids):
+        for r in getReactionsByTerm(t_id, reactions, term2s_ids):
             add2map(r2term_ids, r, t_id)
     return filter(lambda terms: len(terms) > 1, r2term_ids.values())
 
@@ -168,7 +175,7 @@ def getParentOptions(term_ids, onto):
         options = onto.getRoots()
     result = set()
     for t in options:
-        result |= onto.getAnyChildren(t, False, set()) | onto.getEqualTerms(t) | {t}
+        result |= onto.getAnyChildren(t, False, set()) | onto.getEquivalentTerms(t) | {t}
     return result
 
 
@@ -186,7 +193,7 @@ def getPsiSet(onto, term_ids, conflicts):
         return good
 
     transform = lambda t: {t.getId() for t in
-                           (onto.getAnyChildren(t, False, set()) | {t} | onto.getEqualTerms(t))} & term_ids
+                           (onto.getAnyChildren(t, False, set()) | {t} | onto.getEquivalentTerms(t))} & term_ids
 
     Ts = onto.commonPts({onto.getTerm(t) for t in term_ids})
     if not Ts:
@@ -358,19 +365,14 @@ def printFinalClusters(term_id2clu, onto):
     clu2term = invert(term_id2clu)
     print "result quotient species sets:"
     blueprint = []
-    for clu, term_ids in clu2term.iteritems():
+    for clu in sorted(clu2term.keys(), key=lambda k: -len(clu2term[k])):
+        term_ids = clu2term[clu]
         if len(term_ids) == 1:
             continue
         blueprint.append(len(term_ids))
         print "   ", onto.getTerm(clu).getName(), " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in
                                                                                   term_ids]
-        print
-    print sorted(blueprint)
-
-
-def log(verbose, msg):
-    if verbose:
-        print msg
+    print "   ", sorted(blueprint)
 
 
 def fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose):
@@ -393,11 +395,11 @@ def fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_
     return term_id2clu
 
 
-def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose):
+def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
     interesting_term_ids = set(species_id2chebi_id.values()) - ubiquitous_chebi_ids
     term_id2clu = fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose)
     if not term_id2clu:
-        return None
+        return {}, {}
 
     r2clu = getReaction2cluster(reactions, term_id2clu, species_id2chebi_id)
 
@@ -430,18 +432,16 @@ def getSimplifiedKey(r, ubiquitous_ids):
     return ubiquitous_reactants, ubiquitous_products, srs_len, sps_len,
 
 
-def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose):
+def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
     ubiquitous_ids = set(
-        filter(lambda k: not species_id2chebi_id[k] in ubiquitous_chebi_ids, species_id2chebi_id.keys()))
-    specific_terms = {species_id2chebi_id[s_id] for s_id in set(species_id2chebi_id.keys()) - ubiquitous_ids}
+        filter(lambda s_id: species_id2chebi_id[s_id] in ubiquitous_chebi_ids, species_id2chebi_id.keys()))
+    specific_ids = set(species_id2chebi_id.keys()) - ubiquitous_ids
 
-    term_id2s_ids = invert(species_id2chebi_id)
-
-    def getInsOuts(t_id):
-        ins, outs = getPReactions(t_id, reactions, term_id2s_ids), getRReactions(t_id, reactions, term_id2s_ids)
+    def getInsOuts(s_id):
+        ins, outs = getPReactionsBySpecies(s_id, reactions), getRReactionsBySpecies(s_id, reactions)
         r_ins = filter(lambda r: not simplifiedNeedToReverse(r, ubiquitous_ids), ins) + filter(
             lambda r: simplifiedNeedToReverse(r, ubiquitous_ids), outs)
-        r_outs = filter(lambda r: not r in ins, r_ins) + filter(lambda r: not r in ins, outs)
+        r_outs = filter(lambda r: not r in r_ins, ins) + filter(lambda r: not r in r_ins, outs)
         return r_ins, r_outs
 
     def getRP(r):
@@ -450,87 +450,60 @@ def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
             return ps, rs
         return rs, ps
 
-    def check(t_id, checked):
-        if t_id in checked:
-            return [], None
+    def check(s_id, checked):
+        if s_id in checked:
+            return [], None, []
 
-        rs = getReactions(t_id, reactions, term_id2s_ids)
+        rs = getReactionsBySpecies(s_id, reactions)
         if len(rs) != 2:
-            return [t_id], None
-        ins, outs = getInsOuts(t_id)
-        #		print graph["name"][n], len(ins), len(outs)
+            return [s_id], None, []
+        ins, outs = getInsOuts(s_id)
         if 1 == len(ins) == len(outs):
             r_in, r_out = ins[0], outs[0]
             in_k, out_k = getSimplifiedKey(r_in, ubiquitous_ids), getSimplifiedKey(r_out, ubiquitous_ids)
-            #			print in_k, " vs ", out_k
+            # same simplified keys that include at least one ubiquitous species
             if in_k == out_k and (in_k[0] or in_k[1]):
-                checked.add(t_id)
-                print in_k
-                #				verbose(graph.getInNodes(r_in), graph)
-                #				verbose(graph.getInNodes(r_out), graph)
-
+                checked.add(s_id)
                 in_rs, in_ps = getRP(r_in)
                 out_rs, out_ps = getRP(r_out)
-                left_t_ids = in_rs - out_rs
-                #				verbose(left_t_ids, graph)
-                if len(left_t_ids) != 1:
-                    return [t_id], in_k
-                left_id = left_t_ids.pop()
 
-                right_term_ids = out_ps - in_ps
-                #				print right_term_ids
-                if len(right_term_ids) != 1:
-                    return [t_id], in_k
-                right_id = right_term_ids.pop()
+                left_s_ids = in_rs - out_rs
+                if len(left_s_ids) != 1:
+                    return [s_id], (in_k, r_in.getName()), []
+                left_id = left_s_ids.pop()
 
-                return check(left_id, checked)[0] + [t_id] + check(right_id, checked)[0], in_k
-        return [t_id], None
+                right_s_ids = out_ps - in_ps
+                if len(right_s_ids) != 1:
+                    return [s_id], (in_k, r_in.getName()), []
+                right_id = right_s_ids.pop()
+                left_ts, l_key, left_rs = check(left_id, checked)
+                if not r_in.getId() in left_rs:
+                    left_rs += [r_in.getId()]
+                right_ts, r_key, right_rs = check(right_id, checked)
+                if not r_out.getId() in right_rs:
+                    right_rs = [r_out.getId()] + right_rs
+                return left_ts + [s_id] + right_ts, (in_k, r_in.getName()), left_rs + right_rs
+        return [s_id], None, []
 
     result = []
     checked = set()
-    for t_id in specific_terms:
-        lst = check(t_id, checked)
-        if len(lst[0]) > 1 and onto.commonPts({onto.getTerm(t) for t in lst[0]}):
+    for s_id in specific_ids:
+        lst = check(s_id, checked)
+        if len(lst[0]) > 1 and onto.commonPts({onto.getTerm(species_id2chebi_id[s_id]) for s_id in lst[0]}):
             result.append(lst)
+
+    if verbose:
+        printFinalChains(result)
 
     return result
 
-    #TODO: save this result
-    # if result:
-    #     quotient = graph.addCloneSubGraph(graph.getName() + " quotient")
-    #     clone = graph.addCloneSubGraph(graph.getName())
-    #
-    # getR = lambda rs: filter(lambda it: key == getSimplifiedKey(it, ubs, graph), rs)[0]
-    # for (lst, key,) in result:
-    #     print len(lst)
-    #     start, end = lst[0], lst[len(lst) - 1]
-    #     nds = set()
-    #     #		verbose([start, end], graph)
-    #     #		verbose(lst, graph)
-    #     for n in lst[1:]:
-    #         r = getR(graph.getInNodes(n))
-    #         nds |= {r} | set(graph.getInOutNodes(r))
-    #     start_r = getR(graph.getOutNodes(start))
-    #     nds -= set(graph.getInNodes(start_r))
-    #     end_r = getR(graph.getInNodes(end))
-    #     nds -= set(graph.getOutNodes(end_r))
-    #     #		verbose(nds, graph)
-    #
-    #     metaNode = quotient.createMetaNode(list(nds), False)
-    #     for prop in ["compartment", "outsideCompartment", \
-    #                  "reaction", "reversible", "sboTerm", "ubiquitous", \
-    #                  "viewBorderColor", "viewBorderWidth", "viewColor", "viewFont", "viewFontSize", \
-    #                  "viewLabelColor", "viewLabelPosition", "viewLayout", "viewRotation", "viewSelection", \
-    #                  "viewShape", "viewTexture"]:
-    #         quotient[prop][metaNode] = graph[prop][start_r]
-    #     quotient["id"][metaNode] = "meta_" + graph["id"][start_r]
-    #     quotient["viewSize"][metaNode] = tlp.Size(6, 6) #bb.width(), bb.height())
-    #     quotient["viewLabel"][metaNode] = "generalized\nchain\n{0}".format(graph["name"][start_r])
-    #     rs = {graph.getInNodes(m).next() for m in lst[1:]}
-    #     quotient["reversible"][metaNode] = True
-    #     for r in rs:
-    #         if not graph["reversible"][r]:
-    #             quotient["reversible"][metaNode] = False
-    #             break
-    #     quotient["geneAssociation"][metaNode] = " and ".join(graph["geneAssociation"][it] for it in rs)
-    #     quotient["ecNumber"][metaNode] = ",".join(graph["ecNumber"][it] for it in rs)
+
+def printFinalChains(chains):
+    print "result reaction chains:"
+    blueprint = []
+    for chain in chains:
+        s_ids, key, r_ids = chain
+        print "   ", key[1], " : ", len(r_ids)
+        blueprint.append(len(r_ids))
+    print "   ", sorted(blueprint)
+
