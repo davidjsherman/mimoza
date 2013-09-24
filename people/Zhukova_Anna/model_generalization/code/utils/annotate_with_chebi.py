@@ -38,7 +38,6 @@ def getNames(entity):
         name_bis = name_bis[0:end].strip()
     return name, name_bis
 
-
 # This annotation is to be used in Tulip
 def annotateUbiquitous(model, species_id2chebi_id, ubiquitous_chebi_ids):
     for species in model.getListOfSpecies():
@@ -66,10 +65,6 @@ def getSpeciesTerm(species, chebi, model):
 
 
 def getSpecies2chebi(model, species_list, chebi):
-    # a fake term to annotate species
-    # for which we'll not find any term in ChEBI
-    unknown = Term(t_id="chebi:unknown", name="unknown")
-
     species2chebi = {}
     usedTerms = set()
     entity2species = {}
@@ -100,8 +95,9 @@ def getSpecies2chebi(model, species_list, chebi):
         if not possibilities:
             possibilities = chebi.getIdsByName(name_bis)
         if not possibilities:
+            while chebi.getTerm("chebi:unknown_{0}".format(i)):
+                i += 1
             term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
-            i += 1
             term.addSynonym(name_bis)
             chebi.addTerm(term)
             usedTerms.add(term)
@@ -118,5 +114,4 @@ def getSpecies2chebi(model, species_list, chebi):
             species2chebi[species.getId()] = term.getId()
         addAnnotation(entity, BQB_IS, addMiriamPrefix(term.getId()))
         usedTerms.add(term)
-
     return species2chebi

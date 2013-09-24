@@ -1,4 +1,4 @@
-from libsbml import CVTermList, RDFAnnotationParser, BIOLOGICAL_QUALIFIER, CVTerm
+from libsbml import CVTermList, RDFAnnotationParser, BIOLOGICAL_QUALIFIER, CVTerm, BQB_OCCURS_IN
 
 __author__ = 'anna'
 
@@ -66,3 +66,12 @@ def isAnnotationEmpty(element):
         if term.getResources():
             return False
     return True
+
+
+def getTaxonomy(model):
+    occursIn = getAllQualifierValues(model.getAnnotation(), BQB_OCCURS_IN)
+    for it in occursIn:
+        start = it.find("taxonomy")
+        if start != -1:
+            return it[start + len("taxonomy:"):].strip()
+    return None

@@ -50,7 +50,7 @@ def inducedOntology(terms, onto, relationships={"is_a"}):
     for term in induced_ontology.getAllTerms():
         for par_id in term.getParentIds():
             induced_ontology.getTerm(par_id).addChild(term)
-        # fix roots
+    # fix roots
     old_root_ids = {r.getId() for r in onto.getRoots()}
     new_roots = induced_ontology.getRoots()
 
@@ -326,7 +326,7 @@ class Ontology:
         names = set(term.getSynonyms())
         names.add(term.getName())
         for name in names:
-            name = name.lower()
+            name = name.lower().strip()
             if not (name in self.name2term_ids):
                 self.name2term_ids[name] = set()
             self.name2term_ids[name].add(t_id)

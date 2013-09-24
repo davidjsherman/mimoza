@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # encoding: utf-8
-from genericpath import isfile
+from genericpath import isfile, exists
 
 import getopt
-from os import listdir
+from os import listdir, makedirs
 import sys
 from libsbml import *
-from generalization.generalize import generalize
+from generalization.generalize import generalize, shorten_chains
 from generalization.mark_ubiquitous import getUbiquitousSpeciesSet, getCofactors
 from gather_FA_statistics import testFACoAOxidation_main, testACoANum_main
 from utils.annotate_with_chebi import getSpecies2chebi, annotateUbiquitous, EQUIVALENT_TERM_RELATIONSHIPS
 from utils.logger import log
 from utils.ontology import parse, addMiriamPrefix, subOntology
-from utils.rdf_annotation_helper import addAnnotation
+from utils.rdf_annotation_helper import addAnnotation, getTaxonomy
 from utils.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
 from utils.sbml_creation_helper import copyElements, createSpecies, createReaction, removeUnusedElements, generateUniqueId
 from utils.usage import Usage
@@ -196,6 +196,41 @@ def removeIsAReactions(inputModel):
         inputModel.removeReaction(r_id)
 
 
+def saveAsGroupsSBML(clu2rs, grSBML, inputModel, reader, s_id2clu, verbose):
+    log(verbose, "saving to {0}...".format(grSBML))
+    grDocument = convertTo31(Model(inputModel))
+    writeSBMLToFile(grDocument, grSBML)
+    grDocument = reader.readSBMLFromFile(grSBML)
+    grDocument = saveWithGroups(grDocument, s_id2clu, clu2rs)
+    writeSBMLToFile(grDocument, grSBML)
+
+
+def saveAsGeneralizedSBML(inputModel, outSBML, r2clu, s_id2clu, verbose):
+    log(verbose, "saving to {0}...".format(outSBML))
+    # generalized model
+    genDocument = SBMLDocument(inputModel.getSBMLNamespaces())
+    clu2rs = invert(r2clu)
+    if not s_id2clu:
+        genModel = inputModel
+    else:
+        genModel = genDocument.createModel()
+        copyElements(inputModel, genModel)
+        saveToGeneralizedModel(genModel, inputModel, s_id2clu, clu2rs)
+    outDocument = SBMLDocument(inputModel.getSBMLNamespaces())
+    outDocument.setModel(genModel)
+    writeSBMLToFile(outDocument, outSBML)
+
+
+def saveToChainShortenedSBML(chains, inputModel, verbose):
+    log(verbose, "serializing chain shortening...")
+    # chain shortened model
+    csDocument = SBMLDocument(inputModel.getSBMLNamespaces())
+    csModel = csDocument.createModel()
+    copyElements(inputModel, csModel)
+    saveToChainShortenedModel(csModel, inputModel, chains)
+    return csModel
+
+
 def convert(onto, cofactors, inSBML, outSBML, grSBML, verbose=False):
     # inputModel
     reader = SBMLReader()
@@ -226,13 +261,7 @@ def convert(onto, cofactors, inSBML, outSBML, grSBML, verbose=False):
     # chains = shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
     # if chains:
     #     # save
-    #     log(verbose, "serializing chain shortening...")
-    #     # chain shortened model
-    #     csDocument = SBMLDocument(inputModel.getSBMLNamespaces())
-    #     csModel = csDocument.createModel()
-    #     copyElements(inputModel, csModel)
-    #     saveToChainShortenedModel(csModel, inputModel, chains)
-    #     inputModel = csModel
+    #     inputModel = saveToChainShortenedSBML(chains, inputModel, verbose)
     #     # update species_id2chebi_id
     #     for s_id in species_id2chebi_id.keys():
     #         if not inputModel.getSpecies(s_id):
@@ -246,28 +275,10 @@ def convert(onto, cofactors, inSBML, outSBML, grSBML, verbose=False):
     s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
 
     # save
-    log(verbose, "saving to {0}...".format(outSBML))
-    # generalized model
-    genDocument = SBMLDocument(inputModel.getSBMLNamespaces())
-    clu2rs = invert(r2clu)
-    if not s_id2clu:
-        genModel = inputModel
-    else:
-        genModel = genDocument.createModel()
-        copyElements(inputModel, genModel)
-        saveToGeneralizedModel(genModel, inputModel, s_id2clu, clu2rs)
-    outDocument = SBMLDocument(inputModel.getSBMLNamespaces())
-    outDocument.setModel(genModel)
-    writeSBMLToFile(outDocument, outSBML)
-    writeSBMLToFile(inputDocument, "/Users/anna/Desktop/MODEL1111190000_peroxisome.xml")
+    saveAsGeneralizedSBML(inputModel, outSBML, r2clu, s_id2clu, verbose)
 
     # groups model
-    log(verbose, "saving to {0}...".format(grSBML))
-    grDocument = convertTo31(Model(inputModel))
-    writeSBMLToFile(grDocument, grSBML)
-    grDocument = reader.readSBMLFromFile(grSBML)
-    grDocument = saveWithGroups(grDocument, s_id2clu, clu2rs)
-    writeSBMLToFile(grDocument, grSBML)
+    # saveAsGroupsSBML(clu2rs, grSBML, inputModel, reader, s_id2clu, verbose)
 
     log(verbose, "the end\n")
 
@@ -277,28 +288,48 @@ def generalize_main(chebi, inSBML, outSBML, grSBML, verbose):
     log(verbose, "parsing ChEBI...")
     ontology = parse(chebi)
     cofactor_ids = getCofactors(ontology)
-    in_path = "/Users/anna/Desktop/biomodels/"
-    out_path = "/Users/anna/Desktop/gen_biomodels/"
-    gr_path = "/Users/anna/Desktop/gr_biomodels/"
-    # for f in listdir(in_path):
-    #     inSBML = in_path + f
-    #     outSBML = out_path + f
-    #     grSBML = gr_path + f
-    #     if not isfile(inSBML) or inSBML.find(".xml") == -1:
-    #         continue
-    #     log(verbose, "Processing " + inSBML)
-    #     convert(ontology, cofactor_ids, inSBML, outSBML, grSBML, verbose)
-    convert(ontology, cofactor_ids, inSBML, outSBML, grSBML, verbose)
+    in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/biomodels/"
+    out_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/gen_biomodels/"
+    if not exists(out_path):
+        makedirs(out_path)
+    gr_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/gr_biomodels/"
+    if not exists(gr_path):
+        makedirs(gr_path)
+    for f in listdir(in_path):
+        inSBML = in_path + f
+        outSBML = out_path + f
+        grSBML = gr_path + f
+        if not isfile(inSBML) or inSBML.find(".xml") == -1:
+            continue
+        log(verbose, "Processing " + inSBML)
+        convert(ontology, cofactor_ids, inSBML, outSBML, grSBML, verbose)
+    # convert(ontology, cofactor_ids, inSBML, outSBML, grSBML, verbose)
+
+
+def get_taxonomies_main():
+    in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/biomodels/"
+    out_file = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/taxo.txt"
+    with open(out_file, 'w') as out_f:
+        for f in listdir(in_path):
+            inSBML = in_path + f
+            if not isfile(inSBML) or inSBML.find(".xml") == -1:
+                continue
+            reader = SBMLReader()
+            document = reader.readSBML(inSBML)
+            model = document.getModel()
+            taxonomy = getTaxonomy(model)
+            out_f.write(taxonomy + "\n")
 
 
 def main(argv=None):
+    # get_taxonomies_main()
     if argv is None:
         argv = sys.argv
     try:
         chebi, inSBML, outSBML, grSBML, verbose = processArgs(argv)
         verbose = False
         generalize_main(chebi, inSBML, outSBML, grSBML, verbose)
-        # testFACoAOxidation_main(verbose)
+        testFACoAOxidation_main(verbose)
         # testACoANum_main(verbose)
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
