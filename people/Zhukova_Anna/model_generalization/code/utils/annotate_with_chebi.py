@@ -33,7 +33,7 @@ def normalize(name):
 def getNames(entity):
     name = normalize(entity.getName())
     name_bis = name
-    end = name.find("(")
+    end = name_bis.find("(")
     if end != -1 and end != 0:
         name_bis = name_bis[0:end].strip()
     return name, name_bis
@@ -89,6 +89,7 @@ def getSpecies2chebi(model, species_list, chebi):
             add2map(entity2species, entity, species)
     i = 0
     # annotate unannotated
+    fake_terms = set()
     for entity, species_set in entity2species.iteritems():
         name, name_bis = getNames(entity)
         possibilities = chebi.getIdsByName(name)
@@ -100,6 +101,7 @@ def getSpecies2chebi(model, species_list, chebi):
             term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
             term.addSynonym(name_bis)
             chebi.addTerm(term)
+            fake_terms.add(term)
             usedTerms.add(term)
             for species in species_set:
                 species2chebi[species.getId()] = term.getId()
@@ -114,4 +116,4 @@ def getSpecies2chebi(model, species_list, chebi):
             species2chebi[species.getId()] = term.getId()
         addAnnotation(entity, BQB_IS, addMiriamPrefix(term.getId()))
         usedTerms.add(term)
-    return species2chebi
+    return species2chebi, fake_terms

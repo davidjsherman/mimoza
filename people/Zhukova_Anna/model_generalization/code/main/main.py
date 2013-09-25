@@ -246,10 +246,12 @@ def convert(onto, cofactors, inSBML, outSBML, grSBML, verbose=False):
     species = {inputModel.getSpecies(s_id) for s_id in s_ids}
 
     log(verbose, "mapping species to ChEBI...")
-    species_id2chebi_id = getSpecies2chebi(inputModel, species, onto)
+    species_id2chebi_id, fake_terms = getSpecies2chebi(inputModel, species, onto)
     terms = [onto.getTerm(t_id) for t_id in set(species_id2chebi_id.values())]
     ontology = subOntology(onto, terms, relationships={'is_a'} | EQUIVALENT_TERM_RELATIONSHIPS, step=None,
                            min_deepness=11)
+    for t in fake_terms:
+        onto.removeTerm(t)
     cofactor_ids = set(filter(lambda t_id: ontology.getTerm(t_id), cofactors))
     ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(inputModel, species_id2chebi_id, ontology)
 
@@ -295,6 +297,8 @@ def generalize_main(chebi, inSBML, outSBML, grSBML, verbose):
     gr_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/gr_biomodels/"
     if not exists(gr_path):
         makedirs(gr_path)
+    o, r = len(ontology.getAllTerms()), len(ontology.rel_map.values())
+    print o, r
     for f in listdir(in_path):
         inSBML = in_path + f
         outSBML = out_path + f
@@ -303,6 +307,8 @@ def generalize_main(chebi, inSBML, outSBML, grSBML, verbose):
             continue
         log(verbose, "Processing " + inSBML)
         convert(ontology, cofactor_ids, inSBML, outSBML, grSBML, verbose)
+        if o != len(ontology.getAllTerms()) or r != len(ontology.rel_map.values()):
+            print len(ontology.getAllTerms()), " ", len(ontology.rel_map.values())
     # convert(ontology, cofactor_ids, inSBML, outSBML, grSBML, verbose)
 
 

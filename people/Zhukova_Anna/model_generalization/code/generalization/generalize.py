@@ -183,7 +183,7 @@ def getPsiSet(onto, term_ids, conflicts):
     def good(t_set, conflicts):
         if not t_set:
             return False
-        if len(t_set) <= 1:
+        if len(t_set) == 1:
             return True
         good = True
         for c_ts in conflicts:
@@ -192,33 +192,37 @@ def getPsiSet(onto, term_ids, conflicts):
                 break
         return good
 
-    transform = lambda t: {t.getId() for t in
-                           (onto.getAnyChildren(t, False, set()) | {t} | onto.getEquivalentTerms(t))} & term_ids
+    get_covered_terms = lambda t: {t.getId() for t in
+                                   (onto.getAnyChildren(t, False, set()) | {t} | onto.getEquivalentTerms(t))} & term_ids
 
+    # the least common ancestors, or roots if there are none
     Ts = onto.commonPts({onto.getTerm(t) for t in term_ids})
     if not Ts:
         Ts = onto.getRoots()
 
+    # sets defined by the least common ancestors
     basics, psi, set2score = [], set(), {}
     for T in Ts:
-        element = transform(T)
+        element = get_covered_terms(T)
         basics.append(element)
         element = tuple(sorted(element))
         level = onto.getLevel(T)
-        set2score[element] = (3, max(level), min(level))
+        set2score[element] = (3, sum(level)/len(level), sum(level)/len(level))
         psi.add(element)
 
+    # sets defined by the least common ancestors' children
     for T in Ts:
-        options = onto.getAnyChildren(T, direct=False, checked=set())
+        options = onto.getAnyChildren(T, False, set())
         for t in options:
-            t_set = transform(t)
+            t_set = get_covered_terms(t)
             if len(t_set) == 0:
                 continue
             element = tuple(sorted(t_set))
             psi.add(element)
             level = onto.getLevel(t)
-            set2score[element] = (3, max(level), min(level))
+            set2score[element] = (3, sum(level)/len(level), sum(level)/len(level))
 
+            # compliment sets of those defined by the least common ancestors' children
             for basic in basics:
                 compl_set = basic - t_set
                 if len(compl_set) > 0:
@@ -236,6 +240,7 @@ def getPsiSet(onto, term_ids, conflicts):
     #     level = onto.getLevel(t)
     #     set2score[element] = 1#(3, max(level), min(level))
 
+    # the differences between sets already in Psi
     to_add = set()
     ps = list(psi)
     i = 0
@@ -243,11 +248,11 @@ def getPsiSet(onto, term_ids, conflicts):
         i += 1
         for ss in ps[i:]:
             sss = tuple(sorted(set(s) - set(ss)))
-            if sss:
+            if sss and not sss in psi:
                 to_add.add(sss)
                 set2score[sss] = avg_tup(set2score[s])
             sss = tuple(sorted(set(ss) - set(s)))
-            if sss:
+            if sss and not sss in psi:
                 to_add.add(sss)
                 set2score[sss] = avg_tup(set2score[ss])
     psi |= to_add
@@ -282,6 +287,7 @@ def greedy(terms, psi, set2score):
     terms = set(terms)
     while terms and psi:
         s = max(psi, key=lambda it: (len(set(it) & terms), set2score[it]))
+        # print set2score[s], " ", len(set(s) & terms)
         phi.append(s)
         terms -= set(s)
         psi.remove(s)
