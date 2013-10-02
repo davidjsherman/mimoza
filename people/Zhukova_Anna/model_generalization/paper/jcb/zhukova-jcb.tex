@@ -19,6 +19,9 @@
 \fi 
     \usepackage{setspace}
     \usepackage[authoryear]{natbib}
+    \usepackage{caption}
+% the following format will be used to emulate the captions produced by fltpage
+\DeclareCaptionLabelFormat{adja-page}{\hrulefill\\#1 #2 \emph{(previous page)}}
 
 \title{Knowledge-based generalization of metabolic models}
 
@@ -40,17 +43,18 @@ joint project-team Magnome\\
 \begin{document}
 \maketitle
 
-{\bf Keywords:} metabolic modelling; generalization; genome-scale reconstruction.
+\paragraph*{Keywords:}metabolic modelling; generalization; genome-scale reconstruction.
 
+\newpage
 \begin{abstract}
-\section*{Background}
-Genome-scale metabolic model reconstruction is a complicated process including (semi-)automatic inference of reactions participating in the organism's metabolism, followed by many iterations of network analysis and improvement. Better and better automatic model inference and analysis tools are being developed, but they may still miss some reactions or add erroneous ones. That is why the human expert's analysis of the model plays an important role at all the iterations of the reconstruction process. However, the size of the genome-scale models (i.e. thousands of reactions) makes it hard for a human to analyse them.
-\section*{Results}
-To aid a human expert in metabolic model analysis we have developed a method for knowledge-based generalization that provides a higher-level view of a metabolic model, by masking inessential details while preserving its essential structure. The method groups biochemical species in the model into semantically equivalent classes and generalizes them into their common parent in the ChEBI ontology. The reactions between the same generalized species are factored together into generalized reactions.
-\section*{Conclusions}
-We have applied our method to several metabolic models and shown that it improves understanding by helping to identify the peculiarities and potential errors, as well as facilitates model understanding and comparison.      
+{\bf Background:} Genome-scale metabolic model reconstruction is a complicated process including (semi-)automatic inference of reactions participating in the organism's metabolism, followed by many iterations of network analysis and improvement. Better and better automatic model inference and analysis tools are being developed, but they may still miss some reactions or add erroneous ones. That is why the human expert's analysis of the model plays an important role at all the iterations of the reconstruction process. However, the size of the genome-scale models (i.e. thousands of reactions) makes it hard for a human to analyse them.
+
+{\bf Results:} To aid a human expert in metabolic model analysis we have developed a method for knowledge-based generalization that provides a higher-level view of a metabolic model, by masking inessential details while preserving its essential structure. The method groups biochemical species in the model into semantically equivalent classes and generalizes them into their common parent in the ChEBI ontology. The reactions between the same generalized species are factored together into generalized reactions.
+
+{\bf Conclusions:} We have applied our method to several metabolic models and shown that it improves understanding by helping to identify the peculiarities and potential errors, as well as facilitates model understanding and comparison.      
 \end{abstract}
 
+\newpage
 \section*{Introduction}
 Genome-scale metabolic models for new organisms include thousands of reactions. In most cases these reactions are automatically inferred by methods that combine databases of reactions and pathways with genomic information and existing models for similar organisms~\citep{Swainston2011}. Genomic data for the new organism is compared to the data of the reference organism, to find genomic evidence such as the presence of catalysing enzymes for the reactions conserved in the new organism. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\citep{Thiele2010}. The models produced at each iteration are intended for computer simulation, and so describe all the reactions thought to participate in the organism's metabolism. Although automatic model inference tools and genome comparison methods are becoming more and more advanced, they still may leave gaps in the model or add erroneous reactions. Thus, model evaluation by human experts remains important at all the iteration steps. However, because of their completeness, genome-scale models are too detailed and complicated to be easily understood by a~human. The abundance of reactions in the model may hide errors.
 
@@ -71,6 +75,7 @@ The \emph{model generalization} process groups chemical species present in the m
 
 By applying the model generalization process, we can build a simplified model that focusses on the high level relationships. The simplified model can be further divided into pathways. 
 
+\newpage
 \section*{Mathematical basis}
 
 \subsection*{Basic definitions}
@@ -480,14 +485,47 @@ As the most complex part of model generalization is the species partition, we wi
 \mbox{\textbf{return }$\sim, M/\sim = \langle S/\sim, S^{(ub)}/\sim, R/\sim \rangle$}
 \end{array} \]
 
+\newpage
 \section*{Applications}
 We have applied our method to three metabolic models that describe the \textit{$\beta$-oxidation of fatty acids} pathway: a genome-scale metabolic model of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}), and two path2model~\citep{Li10} pathways: fatty acid metabolism of the bacteria \textit{Escherichia coli} (\emph{BMID000000083160}) and of the yeast \textit{Saccharomyces cerevisiae} (\emph{BMID000000089673}). We have generalized these three models, and compared the results. 
 
 In \textit{Yarrowia lypolitica} fatty acid oxidation happens in the peroxisome compartment, so we have extracted a sub-model that includes only those species and reactions that occur in the peroxisome (additional file~1). 
 
 The \textit{Yarrowia lypolitica} model before and after generalization is represented in the figures~\ref{fig:bf} and~\ref{fig:yali}.
+
+\begin{figure}[th]
+\caption{\textit{Yarrowia lypolitica} model}  
+\centerline{\includegraphics{../pics/Zhukova_Fig_1.eps}}
+\vspace*{8pt}
+\caption*{The figure shows \textit{Yarrowia lypolitica} fatty acid oxidation model before generalization. Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products. Ubiquitous species are of smaller size and coloured gray. Non-ubiquitous species are divided into six equivalence classes, and coloured accordingly. Reactions are divided into fifteen equivalence classes, also represented by different colours.
+      
+      The size of the model does not allow for readability of the species labels, thus we do not show them.
+      
+      (The figure is produced using the Tulip~\citep{Auber04} graph visualization tool.)}
+\label{fig:bf}
+\end{figure}
+
+\begin{figure}[th]
+\captionsetup{labelformat=empty}
+\centering
+\includegraphics{../pics/Zhukova_Fig_2.eps}
+\caption{Generalization of the \textit{Yarrowia lypolitica} model}  
+\end{figure}
+\clearpage
+\begin{figure}
+\captionsetup{labelformat=adja-page}
+\ContinuedFloat
+    \caption{The figure shows the generalization of the \textit{Yarrowia lypolitica} fatty acid oxidation model (seeFfigure~\ref{fig:bf}). This model operates with quotient species and reactions. For example, the violet \textit{dehydroacyl-CoA} node is a quotient of \textit{hexadec-2-enoyl-CoA}, \textit{oleoyl-CoA}, \textit{tetradecenoyl-CoA}, \textit{trans-dec-2-enoyl-CoA}, \textit{trans-dodec-2-enoyl-CoA}, \textit{trans-hexacos-2-enoyl-CoA}, \textit{trans-octadec-2-enoyl-CoA}, and \textit{trans-tetradec-2-enoyl-CoA} (coloured violet in figure~\ref{fig:bf}). In a similar manner, the light-green \textit{acyl-CoA oxidase} quotient reaction, that converts \textit{fatty acyl-CoA} (yellow) into \textit{dehydroacyl-CoA} (violet), generalizes six corresponding light-green reactions of the initial model (figure~\ref{fig:bf}).\\      
+      The generalized model describes \textit{$\beta$-oxidation} in a more generic way: as a transformation of \textit{fatty acyl-CoA} (yellow) into \textit{dehydroacyl-CoA} (violet), then into \textit{hydroxyacy fatty acyl-CoA} (dark green), \textit{3-ketoacyl-CoA} (magenta), and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the specific model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species present in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). That is why the \textit{beta-oxidation} chain of the reactions in the initial model, transforming step-by-step the fatty-acyl-CoA with the longest carbon chain into the one with the shortest chain, in the generalized model appears as a cycle (generalizing all the \textit{fatty-acyls-CoA} into one species, regardless the chain-length).\\      
+      The more precise model is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (tetracosanoyl-CoA)} (yellow): there exists a "short-cut" reaction (orange), producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.\\      
+      (The figure is produced using the Tulip graph visualization tool.)}
+\label{fig:yali}
+\end{figure}
+
+
 The generalized \textit{$\beta$-oxidation of fatty acids} models of \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} are shown in figure~\ref{fig:gen}.
 
+\newpage
 \section*{Discussions}
 
 We have developed a method that provides a ``zoomed-out'' view of a metabolic model, that keeps its essential structure but hides the details. 
@@ -509,27 +547,8 @@ No competing financial interests exist.
 \newpage
  \bibliographystyle{zhukova-jcb}\bibliography{../db}
 
-\section*{Figures}
-\subsection*{Figure 1 - \textit{Yarrowia lypolitica} model before the generalization}
-%\includegraphics[scale=0.23]{../pics/pero_before_colored.png} 
-      The figure shows \textit{Yarrowia lypolitica} fatty acid oxidation model before generalization. Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products. Ubiquitous species are of smaller size and coloured gray. Non-ubiquitous species are divided into six equivalence classes, and coloured accordingly. Reactions are divided into fifteen equivalence classes, also represented by different colours.
-      
-      The size of the model does not allow for readability of the species labels, thus we do not show them.
-      
-      (The figure is produced using the Tulip~\citep{Auber04} graph visualization tool.)
-\label{fig:bf}
 
-\subsection*{Figure 2 - Generalization of the \textit{Yarrowia lypolitica} model}  
-%\includegraphics[scale=0.17]{../pics/yali_after.png} 
 
-      The figure shows the generalization of the \textit{Yarrowia lypolitica} fatty acid oxidation model (shown in figure~\ref{fig:bf}). This model operates with quotient species and reactions. For example, the violet \textit{dehydroacyl-CoA} node is a quotient of \textit{hexadec-2-enoyl-CoA}, \textit{oleoyl-CoA}, \textit{tetradecenoyl-CoA}, \textit{trans-dec-2-enoyl-CoA}, \textit{trans-dodec-2-enoyl-CoA}, \textit{trans-hexacos-2-enoyl-CoA}, \textit{trans-octadec-2-enoyl-CoA}, and \textit{trans-tetradec-2-enoyl-CoA} (coloured violet in figure~\ref{fig:bf}). In a similar manner, the light-green \textit{acyl-CoA oxidase} quotient reaction, that converts \textit{fatty acyl-CoA} (yellow) into \textit{dehydroacyl-CoA} (violet), generalizes six corresponding light-green reactions of the initial model (figure~\ref{fig:bf}).
-      
-      The generalized model describes \textit{$\beta$-oxidation} in a more generic way: as a transformation of \textit{fatty acyl-CoA} (yellow) into \textit{dehydroacyl-CoA} (violet), then into \textit{hydroxyacy fatty acyl-CoA} (dark green), \textit{3-ketoacyl-CoA} (magenta), and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the specific model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species presented in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). That is why the \textit{beta-oxidation} chain of the reactions in the initial model, transforming step-by-step the fatty-acyl-CoA with the longest carbon chain into the one with the shortest chain, in the generalized model appears as a cycle (generalizing all the \textit{fatty-acyls-CoA} into one species, regardless the chain-length).
-      
-      The more precise model, is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (stearoyl-CoA)} (yellow): there exists a "short-cut" reaction (orange), producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.
-      
-      (The figure is produced using the Tulip graph visualization tool.)
-\label{fig:yali}
 
 \subsection*{Figure 3 - Generalization of the \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} models}
 %\includegraphics[]{../pics/sace_ecoli.png} 
