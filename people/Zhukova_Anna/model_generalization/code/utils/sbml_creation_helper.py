@@ -231,3 +231,11 @@ def copyReaction(model, prototype, species_id_old2new, param_id_old2new, unit_id
 
     model.addReaction(new_reaction)
     return new_reaction
+
+def remove_is_a_reactions(input_model):
+    to_remove = []
+    for reaction in input_model.getListOfReactions():
+        if 1 == reaction.getNumReactants() == reaction.getNumProducts():  # and reaction.getName().find("isa ") != -1:
+            to_remove.append(reaction.getId())
+    for r_id in to_remove:
+        input_model.removeReaction(r_id)
