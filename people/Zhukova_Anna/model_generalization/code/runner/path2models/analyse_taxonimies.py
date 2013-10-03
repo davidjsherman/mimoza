@@ -3,6 +3,7 @@ from os import listdir
 from shutil import copyfile
 from libsbml import SBMLReader
 import sys
+from runner.path2models.main import ROOT_DIR
 from utils.rdf_annotation_helper import getTaxonomy
 
 __author__ = 'anna'
@@ -16,8 +17,8 @@ def main(argv=None):
 
 
 def get_taxonomies_main():
-    bm_in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/bacteria_1/"
-    in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/sorted_bacteria/"
+    bm_in_path = ROOT_DIR + "bacteria_1/"
+    in_path = ROOT_DIR + "sorted_bacteria/"
     taxonomy_file = "taxo.txt"
     for d in listdir(in_path):
         d = in_path + d + "/"
@@ -39,11 +40,11 @@ def get_taxonomies_main():
 
 
 def extract_fungi():
-    bm_in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/biomodels/"
-    gen_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/gen_biomodels/"
-    dist = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/fungi/"
+    bm_in_path = ROOT_DIR + "biomodels/"
+    gen_path = ROOT_DIR + "gen_biomodels/"
+    dist = ROOT_DIR + "fungi/"
     tax_ids = set()
-    with open('/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/taxidlist.txt', 'r') as f:
+    with open('ROOT_DIR + "taxidlist.txt', 'r') as f:
         for l in f:
             tax_id = l.replace('\n', '').strip()
             if tax_id:
@@ -62,12 +63,12 @@ def extract_fungi():
 
 
 def extract_bacteria():
-    bm_in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/biomodels/"
-    gen_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/gen_biomodels/"
-    dist = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/bacteria/"
-    dist1 = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/bacteria1/"
+    bm_in_path = ROOT_DIR + "biomodels/"
+    gen_path = ROOT_DIR + "gen_biomodels/"
+    dist = ROOT_DIR + "bacteria/"
+    dist1 = ROOT_DIR + "bacteria1/"
     tax_ids = set()
-    with open('/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/taxidlist_bacteria.txt', 'r') as f:
+    with open(ROOT_DIR + "taxidlist_bacteria.txt", 'r') as f:
         for l in f:
             tax_id = l.replace('\n', '').strip()
             if tax_id:
@@ -87,7 +88,7 @@ def extract_bacteria():
 
 
 def get_taxonomy_sense():
-    in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/sorted_gen_biomodels/"
+    in_path = ROOT_DIR + "sorted_gen_biomodels/"
     taxonomy_file = "commontree.txt"
     for d in listdir(in_path):
         t_file = in_path + d + "/" + taxonomy_file
@@ -135,8 +136,8 @@ def update_tree():
     #w = Workbook()
     #ws = w.add_sheet(u'Fungi')
 
-    with open('/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/fungi_commontree.txt', 'r') as tree:
-        with open('/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/fungi_commontree1.txt', 'w') as out_tree:
+    with open(ROOT_DIR + 'fungi_commontree.txt', 'r') as tree:
+        with open(ROOT_DIR + 'fungi_commontree1.txt', 'w') as out_tree:
             #i = 0
             for l in tree:
                 depth = l.count('+ ')

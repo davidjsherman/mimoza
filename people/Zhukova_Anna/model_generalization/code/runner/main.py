@@ -19,13 +19,13 @@ from utils.usage import Usage
 __author__ = 'anna'
 
 ##
-# main module generalizes the model.
-# usage: main.py --model model.xml --chebi chebi.obo --outmodel output_model.xml --verbose
+# runner module generalizes the model.
+# usage: runner.py --model model.xml --chebi chebi.obo --outmodel output_model.xml --verbose
 ##
 
 help_message = '''
 Generalizes the model.
-usage: main.py --model model.xml --chebi chebi.obo --outmodel output_model.xml --verbose
+usage: runner.py --model model.xml --chebi chebi.obo --outmodel output_model.xml --verbose
 '''
 
 
@@ -142,27 +142,6 @@ def convert(onto, cofactors, in_sbml, out_sbml, groups_sbml, verbose=False):
 
     log(verbose, "the end\n")
 
-
-def generalize_many(chebi, verbose):
-    # annotate with ChEBI
-    log(verbose, "parsing ChEBI...")
-    ontology = parse(chebi)
-    cofactor_ids = getCofactors(ontology)
-    in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/biomodels/"
-    out_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/gen_biomodels/"
-    if not exists(out_path):
-        makedirs(out_path)
-    gr_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/gr_biomodels/"
-    if not exists(gr_path):
-        makedirs(gr_path)
-        for f in listdir(in_path):
-            in_sbml = in_path + f
-            out_sbml = out_path + f
-            groups_sbml = gr_path + f
-            if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
-                continue
-            log(verbose, "Processing " + in_sbml)
-            convert(ontology, cofactor_ids, in_sbml, out_sbml, groups_sbml, verbose)
 
 
 if __name__ == "__main__":

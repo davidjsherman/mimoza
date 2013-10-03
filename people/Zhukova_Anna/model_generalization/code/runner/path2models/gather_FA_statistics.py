@@ -2,7 +2,7 @@ from genericpath import isfile, exists
 from os import listdir, makedirs
 from shutil import copyfile
 from libsbml import SBMLReader, os
-import sys
+from runner.path2models.main import ROOT_DIR
 from utils.annotate_with_chebi import getSpeciesTerm, EQUIVALENT_TERM_RELATIONSHIPS
 from utils.misc import add2map
 from utils.ontology import parse
@@ -61,8 +61,8 @@ def test_acyl_coa_number(model, acyl_coa_terms, chebi):
     return len(acyls_coa), acyl_coa_reactions
 
 
-def main(argv=None):
-    chebi = os.getcwd() + "/../data/chebi.obo"
+def get_statistics():
+    chebi = os.getcwd() + "/../../data/chebi.obo"
     ontology = parse(chebi)
     # FA-CoA, trans A-CoA, hydroxy FA-CoA, oxo A-CoA
     the_ids = ['chebi:37554', 'chebi:51006', 'chebi:61902', 'chebi:15489']
@@ -76,8 +76,8 @@ def main(argv=None):
     the_terms[0] -= (the_terms[3] | the_terms[1] | the_terms[2])
     #result = {}
     #model2key = {}
-    in_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/bacteria/"
-    out_path = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/sorted_bacteria/"
+    in_path = ROOT_DIR + "bacteria/"
+    out_path = ROOT_DIR + "sorted_bacteria/"
     for f in listdir(in_path):
         in_sbml = in_path + f
         if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
@@ -110,7 +110,3 @@ def main(argv=None):
         #    print " & ".join(s), str(it[4]), " \\\\"
         #for m in sorted(model2key.keys()):
         #     print m, " & ", model2key[m], " \\\\"
-
-
-if __name__ == "__main__":
-    sys.exit(main())
