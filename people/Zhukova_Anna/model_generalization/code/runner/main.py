@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 # encoding: utf-8
-from genericpath import exists, isfile
 
 import getopt
-from os import makedirs, listdir
 import sys
 from libsbml import *
-from generalization.generalize import generalize
-from generalization.mark_ubiquitous import getUbiquitousSpeciesSet, getCofactors
-from utils.annotate_with_chebi import getSpecies2chebi, annotateUbiquitous, EQUIVALENT_TERM_RELATIONSHIPS
+from generalization.generalize import generalize_model
+from generalization.mark_ubiquitous import getCofactors
+from utils.annotate_with_chebi import annotateUbiquitous
 from utils.logger import log
-from utils.ontology import parse, subOntology
-from utils.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
-from utils.sbml_creation_helper import remove_is_a_reactions
-from utils.sbml_serializer import update_initial_sbml, save_as_generalized_sbml
+from utils.misc import invert
+from utils.ontology import parse
+from utils.sbml_serializer import update_initial_sbml, save_as_generalized_sbml, save_as_groups_sbml
 from utils.usage import Usage
 
 __author__ = 'anna'
@@ -90,46 +87,13 @@ def convert(onto, cofactors, in_sbml, out_sbml, groups_sbml, verbose=False):
     reader = SBMLReader()
     input_doc = reader.readSBML(in_sbml)
     input_model = input_doc.getModel()
-    log(verbose, "filtering reactions and species...")
-    remove_is_a_reactions(input_model)
-    # go only for reactions inside organelles
-    reactions = filter(lambda reaction: filterReactionByNotTransport(reaction, input_model),
-                       input_model.getListOfReactions())
-    s_ids = set()
-    for r in reactions:
-        s_ids |= getProducts(r) | getReactants(r)
-    species = {input_model.getSpecies(s_id) for s_id in s_ids}
 
-    log(verbose, "mapping species to ChEBI...")
-    species_id2chebi_id, fake_terms = getSpecies2chebi(input_model, species, onto)
-    terms = [onto.getTerm(t_id) for t_id in set(species_id2chebi_id.values())]
-    ontology = subOntology(onto, terms, relationships={'is_a'} | EQUIVALENT_TERM_RELATIONSHIPS, step=None,
-                           min_deepness=11)
-    for t in fake_terms:
-        onto.removeTerm(t)
-    cofactor_ids = set(filter(lambda cofactor_id: ontology.getTerm(cofactor_id), cofactors))
-    ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(input_model, species_id2chebi_id, ontology)
+    input_model, species_id2chebi_id, ubiquitous_chebi_ids, s_id2clu, r2clu = generalize_model(input_model, onto,
+                                                                                               cofactors, False,
+                                                                                               verbose)
 
     # print "ubiquitous: ", {ontology.getTerm(it).getName() for it in ubiquitous_chebi_ids}
     annotateUbiquitous(input_model, species_id2chebi_id, ubiquitous_chebi_ids)
-
-    # shorten chains
-    # log(verbose, "chain shortening...")
-    # chains = shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
-    # if chains:
-    #     # save
-    #     input_model = saveToChainShortenedSBML(chains, input_model, verbose)
-    #     # update species_id2chebi_id
-    #     for s_id in species_id2chebi_id.keys():
-    #         if not input_model.getSpecies(s_id):
-    #             del species_id2chebi_id[s_id]
-    #     # update reactions, go only for reactions inside organelles
-    #     reactions = filter(lambda r: filterReactionByNotTransport(r, input_model), input_model.getListOfReactions())
-
-    # generalize
-    log(verbose, "generalizing...")
-    s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
-    s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
 
     # update input file
     update_initial_sbml(input_model, in_sbml, verbose)
@@ -138,10 +102,10 @@ def convert(onto, cofactors, in_sbml, out_sbml, groups_sbml, verbose=False):
     save_as_generalized_sbml(input_model, out_sbml, r2clu, s_id2clu, verbose)
 
     # save groups model
-    # saveAsGroupsSBML(clu2rs, groups_sbml, input_model, reader, s_id2clu, verbose)
+    clu2rs = invert(r2clu)
+    save_as_groups_sbml(clu2rs, groups_sbml, input_model, reader, s_id2clu, verbose)
 
     log(verbose, "the end\n")
-
 
 
 if __name__ == "__main__":

@@ -1,10 +1,15 @@
+from StdSuites.AppleScript_Suite import inches
+from generalization.mark_ubiquitous import getUbiquitousSpeciesSet
+from utils.annotate_with_chebi import getSpecies2chebi, annotateUbiquitous
 from utils.logger import log
-from utils.ontology import Term
-from utils.reaction_filters import getReactants, getProducts
+from utils.ontology import Term, subOntology
+from utils.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
 from utils.misc import add2map, invert
+from utils.sbml_creation_helper import remove_is_a_reactions
+from utils.sbml_serializer import save_as_chain_shortened_sbml
 
 __author__ = 'anna'
-
+EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
 
 def getReactions2Factor(reactions, term_id2clu, s_id2term_id):
     vk2r = {}
@@ -513,3 +518,51 @@ def printFinalChains(chains):
         blueprint.append(len(r_ids))
     print "   ", sorted(blueprint)
 
+
+def map2chebi(cofactors, input_model, onto, species):
+    species_id2chebi_id, fake_terms = getSpecies2chebi(input_model, species, onto)
+    terms = [onto.getTerm(t_id) for t_id in set(species_id2chebi_id.values())]
+    ontology = subOntology(onto, terms, relationships={'is_a'} | EQUIVALENT_TERM_RELATIONSHIPS, step=None,
+                           min_deepness=11)
+    for t in fake_terms:
+        onto.removeTerm(t)
+    cofactor_ids = set(filter(lambda cofactor_id: ontology.getTerm(cofactor_id), cofactors))
+    ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(input_model, species_id2chebi_id, ontology)
+    return ontology, species_id2chebi_id, ubiquitous_chebi_ids
+
+
+def generalize_model(input_model, onto, cofactors, sh_chains=True, verbose=False):
+    remove_is_a_reactions(input_model)
+
+    log(verbose, "filtering reactions and species...")
+    # go only for reactions inside organelles
+    reactions = filter(lambda reaction: filterReactionByNotTransport(reaction, input_model),
+                       input_model.getListOfReactions())
+    s_ids = set()
+    for r in reactions:
+        s_ids |= getProducts(r) | getReactants(r)
+    species = {input_model.getSpecies(s_id) for s_id in s_ids}
+
+    log(verbose, "mapping species to ChEBI...")
+    ontology, species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, onto, species)
+
+    if sh_chains:
+        # shorten chains
+        log(verbose, "chain shortening...")
+        chains = shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
+        if chains:
+             # save
+             input_model = save_as_chain_shortened_sbml(chains, input_model, verbose)
+             # update species_id2chebi_id
+             for s_id in species_id2chebi_id.keys():
+                 if not input_model.getSpecies(s_id):
+                     del species_id2chebi_id[s_id]
+             # update reactions, go only for reactions inside organelles
+             reactions = filter(lambda r: filterReactionByNotTransport(r, input_model), input_model.getListOfReactions())
+
+    # generalize
+    log(verbose, "generalizing...")
+    s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
+    s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
+
+    return input_model, species_id2chebi_id, ubiquitous_chebi_ids, s_id2clu, r2clu

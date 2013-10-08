@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[9pt]{article}
 
 \usepackage{ifpdf}
 \ifpdf 
@@ -20,6 +20,9 @@
     \usepackage{setspace}
     \usepackage[authoryear]{natbib}
     \usepackage{caption}
+   \usepackage{fullpage}
+
+
 % the following format will be used to emulate the captions produced by fltpage
 \DeclareCaptionLabelFormat{adja-page}{\hrulefill\\#1 #2 \emph{(previous page)}}
 
@@ -33,7 +36,7 @@ joint project-team Magnome\\
 351, cours de la Lib\'{e}ration F-33405 Talence cedex, France}
 
 \date{}
-\setstretch{2}
+\setstretch{1}
 \newcounter{fig}
 \newcounter{pbm}
 \newcounter{lm}
@@ -42,10 +45,8 @@ joint project-team Magnome\\
 
 \begin{document}
 \maketitle
-
-\paragraph*{Keywords:}metabolic modelling; generalization; genome-scale reconstruction.
-
 \newpage
+
 \begin{abstract}
 {\bf Background:} Genome-scale metabolic model reconstruction is a complicated process including (semi-)automatic inference of reactions participating in the organism's metabolism, followed by many iterations of network analysis and improvement. Better and better automatic model inference and analysis tools are being developed, but they may still miss some reactions or add erroneous ones. That is why the human expert's analysis of the model plays an important role at all the iterations of the reconstruction process. However, the size of the genome-scale models (i.e. thousands of reactions) makes it hard for a human to analyse them.
 
@@ -53,6 +54,8 @@ joint project-team Magnome\\
 
 {\bf Conclusions:} We have applied our method to several metabolic models and shown that it improves understanding by helping to identify the peculiarities and potential errors, as well as facilitates model understanding and comparison.      
 \end{abstract}
+
+\paragraph*{Keywords:}metabolic modelling; generalization; genome-scale reconstruction.
 
 \newpage
 \section*{Introduction}
