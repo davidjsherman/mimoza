@@ -7,15 +7,16 @@ if version < '2.2.3':
     DistributionMetadata.classifiers = None
     DistributionMetadata.download_url = None
 
-setup(name='model_generalization',
-      description='SBML Model Generalization Utilities',
+setup(name='SBMLModelGeneralization',
+      description='SBML model generalization utilities.',
+      long_description=open('README.txt').read(),
       author='Anna Zhukova',
       author_email='anna.zhukova@inria.fr',
       url='https://team.inria.fr/magnome/software/',
       version='1.0',
       packages=['generalization', 'runner', 'utils'],
-      data_files=[('.', ['Licence_CeCILL_V2-en.txt']), ('data', ['data/chebi.obo'])],
-      license='Licence_CeCILL_V2-en.txt',
+      data_files=[('data', ['data/chebi.obo'])],
+      license='LICENSE.txt',
       platform=['MacOS','Linux', 'Windows'],
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -29,7 +30,6 @@ setup(name='model_generalization',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
           ],
-      long_description=open('README.txt').read(),
       install_requires=["libsbml >= 5.0.0"],
       requires=['libsbml']
       )

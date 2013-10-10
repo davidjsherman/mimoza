@@ -61,22 +61,22 @@ def getUbiquitousSpeciesSet(model, species_id2chebi_id, ontology, threshold=UBIQ
     return ubiquitous_chebi_new
 
 
-def getCofactors(ontology):
+def getCofactors(onto):
     cofactors = set()
-    sub_cofactors = ontology.getTerm(COFACTOR_CHEBI_ID).getChildren(False)
+    sub_cofactors = onto.getTerm(COFACTOR_CHEBI_ID).getChildren(False)
 
     def is_cofactor(t_id):
         if COFACTOR_CHEBI_ID == t_id:
             return True
-        return ontology.getTerm(t_id) in sub_cofactors
+        return onto.getTerm(t_id) in sub_cofactors
 
-    for it in ontology.getRelationshipParticipants('has_role'):
+    for it in onto.getRelationshipParticipants('has_role'):
         subj, rel, obj = it
         if rel == 'has_role' and is_cofactor(obj):
-            subj_term = ontology.getTerm(subj)
-            children = {t.getId() for t in ontology.getAnyChildren(subj_term, False, set(), relationships={
+            subj_term = onto.getTerm(subj)
+            children = {t.getId() for t in onto.getAnyChildren(subj_term, False, set(), relationships={
                 'is_conjugate_base_of', 'is_conjugate_acid_of'})}
-            equals = {t.getId() for t in ontology.getEquivalentTerms(subj_term, relationships={
+            equals = {t.getId() for t in onto.getEquivalentTerms(subj_term, relationships={
                 'is_conjugate_base_of', 'is_conjugate_acid_of'})}
             cofactors |= {subj} | children | equals
     return cofactors
