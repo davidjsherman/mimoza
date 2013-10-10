@@ -225,71 +225,6 @@ For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset
 \end{array} \]
 The Compute$\mathring{\sim}$ algorithm forms the equivalence classes for ubiquitous and then specific species as in Definition~2 and then computes the generalized reactions.
 
-\subsection*{Step 3. Species equivalence class number maximization}
-\newtheorem{p1}[pbm]{Problem}
-\begin{p1}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(1'), find an equivalence operation $\tilde{\sim}$ that obeys restriction~(2) and does not change the reaction equivalence classes: $R/\sim = R/\tilde{\sim}$. 
-\end{p1}
-\subsubsection*{Algorithm}
-To satisfy the restriction~(2) we will associate each species $s$ in the initial model with a pair of reaction equivalence classes sets in the quotient reaction set $R/{\sim}$: those induced by reactions where it participates as a reactant or as a product: \\
-$s \rightarrow \langle R^{(rs)}_s = \{[r^{(rs)}_1]^{\sim}, \ldots, [r^{(rs)}_o]^{\sim}\}, R^{(ps)}_s = \{[r^{(ps)}_1]^{\sim}, \ldots, [r^{(ps)}_t]^{\sim}\}\rangle$.
-
-\newtheorem{eq1}[def]{Definition}\label{equiv1}
-\begin{eq1}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(1'), let us define an \emph{equivalence operation $\tilde{\sim}$} as forming a separate species equivalence class for each of the ubiquitous species, and putting $\sim$-equivalent specific species that intersect in their product or reactant reaction classes in the same equivalence class:
-\[ \begin{array}{rll}
-\mbox{$\forall s^{(ub)} \in S^{(ub)}, s \in S \;\; s^{(ub)} \tilde{\sim} s$} & \mbox{$\iff$} & \mbox{$s^{(ub)} = s$}, \\
-\mbox{$\forall s, \tilde{s} \in S \backslash S^{(ub)} \;\; s \tilde{\sim} \tilde{s}$} & \mbox{$\iff \;\land$} & 
-	\begin{array}{l}
-		\mbox{$s \sim \tilde{s}$} \\
-		\mbox{$(R^{(rs)}_s \cap R^{(rs)}_{\tilde{s}} \neq \emptyset)\;\lor\;$} 
-		\mbox{$(R^{(ps)}_s \cap R^{(ps)}_{\tilde{s}} \neq \emptyset)\;\lor\;$}
-		\mbox{$(\exists \dot{s} \in S:\; s \tilde{\sim} \dot{s} \land \dot{s} \tilde{\sim} \tilde{s})$}.
-	\end{array}
-\end{array} \]
-\end{eq1}
-
-Any further partition of the quotient species set would imply the partition of the quotient reaction set. Hence the number of species equivalence classes is maximal for the current number of reaction equivalence classes, and the restriction (2) is satisfied.
-
-\subsubsection*{Algorithm 2 - Maximization of the Number of Species Equivalence Classes}
-\[ \begin{array}{l}
-\mbox{\textbf{Algorithm: }Maximize}\\
-\mbox{\textbf{Data: }} \begin{array}{l} \mbox{${\sim}$ - equivalence operation defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$,}\\ \mbox{$M/{\sim} = \langle S/{\sim}, S^{(ub)}/{\sim} \subset S/{\sim}, R/{\sim} \rangle$ - corresponding generalized model.} 
-\end{array}\\
-\mbox{\textbf{Result: }} \begin{array}{l} \mbox{$\tilde{\sim}$ - equivalence operation described in Problem~2,}\\  \mbox{$M/\tilde{\sim} = \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim} \subset S/\tilde{\sim}, R/\tilde{\sim} \rangle$ - corresponding generalized model.} \end{array}\\
-\mbox{~}\\
-\mbox{$S/\tilde{\sim} \leftarrow \emptyset;$ // resultant quotient species set $ S/{\tilde{\sim}}\subset 2^S$}\\
-\mbox{$S^{(ub)}/\tilde{\sim} \leftarrow S^{(ub)}/\sim;$ // resultant quotient ubiquitous species set $ S^{(ub)}/{\tilde{\sim}}\subset 2^{S^{(ub)}}$}\\
-\mbox{$R/\tilde{\sim} \leftarrow R/\sim;$ // resultant quotient reaction set $ R/{\tilde{\sim}}\subset 2^R$}\\
-\mbox{$\tilde{\sim} \leftarrow \sim;$ // resultant equivalence operation $ {\tilde{\sim}}: S\cup{R} \rightarrow S/{\tilde{\sim}}\cup{R/{\tilde{\sim}}}$}\\
-\mbox{~}\\
-\mbox{/* Update specific species generalization */}\\
-\mbox{~}\\
-\mbox{// Map a species to a set of its $\sim$-equivalent species}\\
-\mbox{// that participate in $\sim$-equivalent reactions}\\
-\mbox{$r\_sim \leftarrow \lambda{s}.\{\tilde{s}\sim{s}|\exists r,\tilde{r}\in{R}: s\in reactants(r) \land \tilde{s}\in reactants(\tilde{r}) \land r \sim \tilde{r}\};$}\\
-\mbox{$p\_sim \leftarrow \lambda{s}.\{\tilde{s}\sim{s}|\exists r,\tilde{r}\in{R}: s\in products(r) \land \tilde{s}\in products(\tilde{r}) \land r \sim \tilde{r}\};$}\\
-\mbox{$sim \leftarrow \lambda{s}.r\_sim(s)\cup p\_sim(s);$}\\
-\mbox{~}\\
-\mbox{$S/\tilde{\sim} \leftarrow S^{(ub)}/\tilde{\sim} \cup \{sim(s)|s \in S\backslash S^{(ub)}\};$}\\
-\mbox{~}\\
-\mbox{// Merge all quotient species sets that intersect}\\
-\mbox{\textbf{while }$\exists S^{(gen)} \neq \tilde{S}^{(gen)} \in S/\tilde{\sim}: S^{(gen)} \cap \tilde{S}^{(gen)} \neq \emptyset$\textbf{ do}}\\
-\left| \indent\mbox{$S/\tilde{\sim} \leftarrow (S/\tilde{\sim}\backslash{\{S^{(gen)}, \tilde{S}^{(gen)}\}})\cup\{S^{(gen)}\cup \tilde{S}^{(gen)}\};$}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{~}\\
-\mbox{// Update $\tilde{\sim}$}\\
-\mbox{\textbf{for }$S^{(gen)}\in{S/\tilde{\sim}}$\textbf{ do}}\\
-\left| \indent \begin{array}{l}
-\mbox{\textbf{for }$s \in S^{(gen)}$\textbf{ do}}\\
-\left| \indent\mbox{$[s]^{\tilde{\sim}} \leftarrow S^{(gen)};$ // map $s$ to its equivalence class}\right. \\
-\mbox{\textbf{end}}
-\end{array}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{~}\\
-\mbox{\textbf{return }$\tilde{\sim}, \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim}, R/\tilde{\sim} \rangle$}
-\end{array} \]
-
 \subsection*{Step 2. Stoichiometry preserving property obedience}
 \newtheorem{p2}[pbm]{Problem}
 \begin{p2}
@@ -306,7 +241,7 @@ we will partition this species equivalence class $[s]^{{\sim}^i} = [\tilde{s}]^{
 
 As at each iteration one equivalence species class is partitioned, resolving one of the conflicts. In the worst case, the equality operation $=$ (each species is equivalent only to itself) will be achieved. As it obeys the stoichiometry preserving property~(1'), the process will terminate. \\
 
-\subsubsection*{Algorithm 3 - Stoichiometry Preserving Property Obedience}
+\subsubsection*{Algorithm 2 - Stoichiometry Preserving Property Obedience}
 \[ \begin{array}{l}
 \mbox{\textbf{Algorithm: }PreserveStoichiometry}\\
 \mbox{\textbf{Data: }} \begin{array}{l} \mbox{${\sim}$ - equivalence operation defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$,}\\ \mbox{$M/{\sim} = \langle S/{\sim}, S^{(ub)}/{\sim} \subset S/{\sim}, R/{\sim} \rangle$ - corresponding generalized model.} 
@@ -483,7 +418,7 @@ To approximate the solution of the set cover problem, we will use a greedy algor
 \subsubsection*{Greedy Algorithm}
 Among the available subset candidates $S_i \in \Psi$ we will pick the one of the largest size and add it to the resulting set cover $\Pi$. We will repeat this operation until all elements of $X$ are covered. \\
 
-\subsubsection*{Algorithm 4 - Greedy Set Cover Obedience}
+\subsubsection*{Algorithm 3 - Greedy Set Cover Obedience}
 \[ \begin{array}{l}
 \mbox{\textbf{Algorithm: }GreedySetCover}\\
 \mbox{\textbf{Data: }}\begin{array}{l}\mbox{$X$ - set of interest,}\\ \mbox{$\Psi \subseteq 2^X$ - set of subsets of $X$}\end{array}\\
@@ -505,6 +440,71 @@ Among the available subset candidates $S_i \in \Psi$ we will pick the one of the
 \mbox{\textbf{return }$\Pi$}
 \end{array} \]
 Greedy set cover is a polynomial time approximation algorithm that achieves an approximation ratio of $H(\sharp X)$, where $H(n)$ is the $n$-th harmonic number: $H(n) = \sum^n_{i = 1}\frac{1}{i} \leq \ln{n} + 1$~\citep{Chvatal1979}. It is the best-possible polynomial time approximation algorithm for set cover, under plausible complexity assumptions~\citep{Feige1998}. 
+
+\subsection*{Step 3. Species equivalence class number maximization}
+\newtheorem{p1}[pbm]{Problem}
+\begin{p1}
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(1'), find an equivalence operation $\tilde{\sim}$ that obeys restriction~(2) and does not change the reaction equivalence classes: $R/\sim = R/\tilde{\sim}$. 
+\end{p1}
+\subsubsection*{Algorithm}
+To satisfy the restriction~(2) we will associate each species $s$ in the initial model with a pair of reaction equivalence classes sets in the quotient reaction set $R/{\sim}$: those induced by reactions where it participates as a reactant or as a product: \\
+$s \rightarrow \langle R^{(rs)}_s = \{[r^{(rs)}_1]^{\sim}, \ldots, [r^{(rs)}_o]^{\sim}\}, R^{(ps)}_s = \{[r^{(ps)}_1]^{\sim}, \ldots, [r^{(ps)}_t]^{\sim}\}\rangle$.
+
+\newtheorem{eq1}[def]{Definition}\label{equiv1}
+\begin{eq1}
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(1'), let us define an \emph{equivalence operation $\tilde{\sim}$} as forming a separate species equivalence class for each of the ubiquitous species, and putting $\sim$-equivalent specific species that intersect in their product or reactant reaction classes in the same equivalence class:
+\[ \begin{array}{rll}
+\mbox{$\forall s^{(ub)} \in S^{(ub)}, s \in S \;\; s^{(ub)} \tilde{\sim} s$} & \mbox{$\iff$} & \mbox{$s^{(ub)} = s$}, \\
+\mbox{$\forall s, \tilde{s} \in S \backslash S^{(ub)} \;\; s \tilde{\sim} \tilde{s}$} & \mbox{$\iff \;\land$} & 
+	\begin{array}{l}
+		\mbox{$s \sim \tilde{s}$} \\
+		\mbox{$(R^{(rs)}_s \cap R^{(rs)}_{\tilde{s}} \neq \emptyset)\;\lor\;$} 
+		\mbox{$(R^{(ps)}_s \cap R^{(ps)}_{\tilde{s}} \neq \emptyset)\;\lor\;$}
+		\mbox{$(\exists \dot{s} \in S:\; s \tilde{\sim} \dot{s} \land \dot{s} \tilde{\sim} \tilde{s})$}.
+	\end{array}
+\end{array} \]
+\end{eq1}
+
+Any further partition of the quotient species set would imply the partition of the quotient reaction set. Hence the number of species equivalence classes is maximal for the current number of reaction equivalence classes, and the restriction (2) is satisfied.
+
+\subsubsection*{Algorithm 4 - Maximization of the Number of Species Equivalence Classes}
+\[ \begin{array}{l}
+\mbox{\textbf{Algorithm: }Maximize}\\
+\mbox{\textbf{Data: }} \begin{array}{l} \mbox{${\sim}$ - equivalence operation defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$,}\\ \mbox{$M/{\sim} = \langle S/{\sim}, S^{(ub)}/{\sim} \subset S/{\sim}, R/{\sim} \rangle$ - corresponding generalized model.} 
+\end{array}\\
+\mbox{\textbf{Result: }} \begin{array}{l} \mbox{$\tilde{\sim}$ - equivalence operation described in Problem~2,}\\  \mbox{$M/\tilde{\sim} = \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim} \subset S/\tilde{\sim}, R/\tilde{\sim} \rangle$ - corresponding generalized model.} \end{array}\\
+\mbox{~}\\
+\mbox{$S/\tilde{\sim} \leftarrow \emptyset;$ // resultant quotient species set $ S/{\tilde{\sim}}\subset 2^S$}\\
+\mbox{$S^{(ub)}/\tilde{\sim} \leftarrow S^{(ub)}/\sim;$ // resultant quotient ubiquitous species set $ S^{(ub)}/{\tilde{\sim}}\subset 2^{S^{(ub)}}$}\\
+\mbox{$R/\tilde{\sim} \leftarrow R/\sim;$ // resultant quotient reaction set $ R/{\tilde{\sim}}\subset 2^R$}\\
+\mbox{$\tilde{\sim} \leftarrow \sim;$ // resultant equivalence operation $ {\tilde{\sim}}: S\cup{R} \rightarrow S/{\tilde{\sim}}\cup{R/{\tilde{\sim}}}$}\\
+\mbox{~}\\
+\mbox{/* Update specific species generalization */}\\
+\mbox{~}\\
+\mbox{// Map a species to a set of its $\sim$-equivalent species}\\
+\mbox{// that participate in $\sim$-equivalent reactions}\\
+\mbox{$r\_sim \leftarrow \lambda{s}.\{\tilde{s}\sim{s}|\exists r,\tilde{r}\in{R}: s\in reactants(r) \land \tilde{s}\in reactants(\tilde{r}) \land r \sim \tilde{r}\};$}\\
+\mbox{$p\_sim \leftarrow \lambda{s}.\{\tilde{s}\sim{s}|\exists r,\tilde{r}\in{R}: s\in products(r) \land \tilde{s}\in products(\tilde{r}) \land r \sim \tilde{r}\};$}\\
+\mbox{$sim \leftarrow \lambda{s}.r\_sim(s)\cup p\_sim(s);$}\\
+\mbox{~}\\
+\mbox{$S/\tilde{\sim} \leftarrow S^{(ub)}/\tilde{\sim} \cup \{sim(s)|s \in S\backslash S^{(ub)}\};$}\\
+\mbox{~}\\
+\mbox{// Merge all quotient species sets that intersect}\\
+\mbox{\textbf{while }$\exists S^{(gen)} \neq \tilde{S}^{(gen)} \in S/\tilde{\sim}: S^{(gen)} \cap \tilde{S}^{(gen)} \neq \emptyset$\textbf{ do}}\\
+\left| \indent\mbox{$S/\tilde{\sim} \leftarrow (S/\tilde{\sim}\backslash{\{S^{(gen)}, \tilde{S}^{(gen)}\}})\cup\{S^{(gen)}\cup \tilde{S}^{(gen)}\};$}\right. \\
+\mbox{\textbf{end}}\\
+\mbox{~}\\
+\mbox{// Update $\tilde{\sim}$}\\
+\mbox{\textbf{for }$S^{(gen)}\in{S/\tilde{\sim}}$\textbf{ do}}\\
+\left| \indent \begin{array}{l}
+\mbox{\textbf{for }$s \in S^{(gen)}$\textbf{ do}}\\
+\left| \indent\mbox{$[s]^{\tilde{\sim}} \leftarrow S^{(gen)};$ // map $s$ to its equivalence class}\right. \\
+\mbox{\textbf{end}}
+\end{array}\right. \\
+\mbox{\textbf{end}}\\
+\mbox{~}\\
+\mbox{\textbf{return }$\tilde{\sim}, \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim}, R/\tilde{\sim} \rangle$}
+\end{array} \]
 
 \subsection*{Complete Algorithm}
 As the most complex part of model generalization is the species partition, we will first do the other steps to minimize the size of each species quotient class to be partitioned. We will start with the equivalence operation $\mathring{\sim}$ described in Lemma~1, maximize the species equivalence class number for $\mathring{\sim}$, then obey the stoichiometry preserving property using the ChEBI ontology and greedy set cover algorithm, and finally maximize the species equivalence class number again.\\
@@ -533,7 +533,7 @@ The \textit{Yarrowia lypolitica} model before and after generalization is repres
 
 \begin{figure}[th]
 \caption{\textit{Yarrowia lypolitica} model}  
-%\centerline{\includegraphics{../pics/Zhukova_Fig_1.eps}}
+\centerline{\includegraphics{../pics/Zhukova_Fig_1.eps}}
 \vspace*{8pt}
 \caption*{The figure shows \textit{Yarrowia lypolitica} fatty acid oxidation model before generalization. Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products. Ubiquitous species are of smaller size and coloured gray. Specific species are divided into six equivalence classes, and coloured accordingly. Reactions are divided into fifteen equivalence classes, also represented by different colours.
       
@@ -546,7 +546,7 @@ The \textit{Yarrowia lypolitica} model before and after generalization is repres
 \begin{figure}[th]
 \captionsetup{labelformat=empty}
 \centering
-%\includegraphics{../pics/Zhukova_Fig_2.eps}
+\includegraphics{../pics/Zhukova_Fig_2.eps}
 \caption{Generalization of the \textit{Yarrowia lypolitica} model}  
 \end{figure}
 \clearpage
