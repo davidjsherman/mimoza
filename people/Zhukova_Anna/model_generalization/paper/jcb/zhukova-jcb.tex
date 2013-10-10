@@ -83,7 +83,7 @@ By applying the model generalization process, we can build a simplified model th
 
 \subsection*{Basic definitions}
 
-We represent a \emph{metabolic model $M$} as a pair of two sets: a set $S$ of biochemical species, and a set $R$ of reactions between them, described in the model: 
+We represent a \emph{metabolic model $M$} as a pair of two sets: a set $S$ of biochemical species, and a set $R$ of reactions between them: 
 
 \[ \begin{array}{ccll}
 \mbox{$M$} & \mbox{$=$} & \mbox{$\langle S, R \rangle$} & \mbox{- model,} \\
@@ -91,7 +91,7 @@ We represent a \emph{metabolic model $M$} as a pair of two sets: a set $S$ of bi
 \mbox{$R$} & \mbox{$=$} & \mbox{$\{r_1, \ldots, r_m\}$} &  \mbox{- reaction set.} 
 \end{array} \]
 
-We represent each \emph{reaction $r \in R$} as a pair of species sets: a set of its reactant species, and a set of its product species. In a chemical reaction, reactants change into products. A chemical reaction may be represented by a balanced chemical equation, showing the formulae of the reactants and products, and the changes that take place\citep{Clugston2000}. This definition leads to the restriction~(1) that all the species participating in the reaction should be different.
+We represent each \emph{reaction $r \in R$} as a pair of species sets: a set of its reactant species, and a set of its product species. A chemical reaction may be represented by a balanced chemical equation, showing the formulae of the reactants and products, and the changes that take place\citep{Clugston2000}. This definition leads to the restriction~(1) that all the species participating in the reaction should be different.
 
 \[ \begin{array}{llr}
 \mbox{$r = $} & \mbox{$\langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle
@@ -102,21 +102,36 @@ We represent each \emph{reaction $r \in R$} as a pair of species sets: a set of 
 To perform the model generalization, we will define an \emph{equivalence operation $\sim$} on the species set, and group species into equivalence classes: $[s_i]^{\sim} = \{s_j \in S | s_j \sim s_i\}$.
 
 Species equivalence imposes reaction equivalence: two reactions are equivalent if their corresponding reactant and product species are pairwise equivalent.
-\[ \begin{array}{ll}
-\mbox{$\forall r, \tilde{r} \in R:$} &  \mbox{$r = \langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle,$}\\
-& \mbox{$\tilde{r} = \langle\{\tilde{s}^{(rs)}_1, \ldots, \tilde{s}^{(rs)}_{\tilde{k}}\},\{\tilde{s}^{(ps)}_1, \ldots, \tilde{s}^{(ps)}_{\tilde{l}}\}\rangle$}\\
-\mbox{$r \sim \tilde{r} \iff $} & \mbox{$k = \tilde{k}, l = \tilde{l}$}, \\
-& \mbox{$\forall i\; 0\leq{i}\leq{k} \; \exists{!} \tilde{i}\; 0\leq \tilde{i}\leq \tilde{k}:\; s^{(rs)}_i \sim \tilde{s}^{(rs)}_{\tilde{i}}$}, \\
-& \mbox{$\forall j\;0\leq j\leq l\;\exists{!} \tilde{j}\;0\leq \tilde{j}\leq\tilde{l}:\;s^{(ps)}_j \sim \tilde{s}^{(ps)}_{\tilde{j}}$}. 
+\[ \begin{array}{l}
+\mbox{$\forall r, \tilde{r} \in R $} \begin{array}{c}
+	\mbox{$r = \langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle,$}\\
+	\mbox{$\tilde{r} = \langle\{\tilde{s}^{(rs)}_1, \ldots, \tilde{s}^{(rs)}_{\tilde{k}}\},\{\tilde{s}^{(ps)}_1, \ldots, \tilde{s}^{(ps)}_{\tilde{l}}\}\rangle$}
+\end{array}\\ 
+\mbox{$r \sim \tilde{r} \iff \; \land$} \begin{array}{l}
+	\mbox{$k = \tilde{k}, l = \tilde{l}$}, \\
+	\mbox{$\forall i\; 0\leq{i}\leq{k} \; \exists{!} \tilde{i}\; 0\leq \tilde{i}\leq \tilde{k}:\; s^{(rs)}_i \sim \tilde{s}^{(rs)}_{\tilde{i}}$}, \\
+	\mbox{$\forall j\;0\leq j\leq l\;\exists{!} \tilde{j}\;0\leq \tilde{j}\leq\tilde{l}:\;s^{(ps)}_j \sim \tilde{s}^{(ps)}_{\tilde{j}}$}.
+\end{array}	 
 \end{array} \]
 
 Equivalent reactions are factored together into a generalized reaction that operates with generalized species (i.e. species equivalence classes): 
 $[r]^{\sim} = \langle\{[s^{(rs)}_1]^{\sim}, \ldots, [s^{(rs)}_k]^{\sim}\}, \{[s^{(ps)}_1]^{\sim}, \ldots, [s^{(ps)}_l]^{\sim}\}\rangle$.
 
-In order to keep the number of distinct species participating in a reaction the restriction~(2), analogous to the restriction~(1), must be satisfied:
+In order to keep the number of distinct species participating in a reaction, the restriction~(1'), analogous to the restriction~(1), must be satisfied:
 \[ \begin{array}{lr}
-\mbox{$[s^{(rs)}_1]^{\sim} \neq \ldots \neq [s^{(rs)}_k]^{\sim} \neq [s^{(ps)}_1]^{\sim} \neq \ldots \neq [s^{(ps)}_l]^{\sim}$} & (2)
+\mbox{$[s^{(rs)}_1]^{\sim} \neq \ldots \neq [s^{(rs)}_k]^{\sim} \neq [s^{(ps)}_1]^{\sim} \neq \ldots \neq [s^{(ps)}_l]^{\sim}$} & (1')
 \end{array} \]
+
+In order to avoid creation of paths in the generalized model, that are not based on the evidence from the initial model, we introduce the restriction~(2): species that do not participate in any pair of equivalent reactions and do not have any common equivalent species can not be grouped together (as there is no evidence of their equivalence in the initial model):
+\[ \begin{array}{clr}
+\mbox{$\forall s, \tilde{s} \in S\; s \sim \tilde{s} \;\Rightarrow\;\lor$} & 
+\begin{array}{l}
+	\mbox{$\exists r \sim \tilde{r} \in R: s \in reactants(r) \land \tilde{s} \in reactants(\tilde{r})$} \\
+	\mbox{$\exists r \sim \tilde{r} \in R: s \in products(r) \land \tilde{s} \in products(\tilde{r})$} \\
+	\mbox{$ \exists \dot{s} \in S:\; s \tilde{\sim} \dot{s} \land \dot{s} \tilde{\sim} \tilde{s}$}.
+\end{array} & (2)
+\end{array} \]
+Note, that restriction~(2) can be reformulated as maximizing the number of species equivalence classes while keeping the reaction equivalence classes unchanged. 
 
 The \emph{generalized model $M/\sim$} is a pair of generalized species and reaction sets (quotient sets):
 \[ \begin{array}{ccll}
@@ -127,12 +142,11 @@ The \emph{generalized model $M/\sim$} is a pair of generalized species and react
 
 The generalized model is a "zoom out" of the initial model. It provides a higher-level view by including less species and reactions, but more generic ones. For example, \textit{3-oxodecanoyl-CoA}, \textit{3-oxolauroyl-CoA}, \textit{3-oxohexanoyl-CoA}, and \textit{3-oxooctanoyl-CoA} species of the initial model can be "zoomed out" into \textit{oxo-fatty acyl-CoA} in the generalized model. 
 
-Every reaction of the generalized model corresponds to at least one reaction of the initial model having the same topology (number of distinct reactant and product species) and operating with species that can be "zoomed out" into those participating in the generalized reaction. The model generalization process also preserves connectivity, i.e. for every pair of reactions sharing a reactant/product in the initial model, the "zoomed out" reactions share a "zoomed out" reactant/product in the generalized model.
+Every reaction of the generalized model corresponds to at least one reaction of the initial model having the same topology (number of distinct reactant and product species) and operating with species that can be "zoomed out" into those participating in the generalized reaction. The appropriate level of abstraction is defined by the initial model as the most general one that satisfies restrictions (1') and (2).
 
 
-\subsubsection*{Ubiquitous species}
-
-We say that a \emph{ubiquitous species} is one that participates in many reactions (e.g. more than a threshold), such as water, hydrogen, oxygen, etc. They are common to most of the models, and do not need to be generalized. In the generalized model each of them forms a trivial equivalence class:
+\subsubsection*{Specific and ubiquitous species}
+We say that a \emph{ubiquitous species} is one that participates in many reactions (e.g. more than a threshold), such as \emph{water}, \emph{hydrogen}, \emph{oxygen}, etc. Grouping species increases the number of reactions they participate in, while these are already shared by many reactions and common to most of the models. During visualisation these species are often even duplicated to improve readability~\citep{Rohn2012}. That is why we do not generalize them. In the generalized model each of them forms a trivial equivalence class:
 \[ \begin{array}{l}
 \mbox{$S^{(ub)} = \{s^{(ub)}_1, \ldots, s^{(ub)}_{\breve{n}}\} \subset S: \forall i\,[s^{(ub)}_i]^{\sim} = \{s^{ub}_i\}$} 
 \end{array} \]
@@ -142,8 +156,17 @@ We say that a \emph{ubiquitous species} is one that participates in many reactio
 \subsection*{Model generalization problem}
 \newtheorem{p0}[pbm]{Problem}
 \begin{p0}
-Given a metabolic model $M=\langle S, S^{(ub)} \subset S, R \rangle$ that describes $n$ species (including $\breve{n} \leq n$ ubiquitous ones) and $m$ reactions, find an equivalence operation $\sim$ that obeys restriction~(2), and minimizes the number of reaction equivalence classes $\sharp R/\sim$. Among such equivalence operations choose the one that defines the maximal number of species equivalence classes $\sharp S/\sim$, i.e., generalize as many reactions as possible, while keeping species maximally specific.
+Given a metabolic model $M=\langle S, S^{(ub)} \subset S, R \rangle$ that describes $n$ species (including $\breve{n} \leq n$ ubiquitous ones) and $m$ reactions, find an equivalence operation $\sim$ that obeys the restrictions~(1') and (2), and minimizes the number of reaction equivalence classes $\sharp R/\sim$.
 \end{p0}
+
+We will solve the model generalization problem~1 in three steps:
+\begin{enumerate}
+\item Define the most general equivalence operation $\mathring{\sim}$ (having minimal number of species equivalence classes $\sharp{S/\mathring{\sim}}$), that does not take into account the restrictions;
+\item Modify the current equivalence operation, so that it satisfies the restriction~(1');
+\item Modify the current equivalence operation, so that it satisfies the restriction~(2);
+\end{enumerate}
+
+\subsubsection*{Step 1. Equivalence operation $\mathring{\sim}$.}
 \newtheorem{eq0}[def]{Definition}\label{equiv0}
 \begin{eq0}
 Given a model $M=\langle S, S^{(ub)}\subset{S}, R \rangle : \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$, let us define an \emph{equivalence operation $\mathring{\sim}$} on the species set $S$ as forming $\breve{n} + 1$ equivalence classes in the quotient set $S/\mathring{\sim}$: one for each of the ubiquitous species, and one for all the other species:
@@ -155,7 +178,7 @@ Given a model $M=\langle S, S^{(ub)}\subset{S}, R \rangle : \sharp S = n, \sharp
 \end{eq0}
 \newtheorem{l1}[lm]{Lemma}
 \begin{l1}
-For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset S, R \rangle$, the quotient species set $S/\sim$ and the quotient reaction set $R/\sim$ induced by $\sim$ are partitions of respectively the quotient species set $S/\mathring{\sim}$ and the quotient reaction set $R/\mathring{\sim} $ induced by $\mathring{\sim}$:
+For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset S, R \rangle$, the corresponding quotient species set $S/\sim$ and quotient reaction set $R/\sim$ are partitions of respectively the quotient species set $S/\mathring{\sim}$ and the quotient reaction set $R/\mathring{\sim} $ induced by $\mathring{\sim}$:
 \[ \begin{array}{c}
 \mbox{$\forall $ equivalence operation $\sim$ defined on $\langle S, S^{(ub)}, R \rangle$} \\
 \begin{array}{cl}
@@ -166,9 +189,7 @@ For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset
 
 \end{l1}
 
-
-
-\subsubsection*{Algorithm 1 - Computation of $\mathring{\sim}$}
+\paragraph*{Algorithm 1 - Computation of $\mathring{\sim}$}
 \[ \begin{array}{l}
 \mbox{\textbf{Algorithm: }Compute$\mathring{\sim}$}\\
 \mbox{\textbf{Data: }} \begin{array}{l} \mbox{$M=\langle{S, S^{(ub)}\subset{S}, R}\rangle: \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$ - metabolic model}\\ \mbox{describing $n$ species,  $\breve{n}$ among them being ubiquitous,  and $m$ reactions.} 
@@ -182,13 +203,13 @@ For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset
 \mbox{~}\\
 \mbox{/* Generalize ubiquitous species */}\\
 \mbox{\textbf{for }$s^{(ub)} \in S^{(ub)}$\textbf{ do}}\\
-\left| \indent\mbox{$\mathring{\sim}(s^{(ub)}) \leftarrow \{s^{(ub)}\};$ // map $s^{(ub)}$ to its equivalence class: $[s^{(ub)}]^{\mathring{\sim}} = \{s^{(ub)}\}$}\right. \\
+\left| \indent\mbox{$[s^{(ub)}]^{\mathring{\sim}} \leftarrow \{s^{(ub)}\};$ // map $s^{(ub)}$ to its equivalence class}\right. \\
 \mbox{\textbf{end}}\\
-\mbox{$S^{(ub)}/{\mathring{\sim}} \leftarrow \{\{s^{(ub)}\}|s^{(ub)} \in S^{(ub)}\};$}\\
+\mbox{$S^{(ub)}/{\mathring{\sim}} \leftarrow \{[s^{(ub)}]^{\mathring{\sim}}|s^{(ub)} \in S^{(ub)}\};$}\\
 \mbox{~}\\
-\mbox{/* Generalize non-ubiquitous species */}\\
+\mbox{/* Generalize specific species */}\\
 \mbox{\textbf{for }$s \in S \backslash S^{(ub)}$\textbf{ do}}\\
-\left| \indent\mbox{$\mathring{\sim}(s)  \leftarrow S \backslash S^{(ub)};$ // map $s$ to its equivalence class: $[s]^{\mathring{\sim}} = S \backslash S^{(ub)}$}\right. \\
+\left| \indent\mbox{$[s]^{\mathring{\sim}}   \leftarrow S \backslash S^{(ub)};$ // map $s$ to its equivalence class}\right. \\
 \mbox{\textbf{end}}\\
 \mbox{$S/{\mathring{\sim}} \leftarrow {S^{(ub)}/{\mathring{\sim}}}\cup\{S \backslash S^{(ub)}\};$}\\
 \mbox{~}\\
@@ -196,36 +217,39 @@ For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset
 \mbox{// map a reaction to its generalized version that operates with generalized species}\\
 \mbox{$gen \leftarrow \lambda{r}.\langle\mathring{\sim}(reactants(r)), \mathring{\sim}(products(r))\rangle;$}\\
 \mbox{\textbf{for }$r \in R$\textbf{ do}}\\
-\left| \indent\mbox{$\mathring{\sim}(r) \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\};$}\right. \\
+\left| \indent\mbox{$[r]^{\mathring{\sim}} \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\};$}\right. \\
 \mbox{\textbf{end}}\\
-\mbox{$R/{\mathring{\sim}} \leftarrow \{\mathring{\sim}(r)|r \in R\};$}\\
+\mbox{$R/{\mathring{\sim}} \leftarrow \{[r]^{\mathring{\sim}}|r \in R\};$}\\
 \mbox{~}\\
 \mbox{\textbf{return }$\mathring{\sim}, \langle S/{\mathring{\sim}}, S^{(ub)}/{\mathring{\sim}}, R/{\mathring{\sim}} \rangle$}
 \end{array} \]
-The Compute$\mathring{\sim}$ algorithm forms the equivalence classes for ubiquitous and then non-ubiquitous species as in Definition~2 and then computes the generalized reactions.
+The Compute$\mathring{\sim}$ algorithm forms the equivalence classes for ubiquitous and then specific species as in Definition~2 and then computes the generalized reactions.
 
-\subsection*{Species equivalence class number maximization}
+\subsection*{Step 3. Species equivalence class number maximization}
 \newtheorem{p1}[pbm]{Problem}
 \begin{p1}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(2), find an equivalence operation $\tilde{\sim}$ that does not change the reaction equivalence classes: $R/\sim = R/\tilde{\sim}$, and maximizes the number of species equivalence classes $\sharp S/\tilde{\sim}$. 
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(1'), find an equivalence operation $\tilde{\sim}$ that obeys restriction~(2) and does not change the reaction equivalence classes: $R/\sim = R/\tilde{\sim}$. 
 \end{p1}
 \subsubsection*{Algorithm}
-To maximize the number of species equivalence classes for the equivalence operation $\sim$ we will associate each species $s$ in the initial model with a pair of reaction equivalence classes sets in the quotient reaction set $R/{\sim}$: those induced by reactions where it participates as a reactant or as a product: \\
+To satisfy the restriction~(2) we will associate each species $s$ in the initial model with a pair of reaction equivalence classes sets in the quotient reaction set $R/{\sim}$: those induced by reactions where it participates as a reactant or as a product: \\
 $s \rightarrow \langle R^{(rs)}_s = \{[r^{(rs)}_1]^{\sim}, \ldots, [r^{(rs)}_o]^{\sim}\}, R^{(ps)}_s = \{[r^{(ps)}_1]^{\sim}, \ldots, [r^{(ps)}_t]^{\sim}\}\rangle$.
 
 \newtheorem{eq1}[def]{Definition}\label{equiv1}
 \begin{eq1}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(2), let us define an \emph{equivalence operation $\tilde{\sim}$} as forming a separate species equivalence class for each of the ubiquitous species, and putting $\sim$-equivalent non-ubiquitous species that intersect in their product or reactant reaction classes in the same equivalence class:
-\[ \begin{array}{ccll}
-\mbox{$\forall s^{(ub)} \in S^{(ub)}, s \in S \;\;$} & \mbox{$s^{(ub)} \tilde{\sim} s$} & \mbox{$\iff$} & \mbox{$s^{(ub)} = s$}, \\
-\mbox{$\forall s, \tilde{s} \in S \backslash S^{(ub)} \;$} & \mbox{$s \tilde{\sim} \tilde{s}$} & \mbox{$\iff $} & \mbox{$s \sim \tilde{s}\;\land$} \\
-& & &(\mbox{$R^{(rs)}_s \cap R^{(rs)}_{\tilde{s}} \neq \emptyset\;\lor$} \\
-& & &~\mbox{$R^{(ps)}_s \cap R^{(ps)}_{\tilde{s}} \neq \emptyset\;\lor$} \\
-& & &~\mbox{$\exists \dot{s} \in S:\; s \tilde{\sim} \dot{s} \land \dot{s} \tilde{\sim} \tilde{s})$}.
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(1'), let us define an \emph{equivalence operation $\tilde{\sim}$} as forming a separate species equivalence class for each of the ubiquitous species, and putting $\sim$-equivalent specific species that intersect in their product or reactant reaction classes in the same equivalence class:
+\[ \begin{array}{rll}
+\mbox{$\forall s^{(ub)} \in S^{(ub)}, s \in S \;\; s^{(ub)} \tilde{\sim} s$} & \mbox{$\iff$} & \mbox{$s^{(ub)} = s$}, \\
+\mbox{$\forall s, \tilde{s} \in S \backslash S^{(ub)} \;\; s \tilde{\sim} \tilde{s}$} & \mbox{$\iff \;\land$} & 
+	\begin{array}{l}
+		\mbox{$s \sim \tilde{s}$} \\
+		\mbox{$(R^{(rs)}_s \cap R^{(rs)}_{\tilde{s}} \neq \emptyset)\;\lor\;$} 
+		\mbox{$(R^{(ps)}_s \cap R^{(ps)}_{\tilde{s}} \neq \emptyset)\;\lor\;$}
+		\mbox{$(\exists \dot{s} \in S:\; s \tilde{\sim} \dot{s} \land \dot{s} \tilde{\sim} \tilde{s})$}.
+	\end{array}
 \end{array} \]
 \end{eq1}
 
-Any further partition of the quotient species set would imply the partition of the quotient reaction set. Hence the number of species equivalence classes is maximal for the current number of reaction equivalence classes. 
+Any further partition of the quotient species set would imply the partition of the quotient reaction set. Hence the number of species equivalence classes is maximal for the current number of reaction equivalence classes, and the restriction (2) is satisfied.
 
 \subsubsection*{Algorithm 2 - Maximization of the Number of Species Equivalence Classes}
 \[ \begin{array}{l}
@@ -239,7 +263,7 @@ Any further partition of the quotient species set would imply the partition of t
 \mbox{$R/\tilde{\sim} \leftarrow R/\sim;$ // resultant quotient reaction set $ R/{\tilde{\sim}}\subset 2^R$}\\
 \mbox{$\tilde{\sim} \leftarrow \sim;$ // resultant equivalence operation $ {\tilde{\sim}}: S\cup{R} \rightarrow S/{\tilde{\sim}}\cup{R/{\tilde{\sim}}}$}\\
 \mbox{~}\\
-\mbox{/* Update non-ubiquitous species generalization */}\\
+\mbox{/* Update specific species generalization */}\\
 \mbox{~}\\
 \mbox{// Map a species to a set of its $\sim$-equivalent species}\\
 \mbox{// that participate in $\sim$-equivalent reactions}\\
@@ -258,7 +282,7 @@ Any further partition of the quotient species set would imply the partition of t
 \mbox{\textbf{for }$S^{(gen)}\in{S/\tilde{\sim}}$\textbf{ do}}\\
 \left| \indent \begin{array}{l}
 \mbox{\textbf{for }$s \in S^{(gen)}$\textbf{ do}}\\
-\left| \indent\mbox{$\tilde{\sim}(s) = S^{(gen)};$ // map $s$ to its equivalence class: $[s]^{\tilde{\sim}} = S^{(gen)}$}\right. \\
+\left| \indent\mbox{$[s]^{\tilde{\sim}} \leftarrow S^{(gen)};$ // map $s$ to its equivalence class}\right. \\
 \mbox{\textbf{end}}
 \end{array}\right. \\
 \mbox{\textbf{end}}\\
@@ -266,21 +290,21 @@ Any further partition of the quotient species set would imply the partition of t
 \mbox{\textbf{return }$\tilde{\sim}, \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim}, R/\tilde{\sim} \rangle$}
 \end{array} \]
 
-\subsection*{Stoichiometry preserving property obedience}
+\subsection*{Step 2. Stoichiometry preserving property obedience}
 \newtheorem{p2}[pbm]{Problem}
 \begin{p2}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$ find an equivalence operation $\breve{\sim}$ that obeys property~(2) and induces a quotient species set $S/\breve{\sim}$ of minimal size $\sharp S/\breve{\sim}$, such that $S/\breve{\sim}$ is a partition of the quotient species set $S/\sim$ induced by $\sim$, i.e., $\forall s \in S \; [s]^{\breve{\sim}} \subset [s]^{\sim} $. 
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$ find an equivalence operation $\breve{\sim}$ that obeys property~(1') and induces a quotient species set $S/\breve{\sim}$ of minimal size $\sharp S/\breve{\sim}$, such that $S/\breve{\sim}$ is a partition of the quotient species set $S/\sim$ induced by $\sim$, i.e., $\forall s \in S \; [s]^{\breve{\sim}} \subset [s]^{\sim} $. 
 \end{p2}
 \subsubsection*{Algorithm}
-We will start with the given equivalence operation $\sim^0 = \sim$, and iteratively improve it, until the stoichiometry preserving property~(2) is obeyed. We will denote the equivalence operation obtained at the $i$-th iteration step as $\sim^i$.
+We will start with the given equivalence operation $\sim^0 = \sim$, and iteratively improve it, until the stoichiometry preserving property~(1') is obeyed. We will denote the equivalence operation obtained at the $i$-th iteration step as $\sim^i$.
 
-At each iteration, if there exists a species equivalence class that violates the stoichiometry preserving property~(2), i.e.:
+At each iteration, if there exists a species equivalence class that violates the stoichiometry preserving property~(1'), i.e.:
 \[ \begin{array}{l}
 \mbox{$\exists s \neq \tilde{s} \in S, r \in R: s \in species(r) \land \tilde{s} \in species(r) \land  [s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i}$}, 
 \end{array} \]
-we will partition this species equivalence class $[s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i}$ into two: $[s]^{{\sim}^{i+1}}  \vee [\tilde{s}]^{{\sim}^{i+1}}  = [s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i} $ to form a new approximation ${\sim}^{i+1}$ of the equivalence operation. When no species equivalence class violating the stoichiometry preserving property~(2) can be found, the current equivalence operation is returned as result.
+we will partition this species equivalence class $[s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i}$ into two: $[s]^{{\sim}^{i+1}}  \vee [\tilde{s}]^{{\sim}^{i+1}}  = [s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i} $ to form a new approximation ${\sim}^{i+1}$ of the equivalence operation. When no species equivalence class violating the stoichiometry preserving property~(1') can be found, the current equivalence operation is returned as result.
 
-As at each iteration one equivalence species class is partitioned, and the equality operation $=$ (each species is equivalent only to itself), that will be achieved in the worst case, obeys the stoichiometry preserving property~(2), so the process will terminate. \\
+As at each iteration one equivalence species class is partitioned, resolving one of the conflicts. In the worst case, the equality operation $=$ (each species is equivalent only to itself) will be achieved. As it obeys the stoichiometry preserving property~(1'), the process will terminate. \\
 
 \subsubsection*{Algorithm 3 - Stoichiometry Preserving Property Obedience}
 \[ \begin{array}{l}
@@ -295,19 +319,20 @@ As at each iteration one equivalence species class is partitioned, and the equal
 \mbox{$\breve{\sim} \leftarrow \sim;$ // resultant equivalence operation $ {\breve{\sim}}: S\cup{R} \rightarrow S/{\breve{\sim}}\cup{R/{\breve{\sim}}}$}\\
 \mbox{~}\\
 
-\mbox{/* Partition quotient species that do not obey the stoichiometry preserving property~(2) */}\\
+\mbox{/* Partition quotient species that do not obey the stoichiometry preserving property~(1') */}\\
 \mbox{\textbf{for }$S^{(gen)} \in \{\tilde{S}^{(gen)}\in S/\breve{\sim}| \exists s \neq \tilde{s} \in \tilde{S}^{(gen)}, r \in R:  s \in species(r) \land \tilde{s} \in species(r)\}$\textbf{ do}}\\
 \left| \indent \begin{array}{l}
 \mbox{$\Pi = Partition(S^{(gen)});$}\\
 \mbox{} \\
 \mbox{// Update $S/\breve{\sim}$} \\
+\mbox{$S/\breve{\sim} \leftarrow S/\breve{\sim}\backslash\{S^{(gen)}\};$} \\
 \mbox{$S/\breve{\sim} \leftarrow S/\breve{\sim}\cup\Pi;$} \\
 \mbox{} \\
 \mbox{// Update $\breve{\sim}$} \\
 \mbox{\textbf{for }$\tilde{S}^{(gen)} \in \Pi$\textbf{ do}} \\
 \left| \indent \begin{array}{l}
 \mbox{\textbf{for }$s \in \tilde{S}^{(gen)}$\textbf{ do}}\\
-\left| \indent\mbox{$\breve{\sim}(s) = \tilde{S}^{(gen)};$}\right. \\
+\left| \indent\mbox{$[s]^{\breve{\sim}} \leftarrow \tilde{S}^{(gen)};$}\right. \\
 \mbox{\textbf{end}}
 \end{array}\right. \\
 \mbox{\textbf{end}}
@@ -320,7 +345,7 @@ As at each iteration one equivalence species class is partitioned, and the equal
 \mbox{$gen \leftarrow \lambda{r}.\langle\breve{\sim}(reactants(r)), \breve{\sim}(products(r))\rangle;$}\\
 
 \mbox{\textbf{for }$r \in R$\textbf{ do}}\\
-\left| \indent \mbox{$\breve{\sim}(r) \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\};$}\right. \\
+\left| \indent \mbox{$[r]^{\breve{\sim}} \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\};$}\right. \\
 \mbox{\textbf{end}}\\
 \mbox{$R/{\breve{\sim}} \leftarrow \{\breve{\sim}(r)|r \in R\};$}\\
 \mbox{~}\\
@@ -333,9 +358,9 @@ We will now describe the species equivalence class partition.
 \subsubsection*{Clique partition}
 \newtheorem{scg}[def]{Definition}
 \begin{scg}
-For a given a set of species and a set of reactions between them, we define a \emph{species compatibility graph} as a simple undirected graph with vertices representing the species, and edges linking those of the species that do not participate in the same reaction (i.e., putting them into the same equivalence class does not violate the stoichiometry preserving property~(2)).
+For a given a set of species and a set of reactions between them, we define a \emph{species compatibility graph} as a simple undirected graph with vertices representing the species, and edges linking those of the species that do not participate in the same reaction (i.e., putting them into the same equivalence class does not violate the stoichiometry preserving property~(1')).
 \end{scg}
-Note, that any set of species that can be put into the same equivalence class without violating the stoichiometry preserving property~(2), forms a clique  in the species compatibility graph, i.e. a complete subgraph: for every pair of its vertices there exists an edge linking them. Thus, the problem of partition the species equivalence class into minimum number of classes, such that all of them obey the stoichiometry preserving property~(2) is a clique partition problem.
+Note, that any set of species that can be put into the same equivalence class without violating the stoichiometry preserving property~(1'), forms a clique  in the species compatibility graph, i.e. a complete subgraph: for every pair of its vertices there exists an edge linking them. Thus, the problem of partition the species equivalence class into minimum number of classes, such that all of them obey the stoichiometry preserving property~(1') is a clique partition problem.
 \newtheorem{clp}[pbm]{Problem}
 \begin{clp}[Clique partition]
 Find the smallest number of cliques in a graph such that every vertex in the graph is represented in exactly one clique.
@@ -350,7 +375,7 @@ In a species compatibility graph, there are usually a few edges missing, and mul
 
 \newtheorem{mt}[def]{Definition}
 \begin{mt}
-A term $t$ is a \emph{model term} if it corresponds to a non-ubiquitous species in the metabolic model. 
+A term $t$ is a \emph{model term} if it corresponds to a specific species in the metabolic model. 
 \end{mt}
 We will assume that no two model terms are connected by a descendant-ancestor relationship in the ontology (Otherwise, we will mark the ancestor term ubiquitous): \\
 $\forall t, T \in terms \; (\exists\, species(t), species(T) \in S \land t \in descendants(T) \Rightarrow t = T)$.
@@ -367,13 +392,17 @@ $ t_1, \ldots, t_k \in descendants(T)$ are compatible $\iff \forall i \neq j \in
 
 \newtheorem{pp}[pbm]{Problem}
 \begin{pp}
-Given a term $T$, find a compatible term set of minimal size that covers all the $T$-th descendant leaf terms and satisfies the stoichiometry preserving property~(5):
-\[ \begin{array}{lllr}
-\mbox{$?\; t_1, \ldots, t_k \in descendants(T):$} & \mbox{$k = k_{min}$},&\\
-& \mbox{$t_1, \ldots, t_k$ are compatible,} & (3)\\
-& \mbox{$leaves(T) \subset descendants(t_1) \cup \ldots \cup descendants(t_k)$},  & (4)\\
-& \mbox{$\forall i \neq j \in \{1, \ldots, k\}\; (\exists\, species(t_i), species(t_j) \in S \Rightarrow$} & \\
-& \indent \mbox{$\forall r \in R: \{species(t_i), species(t_j)\} \not \subset species(r))$}. & (5)
+Given a term $T$, find a compatible term set of minimal size that covers all the $T$-th descendant leaf terms and satisfies the stoichiometry preserving property~(1''):
+\[ \begin{array}{ll}
+\mbox{$?\; t_1, \ldots, t_k \in descendants(T):\; \land $} & \begin{array}{lr}
+	\mbox{$k = k_{min}$},&\\
+	\mbox{$t_1, \ldots, t_k$ are compatible,} & \\
+	\mbox{$leaves(T) \subset descendants(t_1) \cup \ldots \cup descendants(t_k)$},  & \\
+	\begin{array}{lr}
+	\mbox{$\forall i \neq j \in \{1, \ldots, k\}\;$} & \mbox{$\forall s \in species(t_i), \tilde{s} \in species(t_j)$} \\
+	& \mbox{$\forall r \in R \; \{s, \tilde{s}\} \not \subset species(r)$}.
+	\end{array} & (1'')
+\end{array}
 \end{array} \]
 
 \end{pp}
@@ -425,11 +454,17 @@ Besides that, different types of classification are combined together in the hie
 \item classification based on the presence of double bonds in the carbon chain:
 \begin{itemize}
 \item \textit{saturated fatty acid (CHEBI:26607)}: no double bonds;
-\item \textit{unsaturated fatty acid (CHEBI:27208)}: one or more double bonds.
+\item \textit{unsaturated fatty acid (CHEBI:27208)}: one or more double bonds;
+\end{itemize}
+\item classification based on substituent groups:
+\begin{itemize}
+\item \textit{hydroxy fatty acid (CHEBI:24654)}: one or more hydroxy substituents;
+\item \textit{oxo fatty acid (CHEBI:59644)}: at least one aldehydic or ketonic group;
+\item \textit{etc.}
 \end{itemize}
 \end{itemize}
 
-Moreover, it turns out that using only hierarchical relationships in the ChEBI ontology is not always enough. Examples show, that similar reactions can happen to the acid and the base in a conjugate acid-base pair. A conjugate acid-base pair is two species, one an acid and one a base, that differ from each other through the loss or gain of a proton~\citep{stoker2012general}. For instance, in the Rhea database of chemical reactions~\citep{Alcantara2012}, the \textit{acyl-CoA oxidase (RHEA:28354)} reaction: $\textit{decanoyl-CoA} + \textit{FAD} + \textit{H+} \rightarrow \textit{trans-dec-2-enoyl-CoA} + $\textit{FADH$_2$} is found for both \textit{decanoyl-CoA~(CHEBI:28493)} and its conjugate base \textit{decanoyl-CoA(4-)~(CHEBI:61430)}. But hierarchically, these species are very far from each other in the ChEBI ontology: The least common ancestor of \textit{decanoyl-CoA} and \textit{decanoyl-CoA(4-)} is \textit{molecular entity (CHEBI:23367)}, a direct child of the root \textit{chemical entity}. To establish a conjugate acid-base pair correspondence in the ChEBI ontology not the hierarchical (\textit{is\_a}) but special \textit{is\_conjugate\_base\_of} and \textit{is\_conjugate\_acid\_of} relationships, being inverse of each other, are used. To maximize the chances of a conjugate acid-base pair being in the same quotient species set, we will generalize the hierarchical relationship:
+Moreover, it turns out that using only hierarchical relationships in the ChEBI ontology is not always enough. Examples show, that similar reactions can happen to the acid and the base in a conjugate acid-base pair. A conjugate acid-base pair is two species, one an acid and one a base, that differ from each other through the loss or gain of a proton~\citep{stoker2012general}. For instance, in the Rhea database of chemical reactions~\citep{Alcantara2012}, the \textit{acyl-CoA oxidase (RHEA:28354)} reaction: $\textit{decanoyl-CoA} + \textit{FAD} + \textit{H+} \rightarrow \textit{trans-dec-2-enoyl-CoA} + $\textit{FADH$_2$} is found for both \textit{decanoyl-CoA~(CHEBI:28493)} and its conjugate base \textit{decanoyl-CoA(4-)~(CHEBI:61430)}. But hierarchically, these species are very far from each other in the ChEBI ontology: The least common ancestor of \textit{decanoyl-CoA} and \textit{decanoyl-CoA(4-)} is \textit{molecular entity (CHEBI:23367)}, a direct child of the root \textit{chemical entity}. To establish a conjugate acid-base pair correspondence in the ChEBI ontology not the hierarchical (\textit{is\_a}) but special \textit{is\_conjugate\_base\_of}/\textit{is\_conjugate\_acid\_of} relationships are used. To maximize the chances of a conjugate acid-base pair being in the same quotient species set, we will generalize the hierarchical relationship:
 
 \newtheorem{dirgent}[def]{Definition}
 \begin{dirgent}
@@ -498,9 +533,9 @@ The \textit{Yarrowia lypolitica} model before and after generalization is repres
 
 \begin{figure}[th]
 \caption{\textit{Yarrowia lypolitica} model}  
-\centerline{\includegraphics{../pics/Zhukova_Fig_1.eps}}
+%\centerline{\includegraphics{../pics/Zhukova_Fig_1.eps}}
 \vspace*{8pt}
-\caption*{The figure shows \textit{Yarrowia lypolitica} fatty acid oxidation model before generalization. Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products. Ubiquitous species are of smaller size and coloured gray. Non-ubiquitous species are divided into six equivalence classes, and coloured accordingly. Reactions are divided into fifteen equivalence classes, also represented by different colours.
+\caption*{The figure shows \textit{Yarrowia lypolitica} fatty acid oxidation model before generalization. Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products. Ubiquitous species are of smaller size and coloured gray. Specific species are divided into six equivalence classes, and coloured accordingly. Reactions are divided into fifteen equivalence classes, also represented by different colours.
       
       The size of the model does not allow for readability of the species labels, thus we do not show them.
       
@@ -511,14 +546,14 @@ The \textit{Yarrowia lypolitica} model before and after generalization is repres
 \begin{figure}[th]
 \captionsetup{labelformat=empty}
 \centering
-\includegraphics{../pics/Zhukova_Fig_2.eps}
+%\includegraphics{../pics/Zhukova_Fig_2.eps}
 \caption{Generalization of the \textit{Yarrowia lypolitica} model}  
 \end{figure}
 \clearpage
 \begin{figure}
 \captionsetup{labelformat=adja-page}
 \ContinuedFloat
-    \caption{The figure shows the generalization of the \textit{Yarrowia lypolitica} fatty acid oxidation model (seeFfigure~\ref{fig:bf}). This model operates with quotient species and reactions. For example, the violet \textit{dehydroacyl-CoA} node is a quotient of \textit{hexadec-2-enoyl-CoA}, \textit{oleoyl-CoA}, \textit{tetradecenoyl-CoA}, \textit{trans-dec-2-enoyl-CoA}, \textit{trans-dodec-2-enoyl-CoA}, \textit{trans-hexacos-2-enoyl-CoA}, \textit{trans-octadec-2-enoyl-CoA}, and \textit{trans-tetradec-2-enoyl-CoA} (coloured violet in figure~\ref{fig:bf}). In a similar manner, the light-green \textit{acyl-CoA oxidase} quotient reaction, that converts \textit{fatty acyl-CoA} (yellow) into \textit{dehydroacyl-CoA} (violet), generalizes six corresponding light-green reactions of the initial model (figure~\ref{fig:bf}).\\      
+    \caption{The figure shows the generalization of the \textit{Yarrowia lypolitica} fatty acid oxidation model (see figure~\ref{fig:bf}). This model operates with quotient species and reactions. The number given in parenthesis and the size of each node indicates how many entities it generalizes. For example, the violet \textit{dehydroacyl-CoA (8)} node is a quotient of 8 species: \textit{hexadec-2-enoyl-CoA}, \textit{oleoyl-CoA}, \textit{tetradecenoyl-CoA}, \textit{trans-dec-2-enoyl-CoA}, \textit{trans-dodec-2-enoyl-CoA}, \textit{trans-hexacos-2-enoyl-CoA}, \textit{trans-octadec-2-enoyl-CoA}, and \textit{trans-tetradec-2-enoyl-CoA} (coloured violet in figure~\ref{fig:bf}). In a similar manner, the light-green \textit{acyl-CoA oxidase (6)} quotient reaction, that converts \textit{fatty acyl-CoA (12)} (yellow) into \textit{dehydroacyl-CoA (8)} (violet), generalizes 6 corresponding light-green reactions of the initial model (figure~\ref{fig:bf}).\\      
       The generalized model describes \textit{$\beta$-oxidation} in a more generic way: as a transformation of \textit{fatty acyl-CoA} (yellow) into \textit{dehydroacyl-CoA} (violet), then into \textit{hydroxyacy fatty acyl-CoA} (dark green), \textit{3-ketoacyl-CoA} (magenta), and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the specific model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species present in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). That is why the \textit{beta-oxidation} chain of the reactions in the initial model, transforming step-by-step the fatty-acyl-CoA with the longest carbon chain into the one with the shortest chain, in the generalized model appears as a cycle (generalizing all the \textit{fatty-acyls-CoA} into one species, regardless the chain-length).\\      
       The more precise model is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (tetracosanoyl-CoA)} (yellow): there exists a "short-cut" reaction (orange), producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.\\      
       (The figure is produced using the Tulip graph visualization tool.)}
