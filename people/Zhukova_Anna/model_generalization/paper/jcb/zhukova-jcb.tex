@@ -63,11 +63,16 @@ Genome-scale metabolic models for new organisms include thousands of reactions. 
 
 %For example, if in a genome-scale model of an yeast \textit{Yarrowia lypolitica} (\emph{MODEL1111190000}~\citep{Loira12}) the enzyme \textit{EC 2.3.1.16} were missing, a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway~\citep{Metzler01} would be eliminated: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions would be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
 
-To aid human understanding of these complete models, a fair amount of work has been done on dividing them into reusable modules. Examples of such modules at the highest level is separating reactions in the model into compartment they are happening in. 
+To aid human understanding of these complete models, a ``zoomable'' approach can be used. Different ``zoom'' levels address different types of questions about the model structure. The most abstract level represents compartmentalization of the model, and focusses on such questions as: Are all the compartments present? Are the compartments well connected by transport reactions?
 
-Lower-level approaches can be divided into two groups: series ones and parallel. The series approaches operate with chains of reactions, and generalize them as a series, thus hiding the structure of the network. An example of a series approach is representing the network as a set of metabolic pathways (KEGG\citep{Kanehisa12}, MetaCyC\citep{Caspi2012}), that can be further divided, for example, into reaction modules (conserved sequences of reactions along the metabolic pathways)\citep{Muto2013}. 
+The next level of abstraction goes inside each of the compartments and represents the modules it contains. The questions to be addressed on this level include: Are all the essential processes present? Is the process' structure correct? Is there any organism-specific adaptation of the structure?
 
-The other type of approaches operates with reactions that are ``parallel'', thus keeping the steps and preserving the general view of the network. An example of this approach is grouping reactions based on EC (Enzyme Commission) numbers\citep{Tohsato2000}. The drawback of this approach is that it is not applicable to networks with no EC number assigned or reactions with no catalysing enzymes identified. 
+The following  level ``zooms' inside the modules and checks if all the needed species and reactions are present.
+After,  a ``zoom'' inside of each of the reactions can be done to check their kinetics, stoichiometry, mass balance, reversibility and constraints, and a ``zoom'' inside each species to check the initial concentrations. The model on this level is intended for computer simulation.
+
+In this study we focus on the second ``zooming'' level, that represents the modules inside compartments. A fair amount of work has been done on identifying reusable modules. These approaches can be divided into two groups: series and parallel. The series approaches operate with chains of reactions, and generalize them as a series, thus hiding the structure of the network. An example of a series approach is representing the network as a set of metabolic pathways (KEGG~\citep{Kanehisa12}, MetaCyC~\citep{Caspi2012}), that can be further divided, for example, into reaction modules (conserved sequences of reactions along the metabolic pathways)~\citep{Muto2013}. 
+
+The other type of approaches operates with reactions that are ``parallel'', thus keeping the steps and preserving the general view of the network. An example of this approach is grouping reactions based on EC (Enzyme Commission) numbers~\citep{Tohsato2000}. The drawback of this approach is that it is not applicable to networks with no EC number assigned or reactions with no catalysing enzymes identified. 
 We developed another ``parallel''-reaction method for knowledge-based generalization of metabolic models, that does not depend on enzyme information. It provides a~higher-level view of a~model while keeping its essential structure and omitting the details. 
 
 
@@ -91,7 +96,7 @@ We represent a \emph{metabolic model $M$} as a pair of two sets: a set $S$ of bi
 \mbox{$R$} & \mbox{$=$} & \mbox{$\{r_1, \ldots, r_m\}$} &  \mbox{- reaction set.} 
 \end{array} \]
 
-We represent each \emph{reaction $r \in R$} as a pair of species sets: a set of its reactant species, and a set of its product species. A chemical reaction may be represented by a balanced chemical equation, showing the formulae of the reactants and products, and the changes that take place\citep{Clugston2000}. This definition leads to the restriction~(1) that all the species participating in the reaction should be different.
+We represent each \emph{reaction $r \in R$} as a pair of species sets: a set of its reactant species, and a set of its product species. A chemical reaction may be represented by a balanced chemical equation, showing the formulae of the reactants and products, and the changes that take place~\citep{Clugston2000}. This definition leads to the restriction~(1) that all the species participating in the reaction should be different.
 
 \[ \begin{array}{llr}
 \mbox{$r = $} & \mbox{$\langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle
@@ -602,6 +607,6 @@ No competing financial interests exist.
 
 \section*{Additional Files}
   \subsection*{Additional file 1 --- The peroxisome compartment of the \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}) model}
-    A sub-model of the \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}) model that includes only those species and reactions that occur in the peroxisome compartment. In  SBML level 2 version 4\citep{Hucka08} format with ChEBI annotations.
+    A sub-model of the \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}) model that includes only those species and reactions that occur in the peroxisome compartment. In  SBML level 2 version 4~\citep{Hucka08} format with ChEBI annotations.
 
 \end{document}  
