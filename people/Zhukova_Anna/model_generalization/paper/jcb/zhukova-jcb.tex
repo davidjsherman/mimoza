@@ -61,7 +61,7 @@ joint project-team Magnome\\
 \section*{Introduction}
 Genome-scale metabolic models for new organisms include thousands of reactions. In most cases these reactions are automatically inferred by methods that combine databases of reactions and pathways with genomic information and existing models for similar organisms~\citep{Swainston2011}. Genomic data for the new organism is compared to the data of the reference organism, to find genomic evidence such as the presence of catalysing enzymes for the reactions conserved in the new organism. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\citep{Thiele2010}. The models produced at each iteration are intended for computer simulation, and so describe all the reactions thought to participate in the organism's metabolism. Although automatic model inference tools and genome comparison methods are becoming more and more advanced, they still may leave gaps in the model or add erroneous reactions. Thus, model evaluation by human experts remains important at all the iteration steps. However, because of their completeness, genome-scale models are too detailed and complicated to be easily understood by a~human. The abundance of reactions in the model may hide errors.
 
-For example, if in a genome-scale model of an yeast \textit{Yarrowia lypolitica} (\emph{MODEL1111190000}~\citep{Loira12}) the enzyme \textit{EC 2.3.1.16} were missing, a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway~\citep{Metzler01} would be eliminated: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions would be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
+%For example, if in a genome-scale model of an yeast \textit{Yarrowia lypolitica} (\emph{MODEL1111190000}~\citep{Loira12}) the enzyme \textit{EC 2.3.1.16} were missing, a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway~\citep{Metzler01} would be eliminated: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions would be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
 
 To aid human understanding of these complete models, a fair amount of work has been done on dividing them into reusable modules. Examples of such modules at the highest level is separating reactions in the model into compartment they are happening in. 
 
@@ -99,7 +99,7 @@ We represent each \emph{reaction $r \in R$} as a pair of species sets: a set of 
 & \mbox{where } \mbox{$s^{(rs)}_1 \neq \ldots \neq s^{(rs)}_k \neq s^{(ps)}_1 \neq \ldots \neq s^{(ps)}_l$}  & (1)
 \end{array} \]
 
-To perform the model generalization, we will define an \emph{equivalence operation $\sim$} on the species set, and group species into equivalence classes: $[s_i]^{\sim} = \{s_j \in S | s_j \sim s_i\}$.
+To perform the model generalization, we will define an \emph{equivalence operation $\sim$} on the species set, and group species into equivalence classes: $[s]^{\sim} = \{\tilde{s} \in S | \tilde{s} \sim s\}$.
 
 Species equivalence imposes reaction equivalence: two reactions are equivalent if their corresponding reactant and product species are pairwise equivalent.
 \[ \begin{array}{l}
@@ -215,7 +215,7 @@ For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset
 \mbox{~}\\
 \mbox{/* Generalize reactions */}\\
 \mbox{// map a reaction to its generalized version that operates with generalized species}\\
-\mbox{$gen \leftarrow \lambda{r}.\langle\mathring{\sim}(reactants(r)), \mathring{\sim}(products(r))\rangle;$}\\
+\mbox{$gen \leftarrow \lambda{r}.\langle\{[s]^{\mathring{\sim}} | s \in reactants(r)\}, \{[s]^{\mathring{\sim}} | s \in products(r)\}\rangle;$}\\
 \mbox{\textbf{for }$r \in R$\textbf{ do}}\\
 \left| \indent\mbox{$[r]^{\mathring{\sim}} \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\};$}\right. \\
 \mbox{\textbf{end}}\\
@@ -228,7 +228,7 @@ The Compute$\mathring{\sim}$ algorithm forms the equivalence classes for ubiquit
 \subsection*{Step 2. Stoichiometry preserving property obedience}
 \newtheorem{p2}[pbm]{Problem}
 \begin{p2}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$ find an equivalence operation $\breve{\sim}$ that obeys property~(1') and induces a quotient species set $S/\breve{\sim}$ of minimal size $\sharp S/\breve{\sim}$, such that $S/\breve{\sim}$ is a partition of the quotient species set $S/\sim$ induced by $\sim$, i.e., $\forall s \in S \; [s]^{\breve{\sim}} \subset [s]^{\sim} $. 
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$ find an equivalence operation $\breve{\sim}$ that obeys the restriction~(1') and induces a quotient species set $S/\breve{\sim}$ of minimal size $\sharp S/\breve{\sim}$, such that $S/\breve{\sim}$ is a partition of the quotient species set $S/{\sim}$ induced by $\sim$, i.e., $\forall s \in S \; [s]^{\breve{\sim}} \subset [s]^{\sim} $. 
 \end{p2}
 \subsubsection*{Algorithm}
 We will start with the given equivalence operation $\sim^0 = \sim$, and iteratively improve it, until the stoichiometry preserving property~(1') is obeyed. We will denote the equivalence operation obtained at the $i$-th iteration step as $\sim^i$.
@@ -277,7 +277,7 @@ As at each iteration one equivalence species class is partitioned, resolving one
 \mbox{/* Generalize reactions */}\\
 
 \mbox{// map a reaction to its generalized version that operates with generalized species}\\
-\mbox{$gen \leftarrow \lambda{r}.\langle\breve{\sim}(reactants(r)), \breve{\sim}(products(r))\rangle;$}\\
+\mbox{$gen \leftarrow \lambda{r}.\langle\{[s]^{\breve{\sim}} | s \in reactants(r)\}, \{[s]^{\breve{\sim}} | s \in products(r)\}\rangle;$}\\
 
 \mbox{\textbf{for }$r \in R$\textbf{ do}}\\
 \left| \indent \mbox{$[r]^{\breve{\sim}} \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\};$}\right. \\
@@ -287,26 +287,29 @@ As at each iteration one equivalence species class is partitioned, resolving one
 \mbox{\textbf{return }$\breve{\sim}, \langle S/\breve{\sim}, S^{(ub)}/\breve{\sim}, R/\breve{\sim} \rangle$}
 \end{array} \]
 
+\subsubsection*{Species equivalence class partition}
 
-We will now describe the species equivalence class partition.
+%\subsubsection*{Clique partition}
+%\newtheorem{scg}[def]{Definition}
+%\begin{scg}
+%For a given a set of species and a set of reactions between them, we define a \emph{species compatibility graph} as a simple undirected graph with vertices representing the species, and edges linking those of the species that do not participate in the same reaction (i.e., putting them into the same equivalence class does not violate the stoichiometry preserving property~(1')).
+%\end{scg}
+%Note, that any set of species that can be put into the same equivalence class without violating the stoichiometry preserving property~(1'), forms a clique  in the species compatibility graph, i.e. a complete subgraph: for every pair of its vertices there exists an edge linking them. Thus, the problem of partition the species equivalence class into minimum number of classes, such that all of them obey the stoichiometry preserving property~(1') is a clique partition problem.
+%\newtheorem{clp}[pbm]{Problem}
+%\begin{clp}[Clique partition]
+%Find the smallest number of cliques in a graph such that every vertex in the graph is represented in exactly one clique.
+%\end{clp}
+%\newtheorem{rem0}[rm]{Remark}
+%\begin{rem0}
+%Clique partition problem is known to be \textit{NP}-complete~\citep{Bhasker1991}. 
+%\end{rem0}
 
-\subsubsection*{Clique partition}
-\newtheorem{scg}[def]{Definition}
-\begin{scg}
-For a given a set of species and a set of reactions between them, we define a \emph{species compatibility graph} as a simple undirected graph with vertices representing the species, and edges linking those of the species that do not participate in the same reaction (i.e., putting them into the same equivalence class does not violate the stoichiometry preserving property~(1')).
-\end{scg}
-Note, that any set of species that can be put into the same equivalence class without violating the stoichiometry preserving property~(1'), forms a clique  in the species compatibility graph, i.e. a complete subgraph: for every pair of its vertices there exists an edge linking them. Thus, the problem of partition the species equivalence class into minimum number of classes, such that all of them obey the stoichiometry preserving property~(1') is a clique partition problem.
-\newtheorem{clp}[pbm]{Problem}
-\begin{clp}[Clique partition]
-Find the smallest number of cliques in a graph such that every vertex in the graph is represented in exactly one clique.
-\end{clp}
-\newtheorem{rem0}[rm]{Remark}
-\begin{rem0}
-Clique partition problem is known to be \textit{NP}-complete~\citep{Bhasker1991}. 
-\end{rem0}
+
+%In a species compatibility graph, there are usually a few edges missing
+In a species equivalence class that violates the restriction~(1') there are usually only a few conflicts present, and multiple solutions of the partition problem exist. 
 
 \subsubsection*{Species ontology}
-In a species compatibility graph, there are usually a few edges missing, and multiple solutions of the clique partition problem exist. In order to make the choice of the species equivalence classes biologically meaningful, we will use an ontology that describes hierarchical \textit{is\_a} relationships (i.e. more specific - more general) between biochemical species. This ontology can be viewed as a directed acyclic graph, with nodes representing terms describing species, and edges representing hierarchical relationships between them. A term $T$ is an ancestor of a term $t$ if and only if there exists a path from $t$ to $T$. 
+In order to make the choice of the species equivalence classes biologically meaningful, we will use an ontology that describes hierarchical \textit{is\_a} relationships (i.e. more specific - more general) between biochemical species. This ontology can be viewed as a directed acyclic graph, with nodes representing terms describing species, and edges representing hierarchical relationships between them. A term $T$ is an ancestor of a term $t$ if and only if there exists a path from $t$ to $T$. 
 
 \newtheorem{mt}[def]{Definition}
 \begin{mt}
@@ -322,12 +325,12 @@ For each species equivalence class that needs to be partitioned, we will first f
 \newtheorem{comp}[def]{Definition}
 \begin{comp}
 Terms $ t_1, \ldots, t_k$ are \emph{compatible} if and only if their descendant model terms do not intersect:
-$ t_1, \ldots, t_k \in descendants(T)$ are compatible $\iff \forall i \neq j \in \{1, \ldots, k\} \; descendants(t_i) \cap descendants(t_k) \cap leaves(T) = \emptyset$.
+$ t_1, \ldots, t_k$ are compatible $\iff \forall i \neq j \in \{1, \ldots, k\} \; descendants(t_i) \cap descendants(t_k) \cap leaves(T) = \emptyset$.
 \end{comp}
 
 \newtheorem{pp}[pbm]{Problem}
 \begin{pp}
-Given a term $T$, find a compatible term set of minimal size that covers all the $T$-th descendant leaf terms and satisfies the stoichiometry preserving property~(1''):
+Given a term $T$, find a compatible term set among its descendants, such that it has minimal size, covers all the $T$-th descendant leaf terms, and satisfies the stoichiometry preserving property~(1''):
 \[ \begin{array}{ll}
 \mbox{$?\; t_1, \ldots, t_k \in descendants(T):\; \land $} & \begin{array}{lr}
 	\mbox{$k = k_{min}$},&\\
@@ -341,7 +344,8 @@ Given a term $T$, find a compatible term set of minimal size that covers all the
 \end{array} \]
 
 \end{pp}
-To do so, we will first exclude all the terms that violate the stoichiometry preserving property~(5). We thus obtain an exact set cover problem. We say that a subset $S$ covers its own elements.
+To do so, we will first exclude all the terms that violate the stoichiometry preserving property~(1''). We thus obtain an exact set cover problem.
+% We say that a subset $S$ covers its own elements.
 
 \newtheorem{setc}[pbm]{Problem}
 \begin{setc}[Set cover]
@@ -354,7 +358,7 @@ Given a set $X$ and a collection of its finite subsets $\Psi$, such that $\bigcu
 
 \newtheorem{esetc}[pbm]{Problem}
 \begin{esetc}[Exact set cover]
-As in problem~\ref{esetc}, except that here the sets that are used in the cover are not allowed to intersect. 
+As in problem~\ref{setc}, except that here the sets that are used in the cover are not allowed to intersect. 
 \end{esetc}
 \newtheorem{rem1}[rm]{Remark}
 \begin{rem1}
@@ -362,22 +366,22 @@ Exact cover is \textit{NP}-complete~\citep{Goldreich2008}.
 \end{rem1}
 
 \subsubsection*{Exact set cover applied to ontological terms}
-Each ontological term $t$ defines a set $S(t)$ of its descendant leaf terms (including $t$ if it is a leaf). The instance consists of a set $X$ of all leaf descendants of the least common ancestor $T$ of the model terms of interest, and a collection $\Psi$ of all sets defined by $T$-th descendant terms, and their relative complements with respect to $X$: $\forall S \in \Psi \; X\backslash S \in \Psi$, excluding all the sets that violate the stoichiometry preserving property~(5). We look for a minimum-size exact cover of $X$. 
+Each ontological term $t$ defines a set $S(t)$ of its descendant leaf terms (including $t$ if it is a leaf). The instance consists of a set $X$ of all leaf descendants of the least common ancestor $T$ of the model terms of interest, and a collection $\Psi$ of all sets defined by $T$-th descendant terms, and their relative complements with respect to $X$: $\forall S \in \Psi \; X\backslash S \in \Psi$, excluding all the sets that violate the stoichiometry preserving property~(1''). We look for a minimum-size exact cover of $X$. 
 
 Note, that in this case an exact cover always exists, e.g. the one formed by all the leaf terms.
 
 \subsubsection*{Choice of the ontology}
-We will assume that any term that violates property~(5) is removed from the ontology. Note, that the term $T$ is also removed.
+We will assume that any term that violates property~(1'') is removed from the ontology. Note, that the term $T$ is also removed.
 
 If the ontology has no multiple inheritance, i.e. $\forall S, \tilde{S} \in \Psi \; S \cap \tilde{S} \neq \emptyset \Rightarrow S \subseteq \tilde{S} \lor \tilde{S} \subseteq S$, the problem becomes trivial: The set of the root terms forms the solution. The size of the solution though depends on the characteristics of the ontology, e.g. for a completely flat ontology (i.e., a graph with no edges) the solution will consist of singleton equivalence classes.
 
 If the multiple inheritance is allowed, any $\Psi \subseteq 2^X$ becomes possible, and the problem becomes \textit{NP}-complete. 
 
-We will use the ChEBI ontology~\citep{deMatos10} of chemical compounds, the \textit{de facto} a standard for species annotation in metabolic models. ChEBI consists of three main branches: \textit{chemical entity}, \textit{role}, and \textit{subatomic particle}. The \textit{chemical entity} branch describes terms useful for annotation of biochemical species in a metabolic model. As of ChEBI version 101, this branch contains 37693 terms, among which 29888 are leaves. ChEBI has multiple inheritance with average number of parents 1.4 per term. Average number of siblings is also 1.4 per term. Maximal depth in the \textit{chemical entity} branch is 28, while the average one is 11.
+We will use the ChEBI ontology~\citep{deMatos10} of chemical compounds, that is \textit{de facto} a standard for species annotation in metabolic models. ChEBI consists of three main branches: \textit{chemical entity}, \textit{role}, and \textit{subatomic particle}. The \textit{chemical entity} branch describes terms useful for annotation of biochemical species in a metabolic model. As of ChEBI version 101, this branch contains 37693 terms, among which 29888 are leaves. ChEBI has multiple inheritance with average number of parents 1.4 per term. Average number of siblings is also 1.4 per term. Maximal depth in the \textit{chemical entity} branch is 28, while the average one is 11.
 
-The level of details in the ChEBI hierarchy is not uniform: some sub-branches are more developed than others, which makes equally specific terms to be placed unequally deep in the hierarchical tree. For example, both \textit{hydrogen peroxide (CHEBI:16240)} and \textit{decanoyl-CoA (CHEBI:28493)} terms describe precise chemical molecules; but \textit{hydrogen peroxide} is only 5 terms away from the \textit{chemical entity} in the ChEBI hierarchy, while \textit{decanoyl-CoA} is 11 terms away. 
+The level of details in the ChEBI hierarchy is not uniform: some sub-branches are more developed than others, which makes equally precise terms to be placed unequally deep in the hierarchical tree. For example, both \textit{hydrogen peroxide (CHEBI:16240)} and \textit{decanoyl-CoA (CHEBI:28493)} terms describe precise chemical molecules; but \textit{hydrogen peroxide} is only 5 terms away from the \textit{chemical entity} in the ChEBI hierarchy, while \textit{decanoyl-CoA} is 11 terms away. 
 
-Besides that, different types of classification are combined together in the hierarchical tree, leading to multiple inheritance. For example, in the \textit{fatty-acid (CHEBI:35366)} sub-branch, several types of the classification are present, including
+Besides that, different types of classification are combined together in the hierarchical tree, leading to multiple inheritance. For example, in the \textit{fatty-acid (CHEBI:35366)} sub-branch, several classification typesare present, including:
 \begin{itemize}
 \item classification based on the length of the carbon chain:
 \begin{itemize}
@@ -399,11 +403,11 @@ Besides that, different types of classification are combined together in the hie
 \end{itemize}
 \end{itemize}
 
-Moreover, it turns out that using only hierarchical relationships in the ChEBI ontology is not always enough. Examples show, that similar reactions can happen to the acid and the base in a conjugate acid-base pair. A conjugate acid-base pair is two species, one an acid and one a base, that differ from each other through the loss or gain of a proton~\citep{stoker2012general}. For instance, in the Rhea database of chemical reactions~\citep{Alcantara2012}, the \textit{acyl-CoA oxidase (RHEA:28354)} reaction: $\textit{decanoyl-CoA} + \textit{FAD} + \textit{H+} \rightarrow \textit{trans-dec-2-enoyl-CoA} + $\textit{FADH$_2$} is found for both \textit{decanoyl-CoA~(CHEBI:28493)} and its conjugate base \textit{decanoyl-CoA(4-)~(CHEBI:61430)}. But hierarchically, these species are very far from each other in the ChEBI ontology: The least common ancestor of \textit{decanoyl-CoA} and \textit{decanoyl-CoA(4-)} is \textit{molecular entity (CHEBI:23367)}, a direct child of the root \textit{chemical entity}. To establish a conjugate acid-base pair correspondence in the ChEBI ontology not the hierarchical (\textit{is\_a}) but special \textit{is\_conjugate\_base\_of}/\textit{is\_conjugate\_acid\_of} relationships are used. To maximize the chances of a conjugate acid-base pair being in the same quotient species set, we will generalize the hierarchical relationship:
+Moreover, it turns out that using only hierarchical relationships in the ChEBI ontology is not always enough. Examples show, that similar reactions can happen to the acid and the base in a conjugate acid-base pair. A conjugate acid-base pair is two species, one an acid and one a base, that differ from each other through the loss or gain of a proton~\citep{stoker2012general}. For instance, in the Rhea database of chemical reactions~\citep{Alcantara2012}, the \textit{acyl-CoA oxidase (RHEA:28354)} reaction: $\textit{decanoyl-CoA} + \textit{FAD} + \textit{H+} \rightarrow \textit{trans-dec-2-enoyl-CoA} + $\textit{FADH$_2$} is found for both \textit{decanoyl-CoA~(CHEBI:28493)} and its conjugate base \textit{decanoyl-CoA(4-)~(CHEBI:61430)}. But hierarchically these species are very far from each other in the ChEBI ontology: The least common ancestor of \textit{decanoyl-CoA} and \textit{decanoyl-CoA(4-)} is \textit{molecular entity (CHEBI:23367)}, a direct child of the root \textit{chemical entity}. To establish a conjugate acid-base pair correspondence in the ChEBI ontology not the hierarchical (\textit{is\_a}) but special \textit{is\_conjugate\_base\_of}/\textit{is\_conjugate\_acid\_of} relationships are used. To maximize the chances of a conjugate acid-base pair being in the same quotient species set, we will generalize the hierarchical relationship:
 
 \newtheorem{dirgent}[def]{Definition}
 \begin{dirgent}
-Term $t$ is a \emph{generalized direct descendant/ancestor} of a term $T$ if and only if $t$ or a conjugate base/acid of $t$ is a direct descendant/ancestor of $T$ or of a conjugate base/acid of $T$.
+Term $t$ is a \emph{generalized direct descendant/ancestor} of a term $T$ if and only if $t$ or a conjugate base or acid of $t$ is a direct descendant/ancestor of $T$ or of a conjugate base or acid of $T$.
 \end{dirgent} 
 
 \newtheorem{gent}[def]{Definition}
@@ -418,7 +422,7 @@ To approximate the solution of the set cover problem, we will use a greedy algor
 \subsubsection*{Greedy Algorithm}
 Among the available subset candidates $S_i \in \Psi$ we will pick the one of the largest size and add it to the resulting set cover $\Pi$. We will repeat this operation until all elements of $X$ are covered. \\
 
-\subsubsection*{Algorithm 3 - Greedy Set Cover Obedience}
+\subsubsection*{Algorithm 3 - Greedy Set Cover}
 \[ \begin{array}{l}
 \mbox{\textbf{Algorithm: }GreedySetCover}\\
 \mbox{\textbf{Data: }}\begin{array}{l}\mbox{$X$ - set of interest,}\\ \mbox{$\Psi \subseteq 2^X$ - set of subsets of $X$}\end{array}\\
@@ -444,7 +448,7 @@ Greedy set cover is a polynomial time approximation algorithm that achieves an a
 \subsection*{Step 3. Species equivalence class number maximization}
 \newtheorem{p1}[pbm]{Problem}
 \begin{p1}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(1'), find an equivalence operation $\tilde{\sim}$ that obeys restriction~(2) and does not change the reaction equivalence classes: $R/\sim = R/\tilde{\sim}$. 
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, find an equivalence operation $\tilde{\sim}$ that obeys restriction~(2) and does not change the reaction equivalence classes: $R/\sim = R/\tilde{\sim}$. 
 \end{p1}
 \subsubsection*{Algorithm}
 To satisfy the restriction~(2) we will associate each species $s$ in the initial model with a pair of reaction equivalence classes sets in the quotient reaction set $R/{\sim}$: those induced by reactions where it participates as a reactant or as a product: \\
@@ -452,7 +456,7 @@ $s \rightarrow \langle R^{(rs)}_s = \{[r^{(rs)}_1]^{\sim}, \ldots, [r^{(rs)}_o]^
 
 \newtheorem{eq1}[def]{Definition}\label{equiv1}
 \begin{eq1}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, such that $\sim$ obeys restriction~(1'), let us define an \emph{equivalence operation $\tilde{\sim}$} as forming a separate species equivalence class for each of the ubiquitous species, and putting $\sim$-equivalent specific species that intersect in their product or reactant reaction classes in the same equivalence class:
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, let us define an \emph{equivalence operation $\tilde{\sim}$} as forming a separate species equivalence class for each of the ubiquitous species, and putting $\sim$-equivalent specific species that intersect in their product or reactant reaction classes in the same equivalence class:
 \[ \begin{array}{rll}
 \mbox{$\forall s^{(ub)} \in S^{(ub)}, s \in S \;\; s^{(ub)} \tilde{\sim} s$} & \mbox{$\iff$} & \mbox{$s^{(ub)} = s$}, \\
 \mbox{$\forall s, \tilde{s} \in S \backslash S^{(ub)} \;\; s \tilde{\sim} \tilde{s}$} & \mbox{$\iff \;\land$} & 
@@ -507,7 +511,7 @@ Any further partition of the quotient species set would imply the partition of t
 \end{array} \]
 
 \subsection*{Complete Algorithm}
-As the most complex part of model generalization is the species partition, we will first do the other steps to minimize the size of each species quotient class to be partitioned. We will start with the equivalence operation $\mathring{\sim}$ described in Lemma~1, maximize the species equivalence class number for $\mathring{\sim}$, then obey the stoichiometry preserving property using the ChEBI ontology and greedy set cover algorithm, and finally maximize the species equivalence class number again.\\
+As the most complex step of model generalization is the species partition, we will precede it with the species equivalence class number maximisation step, in order to minimize the size of each species quotient class to be partitioned. We will start with the equivalence operation $\mathring{\sim}$ described in Lemma~1, maximize the species equivalence class number for $\mathring{\sim}$, then obey the stoichiometry preserving property using the ChEBI ontology and greedy set cover algorithm, and finally maximize the species equivalence class number again.\\
 
 \subsubsection*{Algorithm 5 - Computation of ${\sim}$}
 \[ \begin{array}{l}
