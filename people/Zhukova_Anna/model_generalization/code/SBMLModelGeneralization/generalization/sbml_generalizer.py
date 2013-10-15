@@ -3,7 +3,7 @@ from model_generalizer import map2chebi, shorten_chains, generalize
 from utils.logger import log
 from generalization.reaction_filters import filterReactionByNotTransport, getProducts, getReactants
 from generalization.sbml_helper import save_as_generalized_sbml, \
-    remove_is_a_reactions, save_as_chain_shortened_sbml, model_to_l3v1
+    remove_is_a_reactions, save_as_chain_shortened_sbml, model_to_l3v1, annotate_ubiquitous
 
 __author__ = 'anna'
 
@@ -19,6 +19,7 @@ def generalize_model(groups_sbml, out_sbml, cofactors, input_model, onto, sh_cha
     ontology, species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, onto)
 
     model_to_l3v1(groups_sbml, input_model)
+    annotate_ubiquitous(groups_sbml, species_id2chebi_id, ubiquitous_chebi_ids, verbose)
 
     if sh_chains:
         # shorten chains

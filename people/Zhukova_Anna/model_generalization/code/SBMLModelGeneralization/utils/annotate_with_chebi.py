@@ -1,18 +1,17 @@
 from misc import add_to_map
 from obo_ontology import removeMiriamPrefix, Term, addMiriamPrefix
-from generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation
-from generalization.sbml_helper import get_is_qualifier
+from generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation, get_is_qualifier
 
 __author__ = 'anna'
 
 
-def getIsAnnotations(entity):
-    isResources = getAllQualifierValues(entity.getAnnotation(), get_is_qualifier())
-    return [removeMiriamPrefix(it) for it in isResources]
+def get_is_annotations(entity):
+    is_resources = getAllQualifierValues(entity.getAnnotation(), get_is_qualifier())
+    return [removeMiriamPrefix(it) for it in is_resources]
 
 
-def getTerm(entity, chebi):
-    for is_annotation in getIsAnnotations(entity):
+def get_term(entity, chebi):
+    for is_annotation in get_is_annotations(entity):
         term = chebi.getTerm(is_annotation)
         if term:
             return term
@@ -28,7 +27,7 @@ def normalize(name):
     return name.strip()
 
 
-def getNames(entity):
+def get_names(entity):
     name = normalize(entity.getName())
     name_bis = name
     end = name_bis.find("(")
@@ -36,8 +35,9 @@ def getNames(entity):
         name_bis = name_bis[0:end].strip()
     return name, name_bis
 
+
 # This annotation is to be used in Tulip
-def annotateUbiquitous(model, species_id2chebi_id, ubiquitous_chebi_ids):
+def annotate_ubiquitous(model, species_id2chebi_id, ubiquitous_chebi_ids):
     for species in model.getListOfSpecies():
         s_id = species.getId()
         if (s_id in species_id2chebi_id) and (species_id2chebi_id[s_id] in ubiquitous_chebi_ids):
@@ -51,26 +51,26 @@ def annotateUbiquitous(model, species_id2chebi_id, ubiquitous_chebi_ids):
             species.setName(species.getName() + " ubiquitous")
 
 
-def getSpeciesTerm(species, chebi, model):
-    term = getTerm(species, chebi)
+def get_species_term(species, chebi, model):
+    term = get_term(species, chebi)
     if not term:
         s_type_id = species.getSpeciesType()
         if s_type_id:
             s_type = model.getSpeciesType(s_type_id)
             if s_type:
-                term = getTerm(s_type, chebi)
+                term = get_term(s_type, chebi)
     return term
 
 
-def getSpecies2chebi(model, chebi):
+def get_species_to_chebi(model, chebi):
     species2chebi = {}
-    usedTerms = set()
+    used_terms = set()
     entity2species = {}
 
     # process annotated ones
     # and find those that need to be annotated
     for species in model.getListOfSpecies():
-        term = getTerm(species, chebi)
+        term = get_term(species, chebi)
         entity = species
         if not term:
             s_type_id = species.getSpeciesType()
@@ -78,10 +78,10 @@ def getSpecies2chebi(model, chebi):
                 s_type = model.getSpeciesType(s_type_id)
                 if s_type:
                     entity = s_type
-                    term = getTerm(s_type, chebi)
+                    term = get_term(s_type, chebi)
         if term:
             species2chebi[species.getId()] = term.getId()
-            usedTerms.add(term)
+            used_terms.add(term)
             continue
         else:
             add_to_map(entity2species, entity, species)
@@ -89,7 +89,7 @@ def getSpecies2chebi(model, chebi):
     # annotate unannotated
     fake_terms = set()
     for entity, species_set in entity2species.iteritems():
-        name, name_bis = getNames(entity)
+        name, name_bis = get_names(entity)
         possibilities = chebi.getIdsByName(name)
         if not possibilities:
             possibilities = chebi.getIdsByName(name_bis)
@@ -100,7 +100,7 @@ def getSpecies2chebi(model, chebi):
             term.addSynonym(name_bis)
             chebi.addTerm(term)
             fake_terms.add(term)
-            usedTerms.add(term)
+            used_terms.add(term)
             for species in species_set:
                 species2chebi[species.getId()] = term.getId()
             continue
@@ -108,10 +108,10 @@ def getSpecies2chebi(model, chebi):
         options = set()
         for it in possibilities:
             options.add(it)
-        intersection = options & usedTerms
+        intersection = options & used_terms
         term = intersection.pop() if intersection else possibilities.pop()
         for species in species_set:
             species2chebi[species.getId()] = term.getId()
         addAnnotation(entity, get_is_qualifier(), addMiriamPrefix(term.getId()))
-        usedTerms.add(term)
+        used_terms.add(term)
     return species2chebi, fake_terms

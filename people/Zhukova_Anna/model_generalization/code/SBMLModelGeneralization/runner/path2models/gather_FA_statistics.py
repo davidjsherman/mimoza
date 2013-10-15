@@ -7,7 +7,7 @@ from model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from misc import add_to_map
 from obo_ontology import parse
 from runner.path2models.main import ROOT_DIR
-from utils.annotate_with_chebi import getSpeciesTerm
+from utils.annotate_with_chebi import get_species_term
 
 __author__ = 'anna'
 
@@ -16,7 +16,7 @@ def count_fa_coa_oxidation(model, the_terms, chebi):
     the_species = dict()
     for species in model.getListOfSpecies():
         i = 0
-        s_term = getSpeciesTerm(species, chebi, model)
+        s_term = get_species_term(species, chebi, model)
         for terms in the_terms:
             if s_term in terms:
                 add_to_map(the_species, i, species.getId())
@@ -50,7 +50,7 @@ def count_fa_coa_oxidation(model, the_terms, chebi):
 def test_acyl_coa_number(model, acyl_coa_terms, chebi):
     acyls_coa = set()
     for species in model.getListOfSpecies():
-        s_term = getSpeciesTerm(species, chebi, model)
+        s_term = get_species_term(species, chebi, model)
         if s_term in acyl_coa_terms:
             acyls_coa.add(species.getId())
 

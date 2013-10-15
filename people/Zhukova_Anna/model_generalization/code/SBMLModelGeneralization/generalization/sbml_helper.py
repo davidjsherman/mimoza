@@ -1,9 +1,16 @@
 from libsbml import *
+from utils.annotate_with_chebi import get_term
 from utils.logger import log
 from utils.misc import add_to_map, invert_map
-from utils.obo_ontology import addMiriamPrefix
-from generalization.rdf_annotation_helper import addAnnotation
+from utils.obo_ontology import addMiriamPrefix, removeMiriamPrefix
+from generalization.rdf_annotation_helper import addAnnotation, getAllQualifierValues
 from generalization.reaction_filters import getProducts, getReactants, get_compartment, getReactionParticipants
+
+GROUP_TYPE_EQUIV = "equivalent"
+
+GROUP_TYPE_CHAIN = "chain"
+
+GROUP_TYPE_UBIQUITOUS = "ubiquitous"
 
 SBO_CHEMICAL_MACROMOLECULE = "SBO:0000248"
 
@@ -14,10 +21,6 @@ DIMENSIONLESS_UNIT = "dimensionless"
 SBO_MATERIAL_ENTITY = "SBO:0000240"
 
 __author__ = 'anna'
-
-
-def get_is_qualifier():
-    return BQB_IS
 
 
 def copyUnitDefinition(model, prototype, id_=None):
@@ -116,9 +119,9 @@ def removeUnusedElements(outputModel):
 def normalize(t):
     if isinstance(t, tuple):
         t = ''.join(flatten(t))
-    return t.lower().replace("-", "_").replace(":", "_").replace("(", "_").replace(")", "_").replace("[", "_")\
-        .replace("]", "_").replace("'", "_").replace("/", "_").replace(",", "_").replace("\"", "_").replace(" ", "_")\
-        .replace(".", "_").replace("%3a", "_").replace("%3A", "_").replace("=", "_").replace("{", "_")\
+    return t.lower().replace("-", "_").replace(":", "_").replace("(", "_").replace(")", "_").replace("[", "_") \
+        .replace("]", "_").replace("'", "_").replace("/", "_").replace(",", "_").replace("\"", "_").replace(" ", "_") \
+        .replace(".", "_").replace("%3a", "_").replace("%3A", "_").replace("=", "_").replace("{", "_") \
         .replace("}", "_").replace("+", "_").replace(">", "_")
 
 
@@ -275,6 +278,26 @@ def model_to_l3v1(sbml, model):
     writeSBMLToFile(doc, sbml)
 
 
+def annotate_ubiquitous(groups_sbml, species_id2chebi_id, ubiquitous_chebi_ids, verbose=False):
+    if groups_sbml:
+        log(verbose, "saving ubiquitous species annotations...")
+        doc = SBMLReader().readSBMLFromFile(groups_sbml)
+        groups_model = doc.getModel()
+        groups_plugin = groups_model.getPlugin("groups")
+        s_group = groups_plugin.createGroup()
+        s_group.setId("g_ubiquitous_sps")
+        s_group.setKind(GROUP_KIND_COLLECTION)
+        s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
+        s_group.setName("ubiquitous species")
+        for s in groups_model.getListOfSpecies():
+            s_id = s.getId()
+            if s_id in species_id2chebi_id and species_id2chebi_id[s_id] in ubiquitous_chebi_ids:
+                member = s_group.createMember()
+                member.setSymbol(s_id)
+        addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_UBIQUITOUS)
+        save_as_sbml(groups_model, groups_sbml, verbose)
+
+
 def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu, verbose):
     log(verbose, "serializing generalization...")
     # generalized model
@@ -312,7 +335,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                     if groups_sbml and groups_plugin:
                         # save as a group
                         s_group = groups_plugin.createGroup()
-                        s_group.setId("g_s_{0}".format(i))
+                        s_group.setId(new_species.getId())
                         s_group.setKind(GROUP_KIND_CLASSIFICATION)
                         s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
                         s_group.setName(clu.getName())
@@ -320,6 +343,8 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                         for s_id in s_ids:
                             member = s_group.createMember()
                             member.setSymbol(s_id)
+                        addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
+
                 else:
                     del s_id2clu[s_ids.pop()]
 
@@ -353,6 +378,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                             for r in rs:
                                 member = r_group.createMember()
                                 member.setSymbol(r.getId())
+                            addAnnotation(r_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
 
                     createReaction(generalized_model, reactants, products, r_name)
 
@@ -405,6 +431,7 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
                 r = input_model.getReaction(r_id)
                 member = r_group.createMember()
                 member.setSymbol(r.getId())
+            addAnnotation(r_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_CHAIN)
 
     for r in input_model.getListOfReactions():
         if not r.getId() in processed_rs:
@@ -416,3 +443,30 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
         save_as_sbml(groups_model, groups_sbml, verbose)
 
     save_as_sbml(cs_model, out_sbml, verbose)
+
+
+def parse_group_sbml(groups_sbml, chebi):
+    doc = SBMLReader().readSBMLFromFile(groups_sbml)
+    groups_model = doc.getModel()
+    groups_plugin = groups_model.getPlugin("groups")
+    id2rns_eq, id2rns_ch, id2sps = {}, {}, {}
+    ub_sps = []
+    if groups_plugin:
+        for group in groups_plugin.getListOfGroups():
+            gr_members = [it.getSymbol() for it in group.getListOfMembers()]
+            gr_id, gr_name = group.getId(), group.getName()
+            gr_sbo, gr_type = group.getSBOTermID(), getAllQualifierValues(group.getAnnotation(), BQB_IS_DESCRIBED_BY).pop()
+            if SBO_BIOCHEMICAL_REACTION == gr_sbo:
+                if GROUP_TYPE_CHAIN == gr_type:
+                    id2rns_ch[(gr_id, gr_name,)] = gr_members
+                elif GROUP_TYPE_EQUIV == gr_type:
+                    id2rns_eq[(gr_id, gr_name,)] = gr_members
+            elif SBO_CHEMICAL_MACROMOLECULE == gr_sbo:
+                if GROUP_TYPE_UBIQUITOUS == gr_type:
+                    ub_sps = gr_members
+                elif GROUP_TYPE_EQUIV == gr_type:
+                    id2sps[(gr_id, gr_name, get_term(group, chebi), )] = gr_members
+
+    return id2rns_eq, id2rns_ch, id2sps, ub_sps
+
+

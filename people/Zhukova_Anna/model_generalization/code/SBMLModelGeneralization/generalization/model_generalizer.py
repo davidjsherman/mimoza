@@ -1,5 +1,5 @@
 from generalization.mark_ubiquitous import getUbiquitousSpeciesSet
-from utils.annotate_with_chebi import getSpecies2chebi
+from utils.annotate_with_chebi import get_species_to_chebi
 from utils.logger import log
 from utils.misc import add_to_map, invert_map
 from utils.obo_ontology import Term, subOntology
@@ -520,7 +520,7 @@ def printFinalChains(chains):
 
 
 def map2chebi(cofactors, input_model, onto):
-    species_id2chebi_id, fake_terms = getSpecies2chebi(input_model, onto)
+    species_id2chebi_id, fake_terms = get_species_to_chebi(input_model, onto)
     terms = [onto.getTerm(t_id) for t_id in set(species_id2chebi_id.values())]
     ontology = subOntology(onto, terms, relationships={'is_a'} | EQUIVALENT_TERM_RELATIONSHIPS, step=None,
                            min_deepness=11)
