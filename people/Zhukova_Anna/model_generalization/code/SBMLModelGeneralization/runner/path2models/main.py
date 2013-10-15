@@ -1,12 +1,11 @@
-from genericpath import isfile, exists
-from os import listdir, makedirs
-import os
+from genericpath import exists, isfile
+from os import listdir, makedirs, getcwd
 import sys
 from generalization.mark_ubiquitous import getCofactors
-from runner.main import convert
+from generalization.sbml_generalizer import convert
 from runner.path2models.gather_FA_statistics import get_statistics
 from utils.logger import log
-from utils.ontology import parse
+from utils.obo_ontology import parse
 
 __author__ = 'anna'
 
@@ -14,7 +13,7 @@ ROOT_DIR = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/"
 
 
 def main(argv=None):
-    chebi = os.getcwd() + "/../../data/chebi.obo"
+    chebi = getcwd() + "/../../data/chebi.obo"
     verbose = True
     generalize_many(chebi, verbose)
     get_statistics()
@@ -39,7 +38,7 @@ def generalize_many(chebi, verbose):
             if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
                 continue
             log(verbose, "Processing " + in_sbml)
-            convert(ontology, cofactor_ids, in_sbml, out_sbml, groups_sbml, verbose)
+            convert(ontology, cofactor_ids, in_sbml, out_sbml, groups_sbml, None, verbose)
 
 
 if __name__ == "__main__":

@@ -1,21 +1,21 @@
-from StdSuites.AppleScript_Suite import inches
 from generalization.mark_ubiquitous import getUbiquitousSpeciesSet
-from utils.annotate_with_chebi import getSpecies2chebi, annotateUbiquitous
+from utils.annotate_with_chebi import getSpecies2chebi
 from utils.logger import log
-from utils.ontology import Term, subOntology
-from utils.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
-from utils.misc import add2map, invert
-from utils.sbml_creation_helper import remove_is_a_reactions
-from utils.sbml_serializer import save_as_chain_shortened_sbml
+from utils.misc import add_to_map, invert_map
+from utils.obo_ontology import Term, subOntology
+from generalization.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
+from generalization.sbml_helper import remove_is_a_reactions, save_as_chain_shortened_sbml
 
 __author__ = 'anna'
+
 EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
+
 
 def getReactions2Factor(reactions, term_id2clu, s_id2term_id):
     vk2r = {}
     for r in reactions:
         key = getVerticalKey(r, term_id2clu, s_id2term_id)
-        add2map(vk2r, key, r)
+        add_to_map(vk2r, key, r)
     return vk2r.values()
 
 
@@ -109,8 +109,8 @@ def mergeBasedOnNeighbours(lst):
 
 
 def maximize(reactions, term_id2clu, species_id2term_id):
-    clu2term_ids = invert(term_id2clu)
-    term_id2s_ids = invert(species_id2term_id)
+    clu2term_ids = invert_map(term_id2clu)
+    term_id2s_ids = invert_map(species_id2term_id)
 
     r2clu = getReaction2cluster(reactions, term_id2clu, species_id2term_id)
 
@@ -127,7 +127,7 @@ def maximize(reactions, term_id2clu, species_id2term_id):
             neighbours = {transform_r(r) for r in getRReactionsByTerm(t_id, reactions, term_id2s_ids)} | \
                          {transform_p(r) for r in getPReactionsByTerm(t_id, reactions, term_id2s_ids)}
             key = tuple(sorted(neighbours))
-            add2map(neighbours2term_ids, key, t_id)
+            add_to_map(neighbours2term_ids, key, t_id)
         new_lst = mergeBasedOnNeighbours(neighbours2term_ids.iteritems())
         if len(new_lst) > 1:
             i = 0
@@ -146,15 +146,15 @@ def computeEq0(interesting_term_ids):
 
 def getConflicts(reactions, term_ids, species_id2term_id):
     r2term_ids = {}
-    term2s_ids = invert(species_id2term_id)
+    term2s_ids = invert_map(species_id2term_id)
     for t_id in term_ids:
         for r in getReactionsByTerm(t_id, reactions, term2s_ids):
-            add2map(r2term_ids, r, t_id)
+            add_to_map(r2term_ids, r, t_id)
     return filter(lambda terms: len(terms) > 1, r2term_ids.values())
 
 
 def fixStoich(reactions, term_id2clu, species_id2term_id, onto):
-    clu2term_ids = invert(term_id2clu)
+    clu2term_ids = invert_map(term_id2clu)
     for clu, term_ids in clu2term_ids.iteritems():
         if len(term_ids) <= 1:
             continue
@@ -337,7 +337,7 @@ def greedy(terms, psi, set2score):
 
 
 def update(term_id2clu, onto):
-    clu2term_ids = invert(term_id2clu)
+    clu2term_ids = invert_map(term_id2clu)
     used = set()
     i = 0
     for clu, term_ids in clu2term_ids.iteritems():
@@ -356,14 +356,14 @@ def update(term_id2clu, onto):
 
 
 def filterClu2Terms(term2clu):
-    clu2term = invert(term2clu)
+    clu2term = invert_map(term2clu)
     for clu, terms in clu2term.iteritems():
         if len(terms) <= 1:
             del term2clu[terms.pop()]
 
 
 def printClusters(term_id2clu, onto):
-    clu2term_id = invert(term_id2clu)
+    clu2term_id = invert_map(term_id2clu)
     print "   quotient species sets:"
     for clu, term_ids in clu2term_id.iteritems():
         if len(term_ids) == 1:
@@ -373,7 +373,7 @@ def printClusters(term_id2clu, onto):
 
 
 def printFinalClusters(term_id2clu, onto):
-    clu2term = invert(term_id2clu)
+    clu2term = invert_map(term_id2clu)
     print "result quotient species sets:"
     blueprint = []
     for clu in sorted(clu2term.keys(), key=lambda k: -len(clu2term[k])):
@@ -519,8 +519,8 @@ def printFinalChains(chains):
     print "   ", sorted(blueprint)
 
 
-def map2chebi(cofactors, input_model, onto, species):
-    species_id2chebi_id, fake_terms = getSpecies2chebi(input_model, species, onto)
+def map2chebi(cofactors, input_model, onto):
+    species_id2chebi_id, fake_terms = getSpecies2chebi(input_model, onto)
     terms = [onto.getTerm(t_id) for t_id in set(species_id2chebi_id.values())]
     ontology = subOntology(onto, terms, relationships={'is_a'} | EQUIVALENT_TERM_RELATIONSHIPS, step=None,
                            min_deepness=11)

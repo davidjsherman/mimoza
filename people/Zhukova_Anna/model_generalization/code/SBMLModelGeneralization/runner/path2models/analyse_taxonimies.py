@@ -3,8 +3,8 @@ from os import listdir
 from shutil import copyfile
 from libsbml import SBMLReader
 import sys
+from generalization.rdf_annotation_helper import getTaxonomy
 from runner.path2models.main import ROOT_DIR
-from utils.rdf_annotation_helper import getTaxonomy
 
 __author__ = 'anna'
 

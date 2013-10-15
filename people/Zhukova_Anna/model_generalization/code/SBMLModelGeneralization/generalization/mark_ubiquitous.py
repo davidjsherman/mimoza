@@ -1,4 +1,4 @@
-from utils.reaction_filters import getReactionParticipants
+from generalization.reaction_filters import getReactionParticipants
 
 COFACTOR_CHEBI_ID = 'chebi:23357'
 

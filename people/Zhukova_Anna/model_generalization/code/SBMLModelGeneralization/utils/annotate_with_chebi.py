@@ -1,15 +1,13 @@
-from libsbml import BQB_IS
-from utils.misc import add2map
-from utils.ontology import removeMiriamPrefix, addMiriamPrefix, Term
-from utils.rdf_annotation_helper import addAnnotation, getAllQualifierValues
-
-EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
+from misc import add_to_map
+from obo_ontology import removeMiriamPrefix, Term, addMiriamPrefix
+from generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation
+from generalization.sbml_helper import get_is_qualifier
 
 __author__ = 'anna'
 
 
 def getIsAnnotations(entity):
-    isResources = getAllQualifierValues(entity.getAnnotation(), BQB_IS)
+    isResources = getAllQualifierValues(entity.getAnnotation(), get_is_qualifier())
     return [removeMiriamPrefix(it) for it in isResources]
 
 
@@ -64,14 +62,14 @@ def getSpeciesTerm(species, chebi, model):
     return term
 
 
-def getSpecies2chebi(model, species_list, chebi):
+def getSpecies2chebi(model, chebi):
     species2chebi = {}
     usedTerms = set()
     entity2species = {}
 
     # process annotated ones
     # and find those that need to be annotated
-    for species in species_list:
+    for species in model.getListOfSpecies():
         term = getTerm(species, chebi)
         entity = species
         if not term:
@@ -86,7 +84,7 @@ def getSpecies2chebi(model, species_list, chebi):
             usedTerms.add(term)
             continue
         else:
-            add2map(entity2species, entity, species)
+            add_to_map(entity2species, entity, species)
     i = 0
     # annotate unannotated
     fake_terms = set()
@@ -114,6 +112,6 @@ def getSpecies2chebi(model, species_list, chebi):
         term = intersection.pop() if intersection else possibilities.pop()
         for species in species_set:
             species2chebi[species.getId()] = term.getId()
-        addAnnotation(entity, BQB_IS, addMiriamPrefix(term.getId()))
+        addAnnotation(entity, get_is_qualifier(), addMiriamPrefix(term.getId()))
         usedTerms.add(term)
     return species2chebi, fake_terms

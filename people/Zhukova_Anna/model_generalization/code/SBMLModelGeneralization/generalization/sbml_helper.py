@@ -1,14 +1,23 @@
-from libsbml import LIBSBML_OPERATION_SUCCESS, UnitDefinition, Parameter, Compartment, SpeciesType, \
-    Species, Reaction, SpeciesReference, BQB_IS
-from utils.ontology import addMiriamPrefix
-from utils.rdf_annotation_helper import addAnnotation
-from utils.reaction_filters import getReactionParticipants
+from libsbml import *
+from utils.logger import log
+from utils.misc import add_to_map, invert_map
+from utils.obo_ontology import addMiriamPrefix
+from generalization.rdf_annotation_helper import addAnnotation
+from generalization.reaction_filters import getProducts, getReactants, get_compartment, getReactionParticipants
+
+SBO_CHEMICAL_MACROMOLECULE = "SBO:0000248"
+
+SBO_BIOCHEMICAL_REACTION = "SBO:0000176"
 
 DIMENSIONLESS_UNIT = "dimensionless"
 
 SBO_MATERIAL_ENTITY = "SBO:0000240"
 
 __author__ = 'anna'
+
+
+def get_is_qualifier():
+    return BQB_IS
 
 
 def copyUnitDefinition(model, prototype, id_=None):
@@ -232,6 +241,7 @@ def copyReaction(model, prototype, species_id_old2new, param_id_old2new, unit_id
     model.addReaction(new_reaction)
     return new_reaction
 
+
 def remove_is_a_reactions(input_model):
     to_remove = []
     for reaction in input_model.getListOfReactions():
@@ -239,3 +249,170 @@ def remove_is_a_reactions(input_model):
             to_remove.append(reaction.getId())
     for r_id in to_remove:
         input_model.removeReaction(r_id)
+
+
+# serialization
+
+
+def convert_to_lev3_v1(model):
+    doc = SBMLDocument(model.getSBMLNamespaces())
+    doc.setModel(model)
+    doc.setConsistencyChecksForConversion(LIBSBML_CAT_GENERAL_CONSISTENCY, False)
+    doc.setConsistencyChecksForConversion(LIBSBML_CAT_IDENTIFIER_CONSISTENCY, False)
+    doc.setConsistencyChecksForConversion(LIBSBML_CAT_UNITS_CONSISTENCY, False)
+    doc.setConsistencyChecksForConversion(LIBSBML_CAT_MATHML_CONSISTENCY, False)
+    doc.setConsistencyChecksForConversion(LIBSBML_CAT_SBO_CONSISTENCY, False)
+    doc.setConsistencyChecksForConversion(LIBSBML_CAT_OVERDETERMINED_MODEL, False)
+    doc.setConsistencyChecksForConversion(LIBSBML_CAT_MODELING_PRACTICE, False)
+    doc.checkL3v1Compatibility()
+    doc.setLevelAndVersion(3, 1, False)
+    doc.getSBMLNamespaces().addPackageNamespace("groups", 1)
+    return doc
+
+
+def model_to_l3v1(sbml, model):
+    doc = convert_to_lev3_v1(Model(model))
+    writeSBMLToFile(doc, sbml)
+
+
+def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu, verbose):
+    log(verbose, "serializing generalization...")
+    # generalized model
+    generalized_doc = SBMLDocument(input_model.getSBMLNamespaces())
+    clu2rs = invert_map(r2clu)
+    if not s_id2clu:
+        generalized_model = input_model
+    else:
+        generalized_model = generalized_doc.createModel()
+        copyElements(input_model, generalized_model)
+
+        #convert
+        if groups_sbml:
+            doc = SBMLReader().readSBMLFromFile(groups_sbml)
+            groups_model = doc.getModel()
+            groups_plugin = groups_model.getPlugin("groups")
+
+        i = 0
+        s_id2clu = {s_id: clu for (s_id, clu) in s_id2clu.iteritems()}
+        clu2s_ids = invert_map(s_id2clu)
+        for clu, species_ids in clu2s_ids.iteritems():
+            comp2s_ids = {}
+            for s_id in species_ids:
+                species = input_model.getSpecies(s_id)
+                c_id = species.getCompartment()
+                add_to_map(comp2s_ids, c_id, s_id)
+            for c_id, s_ids in comp2s_ids.iteritems():
+                if len(s_ids) > 1:
+                    new_species = createSpecies(generalized_model, c_id, type_id=None,
+                                                name="{0} ({1})".format(clu.getName(), len(s_ids)))
+                    addAnnotation(new_species, BQB_IS, addMiriamPrefix(clu.getId()))
+                    for s_id in s_ids:
+                        s_id2clu[s_id] = new_species.getId()
+
+                    if groups_sbml and groups_plugin:
+                        # save as a group
+                        s_group = groups_plugin.createGroup()
+                        s_group.setId("g_s_{0}".format(i))
+                        s_group.setKind(GROUP_KIND_CLASSIFICATION)
+                        s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
+                        s_group.setName(clu.getName())
+                        addAnnotation(s_group, BQB_IS, addMiriamPrefix(clu.getId()))
+                        for s_id in s_ids:
+                            member = s_group.createMember()
+                            member.setSymbol(s_id)
+                else:
+                    del s_id2clu[s_ids.pop()]
+
+        generalize_species = lambda species_id: s_id2clu[species_id] if (species_id in s_id2clu) else species_id
+        s_id_to_generalize = set(s_id2clu.keys())
+        for clu, r_set in clu2rs.iteritems():
+            comp2rs = {}
+            for r in r_set:
+                c_id = get_compartment(r, input_model)
+                add_to_map(comp2rs, c_id, r)
+            for c_id, rs in comp2rs.iteritems():
+                representative = list(rs)[0]
+                reactants = getReactants(representative)
+                products = getProducts(representative)
+                if (len(rs) == 1) and not ((reactants | products) & s_id_to_generalize):
+                    generalized_model.addReaction(representative)
+                else:
+                    reactants = {generalize_species(it) for it in reactants}
+                    products = {generalize_species(it) for it in products}
+                    r_name = representative.getName()
+                    if len(rs) > 1:
+                        r_name = "{0} ({1})".format(r_name, len(rs))
+
+                        if groups_sbml and groups_plugin:
+                            # save as a group
+                            r_group = groups_plugin.createGroup()
+                            r_group.setId("g_r_{0}".format(i))
+                            r_group.setKind(GROUP_KIND_COLLECTION)
+                            r_group.setSBOTerm(SBO_BIOCHEMICAL_REACTION)
+                            r_group.setName("generalized {0}".format(representative.getName()))
+                            for r in rs:
+                                member = r_group.createMember()
+                                member.setSymbol(r.getId())
+
+                    createReaction(generalized_model, reactants, products, r_name)
+
+        removeUnusedElements(generalized_model)
+
+        if groups_sbml and groups_model:
+            save_as_sbml(groups_model, groups_sbml, verbose)
+        save_as_sbml(generalized_model, out_sbml, verbose)
+
+
+def save_as_sbml(input_model, out_sbml, verbose=True):
+    log(verbose, "saving to {0}...".format(out_sbml))
+    out_doc = SBMLDocument(input_model.getSBMLNamespaces())
+    out_doc.setModel(input_model)
+    writeSBMLToFile(out_doc, out_sbml)
+
+
+def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, verbose):
+    log(verbose, "serializing chain shortening...")
+    # chain shortened model
+    cs_doc = SBMLDocument(input_model.getSBMLNamespaces())
+    cs_model = cs_doc.createModel()
+    copyElements(input_model, cs_model)
+
+    # convert
+    if groups_sbml:
+        doc = SBMLReader().readSBMLFromFile(groups_sbml)
+        groups_model = doc.getModel()
+        groups_plugin = groups_model.getPlugin("groups")
+
+    processed_rs = set()
+    for chain in chains:
+        species_chain, k, reaction_chain = chain
+        processed_rs |= set(reaction_chain)
+        r = input_model.getReaction(reaction_chain[0])
+        # replace the second species in the chain with the last one
+        id_replacer = lambda s_id: species_chain[-1] if s_id == species_chain[1] else s_id
+        reactants = {id_replacer(it) for it in getReactants(r)}
+        products = {id_replacer(it) for it in getProducts(r)}
+        rn = createReaction(cs_model, reactants, products, "{0}{1}".format("shortened chain: ", r.getName()))
+
+        if groups_sbml and groups_plugin:
+            # save as a group
+            r_group = groups_plugin.createGroup()
+            r_group.setId(rn.getId())
+            r_group.setKind(GROUP_KIND_COLLECTION)
+            r_group.setSBOTerm(SBO_BIOCHEMICAL_REACTION)
+            r_group.setName(rn.getName())
+            for r_id in reaction_chain:
+                r = input_model.getReaction(r_id)
+                member = r_group.createMember()
+                member.setSymbol(r.getId())
+
+    for r in input_model.getListOfReactions():
+        if not r.getId() in processed_rs:
+            cs_model.addReaction(r)
+
+    removeUnusedElements(cs_model)
+
+    if groups_sbml and groups_model:
+        save_as_sbml(groups_model, groups_sbml, verbose)
+
+    save_as_sbml(cs_model, out_sbml, verbose)

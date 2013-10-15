@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-from utils.misc import add2map, removeFromMap
+from misc import add_to_map, remove_from_map
 
 __author__ = 'anna'
 
@@ -289,9 +289,9 @@ class Ontology:
 
     def addRelationship(self, subj, rel, obj):
         relationship = (subj, rel, obj)
-        add2map(self.rel_map, subj, relationship)
-        add2map(self.rel_map, obj, relationship)
-        add2map(self.rel_map, rel, relationship)
+        add_to_map(self.rel_map, subj, relationship)
+        add_to_map(self.rel_map, obj, relationship)
+        add_to_map(self.rel_map, rel, relationship)
 
     # role: 0 for any, 1 for subj, 2 for obj
     def getTermRelationships(self, term_id, rel=None, role=0):
@@ -374,9 +374,9 @@ class Ontology:
             del self.rel_map[t_id]
             for (subj, rel, obj) in relationships:
                 if t_id == subj and t_id != obj:
-                    removeFromMap(self.rel_map, obj, (subj, rel, obj))
+                    remove_from_map(self.rel_map, obj, (subj, rel, obj))
                 elif t_id == obj:
-                    removeFromMap(self.rel_map, subj, (subj, rel, obj))
+                    remove_from_map(self.rel_map, subj, (subj, rel, obj))
 
     def getTerm(self, term_id):
         if not term_id:
@@ -529,5 +529,5 @@ class Ontology:
                 if not subj.parents:
                     self.roots.add(subj)
             else:
-                removeFromMap(self.rel_map, subj_id, (subj_id, r, o_id))
-                removeFromMap(self.rel_map, o_id, (subj_id, r, o_id))
+                remove_from_map(self.rel_map, subj_id, (subj_id, r, o_id))
+                remove_from_map(self.rel_map, o_id, (subj_id, r, o_id))

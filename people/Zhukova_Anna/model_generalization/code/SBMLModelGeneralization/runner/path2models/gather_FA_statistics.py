@@ -2,11 +2,12 @@ from genericpath import isfile, exists
 from os import listdir, makedirs
 from shutil import copyfile
 from libsbml import SBMLReader, os
+from generalization.reaction_filters import getReactants, getProducts
+from model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
+from misc import add_to_map
+from obo_ontology import parse
 from runner.path2models.main import ROOT_DIR
-from utils.annotate_with_chebi import getSpeciesTerm, EQUIVALENT_TERM_RELATIONSHIPS
-from utils.misc import add2map
-from utils.ontology import parse
-from utils.reaction_filters import getReactants, getProducts
+from utils.annotate_with_chebi import getSpeciesTerm
 
 __author__ = 'anna'
 
@@ -18,7 +19,7 @@ def count_fa_coa_oxidation(model, the_terms, chebi):
         s_term = getSpeciesTerm(species, chebi, model)
         for terms in the_terms:
             if s_term in terms:
-                add2map(the_species, i, species.getId())
+                add_to_map(the_species, i, species.getId())
                 break
             i += 1
 
@@ -39,7 +40,7 @@ def count_fa_coa_oxidation(model, the_terms, chebi):
                 rs, ps = getReactants(reaction), getProducts(reaction)
                 if rs & s_id1 and ps & s_id2 or rs & s_id2 and ps & s_id1:
                 # if filterReactionByBetweenSpecies(reaction, s_id1, s_id2):
-                    add2map(the_reactions, i, reaction.getId())
+                    add_to_map(the_reactions, i, reaction.getId())
                     break
             i += 1
     return tuple(the_species.keys()), tuple(the_reactions.keys()), tuple(
