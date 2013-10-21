@@ -1,11 +1,11 @@
 from genericpath import exists, isfile
-from os import listdir, makedirs, getcwd
+from os import listdir, makedirs
 import sys
 from generalization.mark_ubiquitous import getCofactors
 from generalization.sbml_generalizer import convert
 from runner.path2models.gather_FA_statistics import get_statistics
 from utils.logger import log
-from utils.obo_ontology import parse
+from utils.obo_ontology import parse, get_chebi
 
 __author__ = 'anna'
 
@@ -13,7 +13,7 @@ ROOT_DIR = "/Users/anna/Documents/PhD/magnome/MCCMB13/models/paper/sbml/"
 
 
 def main(argv=None):
-    chebi = getcwd() + "/../../data/chebi.obo"
+    chebi = get_chebi()
     verbose = True
     generalize_many(chebi, verbose)
     get_statistics()

@@ -2,13 +2,10 @@
 # encoding: utf-8
 
 import getopt
-from os import getcwd
 import sys
-from generalization.mark_ubiquitous import getCofactors
-from generalization.sbml_generalizer import convert
 from generalization.sbml_helper import parse_group_sbml
 from utils.logger import log
-from utils.obo_ontology import parse
+from utils.obo_ontology import parse, get_chebi
 from utils.usage import Usage
 
 __author__ = 'anna'
@@ -31,7 +28,7 @@ def main(argv=None):
         chebi, in_sbml, out_sbml, groups_sbml, sh_chains, verbose = process_args(argv)
         log(verbose, "parsing ChEBI...")
         ontology = parse(chebi)
-        parse_group_sbml(groups_sbml, ontology)
+        print parse_group_sbml(groups_sbml, ontology)
         #cofactor_ids = getCofactors(ontology)
         #convert(ontology, cofactor_ids, in_sbml, out_sbml, groups_sbml, sh_chains, verbose)
     except Usage, err:
@@ -77,7 +74,7 @@ def process_args(argv):
             shorten = True
     out_sbml, groups_sbml = generate_out_sbml_name(in_sbml, out_sbml)
     if not chebi:
-        chebi = getcwd() + "/../data/chebi.obo"
+        chebi = get_chebi()
     if not in_sbml or not chebi:
         raise Usage(help_message)
     return chebi, in_sbml, out_sbml, groups_sbml, shorten, verbose

@@ -19,15 +19,18 @@ def generalize_model(groups_sbml, out_sbml, cofactors, input_model, onto, sh_cha
     ontology, species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, onto)
 
     model_to_l3v1(groups_sbml, input_model)
-    annotate_ubiquitous(groups_sbml, species_id2chebi_id, ubiquitous_chebi_ids, verbose)
+    r_id2g_eq, r_id2ch_id, s_id2gr_id = {}, {}, {}
 
+    ub_sps = {s.getId() for s in input_model.getListOfSpecies() if
+              s.getId() in species_id2chebi_id and species_id2chebi_id[s.getId()] in ubiquitous_chebi_ids}
+    annotate_ubiquitous(groups_sbml, ub_sps, verbose)
     if sh_chains:
         # shorten chains
         log(verbose, "chain shortening...")
         chains = shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
         if chains:
             # save
-            save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, verbose)
+            r_id2ch_id = save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, verbose)
             doc = SBMLReader().readSBML(out_sbml)
             input_model = doc.getModel()
 
@@ -44,8 +47,8 @@ def generalize_model(groups_sbml, out_sbml, cofactors, input_model, onto, sh_cha
     log(verbose, "generalizing...")
     s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
     s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
-    save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu, verbose)
-    return r2clu, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids
+    r_id2g_eq, s_id2gr_id = save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu, verbose)
+    return r_id2g_eq, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps
 
 
 def convert(onto, cofactors, in_sbml, out_sbml, groups_sbml, sh_chains=True, verbose=False):

@@ -90,7 +90,7 @@ def get_statistics():
         sps, rs, nums = res
         #k = tuple(sorted(zip(rs, [len(t) for t in nums]), key=lambda it: it[0])) #, "-".join([str(it) for it in sps])])
         #d = dict(k)
-        dist = out_path + "-".join([str(it) for it in rs]) + "__" + "-".join([str(len(it)) for it in nums]) + "/"
+        dist = "{0}{1}__{2}/".format(out_path, "-".join([str(it) for it in rs]), "-".join([str(len(it)) for it in nums]))
         if not exists(dist):
             makedirs(dist)
         copyfile(in_sbml, dist + f)

@@ -2,7 +2,7 @@ from libsbml import *
 from utils.annotate_with_chebi import get_term
 from utils.logger import log
 from utils.misc import add_to_map, invert_map
-from utils.obo_ontology import addMiriamPrefix, removeMiriamPrefix
+from utils.obo_ontology import addMiriamPrefix
 from generalization.rdf_annotation_helper import addAnnotation, getAllQualifierValues
 from generalization.reaction_filters import getProducts, getReactants, get_compartment, getReactionParticipants
 
@@ -278,24 +278,23 @@ def model_to_l3v1(sbml, model):
     writeSBMLToFile(doc, sbml)
 
 
-def annotate_ubiquitous(groups_sbml, species_id2chebi_id, ubiquitous_chebi_ids, verbose=False):
+def annotate_ubiquitous(groups_sbml, ub_sps, verbose=False):
     if groups_sbml:
         log(verbose, "saving ubiquitous species annotations...")
         doc = SBMLReader().readSBMLFromFile(groups_sbml)
         groups_model = doc.getModel()
         groups_plugin = groups_model.getPlugin("groups")
-        s_group = groups_plugin.createGroup()
-        s_group.setId("g_ubiquitous_sps")
-        s_group.setKind(GROUP_KIND_COLLECTION)
-        s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
-        s_group.setName("ubiquitous species")
-        for s in groups_model.getListOfSpecies():
-            s_id = s.getId()
-            if s_id in species_id2chebi_id and species_id2chebi_id[s_id] in ubiquitous_chebi_ids:
+        if groups_plugin:
+            s_group = groups_plugin.createGroup()
+            s_group.setId("g_ubiquitous_sps")
+            s_group.setKind(GROUP_KIND_COLLECTION)
+            s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
+            s_group.setName("ubiquitous species")
+            for s_id in ub_sps:
                 member = s_group.createMember()
                 member.setSymbol(s_id)
-        addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_UBIQUITOUS)
-        save_as_sbml(groups_model, groups_sbml, verbose)
+            addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_UBIQUITOUS)
+            save_as_sbml(groups_model, groups_sbml, verbose)
 
 
 def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu, verbose):
@@ -303,9 +302,10 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
     # generalized model
     generalized_doc = SBMLDocument(input_model.getSBMLNamespaces())
     clu2rs = invert_map(r2clu)
-    if not s_id2clu:
-        generalized_model = input_model
-    else:
+
+    r_id2g_eq, s_id2gr_id = {}, {}
+
+    if s_id2clu:
         generalized_model = generalized_doc.createModel()
         copyElements(input_model, generalized_model)
 
@@ -316,7 +316,6 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
             groups_plugin = groups_model.getPlugin("groups")
 
         i = 0
-        s_id2clu = {s_id: clu for (s_id, clu) in s_id2clu.iteritems()}
         clu2s_ids = invert_map(s_id2clu)
         for clu, species_ids in clu2s_ids.iteritems():
             comp2s_ids = {}
@@ -330,7 +329,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                                                 name="{0} ({1})".format(clu.getName(), len(s_ids)))
                     addAnnotation(new_species, BQB_IS, addMiriamPrefix(clu.getId()))
                     for s_id in s_ids:
-                        s_id2clu[s_id] = new_species.getId()
+                        s_id2gr_id[s_id] = new_species.getId(), clu.getName(), clu
 
                     if groups_sbml and groups_plugin:
                         # save as a group
@@ -345,11 +344,8 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                             member.setSymbol(s_id)
                         addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
 
-                else:
-                    del s_id2clu[s_ids.pop()]
-
-        generalize_species = lambda species_id: s_id2clu[species_id] if (species_id in s_id2clu) else species_id
-        s_id_to_generalize = set(s_id2clu.keys())
+        generalize_species = lambda species_id: s_id2gr_id[species_id][0] if (species_id in s_id2gr_id) else species_id
+        s_id_to_generalize = set(s_id2gr_id.keys())
         for clu, r_set in clu2rs.iteritems():
             comp2rs = {}
             for r in r_set:
@@ -368,6 +364,9 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                     if len(rs) > 1:
                         r_name = "{0} ({1})".format(r_name, len(rs))
 
+                        for r in rs:
+                            r_id2g_eq[r.getId()] = "g_r_{0}".format(i), "generalized {0}".format(representative.getName())
+
                         if groups_sbml and groups_plugin:
                             # save as a group
                             r_group = groups_plugin.createGroup()
@@ -379,6 +378,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                                 member = r_group.createMember()
                                 member.setSymbol(r.getId())
                             addAnnotation(r_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
+                        i += 1
 
                     createReaction(generalized_model, reactants, products, r_name)
 
@@ -387,6 +387,8 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
         if groups_sbml and groups_model:
             save_as_sbml(groups_model, groups_sbml, verbose)
         save_as_sbml(generalized_model, out_sbml, verbose)
+
+    return r_id2g_eq, s_id2gr_id
 
 
 def save_as_sbml(input_model, out_sbml, verbose=True):
@@ -402,6 +404,8 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
     cs_doc = SBMLDocument(input_model.getSBMLNamespaces())
     cs_model = cs_doc.createModel()
     copyElements(input_model, cs_model)
+
+    r_id2g_id = {}
 
     # convert
     if groups_sbml:
@@ -419,6 +423,9 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
         reactants = {id_replacer(it) for it in getReactants(r)}
         products = {id_replacer(it) for it in getProducts(r)}
         rn = createReaction(cs_model, reactants, products, "{0}{1}".format("shortened chain: ", r.getName()))
+
+        for r_id in reaction_chain:
+            r_id2g_id[r_id] = rn.getId(), rn.getName()
 
         if groups_sbml and groups_plugin:
             # save as a group
@@ -444,13 +451,14 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
 
     save_as_sbml(cs_model, out_sbml, verbose)
 
+    return r_id2g_id
+
 
 def parse_group_sbml(groups_sbml, chebi):
     doc = SBMLReader().readSBMLFromFile(groups_sbml)
     groups_model = doc.getModel()
     groups_plugin = groups_model.getPlugin("groups")
-    id2rns_eq, id2rns_ch, id2sps = {}, {}, {}
-    ub_sps = []
+    r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = {}, {}, {}, set()
     if groups_plugin:
         for group in groups_plugin.getListOfGroups():
             gr_members = [it.getSymbol() for it in group.getListOfMembers()]
@@ -458,15 +466,24 @@ def parse_group_sbml(groups_sbml, chebi):
             gr_sbo, gr_type = group.getSBOTermID(), getAllQualifierValues(group.getAnnotation(), BQB_IS_DESCRIBED_BY).pop()
             if SBO_BIOCHEMICAL_REACTION == gr_sbo:
                 if GROUP_TYPE_CHAIN == gr_type:
-                    id2rns_ch[(gr_id, gr_name,)] = gr_members
+                    for r_id in gr_members:
+                        r_id2ch_id[r_id] = gr_id, gr_name
                 elif GROUP_TYPE_EQUIV == gr_type:
-                    id2rns_eq[(gr_id, gr_name,)] = gr_members
+                    for r_id in gr_members:
+                        r_id2g_id[r_id] = gr_id, gr_name
             elif SBO_CHEMICAL_MACROMOLECULE == gr_sbo:
                 if GROUP_TYPE_UBIQUITOUS == gr_type:
-                    ub_sps = gr_members
+                    ub_sps = set(gr_members)
                 elif GROUP_TYPE_EQUIV == gr_type:
-                    id2sps[(gr_id, gr_name, get_term(group, chebi), )] = gr_members
+                    for s_id in gr_members:
+                        s_id2gr_id[s_id] = gr_id, gr_name, get_term(group, chebi)
+    else:
+        raise GrPlError("groups plugin not installed")
+    return r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps
 
-    return id2rns_eq, id2rns_ch, id2sps, ub_sps
+
+class GrPlError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
 
 

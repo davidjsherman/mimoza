@@ -299,43 +299,6 @@ def greedy(terms, psi, set2score):
     return [set(it) for it in phi]
 
 
-# def cluster2term(term_ids, onto):
-#     # print "ROOTS ", [t.getName() for t in onto.getRoots()]
-#     options = onto.commonPts({onto.getTerm(t) for t in term_ids})
-#     if not options:
-#         options = onto.getRoots()
-#     return options.pop()
-
-
-# def computeRepresentatives(term2clu, clu2term, onto):
-#     clu2t, t2clu = {}, {}
-#     for clu, terms in clu2term.iteritems():
-#         T = cluster2term(terms, onto)
-#         clu2t[clu] = T
-#         add2map(t2clu, T, clu)
-#     Ts = list(t2clu.keys())
-#     i = 0
-#     tr = lambda it: onto.getAnyChildren(it, False, set()) | onto.getEqualTerms(it, None, 0, set())
-#     t2not = {}
-#     for t in Ts:
-#         kids = tr(t)
-#         i += 1
-#         for o_t in Ts[i:]:
-#             if tr(o_t) & kids:
-#                 if o_t in kids:
-#                     add2map(t2not, t, o_t)
-#                 else:
-#                     add2map(t2not, o_t, t)
-#     for clu, terms in clu2term.iteritems():
-#         T = clu2t[clu]
-#         name = T.getName()
-#         if T in t2not:
-#             name = name + ", but not " + ", nor ".join([t.getName() for t in t2not[T]])
-#         for t in terms:
-#             term2clu[t] = (name, list(T.getAllIds()))
-#     return term2clu
-
-
 def update(term_id2clu, onto):
     clu2term_ids = invert_map(term_id2clu)
     used = set()

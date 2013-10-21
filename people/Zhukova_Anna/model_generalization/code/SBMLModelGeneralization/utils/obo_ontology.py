@@ -7,6 +7,14 @@ __author__ = 'anna'
 import os
 
 
+def get_chebi():
+    return os.getcwd() + "/../data/chebi.obo"
+
+
+def get_go():
+    return os.getcwd() + "/../data/gene_ontology_ext.obo"
+
+
 def removeMiriamPrefix(urn):
     urn = urn.strip()
     miriam_prefix = "urn:miriam:"
@@ -410,12 +418,12 @@ class Ontology:
                 wholes = partOf_(term)
                 candidates = parents | wholes
                 for it in candidates:
-                    if (it in whole_Ids) and not self.isA(part, it):
+                    candidate = self.getTerm(it)
+                    if (it in whole_Ids) and not self.isA(part, candidate):
                         result.add(it)
                         continue
-                    candidate = self.getTerm(it)
                     result |= whole_Ids & partOf_(candidate)
-                    result |= set(filter(lambda r: not self.isA(part, r), set(whole_Ids) & candidate.getParentIds()))
+                    result |= set(filter(lambda t_id: not self.isA(part, self.getTerm(t_id)), set(whole_Ids) & candidate.getParentIds()))
                     items.add(candidate)
             term_set = items
         return result
