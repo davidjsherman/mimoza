@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 from misc import add_to_map, remove_from_map
+import misc
+
+URN_MIRIAM = "urn:miriam:"
+
+IDENTIFIERS_ORG = "http://identifiers.org/"
 
 __author__ = 'anna'
 
@@ -8,17 +13,17 @@ import os
 
 
 def get_chebi():
-    return os.getcwd() + "/../data/chebi.obo"
+    return "{0}/../data/chebi.obo".format(os.path.dirname(os.path.abspath(misc.__file__)))
 
 
 def get_go():
-    return os.getcwd() + "/../data/gene_ontology_ext.obo"
+    return "{0}/../data/gene_ontology_ext.obo".format(os.path.dirname(os.path.abspath(misc.__file__)))
 
 
-def removeMiriamPrefix(urn):
+def miriam_to_term_id(urn):
     urn = urn.strip()
-    miriam_prefix = "urn:miriam:"
-    identifiers_org_prefix = "http://identifiers.org/"
+    miriam_prefix = URN_MIRIAM
+    identifiers_org_prefix = IDENTIFIERS_ORG
     if 0 == urn.find(miriam_prefix):
         urn = urn[len(miriam_prefix):]
         start = urn.find(":")
@@ -34,10 +39,8 @@ def removeMiriamPrefix(urn):
     return urn.strip()
 
 
-def addMiriamPrefix(urn):
-    miriam_prefix = "http://identifiers.org/"
-    chebi_prefix = "obo.chebi/"
-    return "{0}{1}{2}".format(miriam_prefix, chebi_prefix, urn)
+def to_identifiers_org_format(t_id, prefix="obo.chebi"):
+    return "{0}{1}/{2}".format(IDENTIFIERS_ORG, prefix, t_id)
 
 
 def inducedOntology(terms, onto, relationships={"is_a"}):

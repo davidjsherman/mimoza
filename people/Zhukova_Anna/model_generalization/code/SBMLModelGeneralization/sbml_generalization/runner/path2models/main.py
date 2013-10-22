@@ -1,11 +1,13 @@
 from genericpath import exists, isfile
 from os import listdir, makedirs
 import sys
-from generalization.mark_ubiquitous import getCofactors
-from generalization.sbml_generalizer import convert
-from runner.path2models.gather_FA_statistics import get_statistics
-from utils.logger import log
-from utils.obo_ontology import parse, get_chebi
+
+from sbml_generalization.utils.logger import log
+from sbml_generalization.utils.obo_ontology import parse, get_chebi
+from sbml_generalization.generalization.sbml_generalizer import convert
+from sbml_generalization.generalization.mark_ubiquitous import getCofactors
+from sbml_generalization.runner.path2models.gather_FA_statistics import get_statistics
+
 
 __author__ = 'anna'
 
@@ -38,7 +40,7 @@ def generalize_many(chebi, verbose):
             if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
                 continue
             log(verbose, "Processing " + in_sbml)
-            convert(ontology, cofactor_ids, in_sbml, out_sbml, groups_sbml, None, verbose)
+            convert(out_sbml, groups_sbml, in_sbml, ontology, cofactor_ids, None, verbose)
 
 
 if __name__ == "__main__":

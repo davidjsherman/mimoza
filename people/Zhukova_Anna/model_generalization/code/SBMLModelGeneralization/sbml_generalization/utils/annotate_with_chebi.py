@@ -1,13 +1,13 @@
 from misc import add_to_map
-from obo_ontology import removeMiriamPrefix, Term, addMiriamPrefix
-from generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation, get_is_qualifier
+from obo_ontology import miriam_to_term_id, Term, to_identifiers_org_format
+from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation, get_is_qualifier
 
 __author__ = 'anna'
 
 
 def get_is_annotations(entity):
     is_resources = getAllQualifierValues(entity.getAnnotation(), get_is_qualifier())
-    return [removeMiriamPrefix(it) for it in is_resources]
+    return [miriam_to_term_id(it) for it in is_resources]
 
 
 def get_term(entity, chebi):
@@ -112,6 +112,6 @@ def get_species_to_chebi(model, chebi):
         term = intersection.pop() if intersection else possibilities.pop()
         for species in species_set:
             species2chebi[species.getId()] = term.getId()
-        addAnnotation(entity, get_is_qualifier(), addMiriamPrefix(term.getId()))
+        addAnnotation(entity, get_is_qualifier(), to_identifiers_org_format(term.getId()))
         used_terms.add(term)
     return species2chebi, fake_terms

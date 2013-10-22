@@ -3,10 +3,13 @@
 
 import getopt
 import sys
-from generalization.sbml_helper import parse_group_sbml
-from utils.logger import log
-from utils.obo_ontology import parse, get_chebi
-from utils.usage import Usage
+
+from sbml_generalization.generalization.sbml_helper import parse_group_sbml, convert_to_l2v4_with_species_types
+from sbml_generalization.utils.logger import log
+from sbml_generalization.utils.obo_ontology import parse, get_chebi
+from sbml_generalization.utils.usage import Usage
+from sbml_generalization.generalization.sbml_generalizer import convert
+
 
 __author__ = 'anna'
 
@@ -26,11 +29,11 @@ def main(argv=None):
         argv = sys.argv
     try:
         chebi, in_sbml, out_sbml, groups_sbml, sh_chains, verbose = process_args(argv)
-        log(verbose, "parsing ChEBI...")
-        ontology = parse(chebi)
-        print parse_group_sbml(groups_sbml, ontology)
-        #cofactor_ids = getCofactors(ontology)
-        #convert(ontology, cofactor_ids, in_sbml, out_sbml, groups_sbml, sh_chains, verbose)
+        #log(verbose, "parsing ChEBI...")
+        #ontology = parse(chebi)
+        convert_to_l2v4_with_species_types(groups_sbml)
+        #print parse_group_sbml(groups_sbml, ontology)
+        #convert(in_sbml, out_sbml, groups_sbml, ontology, None, sh_chains, verbose)
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         print >> sys.stderr, "\t for help use --help"

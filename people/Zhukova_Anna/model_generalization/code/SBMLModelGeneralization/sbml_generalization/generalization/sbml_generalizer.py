@@ -1,14 +1,16 @@
-from libsbml import SBMLReader, SBMLDocument, writeSBMLToFile
-from model_generalizer import map2chebi, shorten_chains, generalize
-from utils.logger import log
-from generalization.reaction_filters import filterReactionByNotTransport, getProducts, getReactants
-from generalization.sbml_helper import save_as_generalized_sbml, \
+from libsbml import SBMLReader
+from sbml_generalization.utils.logger import log
+from reaction_filters import filterReactionByNotTransport
+from sbml_helper import save_as_generalized_sbml, \
     remove_is_a_reactions, save_as_chain_shortened_sbml, model_to_l3v1, annotate_ubiquitous
+from mark_ubiquitous import getCofactors
+from model_generalizer import map2chebi, shorten_chains, generalize
+
 
 __author__ = 'anna'
 
 
-def generalize_model(groups_sbml, out_sbml, cofactors, input_model, onto, sh_chains=True, verbose=False):
+def generalize_model(groups_sbml, out_sbml, input_model, onto, cofactors=None, sh_chains=True, verbose=False):
     remove_is_a_reactions(input_model)
     log(verbose, "filtering reactions and species...")
     ## go only for reactions inside organelles
@@ -16,6 +18,8 @@ def generalize_model(groups_sbml, out_sbml, cofactors, input_model, onto, sh_cha
                        input_model.getListOfReactions())
 
     log(verbose, "mapping species to ChEBI...")
+    if not cofactors:
+        cofactors = getCofactors(onto)
     ontology, species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, onto)
 
     model_to_l3v1(groups_sbml, input_model)
@@ -51,12 +55,12 @@ def generalize_model(groups_sbml, out_sbml, cofactors, input_model, onto, sh_cha
     return r_id2g_eq, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps
 
 
-def convert(onto, cofactors, in_sbml, out_sbml, groups_sbml, sh_chains=True, verbose=False):
+def convert(out_sbml, groups_sbml, in_sbml, onto, cofactors=None, sh_chains=True, verbose=False):
     # input_model
     input_doc = SBMLReader().readSBML(in_sbml)
     input_model = input_doc.getModel()
 
-    generalize_model(groups_sbml, out_sbml, cofactors, input_model, onto, sh_chains, verbose)
+    generalize_model(groups_sbml, out_sbml, input_model, onto, cofactors, sh_chains, verbose)
 
     # print "ubiquitous: ", {ontology.getTerm(it).getName() for it in ubiquitous_chebi_ids}
     # annotateUbiquitous(input_model, species_id2chebi_id, ubiquitous_chebi_ids, verbose)

@@ -1,13 +1,15 @@
 from genericpath import isfile, exists
 from os import listdir, makedirs
 from shutil import copyfile
+
 from libsbml import SBMLReader, os
-from generalization.reaction_filters import getReactants, getProducts
-from model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
-from misc import add_to_map
-from obo_ontology import parse
-from runner.path2models.main import ROOT_DIR
-from utils.annotate_with_chebi import get_species_term
+from sbml_generalization.utils.annotate_with_chebi import get_species_term
+from sbml_generalization.generalization.reaction_filters import getReactants, getProducts
+from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
+from sbml_generalization.utils.misc import add_to_map
+from sbml_generalization.utils.obo_ontology import parse
+from main import ROOT_DIR
+
 
 __author__ = 'anna'
 

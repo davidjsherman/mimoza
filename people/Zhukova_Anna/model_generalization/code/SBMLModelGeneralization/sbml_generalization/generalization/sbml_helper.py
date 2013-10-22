@@ -1,10 +1,10 @@
 from libsbml import *
-from utils.annotate_with_chebi import get_term
-from utils.logger import log
-from utils.misc import add_to_map, invert_map
-from utils.obo_ontology import addMiriamPrefix
-from generalization.rdf_annotation_helper import addAnnotation, getAllQualifierValues
-from generalization.reaction_filters import getProducts, getReactants, get_compartment, getReactionParticipants
+from sbml_generalization.utils.annotate_with_chebi import get_term
+from sbml_generalization.utils.logger import log
+from sbml_generalization.utils.misc import add_to_map, invert_map
+from sbml_generalization.utils.obo_ontology import to_identifiers_org_format
+from rdf_annotation_helper import addAnnotation, getAllQualifierValues
+from reaction_filters import getProducts, getReactants, get_compartment, getReactionParticipants
 
 GROUP_TYPE_EQUIV = "equivalent"
 
@@ -23,17 +23,17 @@ SBO_MATERIAL_ENTITY = "SBO:0000240"
 __author__ = 'anna'
 
 
-def copyUnitDefinition(model, prototype, id_=None):
+def copy_unit_definition(model, prototype, id_=None):
     if prototype:
-        id_ = generateUniqueId(model, id_ if id_ else "u_new")
+        id_ = generate_unique_id(model, id_ if id_ else "u_new")
         unit_def = UnitDefinition(prototype)
         unit_def.setId(id_)
         model.addUnitDefinition(unit_def)
 
 
-def copyCompartment(model, prototype, compartment_id_old2new, id_=None):
+def copy_compartment(model, prototype, compartment_id_old2new, id_=None):
     if prototype:
-        id_ = generateUniqueId(model, id_ if id_ else "c_new")
+        id_ = generate_unique_id(model, id_ if id_ else "c_new")
         comp = Compartment(prototype)
         comp.setId(id_)
         if prototype.isSetOutside():
@@ -43,9 +43,9 @@ def copyCompartment(model, prototype, compartment_id_old2new, id_=None):
         model.addCompartment(comp)
 
 
-def copySpecies(model, prototype, compartment_id, type_id=None, id_=None):
+def copy_species(model, prototype, compartment_id, type_id=None, id_=None):
     if prototype:
-        id_ = generateUniqueId(model, id_ if id_ else "s_new")
+        id_ = generate_unique_id(model, id_ if id_ else "s_new")
 
         species = Species(prototype)
         species.setId(id_)
@@ -65,9 +65,9 @@ def copySpecies(model, prototype, compartment_id, type_id=None, id_=None):
         model.addSpecies(species)
 
 
-def copyParameter(model, prototype, unit_id_old2new, id_=None):
+def copy_parameter(model, prototype, unit_id_old2new, id_=None):
     if prototype:
-        id_ = generateUniqueId(model, id_ if id_ else "p_new")
+        id_ = generate_unique_id(model, id_ if id_ else "p_new")
         param = Parameter(prototype)
         param.setId(id_)
         old_unit_id = prototype.getUnits()
@@ -76,43 +76,43 @@ def copyParameter(model, prototype, unit_id_old2new, id_=None):
         model.addParameter(param)
 
 
-def copyElements(inputModel, outputModel):
-    outputModel.setId(inputModel.getId())
-    outputModel.setNamespaces(inputModel.getNamespaces())
-    for unit in inputModel.getListOfUnitDefinitions():
-        outputModel.addUnitDefinition(unit)
-    for parameter in inputModel.getListOfParameters():
-        outputModel.addParameter(parameter)
-    for compartment in inputModel.getListOfCompartments():
-        outputModel.addCompartment(compartment)
-    for speciesType in inputModel.getListOfSpeciesTypes():
-        outputModel.addSpeciesType(speciesType)
-    for species in inputModel.getListOfSpecies():
-        outputModel.addSpecies(species)
+def copy_elements(input_model, output_model):
+    output_model.setId(input_model.getId())
+    output_model.setNamespaces(input_model.getNamespaces())
+    for unit in input_model.getListOfUnitDefinitions():
+        output_model.addUnitDefinition(unit)
+    for parameter in input_model.getListOfParameters():
+        output_model.addParameter(parameter)
+    for compartment in input_model.getListOfCompartments():
+        output_model.addCompartment(compartment)
+    for speciesType in input_model.getListOfSpeciesTypes():
+        output_model.addSpeciesType(speciesType)
+    for species in input_model.getListOfSpecies():
+        output_model.addSpecies(species)
 
 
-def removeUnusedElements(outputModel):
-    speciesToKeep = []
-    for reaction in outputModel.getListOfReactions():
-        speciesToKeep.extend(getReactionParticipants(reaction))
-    sp_list = list(outputModel.getListOfSpecies())
+def remove_unused_elements(output_model):
+    species_to_keep = []
+    for reaction in output_model.getListOfReactions():
+        species_to_keep.extend(getReactionParticipants(reaction))
+    sp_list = list(output_model.getListOfSpecies())
     for species in sp_list:
-        speciesId = species.getId()
-        if not (speciesId in speciesToKeep):
-            outputModel.removeSpecies(speciesId)
-    compartmentsToKeep = set()
-    for species in outputModel.getListOfSpecies():
-        compartmentId = species.getCompartment()
-        compartmentsToKeep.add(compartmentId)
-        outer_compartment = outputModel.getCompartment(compartmentId).getOutside()
+        species_id = species.getId()
+        if not (species_id in species_to_keep):
+            output_model.removeSpecies(species_id)
+    compartments_to_keep = set()
+    for species in output_model.getListOfSpecies():
+        compartment_id = species.getCompartment()
+        compartments_to_keep.add(compartment_id)
+        outer_compartment = output_model.getCompartment(compartment_id).getOutside()
         while outer_compartment:
-            compartmentsToKeep.add(outer_compartment)
-            outer_compartment = outputModel.getCompartment(outer_compartment).getOutside()
-    c_list = list(outputModel.getListOfCompartments())
+            compartments_to_keep.add(outer_compartment)
+            outer_compartment = output_model.getCompartment(outer_compartment).getOutside()
+    c_list = list(output_model.getListOfCompartments())
     for compartment in c_list:
-        compartmentId = compartment.getId()
-        if not (compartmentId in compartmentsToKeep):
-            outputModel.removeCompartment(compartmentId)
+        compartment_id = compartment.getId()
+        if not (compartment_id in compartments_to_keep):
+            output_model.removeCompartment(compartment_id)
 
 
 # TODO: improve
@@ -134,7 +134,7 @@ def flatten(t):
         return flatten(t[0]) + flatten(t[1:])
 
 
-def generateUniqueId(model, id_=None):
+def generate_unique_id(model, id_=None):
     if not id_:
         id_ = "new_id"
     id_ = normalize(id_)
@@ -146,27 +146,39 @@ def generateUniqueId(model, id_=None):
     return id_
 
 
-def copySpeciesType(model, id_, prototype):
+def copy_species_type(model, id_, prototype):
     if prototype:
-        id_ = generateUniqueId(model, id_ if id_ else "t_new")
+        id_ = generate_unique_id(model, id_ if id_ else "t_new")
         sp_type = SpeciesType(prototype)
         sp_type.setId(id_)
         model.addSpeciesType(sp_type)
 
 
-def createSpeciesType(model, name, term_id=None, id_=None):
+def create_species_type(model, name, term_id=None, id_=None):
     new_type = model.createSpeciesType()
-    id_ = generateUniqueId(model, id_ if id_ else "t_new")
+    id_ = generate_unique_id(model, id_ if id_ else "t_new")
     new_type.setId(id_)
     new_type.setName(name)
     if term_id:
-        addAnnotation(new_type, BQB_IS, addMiriamPrefix(term_id))
+        addAnnotation(new_type, BQB_IS, to_identifiers_org_format(term_id))
     return new_type
 
 
-def createSpecies(model, compartment_id, type_id=None, name=None, id_=None, sbo_id=None):
+def create_compartment(model, name, outside=None, term_id=None, id_=None):
+    new_comp = model.createCompartment()
+    id_ = generate_unique_id(model, id_ if id_ else "c_new")
+    new_comp.setId(id_)
+    new_comp.setName(name)
+    if outside:
+        new_comp.setOutside(outside)
+    if term_id:
+        addAnnotation(new_comp, BQB_IS, to_identifiers_org_format(term_id, "obo.go"))
+    return new_comp
+
+
+def create_species(model, compartment_id, type_id=None, name=None, id_=None, sbo_id=None):
     new_species = model.createSpecies()
-    id_ = generateUniqueId(model, id_ if id_ else "s_new")
+    id_ = generate_unique_id(model, id_ if id_ else "s_new")
     if LIBSBML_OPERATION_SUCCESS != new_species.setId(id_):
         print "species  ", id_, " creation error"
     if not name:
@@ -190,9 +202,9 @@ def createSpecies(model, compartment_id, type_id=None, name=None, id_=None, sbo_
     return new_species
 
 
-def createReaction(model, reactants, products, name=None, id_=None):
+def create_reaction(model, reactants, products, name=None, id_=None):
     reaction = model.createReaction()
-    id_ = generateUniqueId(model, id_ if id_ else "r_new")
+    id_ = generate_unique_id(model, id_ if id_ else "r_new")
     if LIBSBML_OPERATION_SUCCESS != reaction.setId(id_):
         print "reaction  ", id_, " creation error"
     for sp_id in reactants:
@@ -206,22 +218,22 @@ def createReaction(model, reactants, products, name=None, id_=None):
     return reaction
 
 
-def _copySpeciesReference(spRef, species_id_replacement_map):
-    sp_id = spRef.getSpecies()
-    new_spRef = SpeciesReference(spRef)
-    new_spRef.setStoichiometry(spRef.getStoichiometry())
+def _copy_species_reference(sp_ref, species_id_replacement_map):
+    sp_id = sp_ref.getSpecies()
+    new_sp_ref = SpeciesReference(sp_ref)
+    new_sp_ref.setStoichiometry(sp_ref.getStoichiometry())
     if sp_id in species_id_replacement_map:
-        new_spRef.setSpecies(species_id_replacement_map[sp_id])
-    return new_spRef
+        new_sp_ref.setSpecies(species_id_replacement_map[sp_id])
+    return new_sp_ref
 
 
-def copyReaction(model, prototype, species_id_old2new, param_id_old2new, unit_id_old2new, name=None,
-                 compartment_id=None, id_=None):
+def copy_reaction(model, prototype, species_id_old2new, param_id_old2new, unit_id_old2new, name=None, comp_id=None,
+                  id_=None):
     new_reaction = Reaction(prototype)
-    id_ = generateUniqueId(model, id_ if id_ else "r_new")
+    id_ = generate_unique_id(model, id_ if id_ else "r_new")
     new_reaction.setId(id_)
-    if compartment_id:
-        new_reaction.setCompartment(compartment_id)
+    if comp_id:
+        new_reaction.setCompartment(comp_id)
     if name:
         new_reaction.setName(name)
 
@@ -238,8 +250,8 @@ def copyReaction(model, prototype, species_id_old2new, param_id_old2new, unit_id
                         param.setUnits(unit_id_old2new[old_unit_id])
     for spRef_iterable in prototype.getListOfReactants(), prototype.getListOfProducts(), prototype.getListOfModifiers():
         for spRef in spRef_iterable:
-            new_spRef = _copySpeciesReference(spRef, species_id_old2new)
-            new_reaction.addReactant(new_spRef)
+            new_sp_ref = _copy_species_reference(spRef, species_id_old2new)
+            new_reaction.addReactant(new_sp_ref)
 
     model.addReaction(new_reaction)
     return new_reaction
@@ -256,10 +268,7 @@ def remove_is_a_reactions(input_model):
 
 # serialization
 
-
-def convert_to_lev3_v1(model):
-    doc = SBMLDocument(model.getSBMLNamespaces())
-    doc.setModel(model)
+def set_consistency_level(doc):
     doc.setConsistencyChecksForConversion(LIBSBML_CAT_GENERAL_CONSISTENCY, False)
     doc.setConsistencyChecksForConversion(LIBSBML_CAT_IDENTIFIER_CONSISTENCY, False)
     doc.setConsistencyChecksForConversion(LIBSBML_CAT_UNITS_CONSISTENCY, False)
@@ -267,10 +276,73 @@ def convert_to_lev3_v1(model):
     doc.setConsistencyChecksForConversion(LIBSBML_CAT_SBO_CONSISTENCY, False)
     doc.setConsistencyChecksForConversion(LIBSBML_CAT_OVERDETERMINED_MODEL, False)
     doc.setConsistencyChecksForConversion(LIBSBML_CAT_MODELING_PRACTICE, False)
+
+
+def convert_to_lev3_v1(model):
+    doc = SBMLDocument(model.getSBMLNamespaces())
+    doc.setModel(model)
+    set_consistency_level(doc)
     doc.checkL3v1Compatibility()
     doc.setLevelAndVersion(3, 1, False)
     doc.getSBMLNamespaces().addPackageNamespace("groups", 1)
     return doc
+
+
+def convert_to_l2v4_with_species_types(sbml):
+    doc = SBMLReader().readSBMLFromFile(sbml)
+    input_model = doc.getModel()
+    doc = SBMLDocument(input_model.getSBMLNamespaces())
+    doc.setModel(input_model)
+    set_consistency_level(doc)
+    doc.checkL2v4Compatibility()
+    converted = doc.setLevelAndVersion(2, 4, False)
+    if not converted:
+        doc = SBMLReader().readSBMLFromFile(sbml)
+    input_model = doc.getModel()
+    check_names(input_model)
+    if converted:
+        add_species_types(input_model)
+    check_compartments(input_model)
+    return doc
+
+
+def check_compartments(model):
+    if not model.getListOfCompartments():
+        cell_id = create_compartment(model, "cell", outside=None, term_id="GO:0005623").getId()
+        for sp in model.getListOfSpecies():
+            sp.setCompartment(cell_id)
+
+
+def check_names(model):
+    def name_setter(collection):
+        for it in collection:
+            if not it.isSetName():
+                it.setName(it.getId())
+    name_setter(model.getListOfCompartments())
+    name_setter(model.getListOfSpecies())
+    name_setter(model.getListOfSpeciesTypes())
+
+
+def add_species_types(model):
+    name2species_type = {}
+    name2species = {}
+    for species in model.getListOfSpecies():
+        name = species.getName()
+        if species.isSetSpeciesType():
+            species_type = species.getSpeciesType()
+            name2species_type[name] = species_type
+        else:
+            if name in name2species:
+                name2species[name].append(species)
+            else:
+                name2species[name] = [species]
+    for name, species_list in name2species.iteritems():
+        s_t_id = name2species_type[name] if name in name2species_type else create_species_type(model, name)
+        species_type = model.getSpeciesType(s_t_id)
+        for species in species_list:
+            species.setSpeciesType(s_t_id)
+            if species.isSetAnnotation():
+                species_type.setAnnotation(species.getAnnotation())
 
 
 def model_to_l3v1(sbml, model):
@@ -307,7 +379,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
 
     if s_id2clu:
         generalized_model = generalized_doc.createModel()
-        copyElements(input_model, generalized_model)
+        copy_elements(input_model, generalized_model)
 
         #convert
         if groups_sbml:
@@ -325,9 +397,9 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                 add_to_map(comp2s_ids, c_id, s_id)
             for c_id, s_ids in comp2s_ids.iteritems():
                 if len(s_ids) > 1:
-                    new_species = createSpecies(generalized_model, c_id, type_id=None,
-                                                name="{0} ({1})".format(clu.getName(), len(s_ids)))
-                    addAnnotation(new_species, BQB_IS, addMiriamPrefix(clu.getId()))
+                    new_species = create_species(generalized_model, c_id, type_id=None,
+                                                 name="{0} ({1})".format(clu.getName(), len(s_ids)))
+                    addAnnotation(new_species, BQB_IS, to_identifiers_org_format(clu.getId()))
                     for s_id in s_ids:
                         s_id2gr_id[s_id] = new_species.getId(), clu.getName(), clu
 
@@ -338,7 +410,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                         s_group.setKind(GROUP_KIND_CLASSIFICATION)
                         s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
                         s_group.setName(clu.getName())
-                        addAnnotation(s_group, BQB_IS, addMiriamPrefix(clu.getId()))
+                        addAnnotation(s_group, BQB_IS, to_identifiers_org_format(clu.getId()))
                         for s_id in s_ids:
                             member = s_group.createMember()
                             member.setSymbol(s_id)
@@ -365,7 +437,8 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                         r_name = "{0} ({1})".format(r_name, len(rs))
 
                         for r in rs:
-                            r_id2g_eq[r.getId()] = "g_r_{0}".format(i), "generalized {0}".format(representative.getName())
+                            r_id2g_eq[r.getId()] = "g_r_{0}".format(i), "generalized {0}".format(
+                                representative.getName())
 
                         if groups_sbml and groups_plugin:
                             # save as a group
@@ -380,9 +453,9 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
                             addAnnotation(r_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
                         i += 1
 
-                    createReaction(generalized_model, reactants, products, r_name)
+                    create_reaction(generalized_model, reactants, products, r_name)
 
-        removeUnusedElements(generalized_model)
+        remove_unused_elements(generalized_model)
 
         if groups_sbml and groups_model:
             save_as_sbml(groups_model, groups_sbml, verbose)
@@ -403,7 +476,7 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
     # chain shortened model
     cs_doc = SBMLDocument(input_model.getSBMLNamespaces())
     cs_model = cs_doc.createModel()
-    copyElements(input_model, cs_model)
+    copy_elements(input_model, cs_model)
 
     r_id2g_id = {}
 
@@ -422,7 +495,7 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
         id_replacer = lambda s_id: species_chain[-1] if s_id == species_chain[1] else s_id
         reactants = {id_replacer(it) for it in getReactants(r)}
         products = {id_replacer(it) for it in getProducts(r)}
-        rn = createReaction(cs_model, reactants, products, "{0}{1}".format("shortened chain: ", r.getName()))
+        rn = create_reaction(cs_model, reactants, products, "{0}{1}".format("shortened chain: ", r.getName()))
 
         for r_id in reaction_chain:
             r_id2g_id[r_id] = rn.getId(), rn.getName()
@@ -444,7 +517,7 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
         if not r.getId() in processed_rs:
             cs_model.addReaction(r)
 
-    removeUnusedElements(cs_model)
+    remove_unused_elements(cs_model)
 
     if groups_sbml and groups_model:
         save_as_sbml(groups_model, groups_sbml, verbose)
@@ -463,7 +536,8 @@ def parse_group_sbml(groups_sbml, chebi):
         for group in groups_plugin.getListOfGroups():
             gr_members = [it.getSymbol() for it in group.getListOfMembers()]
             gr_id, gr_name = group.getId(), group.getName()
-            gr_sbo, gr_type = group.getSBOTermID(), getAllQualifierValues(group.getAnnotation(), BQB_IS_DESCRIBED_BY).pop()
+            gr_sbo, gr_type = group.getSBOTermID(), getAllQualifierValues(group.getAnnotation(),
+                                                                          BQB_IS_DESCRIBED_BY).pop()
             if SBO_BIOCHEMICAL_REACTION == gr_sbo:
                 if GROUP_TYPE_CHAIN == gr_type:
                     for r_id in gr_members:
@@ -485,5 +559,3 @@ def parse_group_sbml(groups_sbml, chebi):
 class GrPlError(Exception):
     def __init__(self, msg):
         self.msg = msg
-
-

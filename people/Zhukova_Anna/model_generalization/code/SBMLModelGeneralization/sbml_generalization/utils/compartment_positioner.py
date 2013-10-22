@@ -1,3 +1,12 @@
+from libsbml import BQB_IS, BQB_IS_VERSION_OF
+from obo_ontology import parse, get_go, miriam_to_term_id
+
+from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues
+from sbml_generalization.generalization.sbml_helper import create_compartment
+
+
+FAKE_ROOT_COMP = "fake-outside-most-compartment-for-visualisation-purposes"
+
 GO_CYTOPLASM = 'go:0005737'
 GO_NUCLEUS = 'go:0005634'
 GO_ORGANELLE_OUTER_MEMBRANE = 'go:0031968'
@@ -16,6 +25,60 @@ isACheck = lambda it, t_id, onto: onto.isA(it, onto.getTerm(t_id)) or (t_id.lowe
 isA = lambda t_id, onto, candidates: {it for it in candidates if isACheck(it, t_id, onto)}
 isAorPartOf = lambda t_id, onto, candidates: {it for it in candidates if
                                               isACheck(it, t_id, onto) or partOfCheck(it.getId(), t_id, onto)}
+
+
+def get_go_term(annotation, qualifier, onto):
+    for go_id in getAllQualifierValues(annotation, qualifier):
+        go_id = miriam_to_term_id(go_id)
+        term = onto.getTerm(go_id)
+        if term:
+            return term
+    return None
+
+
+def nest_compartments(model):
+    outs_set = False
+    for comp in model.getListOfCompartments():
+        out = comp.getOutside()
+        if out:
+            out = model.getCompartment(out)
+            if out:
+                outs_set = True
+    if not outs_set:
+        onto = parse(get_go())
+        term2comp = {}
+        for comp in model.getListOfCompartments():
+            annotation = comp.getAnnotation()
+            if annotation:
+                term = get_go_term(annotation, BQB_IS, onto)
+                if not term:
+                    term = get_go_term(annotation, BQB_IS_VERSION_OF, onto)
+                if term:
+                    term2comp[term] = comp
+                    continue
+            term_ids = onto.getIdsByName(comp.getName())
+            if term_ids:
+                term2comp[onto.getTerm(set(term_ids).pop())] = comp
+        in2out = nest_compartments_with_gene_ontology({it.getId() for it in term2comp.iterkeys()}, onto)
+        for in_term, out_term in in2out.iteritems():
+            if out_term:
+                term2comp[in_term].setOutside(term2comp[out_term].getId())
+    roots = {comp for comp in model.getListOfCompartments() if not comp.isSetOutside()}
+    outsides = {model.getCompartment(comp.getOutside()) for comp in model.getListOfCompartments() if
+                comp.isSetOutside()}
+    if len(roots) > 1:
+        the_root = None
+        for it in roots:
+            if not (it in outsides):
+                the_root = it
+                break
+        if not the_root:
+            the_root = create_compartment(model, FAKE_ROOT_COMP)
+        for root in roots:
+            if not root == the_root:
+                root.setOutside(the_root.getId())
+    return {comp.getName(): model.getCompartment(comp.getOutside()).getName() if comp.isSetOutside() else '' for comp in
+            model.getListOfCompartments()}
 
 
 # Update compartment hierarchy using the Gene Ontology
@@ -111,7 +174,7 @@ def correct_membranes(organelle, parts, comp2out, onto):
             if not (out in parts):
                 outside = out
                 break
-        # envelope, membrane
+                # envelope, membrane
     envelopes = isAorPartOf(GO_ENVELOPE, onto, parts) | isAorPartOf(GO_MEMBRANE, onto, parts)
     insides = parts - envelopes
     # organelle
@@ -222,7 +285,7 @@ def get_inner_most(onto, matches):
         return None
     if len(matches) == 1:
         return matches.pop()
-    # return id of the inner-most compartment
+        # return id of the inner-most compartment
     while matches:
         it = matches.pop()
         no_better_candidate = True
@@ -240,7 +303,7 @@ def get_outer_most(onto, matches):
         return None
     if len(matches) == 1:
         return matches.pop()
-    # return id of the outer-most compartment
+        # return id of the outer-most compartment
     while matches:
         it = matches.pop()
         no_better_candidate = True

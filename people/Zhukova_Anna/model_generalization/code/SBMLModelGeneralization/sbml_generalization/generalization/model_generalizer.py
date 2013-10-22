@@ -1,10 +1,12 @@
-from generalization.mark_ubiquitous import getUbiquitousSpeciesSet
-from utils.annotate_with_chebi import get_species_to_chebi
-from utils.logger import log
-from utils.misc import add_to_map, invert_map
-from utils.obo_ontology import Term, subOntology
-from generalization.reaction_filters import getReactants, getProducts, filterReactionByNotTransport
-from generalization.sbml_helper import remove_is_a_reactions, save_as_chain_shortened_sbml
+from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
+from sbml_generalization.utils.logger import log
+from sbml_generalization.utils.misc import add_to_map, invert_map
+from sbml_generalization.utils.obo_ontology import Term, subOntology
+from reaction_filters import getReactants, getProducts, filterReactionByNotTransport
+from sbml_helper import remove_is_a_reactions, save_as_chain_shortened_sbml
+
+from sbml_generalization.generalization.mark_ubiquitous import getUbiquitousSpeciesSet
+
 
 __author__ = 'anna'
 

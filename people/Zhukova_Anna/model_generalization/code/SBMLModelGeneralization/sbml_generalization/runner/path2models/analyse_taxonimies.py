@@ -1,10 +1,13 @@
 from genericpath import isfile, isdir
 from os import listdir
 from shutil import copyfile
-from libsbml import SBMLReader
 import sys
-from generalization.rdf_annotation_helper import getTaxonomy
-from runner.path2models.main import ROOT_DIR
+
+from libsbml import SBMLReader
+
+from sbml_generalization.generalization.rdf_annotation_helper import getTaxonomy
+from sbml_generalization.runner.path2models.main import ROOT_DIR
+
 
 __author__ = 'anna'
 
