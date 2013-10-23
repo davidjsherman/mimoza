@@ -4,7 +4,7 @@ import sys
 
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from sbml_generalization.generalization.sbml_generalizer import convert
+from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.generalization.mark_ubiquitous import getCofactors
 from sbml_generalization.runner.path2models.gather_FA_statistics import get_statistics
 
@@ -40,7 +40,7 @@ def generalize_many(chebi, verbose):
             if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
                 continue
             log(verbose, "Processing " + in_sbml)
-            convert(out_sbml, groups_sbml, in_sbml, ontology, cofactor_ids, None, verbose)
+            generalize_model(groups_sbml, out_sbml, in_sbml, ontology, cofactor_ids, None, verbose)
 
 
 if __name__ == "__main__":

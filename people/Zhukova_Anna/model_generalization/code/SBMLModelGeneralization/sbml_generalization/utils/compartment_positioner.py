@@ -126,7 +126,7 @@ def nest_compartments_with_gene_ontology(t_ids, onto):
         else:
             no_organelle_parts.append(it)
 
-    populated = set(filter(lambda org: organelle2parts[org], organelle2parts.keys()))
+    populated = {org for org in organelle2parts.iterkeys() if lambda org: organelle2parts[org]}
     # organelle
     organelle = onto.getTerm(GO_ORGANELLE)
     organelle_ids = {it.getId() for it in organelle.getChildren(False)} | {GO_ORGANELLE.lower()}

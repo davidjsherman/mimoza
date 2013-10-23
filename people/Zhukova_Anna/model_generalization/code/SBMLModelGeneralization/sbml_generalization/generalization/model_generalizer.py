@@ -71,27 +71,27 @@ def get_reaction_to_cluster_map(reactions, term_id2clu, s_id2term_id):
 
 
 def get_r_reactions_by_term(t_id, reactions, term_id2s_ids):
-    return filter(lambda r: len(term_id2s_ids[t_id] & getReactants(r)) > 0, reactions)
+    return (r for r in reactions if len(term_id2s_ids[t_id] & getReactants(r)) > 0)
 
 
 def get_p_reactions_by_term(t_id, reactions, term_id2s_ids):
-    return filter(lambda r: len(term_id2s_ids[t_id] & getProducts(r)) > 0, reactions)
+    return (r for r in reactions if len(term_id2s_ids[t_id] & getProducts(r)) > 0)
 
 
 def get_reactions_ry_term(t_id, reactions, term_id2s_ids):
-    return filter(lambda r: len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0, reactions)
+    return (r for r in reactions if len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0)
 
 
 def get_r_reactions_by_species(s_id, reactions):
-    return filter(lambda r: s_id in getReactants(r), reactions)
+    return [r for r in reactions if s_id in getReactants(r)]
 
 
 def get_p_reactions_by_species(s_id, reactions):
-    return filter(lambda r: s_id in getProducts(r), reactions)
+    return [r for r in reactions if s_id in getProducts(r)]
 
 
 def get_reactions_by_species(s_id, reactions):
-    return filter(lambda r: s_id in (getReactants(r) | getProducts(r)), reactions)
+    return [r for r in reactions if s_id in (getReactants(r) | getProducts(r))]
 
 
 def merge_based_on_neighbours(lst):
@@ -104,7 +104,7 @@ def merge_based_on_neighbours(lst):
                 neighbours |= new_neighbours
                 terms |= new_terms
                 to_remove.append((new_neighbours, new_terms))
-        new_lst = filter(lambda it: not it in to_remove, new_lst)
+        new_lst = [it for it in new_lst if not it in to_remove]
         new_lst.append((neighbours, terms))
     return new_lst
 
@@ -149,7 +149,7 @@ def compute_eq0(interesting_term_ids, onto):
         clu = (i,)
         term_id2clu.update({t_id: clu for t_id in t_set})
         i += 1
-    #return {term_id: clu for term_id in interesting_term_ids}
+        #return {term_id: clu for term_id in interesting_term_ids}
     return term_id2clu
 
 
@@ -159,7 +159,7 @@ def get_conflicts(reactions, term_ids, species_id2term_id):
     for t_id in term_ids:
         for r in get_reactions_ry_term(t_id, reactions, term2s_ids):
             add_to_map(r2term_ids, r, t_id)
-    return filter(lambda terms: len(terms) > 1, r2term_ids.values())
+    return [terms for terms in r2term_ids.itervalues() if len(terms) > 1]
 
 
 def fix_stoichiometry(reactions, term_id2clu, species_id2term_id, onto):
@@ -171,9 +171,8 @@ def fix_stoichiometry(reactions, term_id2clu, species_id2term_id, onto):
         if not conflicts:
             continue
         psi, set2score = get_psi_set(onto, term_ids, conflicts)
-        #t_sets = partition(term_ids, onto, conflicts)
         i = 0
-        for ts in greedy(term_ids, psi, set2score):#t_sets:
+        for ts in greedy(term_ids, psi, set2score):
             i += 1
             n_clu = clu + (i,)
             for t in ts:
@@ -266,7 +265,7 @@ def get_psi_set(onto, term_ids, conflicts):
                 set2score[sss] = avg_tup(set2score[ss])
     psi |= to_add
 
-    return filter(lambda term_set: good(set(term_set)), psi), set2score
+    return [term_set for term_set in psi if good(set(term_set))], set2score
 
 
 def avg_tup(u):
@@ -353,15 +352,15 @@ def print_final_clusters(term_id2clu, onto):
 def fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose):
     log(verbose, "  computing eq 0...")
     term_id2clu = compute_eq0(interesting_term_ids, onto)
-    print_clusters(term_id2clu, onto)
+    #print_clusters(term_id2clu, onto)
     log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
     filter_clu_to_terms(term_id2clu)
-    print_clusters(term_id2clu, onto)
+    #print_clusters(term_id2clu, onto)
     log(verbose, "  preserving stoichiometry...")
     term_id2clu = fix_stoichiometry(reactions, term_id2clu, species_id2chebi_id, onto)
     filter_clu_to_terms(term_id2clu)
-    print_clusters(term_id2clu, onto)
+    #print_clusters(term_id2clu, onto)
     log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
     filter_clu_to_terms(term_id2clu)
@@ -383,8 +382,7 @@ def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbo
     if verbose:
         print_final_clusters(term_id2clu, onto)
 
-    s_id2clu = {s_id: term_id2clu[t] for (s_id, t) in
-                filter(lambda (s_id, t): t in term_id2clu, species_id2chebi_id.iteritems())}
+    s_id2clu = {s_id: term_id2clu[t] for (s_id, t) in species_id2chebi_id.iteritems() if t in term_id2clu}
     return s_id2clu, r2clu
 
 
@@ -408,15 +406,14 @@ def get_simplified_key(r, ubiquitous_ids):
 
 
 def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
-    ubiquitous_ids = set(
-        filter(lambda s_id: species_id2chebi_id[s_id] in ubiquitous_chebi_ids, species_id2chebi_id.keys()))
-    specific_ids = set(species_id2chebi_id.keys()) - ubiquitous_ids
+    ubiquitous_ids = {s_id for s_id in species_id2chebi_id.iterkeys() if
+                      species_id2chebi_id[s_id] in ubiquitous_chebi_ids}
 
     def get_in_out_reactions(s_id):
         ins, outs = get_p_reactions_by_species(s_id, reactions), get_r_reactions_by_species(s_id, reactions)
-        r_ins = filter(lambda r: not simplified_need_to_reverse(r, ubiquitous_ids), ins) + filter(
-            lambda r: simplified_need_to_reverse(r, ubiquitous_ids), outs)
-        r_outs = filter(lambda r: not r in r_ins, ins) + filter(lambda r: not r in r_ins, outs)
+        r_ins = [r for r in ins if not simplified_need_to_reverse(r, ubiquitous_ids)] \
+                + [r for r in outs if simplified_need_to_reverse(r, ubiquitous_ids)]
+        r_outs = [r for r in ins if not r in r_ins] + [r for r in outs if not r in r_ins]
         return r_ins, r_outs
 
     def get_aligned_reactants_products(r):
@@ -462,9 +459,11 @@ def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 
     result = []
     checked = set()
+    specific_ids = (s_id for s_id in species_id2chebi_id.iterkeys() if \
+                    not species_id2chebi_id[s_id] in ubiquitous_chebi_ids)
     for s_id in specific_ids:
         lst = check(s_id, checked)
-        if len(lst[0]) > 1 and onto.commonPts({onto.getTerm(species_id2chebi_id[s_id]) for s_id in lst[0]}):
+        if len(lst[0]) > 1 and onto.commonPts((onto.getTerm(species_id2chebi_id[s_id]) for s_id in lst[0])):
             result.append(lst)
 
     if verbose:
@@ -490,6 +489,6 @@ def map2chebi(cofactors, input_model, onto):
                            min_deepness=11)
     for t in fake_terms:
         onto.removeTerm(t)
-    cofactor_ids = set(filter(lambda cofactor_id: ontology.getTerm(cofactor_id), cofactors))
+    cofactor_ids = {cofactor_id for cofactor_id in cofactors if ontology.getTerm(cofactor_id)}
     ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(input_model, species_id2chebi_id, ontology)
     return ontology, species_id2chebi_id, ubiquitous_chebi_ids

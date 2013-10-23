@@ -537,7 +537,7 @@ def parse_group_sbml(groups_sbml, chebi):
             gr_members = [it.getSymbol() for it in group.getListOfMembers()]
             gr_id, gr_name = group.getId(), group.getName()
             gr_sbo, gr_type = group.getSBOTermID(), getAllQualifierValues(group.getAnnotation(),
-                                                                          BQB_IS_DESCRIBED_BY).pop()
+                                                                          BQB_IS_DESCRIBED_BY).next()
             if SBO_BIOCHEMICAL_REACTION == gr_sbo:
                 if GROUP_TYPE_CHAIN == gr_type:
                     for r_id in gr_members:

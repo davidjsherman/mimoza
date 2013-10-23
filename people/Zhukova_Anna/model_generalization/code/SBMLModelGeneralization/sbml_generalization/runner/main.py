@@ -4,11 +4,10 @@
 import getopt
 import sys
 
-from sbml_generalization.generalization.sbml_helper import parse_group_sbml, convert_to_l2v4_with_species_types
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
 from sbml_generalization.utils.usage import Usage
-from sbml_generalization.generalization.sbml_generalizer import convert
+from sbml_generalization.generalization.sbml_generalizer import generalize_model
 
 
 __author__ = 'anna'
@@ -33,7 +32,7 @@ def main(argv=None):
         ontology = parse(chebi)
         #convert_to_l2v4_with_species_types(groups_sbml)
         #print parse_group_sbml(groups_sbml, ontology)
-        convert(in_sbml, out_sbml, groups_sbml, ontology, None, sh_chains, verbose)
+        generalize_model(groups_sbml, out_sbml, in_sbml, ontology, None, sh_chains, verbose)
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         print >> sys.stderr, "\t for help use --help"

@@ -61,7 +61,7 @@ def inducedOntology(terms, onto, relationships={"is_a"}):
     for term in induced_ontology.getAllTerms():
         for par_id in term.getParentIds():
             induced_ontology.getTerm(par_id).addChild(term)
-        # fix roots
+            # fix roots
     old_root_ids = {r.getId() for r in onto.getRoots()}
     new_roots = induced_ontology.getRoots()
 
@@ -77,7 +77,8 @@ def inducedOntology(terms, onto, relationships={"is_a"}):
         return findParents(new_candidates, all_ids)
 
     all_ids = induced_ontology.getAllTermIds()
-    for root in filter(lambda it: not (it.getId() in old_root_ids), new_roots):
+    new_not_old_roots = (it for it in new_roots if not (it.getId() in old_root_ids))
+    for root in new_not_old_roots:
         old_root = onto.getTerm(root.getId())
         ancestor_ids = findParents(old_root.getParentIds(), all_ids)
         if ancestor_ids:
@@ -296,7 +297,7 @@ class Ontology:
         return set(self.id2term.keys())
 
     def getLeaves(self):
-        return set(filter(lambda it: not it.getChildren(), self.id2term.values()))
+        return {it for it in self.id2term.itervalues() if not it.getChildren()}
 
     def addRelationship(self, subj, rel, obj):
         relationship = (subj, rel, obj)
@@ -310,11 +311,11 @@ class Ontology:
             return set()
         relationships = set(self.rel_map[term_id])
         if rel:
-            relationships = filter(lambda (subj, r, obj): rel == r, relationships)
+            relationships = {(subj, r, obj) for (subj, r, obj) in relationships if rel == r}
         if 1 == role:
-            relationships = filter(lambda (subj, r, obj): term_id == subj, relationships)
+            relationships = {(subj, r, obj) for (subj, r, obj) in relationships if term_id == subj}
         if 2 == role:
-            relationships = filter(lambda (subj, r, obj): term_id == obj, relationships)
+            relationships = {(subj, r, obj) for (subj, r, obj) in relationships if term_id == obj}
         return relationships
 
     def getRelationshipParticipants(self, rel):
@@ -322,7 +323,7 @@ class Ontology:
 
     def getRelationships(self):
         result = set()
-        for rel_set in self.rel_map.values():
+        for rel_set in self.rel_map.itervalues():
             result |= {rel for (subj, rel, obj) in rel_set}
         return result
 
@@ -426,8 +427,8 @@ class Ontology:
                         result.add(it)
                         continue
                     result |= whole_Ids & partOf_(candidate)
-                    result |= set(filter(lambda t_id: not self.isA(part, self.getTerm(t_id)),
-                                         set(whole_Ids) & candidate.getParentIds()))
+                    result |= {t_id for t_id in set(whole_Ids) & candidate.getParentIds() if
+                               not self.isA(part, self.getTerm(t_id))}
                     items.add(candidate)
             term_set = items
         return result
@@ -528,7 +529,7 @@ class Ontology:
             # print "  draft ", [t.getName() for t in common]
         result = set(common)
         # print " common ", [t.getName() for t in common]
-        return filter(lambda it: not self.getAnyChildren(it, False, set()) & result, common)
+        return [it for it in common if not self.getAnyChildren(it, False, set()) & result]
 
     def removeRelationships(self, relationships, brutally=False):
         for (subj_id, r, o_id) in relationships:

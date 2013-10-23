@@ -21,16 +21,15 @@ def getQualifierValue(annotation, qualifierType):
 
 
 def getAllQualifierValues(annotation, qualifierType):
-    result = set()
     if not annotation:
-        return result
+        return
+        yield
     cvTerms = CVTermList()
     RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
-    for i in range(cvTerms.getSize()):
+    for i in xrange(cvTerms.getSize()):
         term = cvTerms.get(i)
         if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifierType == term.getBiologicalQualifierType():
-            result.add(term.getResourceURI(0).replace("%3A", ":"))
-    return result
+            yield term.getResourceURI(0).replace("%3A", ":")
 
 
 def getPrefixedQualifierValues(annotation, qualifierType, prefix):

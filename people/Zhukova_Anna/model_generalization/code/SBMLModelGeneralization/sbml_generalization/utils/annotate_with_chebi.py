@@ -6,8 +6,7 @@ __author__ = 'anna'
 
 
 def get_is_annotations(entity):
-    is_resources = getAllQualifierValues(entity.getAnnotation(), get_is_qualifier())
-    return [miriam_to_term_id(it) for it in is_resources]
+    return (miriam_to_term_id(it) for it in getAllQualifierValues(entity.getAnnotation(), get_is_qualifier()))
 
 
 def get_term(entity, chebi):
@@ -46,7 +45,7 @@ def annotate_ubiquitous(model, species_id2chebi_id, ubiquitous_chebi_ids):
                 # species = model.getSpeciesType(st_id)
                 st = model.getSpeciesType(st_id)
                 st.setName(st.getName() + " ubiquitous")
-            # species.appendNotes("<html:body><html:p>SUBSYSTEM: {0}</html:p></html:body>".format("ubiquitous"))
+                # species.appendNotes("<html:body><html:p>SUBSYSTEM: {0}</html:p></html:body>".format("ubiquitous"))
             # addAnnotation(species, BQB_IS_DESCRIBED_BY, "ubiquitous")
             species.setName(species.getName() + " ubiquitous")
 
@@ -105,10 +104,7 @@ def get_species_to_chebi(model, chebi):
                 species2chebi[species.getId()] = term.getId()
             continue
         possibilities = {chebi.getTerm(it) for it in possibilities}
-        options = set()
-        for it in possibilities:
-            options.add(it)
-        intersection = options & used_terms
+        intersection = possibilities & used_terms
         term = intersection.pop() if intersection else possibilities.pop()
         for species in species_set:
             species2chebi[species.getId()] = term.getId()

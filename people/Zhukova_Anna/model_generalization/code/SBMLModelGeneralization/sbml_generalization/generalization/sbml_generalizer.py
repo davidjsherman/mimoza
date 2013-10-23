@@ -10,12 +10,16 @@ from model_generalizer import map2chebi, shorten_chains, generalize
 __author__ = 'anna'
 
 
-def generalize_model(groups_sbml, out_sbml, input_model, onto, cofactors=None, sh_chains=True, verbose=False):
+def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, sh_chains=True, verbose=False):
+    # input_model
+    input_doc = SBMLReader().readSBML(in_sbml)
+    input_model = input_doc.getModel()
+
     remove_is_a_reactions(input_model)
     log(verbose, "filtering reactions and species...")
     ## go only for reactions inside organelles
-    reactions = filter(lambda reaction: filterReactionByNotTransport(reaction, input_model),
-                       input_model.getListOfReactions())
+    reactions = [reaction for reaction in input_model.getListOfReactions() if
+                 filterReactionByNotTransport(reaction, input_model)]
 
     log(verbose, "mapping species to ChEBI...")
     if not cofactors:
@@ -44,8 +48,7 @@ def generalize_model(groups_sbml, out_sbml, input_model, onto, cofactors=None, s
                 if not input_model.getSpecies(s_id):
                     del species_id2chebi_id[s_id]
                     # update reactions, go only for reactions inside organelles
-            reactions = filter(lambda rn: filterReactionByNotTransport(rn, input_model),
-                               input_model.getListOfReactions())
+            reactions = [rn for rn in input_model.getListOfReactions() if filterReactionByNotTransport(rn, input_model)]
 
     # generalize
     log(verbose, "generalizing...")
@@ -53,16 +56,3 @@ def generalize_model(groups_sbml, out_sbml, input_model, onto, cofactors=None, s
     s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
     r_id2g_eq, s_id2gr_id = save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu, verbose)
     return r_id2g_eq, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps
-
-
-def convert(out_sbml, groups_sbml, in_sbml, onto, cofactors=None, sh_chains=True, verbose=False):
-    # input_model
-    input_doc = SBMLReader().readSBML(in_sbml)
-    input_model = input_doc.getModel()
-
-    generalize_model(groups_sbml, out_sbml, input_model, onto, cofactors, sh_chains, verbose)
-
-    # print "ubiquitous: ", {ontology.getTerm(it).getName() for it in ubiquitous_chebi_ids}
-    # annotateUbiquitous(input_model, species_id2chebi_id, ubiquitous_chebi_ids, verbose)
-
-    log(verbose, "the end\n")
