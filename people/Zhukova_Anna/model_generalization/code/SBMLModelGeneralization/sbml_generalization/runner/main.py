@@ -29,11 +29,11 @@ def main(argv=None):
         argv = sys.argv
     try:
         chebi, in_sbml, out_sbml, groups_sbml, sh_chains, verbose = process_args(argv)
-        #log(verbose, "parsing ChEBI...")
-        #ontology = parse(chebi)
-        convert_to_l2v4_with_species_types(groups_sbml)
+        log(verbose, "parsing ChEBI...")
+        ontology = parse(chebi)
+        #convert_to_l2v4_with_species_types(groups_sbml)
         #print parse_group_sbml(groups_sbml, ontology)
-        #convert(in_sbml, out_sbml, groups_sbml, ontology, None, sh_chains, verbose)
+        convert(in_sbml, out_sbml, groups_sbml, ontology, None, sh_chains, verbose)
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         print >> sys.stderr, "\t for help use --help"

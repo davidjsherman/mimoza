@@ -2,8 +2,7 @@ from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.misc import add_to_map, invert_map
 from sbml_generalization.utils.obo_ontology import Term, subOntology
-from reaction_filters import getReactants, getProducts, filterReactionByNotTransport
-from sbml_helper import remove_is_a_reactions, save_as_chain_shortened_sbml
+from reaction_filters import getReactants, getProducts
 
 from sbml_generalization.generalization.mark_ubiquitous import getUbiquitousSpeciesSet
 
@@ -13,29 +12,29 @@ __author__ = 'anna'
 EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
 
 
-def getReactions2Factor(reactions, term_id2clu, s_id2term_id):
+def get_reactions_to_factor(reactions, term_id2clu, s_id2term_id):
     vk2r = {}
     for r in reactions:
-        key = getVerticalKey(r, term_id2clu, s_id2term_id)
+        key = get_vertical_key(r, term_id2clu, s_id2term_id)
         add_to_map(vk2r, key, r)
     return vk2r.values()
 
 
-def getVerticalKey(r, term_id2clu, s_id2term_id):
+def get_vertical_key(r, term_id2clu, s_id2term_id):
     ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes \
-        = getKeyElements(r, term_id2clu, s_id2term_id)
-    if r.getReversible() and needToReverse(
+        = get_key_elements(r, term_id2clu, s_id2term_id)
+    if r.getReversible() and need_to_reverse(
             (ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes,)):
         return ubiquitous_products, ubiquitous_reactants, specific_product_classes, specific_reactant_classes
     return ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes
 
 
-def needToReverse((ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes, )):
+def need_to_reverse((ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes, )):
     return (ubiquitous_reactants > ubiquitous_products) or (
         not ubiquitous_reactants and not ubiquitous_products and specific_reactant_classes > specific_product_classes)
 
 
-def getKeyElements(r, term_id2clu, s_id2term_id):
+def get_key_elements(r, term_id2clu, s_id2term_id):
     reactants, products = getReactants(r), getProducts(r)
     chebi_transform = lambda s_ids: {s_id2term_id[s_id] if (s_id in s_id2term_id) else s_id for s_id in s_ids}
     reactants, products = chebi_transform(reactants), chebi_transform(products)
@@ -55,14 +54,14 @@ def getKeyElements(r, term_id2clu, s_id2term_id):
     return ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes
 
 
-def alignedToVKey(r, term_id2clu, s_id2term_id):
+def aligned_to_v_key(r, term_id2clu, s_id2term_id):
     if not r.getReversible():
         return True
-    return not needToReverse(getKeyElements(r, term_id2clu, s_id2term_id))
+    return not need_to_reverse(get_key_elements(r, term_id2clu, s_id2term_id))
 
 
-def getReaction2cluster(reactions, term_id2clu, s_id2term_id):
-    rs_clusters = getReactions2Factor(reactions, term_id2clu, s_id2term_id)
+def get_reaction_to_cluster_map(reactions, term_id2clu, s_id2term_id):
+    rs_clusters = get_reactions_to_factor(reactions, term_id2clu, s_id2term_id)
     r2clu, i = {}, 0
     for rs in rs_clusters:
         for r in rs:
@@ -71,31 +70,31 @@ def getReaction2cluster(reactions, term_id2clu, s_id2term_id):
     return r2clu
 
 
-def getRReactionsByTerm(t_id, reactions, term_id2s_ids):
+def get_r_reactions_by_term(t_id, reactions, term_id2s_ids):
     return filter(lambda r: len(term_id2s_ids[t_id] & getReactants(r)) > 0, reactions)
 
 
-def getPReactionsByTerm(t_id, reactions, term_id2s_ids):
+def get_p_reactions_by_term(t_id, reactions, term_id2s_ids):
     return filter(lambda r: len(term_id2s_ids[t_id] & getProducts(r)) > 0, reactions)
 
 
-def getReactionsByTerm(t_id, reactions, term_id2s_ids):
+def get_reactions_ry_term(t_id, reactions, term_id2s_ids):
     return filter(lambda r: len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0, reactions)
 
 
-def getRReactionsBySpecies(s_id, reactions):
+def get_r_reactions_by_species(s_id, reactions):
     return filter(lambda r: s_id in getReactants(r), reactions)
 
 
-def getPReactionsBySpecies(s_id, reactions):
+def get_p_reactions_by_species(s_id, reactions):
     return filter(lambda r: s_id in getProducts(r), reactions)
 
 
-def getReactionsBySpecies(s_id, reactions):
+def get_reactions_by_species(s_id, reactions):
     return filter(lambda r: s_id in (getReactants(r) | getProducts(r)), reactions)
 
 
-def mergeBasedOnNeighbours(lst):
+def merge_based_on_neighbours(lst):
     new_lst = []
     for neighbours, terms in lst:
         neighbours = set(neighbours)
@@ -114,7 +113,7 @@ def maximize(reactions, term_id2clu, species_id2term_id):
     clu2term_ids = invert_map(term_id2clu)
     term_id2s_ids = invert_map(species_id2term_id)
 
-    r2clu = getReaction2cluster(reactions, term_id2clu, species_id2term_id)
+    r2clu = get_reaction_to_cluster_map(reactions, term_id2clu, species_id2term_id)
 
     for (clu, term_ids) in clu2term_ids.iteritems():
         if len(term_ids) <= 1:
@@ -122,15 +121,15 @@ def maximize(reactions, term_id2clu, species_id2term_id):
         neighbours2term_ids = {}
         for t_id in term_ids:
             # reactions this t_id participated in
-            transform_r = lambda r: ("in", r2clu[r]) if alignedToVKey(r, term_id2clu, species_id2term_id) else (
+            transform_r = lambda r: ("in", r2clu[r]) if aligned_to_v_key(r, term_id2clu, species_id2term_id) else (
                 "out", r2clu[r])
-            transform_p = lambda r: ("out", r2clu[r]) if alignedToVKey(r, term_id2clu, species_id2term_id) else (
+            transform_p = lambda r: ("out", r2clu[r]) if aligned_to_v_key(r, term_id2clu, species_id2term_id) else (
                 "in", r2clu[r])
-            neighbours = {transform_r(r) for r in getRReactionsByTerm(t_id, reactions, term_id2s_ids)} | \
-                         {transform_p(r) for r in getPReactionsByTerm(t_id, reactions, term_id2s_ids)}
+            neighbours = {transform_r(r) for r in get_r_reactions_by_term(t_id, reactions, term_id2s_ids)} | \
+                         {transform_p(r) for r in get_p_reactions_by_term(t_id, reactions, term_id2s_ids)}
             key = tuple(sorted(neighbours))
             add_to_map(neighbours2term_ids, key, t_id)
-        new_lst = mergeBasedOnNeighbours(neighbours2term_ids.iteritems())
+        new_lst = merge_based_on_neighbours(neighbours2term_ids.iteritems())
         if len(new_lst) > 1:
             i = 0
             for neighbours, term_ids in new_lst:
@@ -141,34 +140,40 @@ def maximize(reactions, term_id2clu, species_id2term_id):
     return term_id2clu
 
 
-def computeEq0(interesting_term_ids):
-    clu = (0,)
-    return {term_id: clu for term_id in interesting_term_ids}
+def compute_eq0(interesting_term_ids, onto):
+    #clu = (0,)
+    term_id2clu = {}
+    i = 0
+    psi = [tuple(t.getId() for t in onto.get_sub_tree(root)) for root in onto.getRoots()]
+    for t_set in greedy(interesting_term_ids, psi, {it: 1 for it in psi}):
+        clu = (i,)
+        term_id2clu.update({t_id: clu for t_id in t_set})
+        i += 1
+    #return {term_id: clu for term_id in interesting_term_ids}
+    return term_id2clu
 
 
-def getConflicts(reactions, term_ids, species_id2term_id):
+def get_conflicts(reactions, term_ids, species_id2term_id):
     r2term_ids = {}
     term2s_ids = invert_map(species_id2term_id)
     for t_id in term_ids:
-        for r in getReactionsByTerm(t_id, reactions, term2s_ids):
+        for r in get_reactions_ry_term(t_id, reactions, term2s_ids):
             add_to_map(r2term_ids, r, t_id)
     return filter(lambda terms: len(terms) > 1, r2term_ids.values())
 
 
-def fixStoich(reactions, term_id2clu, species_id2term_id, onto):
+def fix_stoichiometry(reactions, term_id2clu, species_id2term_id, onto):
     clu2term_ids = invert_map(term_id2clu)
     for clu, term_ids in clu2term_ids.iteritems():
         if len(term_ids) <= 1:
             continue
-        conflicts = getConflicts(reactions, term_ids, species_id2term_id)
+        conflicts = get_conflicts(reactions, term_ids, species_id2term_id)
         if not conflicts:
             continue
-            # print [onto.getTerm(t).getName() for t in term_ids]
-        # print " >> ", [{onto.getTerm(n).getName() for n in ns} for ns in conflicts]
-        t_sets = partition(term_ids, onto, conflicts)
+        psi, set2score = get_psi_set(onto, term_ids, conflicts)
+        #t_sets = partition(term_ids, onto, conflicts)
         i = 0
-        for ts in t_sets:
-            # print "---> ", [onto.getTerm(t).getName() for t in ts]
+        for ts in greedy(term_ids, psi, set2score):#t_sets:
             i += 1
             n_clu = clu + (i,)
             for t in ts:
@@ -176,64 +181,61 @@ def fixStoich(reactions, term_id2clu, species_id2term_id, onto):
     return term_id2clu
 
 
-def getParentOptions(term_ids, onto):
+def get_parent_options(term_ids, onto):
     options = onto.commonPts({onto.getTerm(t) for t in term_ids})
     if not options:
         options = onto.getRoots()
     result = set()
     for t in options:
-        result |= onto.getAnyChildren(t, False, set()) | onto.getEquivalentTerms(t) | {t}
+        result |= onto.get_sub_tree(t)
     return result
 
 
-def getPsiSet(onto, term_ids, conflicts):
-    def good(t_set, conflicts):
+def get_psi_set(onto, term_ids, conflicts):
+    def good(t_set):
         if not t_set:
             return False
         if len(t_set) == 1:
             return True
-        good = True
         for c_ts in conflicts:
             if len(t_set & c_ts) > 1:
-                good = False
-                break
-        return good
+                return False
+        return True
 
-    get_covered_terms = lambda t: {t.getId() for t in
-                                   (onto.getAnyChildren(t, False, set()) | {t} | onto.getEquivalentTerms(t))} & term_ids
+    get_covered_term_ids = lambda term: {sub_t.getId() for sub_t in onto.get_sub_tree(term)} & term_ids
 
     # the least common ancestors, or roots if there are none
-    Ts = onto.commonPts({onto.getTerm(t) for t in term_ids})
-    if not Ts:
-        Ts = onto.getRoots()
+    common_ancestor_terms = onto.commonPts({onto.getTerm(t) for t in term_ids})
+    if not common_ancestor_terms:
+        common_ancestor_terms = onto.getRoots()
 
     # sets defined by the least common ancestors
     basics, psi, set2score = [], set(), {}
-    for T in Ts:
-        element = get_covered_terms(T)
+    for T in common_ancestor_terms:
+        element = get_covered_term_ids(T)
         basics.append(element)
         element = tuple(sorted(element))
         level = onto.getLevel(T)
-        set2score[element] = (3, sum(level)/len(level), sum(level)/len(level))
+        set2score[element] = (3, sum(level) / len(level), sum(level) / len(level))
         psi.add(element)
 
     # sets defined by the least common ancestors' children
-    for T in Ts:
+    for T in common_ancestor_terms:
         options = onto.getAnyChildren(T, False, set())
         for t in options:
-            t_set = get_covered_terms(t)
-            if len(t_set) == 0:
+            covered_t_ids = get_covered_term_ids(t)
+            if len(covered_t_ids) == 0:
                 continue
-            element = tuple(sorted(t_set))
+            element = tuple(sorted(covered_t_ids))
             psi.add(element)
             level = onto.getLevel(t)
-            set2score[element] = (3, sum(level)/len(level), sum(level)/len(level))
+            set2score[element] = (3, sum(level) / len(level), sum(level) / len(level))
 
             # compliment sets of those defined by the least common ancestors' children
             for basic in basics:
-                compl_set = basic - t_set
-                if len(compl_set) > 0:
-                    c_element = tuple(sorted(compl_set))
+                complement_set = basic - covered_t_ids
+                if len(complement_set) > 0:
+                    c_element = tuple(sorted(complement_set))
                     if c_element in psi:
                         continue
                     psi.add(c_element)
@@ -264,7 +266,7 @@ def getPsiSet(onto, term_ids, conflicts):
                 set2score[sss] = avg_tup(set2score[ss])
     psi |= to_add
 
-    return filter(lambda s: good(set(s), conflicts), psi), set2score
+    return filter(lambda term_set: good(set(term_set)), psi), set2score
 
 
 def avg_tup(u):
@@ -272,33 +274,29 @@ def avg_tup(u):
     return i0 - 1, j0, k0
 
 
-def partition(term_ids, onto, conflicts):
-    psi, set2score = getPsiSet(onto, term_ids, conflicts)
-    # for s, score in set2score.iteritems():
-    #     print [t.getName() for t in s], " ", score
-    parts = list(reversed(greedy(term_ids, psi, set2score)))
-    i = 1
-    for part in parts:
-        for o_part in parts[i:]:
-            if o_part & part:
-                part -= o_part
-        i += 1
-    return parts
+#def partition(term_ids, onto, conflicts):
+#    psi, set2score = get_psi_set(onto, term_ids, conflicts)
+#    # for s, score in set2score.iteritems():
+#    #     print [t.getName() for t in s], " ", score
+#    parts = list(reversed(greedy(term_ids, psi, set2score)))
+#    i = 1
+#    for part in parts:
+#        for o_part in parts[i:]:
+#            if o_part & part:
+#                part -= o_part
+#        i += 1
+#    return parts
 
 
 def greedy(terms, psi, set2score):
-    phi = []
-    # for s in sorted(psi, key=lambda it:-len(it)):
-    #     if len(s) > 1:
-    #         print "?", [it.getName() for it in s]
     terms = set(terms)
     while terms and psi:
-        s = max(psi, key=lambda it: (len(set(it) & terms), set2score[it]))
-        # print set2score[s], " ", len(set(s) & terms)
-        phi.append(s)
-        terms -= set(s)
+        s = max(psi, key=lambda candidate_terms: (len(set(candidate_terms) & terms), set2score[candidate_terms]))
+        result = set(s)
+        #yield result
+        yield result & terms
+        terms -= result
         psi.remove(s)
-    return [set(it) for it in phi]
 
 
 def update(term_id2clu, onto):
@@ -309,25 +307,26 @@ def update(term_id2clu, onto):
         terms = {onto.getTerm(t) for t in term_ids}
         options = set(onto.commonPts(terms)) - used
         if options:
-            T = options.pop()
+            common_ancestor_term = options.pop()
         else:
-            T = Term(t_id="chebi:unknown_{0}".format(i), name=' or '.join([t.getName() for t in terms]))
-            onto.addTerm(T)
+            common_ancestor_term = Term(t_id="chebi:unknown_{0}".format(i),
+                                        name=' or '.join([t.getName() for t in terms]))
+            onto.addTerm(common_ancestor_term)
             i += 1
-        used.add(T)
+        used.add(common_ancestor_term)
         for t in term_ids:
-            term_id2clu[t] = T.getId()
+            term_id2clu[t] = common_ancestor_term.getId()
     return term_id2clu
 
 
-def filterClu2Terms(term2clu):
+def filter_clu_to_terms(term2clu):
     clu2term = invert_map(term2clu)
     for clu, terms in clu2term.iteritems():
         if len(terms) <= 1:
             del term2clu[terms.pop()]
 
 
-def printClusters(term_id2clu, onto):
+def print_clusters(term_id2clu, onto):
     clu2term_id = invert_map(term_id2clu)
     print "   quotient species sets:"
     for clu, term_ids in clu2term_id.iteritems():
@@ -337,7 +336,7 @@ def printClusters(term_id2clu, onto):
         print
 
 
-def printFinalClusters(term_id2clu, onto):
+def print_final_clusters(term_id2clu, onto):
     clu2term = invert_map(term_id2clu)
     print "result quotient species sets:"
     blueprint = []
@@ -351,21 +350,21 @@ def printFinalClusters(term_id2clu, onto):
     print "   ", sorted(blueprint)
 
 
-def fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose):
+def fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose):
     log(verbose, "  computing eq 0...")
-    term_id2clu = computeEq0(interesting_term_ids)
-    # printClusters(term_id2clu, onto)
+    term_id2clu = compute_eq0(interesting_term_ids, onto)
+    print_clusters(term_id2clu, onto)
     log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
-    filterClu2Terms(term_id2clu)
-    # printClusters(term_id2clu, onto)
+    filter_clu_to_terms(term_id2clu)
+    print_clusters(term_id2clu, onto)
     log(verbose, "  preserving stoichiometry...")
-    term_id2clu = fixStoich(reactions, term_id2clu, species_id2chebi_id, onto)
-    filterClu2Terms(term_id2clu)
-    # printClusters(term_id2clu, onto)
+    term_id2clu = fix_stoichiometry(reactions, term_id2clu, species_id2chebi_id, onto)
+    filter_clu_to_terms(term_id2clu)
+    print_clusters(term_id2clu, onto)
     log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
-    filterClu2Terms(term_id2clu)
+    filter_clu_to_terms(term_id2clu)
     # printClusters(term_id2clu, onto)
     # term_id2clu = computeRepresentatives(term_id2clu, getClu2term(term_id2clu), onto)
     return term_id2clu
@@ -373,37 +372,37 @@ def fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_
 
 def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
     interesting_term_ids = set(species_id2chebi_id.values()) - ubiquitous_chebi_ids
-    term_id2clu = fixIncompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose)
+    term_id2clu = fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose)
     if not term_id2clu:
         return {}, {}
 
-    r2clu = getReaction2cluster(reactions, term_id2clu, species_id2chebi_id)
-
     log(verbose, "  annotating generalized terms...")
     term_id2clu = update(term_id2clu, onto)
+
+    r2clu = get_reaction_to_cluster_map(reactions, term_id2clu, species_id2chebi_id)
     if verbose:
-        printFinalClusters(term_id2clu, onto)
+        print_final_clusters(term_id2clu, onto)
 
     s_id2clu = {s_id: term_id2clu[t] for (s_id, t) in
                 filter(lambda (s_id, t): t in term_id2clu, species_id2chebi_id.iteritems())}
     return s_id2clu, r2clu
 
 
-def getUbRP(r, ubiquitous_ids):
+def get_ubiquitous_reactants_products(r, ubiquitous_ids):
     reactants, products = getReactants(r), getProducts(r)
     return reactants & ubiquitous_ids, products & ubiquitous_ids
 
 
-def simplifiedNeedToReverse(r, ubiquitous_ids):
-    u_rs, u_ps = getUbRP(r, ubiquitous_ids)
+def simplified_need_to_reverse(r, ubiquitous_ids):
+    u_rs, u_ps = get_ubiquitous_reactants_products(r, ubiquitous_ids)
     return r.getReversible() and u_rs > u_ps
 
 
-def getSimplifiedKey(r, ubiquitous_ids):
+def get_simplified_key(r, ubiquitous_ids):
     reactants, products = getReactants(r), getProducts(r)
     ubiquitous_reactants, ubiquitous_products = reactants & ubiquitous_ids, products & ubiquitous_ids
     srs_len, sps_len = len(reactants - ubiquitous_ids), len(products - ubiquitous_ids)
-    if r.getReversible() and simplifiedNeedToReverse(r, ubiquitous_ids):
+    if r.getReversible() and simplified_need_to_reverse(r, ubiquitous_ids):
         return ubiquitous_products, ubiquitous_reactants, sps_len, srs_len
     return ubiquitous_reactants, ubiquitous_products, srs_len, sps_len,
 
@@ -413,35 +412,35 @@ def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
         filter(lambda s_id: species_id2chebi_id[s_id] in ubiquitous_chebi_ids, species_id2chebi_id.keys()))
     specific_ids = set(species_id2chebi_id.keys()) - ubiquitous_ids
 
-    def getInsOuts(s_id):
-        ins, outs = getPReactionsBySpecies(s_id, reactions), getRReactionsBySpecies(s_id, reactions)
-        r_ins = filter(lambda r: not simplifiedNeedToReverse(r, ubiquitous_ids), ins) + filter(
-            lambda r: simplifiedNeedToReverse(r, ubiquitous_ids), outs)
+    def get_in_out_reactions(s_id):
+        ins, outs = get_p_reactions_by_species(s_id, reactions), get_r_reactions_by_species(s_id, reactions)
+        r_ins = filter(lambda r: not simplified_need_to_reverse(r, ubiquitous_ids), ins) + filter(
+            lambda r: simplified_need_to_reverse(r, ubiquitous_ids), outs)
         r_outs = filter(lambda r: not r in r_ins, ins) + filter(lambda r: not r in r_ins, outs)
         return r_ins, r_outs
 
-    def getRP(r):
+    def get_aligned_reactants_products(r):
         rs, ps = getReactants(r), getProducts(r)
-        if simplifiedNeedToReverse(r, ubiquitous_ids):
+        if simplified_need_to_reverse(r, ubiquitous_ids):
             return ps, rs
         return rs, ps
 
-    def check(s_id, checked):
-        if s_id in checked:
+    def check(s_id, already_checked):
+        if s_id in already_checked:
             return [], None, []
 
-        rs = getReactionsBySpecies(s_id, reactions)
+        rs = get_reactions_by_species(s_id, reactions)
         if len(rs) != 2:
             return [s_id], None, []
-        ins, outs = getInsOuts(s_id)
+        ins, outs = get_in_out_reactions(s_id)
         if 1 == len(ins) == len(outs):
             r_in, r_out = ins[0], outs[0]
-            in_k, out_k = getSimplifiedKey(r_in, ubiquitous_ids), getSimplifiedKey(r_out, ubiquitous_ids)
+            in_k, out_k = get_simplified_key(r_in, ubiquitous_ids), get_simplified_key(r_out, ubiquitous_ids)
             # same simplified keys that include at least one ubiquitous species
             if in_k == out_k and (in_k[0] or in_k[1]):
-                checked.add(s_id)
-                in_rs, in_ps = getRP(r_in)
-                out_rs, out_ps = getRP(r_out)
+                already_checked.add(s_id)
+                in_rs, in_ps = get_aligned_reactants_products(r_in)
+                out_rs, out_ps = get_aligned_reactants_products(r_out)
 
                 left_s_ids = in_rs - out_rs
                 if len(left_s_ids) != 1:
@@ -452,10 +451,10 @@ def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
                 if len(right_s_ids) != 1:
                     return [s_id], (in_k, r_in.getName()), []
                 right_id = right_s_ids.pop()
-                left_ts, l_key, left_rs = check(left_id, checked)
+                left_ts, l_key, left_rs = check(left_id, already_checked)
                 if not r_in.getId() in left_rs:
                     left_rs += [r_in.getId()]
-                right_ts, r_key, right_rs = check(right_id, checked)
+                right_ts, r_key, right_rs = check(right_id, already_checked)
                 if not r_out.getId() in right_rs:
                     right_rs = [r_out.getId()] + right_rs
                 return left_ts + [s_id] + right_ts, (in_k, r_in.getName()), left_rs + right_rs
@@ -469,12 +468,12 @@ def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
             result.append(lst)
 
     if verbose:
-        printFinalChains(result)
+        print_final_chains(result)
 
     return result
 
 
-def printFinalChains(chains):
+def print_final_chains(chains):
     print "result reaction chains:"
     blueprint = []
     for chain in chains:
@@ -494,40 +493,3 @@ def map2chebi(cofactors, input_model, onto):
     cofactor_ids = set(filter(lambda cofactor_id: ontology.getTerm(cofactor_id), cofactors))
     ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(input_model, species_id2chebi_id, ontology)
     return ontology, species_id2chebi_id, ubiquitous_chebi_ids
-
-
-def generalize_model(input_model, onto, cofactors, sh_chains=True, verbose=False):
-    remove_is_a_reactions(input_model)
-
-    log(verbose, "filtering reactions and species...")
-    # go only for reactions inside organelles
-    reactions = filter(lambda reaction: filterReactionByNotTransport(reaction, input_model),
-                       input_model.getListOfReactions())
-    s_ids = set()
-    for r in reactions:
-        s_ids |= getProducts(r) | getReactants(r)
-    species = {input_model.getSpecies(s_id) for s_id in s_ids}
-
-    log(verbose, "mapping species to ChEBI...")
-    ontology, species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, onto, species)
-
-    if sh_chains:
-        # shorten chains
-        log(verbose, "chain shortening...")
-        chains = shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
-        if chains:
-             # save
-             input_model = save_as_chain_shortened_sbml(chains, input_model, verbose)
-             # update species_id2chebi_id
-             for s_id in species_id2chebi_id.keys():
-                 if not input_model.getSpecies(s_id):
-                     del species_id2chebi_id[s_id]
-             # update reactions, go only for reactions inside organelles
-             reactions = filter(lambda r: filterReactionByNotTransport(r, input_model), input_model.getListOfReactions())
-
-    # generalize
-    log(verbose, "generalizing...")
-    s_id2clu, r2clu = generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
-    s_id2clu = {s_id: ontology.getTerm(clu) for (s_id, clu) in s_id2clu.iteritems()}
-
-    return input_model, species_id2chebi_id, ubiquitous_chebi_ids, s_id2clu, r2clu

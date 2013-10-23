@@ -61,7 +61,7 @@ def inducedOntology(terms, onto, relationships={"is_a"}):
     for term in induced_ontology.getAllTerms():
         for par_id in term.getParentIds():
             induced_ontology.getTerm(par_id).addChild(term)
-    # fix roots
+        # fix roots
     old_root_ids = {r.getId() for r in onto.getRoots()}
     new_roots = induced_ontology.getRoots()
 
@@ -426,7 +426,8 @@ class Ontology:
                         result.add(it)
                         continue
                     result |= whole_Ids & partOf_(candidate)
-                    result |= set(filter(lambda t_id: not self.isA(part, self.getTerm(t_id)), set(whole_Ids) & candidate.getParentIds()))
+                    result |= set(filter(lambda t_id: not self.isA(part, self.getTerm(t_id)),
+                                         set(whole_Ids) & candidate.getParentIds()))
                     items.add(candidate)
             term_set = items
         return result
@@ -462,6 +463,10 @@ class Ontology:
             if not relationships or r in relationships:
                 equals |= {subj, obj} - {term_id}
         return {self.getTerm(t_id) for t_id in equals}
+
+    def get_sub_tree(self, t, relationships=None):
+        return self.getAnyChildren(t, False, set(), relationships) | self.getEquivalentTerms(t, None, 0,
+                                                                                             relationships) | {t}
 
     def getAnyChildren(self, term, direct=True, checked=None, relationships=None):
         if not checked:
