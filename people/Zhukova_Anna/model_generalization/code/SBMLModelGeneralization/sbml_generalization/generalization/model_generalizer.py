@@ -1,5 +1,5 @@
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
-from sbml_generalization.utils.logger import log
+from sbml_generalization.utils.logger import log, log_chains, log_clusters
 from sbml_generalization.utils.misc import add_to_map, invert_map
 from sbml_generalization.utils.obo_ontology import Term, subOntology
 from reaction_filters import getReactants, getProducts
@@ -273,20 +273,6 @@ def avg_tup(u):
     return i0 - 1, j0, k0
 
 
-#def partition(term_ids, onto, conflicts):
-#    psi, set2score = get_psi_set(onto, term_ids, conflicts)
-#    # for s, score in set2score.iteritems():
-#    #     print [t.getName() for t in s], " ", score
-#    parts = list(reversed(greedy(term_ids, psi, set2score)))
-#    i = 1
-#    for part in parts:
-#        for o_part in parts[i:]:
-#            if o_part & part:
-#                part -= o_part
-#        i += 1
-#    return parts
-
-
 def greedy(terms, psi, set2score):
     terms = set(terms)
     while terms and psi:
@@ -325,47 +311,22 @@ def filter_clu_to_terms(term2clu):
             del term2clu[terms.pop()]
 
 
-def print_clusters(term_id2clu, onto):
-    clu2term_id = invert_map(term_id2clu)
-    print "   quotient species sets:"
-    for clu, term_ids in clu2term_id.iteritems():
-        if len(term_ids) == 1:
-            continue
-        print "     (", len(term_ids), ") ", [onto.getTerm(it).getName() for it in term_ids]
-        print
-
-
-def print_final_clusters(term_id2clu, onto):
-    clu2term = invert_map(term_id2clu)
-    print "result quotient species sets:"
-    blueprint = []
-    for clu in sorted(clu2term.keys(), key=lambda k: -len(clu2term[k])):
-        term_ids = clu2term[clu]
-        if len(term_ids) == 1:
-            continue
-        blueprint.append(len(term_ids))
-        print "   ", onto.getTerm(clu).getName(), " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in
-                                                                                  term_ids]
-    print "   ", sorted(blueprint)
-
-
 def fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose):
     log(verbose, "  computing eq 0...")
     term_id2clu = compute_eq0(interesting_term_ids, onto)
-    #print_clusters(term_id2clu, onto)
+    #log_clusters(term_id2clu, onto, verbose)
     log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
     filter_clu_to_terms(term_id2clu)
-    #print_clusters(term_id2clu, onto)
+    #log_clusters(term_id2clu, onto, verbose)
     log(verbose, "  preserving stoichiometry...")
     term_id2clu = fix_stoichiometry(reactions, term_id2clu, species_id2chebi_id, onto)
     filter_clu_to_terms(term_id2clu)
-    #print_clusters(term_id2clu, onto)
+    #log_clusters(term_id2clu, onto, verbose)
     log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
     filter_clu_to_terms(term_id2clu)
-    # printClusters(term_id2clu, onto)
-    # term_id2clu = computeRepresentatives(term_id2clu, getClu2term(term_id2clu), onto)
+    #log_clusters(term_id2clu, onto, verbose)
     return term_id2clu
 
 
@@ -379,8 +340,7 @@ def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbo
     term_id2clu = update(term_id2clu, onto)
 
     r2clu = get_reaction_to_cluster_map(reactions, term_id2clu, species_id2chebi_id)
-    if verbose:
-        print_final_clusters(term_id2clu, onto)
+    log_clusters(term_id2clu, onto, verbose)
 
     s_id2clu = {s_id: term_id2clu[t] for (s_id, t) in species_id2chebi_id.iteritems() if t in term_id2clu}
     return s_id2clu, r2clu
@@ -466,20 +426,9 @@ def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
         if len(lst[0]) > 1 and onto.commonPts((onto.getTerm(species_id2chebi_id[s_id]) for s_id in lst[0])):
             result.append(lst)
 
-    if verbose:
-        print_final_chains(result)
+    log_chains(result, verbose)
 
     return result
-
-
-def print_final_chains(chains):
-    print "result reaction chains:"
-    blueprint = []
-    for chain in chains:
-        s_ids, key, r_ids = chain
-        print "   ", key[1], " : ", len(r_ids)
-        blueprint.append(len(r_ids))
-    print "   ", sorted(blueprint)
 
 
 def map2chebi(cofactors, input_model, onto):
