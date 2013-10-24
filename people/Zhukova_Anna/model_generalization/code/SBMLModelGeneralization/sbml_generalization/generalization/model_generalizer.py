@@ -1,5 +1,5 @@
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
-from sbml_generalization.utils.logger import log, log_chains, log_clusters
+from sbml_generalization.utils.logger import log, log_chains, log_clusters, log_r_clusters
 from sbml_generalization.utils.misc import add_to_map, invert_map
 from sbml_generalization.utils.obo_ontology import Term, subOntology
 from reaction_filters import getReactants, getProducts
@@ -60,13 +60,14 @@ def aligned_to_v_key(r, term_id2clu, s_id2term_id):
     return not need_to_reverse(get_key_elements(r, term_id2clu, s_id2term_id))
 
 
-def get_reaction_to_cluster_map(reactions, term_id2clu, s_id2term_id):
+def generalize_reactions(reactions, term_id2clu, s_id2term_id, verbose=False):
     rs_clusters = get_reactions_to_factor(reactions, term_id2clu, s_id2term_id)
     r2clu, i = {}, 0
     for rs in rs_clusters:
         for r in rs:
             r2clu[r] = i
         i += 1
+    log_r_clusters(r2clu, verbose)
     return r2clu
 
 
@@ -113,7 +114,7 @@ def maximize(reactions, term_id2clu, species_id2term_id):
     clu2term_ids = invert_map(term_id2clu)
     term_id2s_ids = invert_map(species_id2term_id)
 
-    r2clu = get_reaction_to_cluster_map(reactions, term_id2clu, species_id2term_id)
+    r2clu = generalize_reactions(reactions, term_id2clu, species_id2term_id)
 
     for (clu, term_ids) in clu2term_ids.iteritems():
         if len(term_ids) <= 1:
@@ -330,7 +331,7 @@ def fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term
     return term_id2clu
 
 
-def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
+def generalize_species(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
     interesting_term_ids = set(species_id2chebi_id.values()) - ubiquitous_chebi_ids
     term_id2clu = fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, verbose)
     if not term_id2clu:
@@ -338,12 +339,9 @@ def generalize(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbo
 
     log(verbose, "  annotating generalized terms...")
     term_id2clu = update(term_id2clu, onto)
-
-    r2clu = get_reaction_to_cluster_map(reactions, term_id2clu, species_id2chebi_id)
     log_clusters(term_id2clu, onto, verbose)
 
-    s_id2clu = {s_id: term_id2clu[t] for (s_id, t) in species_id2chebi_id.iteritems() if t in term_id2clu}
-    return s_id2clu, r2clu
+    return term_id2clu
 
 
 def get_ubiquitous_reactants_products(r, ubiquitous_ids):
