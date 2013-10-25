@@ -318,6 +318,7 @@ def check_names(model):
         for it in collection:
             if not it.isSetName():
                 it.setName(it.getId())
+
     name_setter(model.getListOfCompartments())
     name_setter(model.getListOfSpecies())
     name_setter(model.getListOfSpeciesTypes())
@@ -352,7 +353,7 @@ def model_to_l3v1(sbml, model):
 
 def annotate_ubiquitous(groups_sbml, ub_sps, verbose=False):
     if groups_sbml:
-        log(verbose, "saving ubiquitous species annotations...")
+        #log(verbose, "saving ubiquitous species annotations...")
         doc = SBMLReader().readSBMLFromFile(groups_sbml)
         groups_model = doc.getModel()
         groups_plugin = groups_model.getPlugin("groups")
@@ -464,8 +465,99 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
     return r_id2g_eq, s_id2gr_id
 
 
+def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, comp2s_id2clu, verbose):
+    log(verbose, "serializing generalization...")
+    # generalized model
+    generalized_doc = SBMLDocument(input_model.getSBMLNamespaces())
+    clu2rs = invert_map(r2clu)
+
+    r_id2g_eq, s_id2gr_id = {}, {}
+
+    if comp2s_id2clu:
+        generalized_model = generalized_doc.createModel()
+        copy_elements(input_model, generalized_model)
+
+        #convert
+        if groups_sbml:
+            doc = SBMLReader().readSBMLFromFile(groups_sbml)
+            groups_model = doc.getModel()
+            groups_plugin = groups_model.getPlugin("groups")
+
+        i = 0
+        for (comp, s_id2clu) in comp2s_id2clu:
+            clu2s_ids = invert_map(s_id2clu)
+            for clu, s_ids in clu2s_ids.iteritems():
+                if len(s_ids) > 1:
+                    new_species = create_species(generalized_model, comp.getId(), type_id=None,
+                                                 name="{0} ({1}) [{2}]".format(clu.getName(), len(s_ids),
+                                                                               comp.getName()))
+                    addAnnotation(new_species, BQB_IS, to_identifiers_org_format(clu.getId()))
+                    for s_id in s_ids:
+                        s_id2gr_id[s_id] = new_species.getId(), clu.getName(), clu
+
+                    if groups_sbml and groups_plugin:
+                        # save as a group
+                        s_group = groups_plugin.createGroup()
+                        s_group.setId(new_species.getId())
+                        s_group.setKind(GROUP_KIND_CLASSIFICATION)
+                        s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
+                        s_group.setName("{0} [{1}]".format(clu.getName(), comp.getName()))
+                        addAnnotation(s_group, BQB_IS, to_identifiers_org_format(clu.getId()))
+                        for s_id in s_ids:
+                            member = s_group.createMember()
+                            member.setSymbol(s_id)
+                        addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
+
+        generalize_species = lambda species_id: s_id2gr_id[species_id][0] if (species_id in s_id2gr_id) else species_id
+        s_id_to_generalize = set(s_id2gr_id.keys())
+        for clu, r_set in clu2rs.iteritems():
+            comp2rs = {}
+            for r in r_set:
+                c_id = get_compartment(r, input_model)
+                add_to_map(comp2rs, c_id, r)
+            for c_id, rs in comp2rs.iteritems():
+                representative = list(rs)[0]
+                reactants = getReactants(representative)
+                products = getProducts(representative)
+                if (len(rs) == 1) and not ((reactants | products) & s_id_to_generalize):
+                    generalized_model.addReaction(representative)
+                else:
+                    reactants = {generalize_species(it) for it in reactants}
+                    products = {generalize_species(it) for it in products}
+                    r_name = representative.getName()
+                    if len(rs) > 1:
+                        r_name = "{0} ({1})".format(r_name, len(rs))
+
+                        for r in rs:
+                            r_id2g_eq[r.getId()] = "g_r_{0}".format(i), "generalized {0}".format(
+                                representative.getName())
+
+                        if groups_sbml and groups_plugin:
+                            # save as a group
+                            r_group = groups_plugin.createGroup()
+                            r_group.setId("g_r_{0}".format(i))
+                            r_group.setKind(GROUP_KIND_COLLECTION)
+                            r_group.setSBOTerm(SBO_BIOCHEMICAL_REACTION)
+                            r_group.setName("generalized {0}".format(representative.getName()))
+                            for r in rs:
+                                member = r_group.createMember()
+                                member.setSymbol(r.getId())
+                            addAnnotation(r_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
+                        i += 1
+
+                    create_reaction(generalized_model, reactants, products, r_name)
+
+        remove_unused_elements(generalized_model)
+
+        if groups_sbml and groups_model:
+            save_as_sbml(groups_model, groups_sbml, verbose)
+        save_as_sbml(generalized_model, out_sbml, verbose)
+
+    return r_id2g_eq, s_id2gr_id
+
+
 def save_as_sbml(input_model, out_sbml, verbose=True):
-    log(verbose, "saving to {0}...".format(out_sbml))
+    #log(verbose, "saving to {0}...".format(out_sbml))
     out_doc = SBMLDocument(input_model.getSBMLNamespaces())
     out_doc.setModel(input_model)
     writeSBMLToFile(out_doc, out_sbml)

@@ -37,6 +37,7 @@ def log_clusters(term_id2clu, onto, verbose):
         print "   ", onto.getTerm(clu).getName(), " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in
                                                                                   term_ids]
     print "   ", sorted(blueprint)
+    print
 
 
 def log_r_clusters(r2clu, verbose):
@@ -52,3 +53,4 @@ def log_r_clusters(r2clu, verbose):
         blueprint.append(len(rs))
         print "   ", list(rs)[0].getName(), " (", len(rs), ") "
     print "   ", sorted(blueprint)
+    print
