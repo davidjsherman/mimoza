@@ -39,12 +39,13 @@
             var southWest = map.unproject([x - r, y + r], 1),
                 northEast = map.unproject([x + r, y - r], 1),
             bounds = new L.LatLngBounds(southWest, northEast);
+            var col = feature.properties.color;
             return L.rectangle(bounds,
                                {color: feature.properties.color,
                                 fillColor: feature.properties.color,
                                 fillOpacity: 0.1,
                                 opacity: 1,
-                                weight: 1
+                                weight: 0,
                                }
                               );
           },
@@ -59,8 +60,8 @@
             }
             layer.bindPopup(ga);
           },
-          maxZoom: 2,
-          minZoom: 1,          
+          maxZoom: 4,
+          minZoom: 3,          
       }
     ).addTo(map);
     //console.log(gjsn.geometry.coordinates[0]);
