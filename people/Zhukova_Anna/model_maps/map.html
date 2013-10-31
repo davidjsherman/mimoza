@@ -49,8 +49,15 @@
                               );
           },
           onEachFeature: function (feature, layer) {
-            layer.bindPopup("<a href='http://google.com/search?q=" + feature.properties.gene_association
-          + "' target='_blank'>" + feature.properties.name + "</a>");
+            var ga = feature.properties.gene_association;
+            var genes = ga.match(/YALI[\d|\w]+/g);
+            if (genes) {
+              for (i=0;i < genes.length;i++) {
+                var g = genes[i];
+                ga = ga.replace(g, "<a href='http://genolevures.org/elt/YALI/" + g + "' target='_blank'>" + g + "</a>");
+              }
+            }
+            layer.bindPopup(ga);
           },
           maxZoom: 2,
           minZoom: 1,          
