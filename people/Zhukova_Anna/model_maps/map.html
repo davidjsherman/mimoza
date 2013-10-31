@@ -12,7 +12,14 @@
     
     <script>
       // map initialize
-      var map = L.map('map').setView([0, 0], 1);
+      var map = L.map('map', {
+          maxZoom: 4,
+          minZoom: 1
+        }).setView([0, 0], 1);
+      //var southWest = map.unproject([0, 512]),
+      //    northEast = map.unproject([512, 0]),
+      //    bounds = new L.LatLngBounds(southWest, northEast);
+      //map.setMaxBounds(bounds, 1);
       L.tileLayer('./peroxisome/{z}/{x}/{y}.png', {
           continuousWorld: true,
           tileSize: 256,
@@ -28,9 +35,10 @@
           pointToLayer: function (feature, latlng) {
             var e = feature.geometry.coordinates;
             var x = e[0], y = e[1];
-            console.log(e)
             var r = feature.properties.radius / 2;
-            var bounds = [map.unproject([x - r, y + r]), map.unproject([x + r, y - r])];
+            var southWest = map.unproject([x - r, y + r], 1),
+                northEast = map.unproject([x + r, y - r], 1),
+            bounds = new L.LatLngBounds(southWest, northEast);
             return L.rectangle(bounds,
                                {color: feature.properties.color,
                                 fillColor: feature.properties.color,
@@ -41,10 +49,18 @@
                               );
           },
           onEachFeature: function (feature, layer) {
-            layer.bindPopup(feature.properties.name);
-          }
+            layer.bindPopup("<a href='http://google.com/search?q=" + feature.properties.gene_association
+          + "' target='_blank'>" + feature.properties.name + "</a>");
+          },
+          maxZoom: 2,
+          minZoom: 1,          
       }
     ).addTo(map);
+    //console.log(gjsn.geometry.coordinates[0]);
+    //console.log(gjsn.geometry.coordinates[2]);
+    //var bounds = [gjsn.geometry.coordinates[0], gjsn.geometry.coordinates[2]];
+    //bounds = new L.LatLngBounds(map.unproject(bounds[0]), map.unproject(bounds[1]));
+    //map.setMaxBounds(bounds, 1);
   </script>
 </body>
 </html>
