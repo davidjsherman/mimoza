@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4/leaflet.css" /> 
+</head>
+<body>
+    <div id="map" style="width: 512px; height: 512px"></div>
+    
+    <script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="./gjsn.json"></script> 
+    
+    <script>
+      // map initialize
+      var map = L.map('map').setView([0, 0], 1);
+      L.tileLayer('./peroxisome/{z}/{x}/{y}.png', {
+          continuousWorld: true,
+          tileSize: 256,
+          reuseTiles: true,
+          maxZoom: 4,
+          minZoom: 1,
+          attribution: 'Peroxisome of YALI',
+          tms: true
+        }
+      ).addTo(map);
+    
+      L.geoJson(gjsn, {
+          pointToLayer: function (feature, latlng) {
+            var e = feature.geometry.coordinates;
+            var x = e[0], y = e[1];
+            console.log(e)
+            var r = feature.properties.radius / 2;
+            var bounds = [map.unproject([x - r, y + r]), map.unproject([x + r, y - r])];
+            return L.rectangle(bounds,
+                               {color: feature.properties.color,
+                                fillColor: feature.properties.color,
+                                fillOpacity: 0.1,
+                                opacity: 1,
+                                weight: 1
+                               }
+                              );
+          },
+          onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.name);
+          }
+      }
+    ).addTo(map);
+  </script>
+</body>
+</html>
