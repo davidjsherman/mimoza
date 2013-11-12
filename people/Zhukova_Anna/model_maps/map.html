@@ -14,14 +14,12 @@
       // map initialize
       var map = L.map('map', {
           maxZoom: 4,
-          minZoom: 2
+          minZoom: 2,
         }).setView([0, 0], 2);
-      //var southWest = map.unproject([0, 512]),
-      //    northEast = map.unproject([512, 0]),
-      //    bounds = new L.LatLngBounds(southWest, northEast);
-      //map.setMaxBounds(bounds, 1);
+    
       L.tileLayer('./peroxisome/{z}/{x}/{y}.png', {
           continuousWorld: true,
+          noWrap: true,
           tileSize: 256,
           reuseTiles: true,
           maxZoom: 4,
@@ -64,11 +62,6 @@
           minZoom: 3,          
       }
     ).addTo(map);
-    //console.log(gjsn.geometry.coordinates[0]);
-    //console.log(gjsn.geometry.coordinates[2]);
-    //var bounds = [gjsn.geometry.coordinates[0], gjsn.geometry.coordinates[2]];
-    //bounds = new L.LatLngBounds(map.unproject(bounds[0]), map.unproject(bounds[1]));
-    //map.setMaxBounds(bounds, 1);
   </script>
 </body>
 </html>
