@@ -6,30 +6,45 @@ Model Generalization
 
 It groups biochemical species in the model into semantically equivalent classes and generalizes them into their common parent in the `ChEBI ontology <http://www.ebi.ac.uk/chebi/>`_. The reactions between the same generalized species are factored together into generalized reactions.
 
-Model generalization takes a model in `SBML format <http://sbml.org/>`_ as input, and produces a generalized SBML model as output.
+Model generalization takes a model in `SBML format <http://sbml.org/>`_ as input, and produces two SBML files as an output:
+* SBML containing the generalized model
+* SBML file with `groups extension <http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups>`_ containing the initial model plus the groups representing quotient species and reaction sets.
 
 
-TO RUN Model Generalization
-===========================
+Installing libSBML
+==================
 
-* *Model Generalization* uses *libSBML* library. To install *libSBML*, please visit `http://sbml.org/Software/libSBML <http://sbml.org/Software/libSBML/docs/python-api/libsbml-installation.html>`_. You might need to install it from the `source files <http://sourceforge.net/projects/sbml/files/libsbml/5.8.0/stable/libSBML-5.8.0-src.zip/download>`_. In this case, please make sure you have the following libraries installed:
-
-** libxml2-dev 
-
-** xml2 
-
-** libxml2 
+*Model Generalization* uses *libSBML* library for python with the groups extension. To install it, please download and extract the source files for *libSBML with extensions*, e.g. from `https://sourceforge.net/projects/sbml/files/libsbml/5.8.0/experimental/src/ <https://sourceforge.net/projects/sbml/files/libsbml/5.8.0/experimental/src/>`_. Make sure you have the following libraries installed:
+* libxml2-dev 
+* xml2 
+* libxml2 
+* cmake
 
 Then, build and install *libsbml* for python:
+* cd where_you_have_extracted_libsbml_archive
+* mkdir build
+* cd build
+* cmake -DENABLE_GROUPS=ON -DWITH_PYTHON=ON ..
+* make
+* export PYTHONPATH=where_you_have_extracted_libsbml_archive/build/src/bindings/python:$PYTHONPATH
 
-** ./configure --with-python
 
-** make
+Installing Model Generalization
+===============================
 
-** make install
+From the directory where you have extracted this archive, execute:
+* python setup.py
 
-* Open the Makefile and specify the path to the model to be generalized in the MODEL variable
 
-* Type (in terminal): make 
+Running Model Generalization
+============================
 
-* The script will produce a new SBML file, containing the generalized model, named your-model's-filename_generalized.xml
+Execute:
+* python ./main.py --model path_to_your_model.xml --verbose
+
+For example:
+python ./main.py --model ./MODEL1111190000.xml --verbose
+
+The script will produce two SBML files, containing the generalized model:
+* path_to_your_model_generalized.xml
+* path_to_your_model_with_groups.xml

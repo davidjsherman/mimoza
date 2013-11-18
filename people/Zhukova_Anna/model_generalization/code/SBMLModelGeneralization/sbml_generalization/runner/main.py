@@ -3,25 +3,23 @@
 
 import getopt
 import sys
-from libsbml import SBMLReader, Model
-from sbml_generalization.generalization.sbml_helper import parse_group_sbml
-
-from sbml_generalization.utils.logger import log
-from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from sbml_generalization.utils.usage import Usage
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
+from sbml_generalization.utils.logger import log
+
+from sbml_generalization.utils.obo_ontology import get_chebi, parse
+from sbml_generalization.utils.usage import Usage
 
 
 __author__ = 'anna'
 
 ##
 # runner module generalizes the model.
-# usage: runner.py --model model.xml --chebi chebi.obo --outmodel output_model.xml --verbose
+# usage: main.py --model model.xml --chebi chebi.obo --verbose
 ##
 
 help_message = '''
 Generalizes the model.
-usage: runner.py --model model.xml --chebi chebi.obo --outmodel output_model.xml --verbose
+usage: main.py --model model.xml --chebi chebi.obo --verbose
 '''
 
 
@@ -30,17 +28,9 @@ def main(argv=None):
         argv = sys.argv
     try:
         chebi, in_sbml, out_sbml, groups_sbml, sh_chains, verbose = process_args(argv)
-        #log(verbose, "parsing ChEBI...")
-        #ontology = parse(chebi)
-        #r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = parse_group_sbml(groups_sbml, ontology)
-        #print len(set(r_id2g_id.values())), len(set(s_id2gr_id.values()))
-        #generalize_model(groups_sbml, out_sbml, in_sbml, ontology, None, sh_chains, verbose)
-        doc = SBMLReader().readSBMLFromFile(in_sbml)
-        model = doc.getModel()
-        print model.getNumSpecies(), model.getNumReactions()
-        doc = SBMLReader().readSBMLFromFile(out_sbml)
-        model = doc.getModel()
-        print model.getNumSpecies(), model.getNumReactions()
+        log(verbose, "parsing ChEBI...")
+        ontology = parse(chebi)
+        generalize_model(groups_sbml, out_sbml, in_sbml, ontology, None, sh_chains, verbose)
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         print >> sys.stderr, "\t for help use --help"
