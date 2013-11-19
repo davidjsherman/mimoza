@@ -70,7 +70,7 @@ Much of the complexity of the graph comes from similar reactions that operate on
 
 To aid human understanding of genome-scale models, while keeping the details needed for a computer simulation, a 3-level \emph{zoomable} approach can be used, with two abstract levels intended for a human expert and the last one for the computer. 
 
-The most abstract level represents compartmentalization of the model, and focusses on such questions as: Are all the compartments present? Are they well connected by transport reactions?
+The most abstract level represents compartmentalization of the model, and focusses on such questions as: Are all the compartments present? Are they well connected by transport reactions? 
 
 The second level shows the modules inside of each of the compartments. The questions to be addressed on this level include: Are all the essential processes present? Is the process' structure correct? Is there any organism-specific adaptation of the structure?
 
@@ -151,10 +151,23 @@ The \emph{generalized model $M/\sim$} is a pair of generalized species and react
 \mbox{$R/\sim$} & \mbox{$=$} & \mbox{$\{[r_1]^{\sim}, \ldots, [r_{\tilde{m}}]^{\sim}\}$} &  \mbox{ - quotient reaction set.} 
 \end{array} \]
 
-The generalized model is a ``zoom out'' of the initial model. It provides a higher-level view by including less species and reactions, but more generic ones. For example, \textit{3-oxodecanoyl-CoA}, \textit{3-oxolauroyl-CoA}, and \textit{3-oxohexanoyl-CoA} species of the initial model can be generalized into \textit{oxo-fatty acyl-CoA}. 
+The generalized model is a zoom out of the initial model. It provides a higher-level view by including less species and reactions, but more generic ones. For example, \textit{3-oxodecanoyl-CoA}, \textit{3-oxolauroyl-CoA}, and \textit{3-oxohexanoyl-CoA} species of the initial model can be generalized into \textit{oxo-fatty acyl-CoA}. 
 
-Every reaction of the generalized model corresponds to at least one reaction of the initial model having the same topology (number of distinct reactant and product species) and operating with species that can be ``zoomed out'' into those participating in the generalized reaction. The appropriate level of abstraction is defined by the initial model as the most general one that satisfies restrictions (1') and (2).
+Every reaction of the generalized model corresponds to at least one reaction of the initial model having the same topology (number of distinct reactant and product species) and operating with species that can be zoomed out into those participating in the generalized reaction. The appropriate level of abstraction is defined by the initial model as the most general one that satisfies restrictions (1') and (2).
 
+The method and restrictions are described in figure~\ref{fig:mg}.
+
+\begin{figure}[th]
+\caption{The model generalization method}  
+\centerline{\includegraphics{../pics/Zhukova_Fig_1.eps}}
+\vspace*{8pt}
+\caption*{The figure  a) shows the generalization method, that first groups the species into equivalence classes, and then factors them into generalized species. The reaction equivalence classes and factoring are based on the species ones.
+
+The figure b) describes the restriction (1'): the top part shows a correct generalization that obeys the restriction. Two bottom parts show generalizations that change the reaction stoichiometry, and thus are not allowed.
+
+The figure c) describes the restriction (2): the top part shows a correct generalization that obeys the restriction. The bottom part violates the restriction as there is no evidence in the model (i.e. no equivalent reaction) of the species $b_3$ belonging to the same equivalence class as $b_1$ and $b_2$.}
+\label{fig:mg}
+\end{figure}
 
 \subsubsection*{Specific and ubiquitous species}
 We say that a \emph{ubiquitous species} is one that participates in many reactions (e.g. more than a threshold), such as \emph{water}, \emph{hydrogen}, \emph{oxygen}, etc. Grouping species increases the number of reactions they participate in, while they are already shared by many reactions and common to most of the models. During visualisation these species are often even duplicated to improve readability~\citep{Rohn2012}. That is why we do not generalize them. In the generalized model each of them forms a trivial equivalence class:
@@ -559,7 +572,7 @@ Examples of using metabolic model generalization for model comparison can be fou
 
 \begin{figure}[th]
 \caption{Peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000})}  
-\centerline{\includegraphics{../pics/Zhukova_Fig_1.eps}}
+\centerline{\includegraphics{../pics/Zhukova_Fig_2.eps}}
 \vspace*{8pt}
 \caption*{The figure shows the \textit{Y.~lypolitica} model (\emph{MODEL1111190000}) before generalization. Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products. Ubiquitous species are of smaller size and coloured gray. Specific species are divided into six non-trivial equivalence classes, and coloured accordingly (violet, light-blue, yellow, green, light-green, magenta). The specific species that form trivial equivalence classes are all coloured red. Reactions are divided into fifteen non-trivial equivalence classes, also represented by different colours. Reactions that form trivial equivalence classes are all coloured blue.
       
@@ -572,7 +585,7 @@ Examples of using metabolic model generalization for model comparison can be fou
 \begin{figure}[th]
 \captionsetup{labelformat=empty}
 \centering
-\includegraphics{../pics/Zhukova_Fig_2.eps}
+\includegraphics{../pics/Zhukova_Fig_3.eps}
 \caption{Generalized peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000})}  
 \end{figure}
 \clearpage
@@ -594,7 +607,7 @@ Examples of using metabolic model generalization for model comparison can be fou
 
 We have developed a method that provides a semantically ``zoomed-out'' view of a metabolic model, that keeps its essential structure but hides the details. 
 
-We have implemented our method as a Python program, that is available for download from\\ \url{https://team.inria.fr/magnome/software/}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces two SBML files, as an output. The first output file contains the generalized model. The second output file uses groups\citep{Hucka2012} extension of SBML, and contains the initial model plus the groups representing quotient species and reaction sets.
+We have implemented our method as a Python program, that is available for download from\\ \url{http://metamogen.gforge.inria.fr}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces two SBML files, as an output. The first output file contains the generalized model. The second output file uses groups\citep{Hucka2012} extension of SBML, and contains the initial model plus the groups representing quotient species and reaction sets.
 
 We have applied our method to genome-scale metabolic model of \emph{Y. lipolytica} and have shown that it helps finding gaps and peculiarities, as well as compresses the information stored in the model, which can be used for model visualisation and model comparison.
 
