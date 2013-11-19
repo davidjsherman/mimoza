@@ -29,13 +29,13 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="-2523.7243"
+     inkscape:cx="-2610.2216"
      inkscape:cy="142.16097"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1280"
-     inkscape:window-height="756"
+     inkscape:window-width="1598"
+     inkscape:window-height="992"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0" />
@@ -72,5 +72,17 @@
            height="234.35539"
            x="-3563.8181"
            y="1125.0931" /></flowRegion><flowPara
-         id="flowPara4360" /></flowRoot>  </g>
+         id="flowPara4360" /></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot7767"
+       style="font-size:20px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-283.58374,41.555001)"><flowRegion
+         id="flowRegion7769"><rect
+           id="rect7771"
+           width="139.40105"
+           height="26.263966"
+           x="-2296.0767"
+           y="728.10321" /></flowRegion><flowPara
+         id="flowPara7773"
+         style="font-size:12px;font-weight:bold;fill:#646464;fill-opacity:1;-inkscape-font-specification:Sans Bold">Figure 2</flowPara></flowRoot>  </g>
 </svg>
