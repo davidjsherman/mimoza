@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Metabolic model generalisation</title>
+    <link rel='shortcut icon' type='image/x-icon' href='fav.ico' />
+
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+        h1 {
+            text-color: #ac3131;
+            color: #ac3131;
+            text-align: center;
+            font-family: "Lucida Sans Unicode";
+            font-size: 20px;
+            line-height: 26px;
+        }
+        li {
+            font-family: "Lucida Sans Unicode";
+            font-size: 13px;
+            line-height: 17px;
+        }
+        p {
+            font-family: "Lucida Sans Unicode";
+            font-size: 13px;
+            line-height: 17px;
+        }
+        a {
+            text-color: #ac3131;
+            color: #ac3131;
+            font-family: "Lucida Sans Unicode";
+            font-size: 13px;
+            line-height: 17px;
+        }
+        a:visited {
+            text-color: #773131;
+            color: #773131;
+            font-family: "Lucida Sans Unicode";
+            font-size: 13px;
+            line-height: 17px;
+        }
+        div {
+            text-align: justify;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-bottom: 5px;
+            padding-top: 5px;
+            margin: 5px;
+        }
+        span.pant {
+            text-color: #ac3131;
+            color: #ac3131;
+            font-weight: bold;
+        }
+        div.image {
+            padding-top: 25px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        p.indent {
+            padding-left: 50px;
+            padding-right: 50px;
+        }
+    </style>
+</head>
+
+
+<body>
+    <h1>Knowledge-Based Generalization of Metabolic Models</h1>
+    <div><p><a href="http://metamogen.gforge.inria.fr/SBMLModelGeneralization.zip">Download</a></p></div>
+    <div>
+        <p><span class="pant">Model generalization</span> method provides a higher-level view of a metabolic model, by masking inessential details while preserving its essential structure. It groups biochemical species in the model into semantically equivalent
+            classes and generalizes them into their common parent in the <a href="http://www.ebi.ac.uk/chebi">ChEBI</a> ontology. The reactions between the same generalized species are factored together into generalized reactions.
+    </div>
+
+    <div>
+        <p><span class="pant">Model generalization</span> is
+        implemented as a <a href="http://www.python.org">Python</a>
+        library that takes a model in <a href="http://sbml.org">SBML</a> format as input, and produces two SBML files as output:
+            <ul>
+                <li>SBML containing the generalized model,
+                </li>
+                <li>SBML file with <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups">groups</a>
+                        extension, containing the initial model plus the groups representing species and reaction equivalence classes.
+                </li>
+            </ul>
+        </p>
+    </div>
+
+    <div>
+        <p><span class="pant">Model generalization</span> method and library were developed by the <a href="https://team.inria.fr/magnome/">MAGNOME</a> team at the <a href="http://www.inria.fr/en/centre/bordeaux">Inria Bordeaux</a>
+            research center. The library is open source and is
+        available under the <a
+        href="http://www.cecill.info/licences/Licence_CeCILL_V2-en.html">CeCILL</a>
+        license (<a
+        href="http://www.gnu.org/licenses/licenses.html#GPL">GPL</a>
+        compatible). For any questions and comments please contact <a href="mailto:anna.zhukova@inria.fr">anna.zhukova@inria.fr</a>.</p>
+    </div>
+    <div class="image">
+        <img src="modgen.png" alt="Model generalization method" title="Model generalization method" />
+    </div>
+
+</body>
+
+</html>

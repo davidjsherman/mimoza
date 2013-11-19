@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <link rel="stylesheet" href="./leaflet.css"/>
+</head>
+
+<body>
+<button type="button" onclick="centerMap()">Centre<br>map</button>
+<div id="map" style="width: 1024px; height: 1024px"></div>
+
+<script src="./leaflet.js" type="text/javascript"></script>
+<script src="http://code.jquery.com/jquery-1.10.2.min.js" type="text/javascript"></script>
+<script src="./pero_f.json" type="text/javascript"></script>
+<script src="./pero.json" type="text/javascript"></script>
+
+<script>
+    // map initialize
+    var map = L.map('map', {
+        maxZoom: 4,
+        minZoom: 2,
+        crs: L.CRS.Simple
+    }).setView([0, 0], 2);
+    var southWest = map.unproject([0, 4096], 4);
+    var northEast = map.unproject([4096, 0], 4);
+    map.setMaxBounds(new L.LatLngBounds(southWest, northEast));
+
+    function getJson(jsn) {
+        try {
+            map.removeLayer(geojsonLayer);
+        } catch (err) {
+        }
+        geojsonLayer = L.geoJson(jsn, {
+            pointToLayer: function (feature, latlng) {
+                var e = feature.geometry.coordinates;
+                var col = feature.properties.color;
+                var x = e[0],
+                        y = e[1];
+                var r = feature.properties.radius / 2;
+                var southWest = map.unproject([x - r, y + r], 1),
+                        northEast = map.unproject([x + r, y - r], 1),
+                        bounds = new L.LatLngBounds(southWest, northEast);
+                return L.rectangle(bounds, {
+                    color: feature.properties.color,
+                    fillColor: feature.properties.color,
+                    fillOpacity: 0,
+                    opacity: 1,
+                    weight: 0
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                if (feature.properties.reaction) {
+                    var ga = feature.properties.gene_association;
+                    var genes = ga.match(/YALI[\d|\w]+/g);
+                    ga = ga.toLowerCase();
+                    if (genes) {
+                        for (var i = 0; i < genes.length; i++) {
+                            var g = genes[i];
+                            var g_l = g.toLowerCase();
+                            var replacement = "<a href=\'http://genolevures.org/elt/YALI/" + g + "\' target=\'_blank\'>" + g + "</a>";
+                            ga = ga.replace(new RegExp(g_l, 'g'), replacement);
+                        }
+                    }
+                    while (ga.indexOf('\n') != -1) {
+                        ga = ga.replace('\n', '<br>');
+                    }
+                    layer.bindPopup(ga);
+                } else {
+                    var ch = feature.properties.chebi.toUpperCase();
+                    if (ch.indexOf("UNKNOWN") == -1) {
+                        ch = "<a href=\'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=" + ch + "\' target=\'_blank\'>" + ch + "</a>";
+                    } else {
+                        ch = "<i>no ChEBI id :(</i>";
+                    }
+                    layer.bindPopup(ch);
+                }
+            }
+        });
+        geojsonLayer.addTo(map);
+    }
+    getJson(gjsn);
+
+    var simpCounter = 0;
+    map.on('zoomend', function (e) {
+        var style = document.getElementById('map').style;
+        if (map.getZoom() >= 3) {
+            if (simpCounter == 0) {
+                getJson(gjsn_f);
+                simpCounter = 1;
+            }
+        } else if (map.getZoom() <= 2) {
+            if (simpCounter == 1) {
+                getJson(gjsn);
+                simpCounter = 0;
+            }
+        }
+    });
+
+    function centerMap() {
+        map.setView([0, 0], map.getZoom());
+    }
+
+    L.tileLayer('./peroxisome/{z}/{x}/{y}.png', {
+        continuousWorld: true,
+        noWrap: true,
+        tileSize: 256,
+        reuseTiles: true,
+        maxZoom: 4,
+        minZoom: 1,
+        attribution: 'Peroxisome of <a href="http://www.ebi.ac.uk/biomodels-main/MODEL1111190000">Y. lipolytica</a>',
+        tms: true
+    }).addTo(map);
+</script>
+</body>
+
+</html>
