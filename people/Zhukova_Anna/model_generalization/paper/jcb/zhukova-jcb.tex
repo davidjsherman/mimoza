@@ -44,12 +44,12 @@ joint project-team Magnome\\
 \newpage
 
 \begin{abstract}
-{\bf Background:} Genome-scale metabolic model reconstruction is a complicated process including (semi-)automatic inference of reactions participating in the organism's metabolism, followed by many iterations of network analysis and improvement. More advanced automatic model inference and analysis tools are being developed, but they may still miss some reactions or add erroneous ones. That is why the human expert's analysis of the model plays an important role at all the iterations of the reconstruction process. However, the size of the genome-scale models (i.e. thousands of reactions) makes it hard for a human to analyse them.
+{\bf Background:} Genome-scale metabolic model reconstruction is a complicated process beginning with (semi-)automatic inference of the reactions participating in the organism's metabolism, followed by many iterations of network analysis and improvement. Despite advances in automatic model inference and analysis, reconstruction may still miss some reactions or add erroneous ones. Consequently a human expert's analysis of the model will continue to play an important role in all the iterations of the reconstruction process. This analysis is hampered by the size of the genome-scale models (typically thousands of reactions), which makes it hard for a human to understand them.
 
-{\bf Results:} To aid human experts in curating and analyzing metabolic models, we have developed a method for \emph{knowledge-based generalization} that provides a higher-level view of a metabolic model that masks its inessential details while presenting its essential structure. The method groups biochemical species in the model into semantically equivalent classes based on the ChEBI ontology, identifies reactions that become equivalent with respect to the generalized species, and factors those reactions into \emph{generalized reactions}.
+{\bf Results:} To aid human experts in curating and analyzing metabolic models, we have developed a method for \emph{knowledge-based generalization} that provides a higher-level view of a metabolic model, masking its inessential details while presenting its essential structure. The method groups biochemical species in the model into semantically equivalent classes based on the ChEBI ontology, identifies reactions that become equivalent with respect to the generalized species, and factors those reactions into \emph{generalized reactions}.
 
 {\bf Conclusions:} Generalization allows curators to quickly identify divergences from the expected structure of the model, such as alternative paths or missing reactions, that are the priority targets for further curation.
-We have applied our method to genome-scale yeast metabolic models and shown that it improves understanding by helping to identify the peculiarities and potential errors.      
+We have applied our method to genome-scale yeast metabolic models and shown that it improves understanding by helping to identify both specificities and potential errors.      
 \end{abstract}
 
 \paragraph*{Keywords:} metabolic modeling; generalization; genome-scale reconstruction.
@@ -57,41 +57,41 @@ We have applied our method to genome-scale yeast metabolic models and shown that
 \newpage
 \section*{Introduction}
 Genome-scale metabolic models are complex networks that describe the thousands of reactions and molecular species that participate in an organism's metabolism.
-The complexity of these networks makes it difficult for human curators to understand, analyze, and verify them, since the individual reactions that demand their attention are hidden among the reactions that are correctly described. The priority targets are gaps in pathways, and reactions that are in some sense \emph{unusual}, because they represent shortcuts, alternative paths.
+The complexity of these networks makes it difficult for human curators to understand, analyze, and verify them, since the individual reactions that require their attention are hidden among the reactions that are correctly described. The priority targets are gaps in pathways, and reactions that are in some sense \emph{unusual}, because they represent shortcuts or alternative paths.
 Efficient curation of genome-scale models requires analysis and exploration tools that synthesize high-level views of the network and focus curator attention on these small subsets of unusual reactions.
 
-Curation is performed after the automatic inference of the draft metabolic model. The inference methods combine databases of reactions and pathways with genomic information and existing models for similar organisms~\citep{Swainston2011}. Genomic data for the new organism is compared to the data of the reference organism, to find genomic evidence such as the presence of catalysing enzymes for the reactions conserved in the new organism. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\citep{Thiele2010}. The models produced at each iteration are intended for computer simulation, and so describe all the reactions thought to participate in the organism's metabolism. Although automatic model inference tools and genomic comparison methods are becoming more advanced, they may still leave gaps in the model or add erroneous reactions. Curation by human experts is necessary.
+Curation is performed after the automatic inference of the draft metabolic model. Inference methods combine databases of reactions and pathways with genomic information and existing models for similar organisms~\citep{Swainston2011}. Genomic data for the new organism is compared to the data of the reference organism, to find genomic evidence such as the presence of catalysing enzymes for the reactions conserved in the new organism. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\citep{Thiele2010}. The models produced at each iteration are intended for computer simulation, and so describe all the reactions thought to participate in the organism's metabolism. Although automatic model inference tools and genomic comparison methods are becoming steadily more sophisticated, they may still leave gaps in the model or add erroneous reactions. Curation by human experts is necessary.
 
-Much of the complexity of the reaction network comes from biochemically similar reactions that operate on slightly different substrates. For example, in the peroxisome compartment of \emph{Yarrowia lypolitica} model (\emph{MODEL1111190000}~\citep{Loira12}) 6 \emph{acetyl-CoA oxidase} reactions are present, transforming \emph{fatty acyls-CoA} different in their carbon chain length (\emph{decanoyl-CoA}, \emph{lauroyl-CoA}, etc.) into corresponding \emph{unsaturated fatty acyls-CoA}. There are also several similar reactions for other steps of \emph{beta-oxidation of fatty acyls} pathway~\citep{Metzler01}. 
+Much of the complexity of the reaction network comes from biochemically similar reactions that operate on slightly different substrates. For example, in the peroxisome compartment of \emph{Yarrowia lypolitica} model (\emph{MODEL1111190000}~\citep{Loira12}) six \emph{acetyl-CoA oxidase} reactions are present, transforming \emph{fatty acyls-CoA}s differing in their carbon chain length (\emph{decanoyl-CoA}, \emph{lauroyl-CoA}, etc.) into the corresponding \emph{unsaturated fatty acyls-CoA}s. There are also several similar reactions for other steps of the \emph{beta-oxidation of fatty acyls} pathway~\citep{Metzler01}. 
 Although all of these details are needed for accurate computer simulation, and are common to many models, 
 not all of them are interesting for a curator. It is instead the differences from the common pattern that demand attention. They may be errors in the model, such as missing steps or erroneous connections between pathways, or they may be organism-specific differences such as alternative pathways that are biologically interesting.
 
 
 %For example, if in a genome-scale model of an yeast \textit{Yarrowia lypolitica} (\emph{MODEL1111190000}~\citep{Loira12}) the enzyme \textit{EC 2.3.1.16} were missing, a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway~\citep{Metzler01} would be eliminated: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions would be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
 
-To aid human understanding of genome-scale models, while keeping the details needed for a computer simulation, a 3-level \emph{zoomable} approach can be used:
+To aid human understanding of genome-scale models, while keeping the details needed for a computer simulation, we propose a 3-level \emph{zoomable} approach:
 \begin{itemize}
 %
 \item
 The most abstract level represents compartmentalization of the model, and focusses on such questions as: Are all the compartments present? Are they well connected by transport reactions? 
 %
 \item
-The second level shows the modules inside of each of the compartments. The questions to be addressed on this level include: Are all the essential processes present? Is the process' structure correct? Is there any organism-specific adaptation of the structure?
+The second level shows the modules inside of each of the compartments. The questions to be addressed on this level include: Are all the essential processes present? Is the structure of each process correct? Is there any organism-specific adaptation of the structure?
 %
 \item
 The most detailed level is intended for computer simulation and represents the inner structure of each of the modules with all the species, reactions and their kinetics, stoichiometry and constraints.
 \end{itemize}
-The two abstract levels intended for a human expert, and the last one for the computer.
+The two abstract levels are intended for a human expert, and the last one for the computer.
 
-In this study we focus on the second level of abstraction, that represents the modules inside compartments. A fair amount of work has been done on identifying reusable modules. These approaches can be divided into two groups: \emph{series} and \emph{parallel}. A \emph{series} approach operates on chains of reactions, and generalizes them as a series, thus hiding the structure of the network. An example of a \emph{series} approach is representing the network as a set of metabolic pathways (KEGG~\citep{Kanehisa12}, MetaCyC~\citep{Caspi2012}), that can be further divided, for example, into reaction modules (conserved sequences of reactions along the metabolic pathways)~\citep{Muto2013}. 
+In this study we focus on the second level of abstraction, that represents the modules inside compartments. A fair amount of work has been done on identifying reusable modules. These approaches can be divided into two groups: \emph{series} and \emph{parallel}. A \emph{series} approach operates on chains of reactions, and generalizes them as a series, consequently hiding the structure of the network. An example of a \emph{series} approach is representing the network as a set of metabolic pathways (KEGG~\citep{Kanehisa12}, MetaCyC~\citep{Caspi2012}), that can be further divided, for example, into reaction modules (conserved sequences of reactions along the metabolic pathways)~\citep{Muto2013}. 
 
-The other type of approach operates on reactions that are \emph{parallel},  keeping the steps and preserving the general view of the network. An example of this approach is grouping reactions based on EC (Enzyme Commission) numbers~\citep{Tohsato2000}. The drawback of this approach is that it is not applicable to networks with no EC number assigned or reactions with no catalysing enzymes identified. 
-We developed another \emph{parallel}-reaction method for knowledge-based generalization of metabolic models, which does not depend on enzyme information. It provides a~higher-level view of a~model while keeping its essential structure and omitting the details. 
+The other type of approach operates on reactions that are \emph{parallel}, keeping the steps and preserving the general view of the network. An example of this approach is grouping reactions based on EC (Enzyme Commission) numbers~\citep{Tohsato2000}. The drawback of this approach is that it is not applicable to networks with no EC number assigned or reactions with no catalysing enzymes identified. 
+We have developed another \emph{parallel}-reaction method for knowledge-based generalization of metabolic models, which does not depend on enzyme information. It provides a higher-level view of a model while keeping its essential structure and omitting the details. 
 
 
 \newtheorem{eq00}[def]{Definition}
 \begin{eq00}
-The \emph{model generalization} process groups chemical species present in the model into equivalence classes, and merges them into a generalized chemical species. Reactions that involve same generalized chemical species are then factored together into a generalized reaction. 
+The \emph{model generalization} process groups chemical species present in the model into equivalence classes, and merges each class into a generalized chemical species. Reactions that involve same generalized chemical species are then factored together into a generalized reaction. 
 \end{eq00}
 
 By applying the model generalization process, we can build a simplified model that focusses on the high level relationships. The simplified model can be further divided into pathways. 
@@ -109,7 +109,7 @@ We represent a \emph{metabolic model $M$} as a pair of two sets: a set $S$ of bi
 \mbox{$R$} & \mbox{$=$} & \mbox{$\{r_1, \ldots, r_m\}$} &  \mbox{- reaction set.} 
 \end{array} \]
 
-We represent each \emph{reaction $r \in R$} as a pair of species sets: its reactants and products. A chemical reaction may be represented by a balanced chemical equation, showing the formulae of the reactants and products, and the changes that take place~\citep{Clugston2000}. This definition leads to the restriction~(1) that all the species participating in the reaction must be different.
+We represent each \emph{reaction $r \in R$} as a pair of sets of species: its reactants and products. A chemical reaction may be represented by a balanced chemical equation, showing the formule of the reactants and products, and the changes that take place~\citep{Clugston2000}. This definition leads to restriction~(1) that all the species participating in the reaction must be different.
 
 \[ \begin{array}{llr}
 \mbox{$r = $} & \mbox{$\langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle
@@ -119,7 +119,7 @@ We represent each \emph{reaction $r \in R$} as a pair of species sets: its react
 
 To perform the model generalization, we define an \emph{equivalence operation $\sim$} on the species set, and group species into equivalence classes: $[s]^{\sim} = \{\tilde{s} \in S | \tilde{s} \sim s\}$.
 
-Species equivalence imposes reaction equivalence: two reactions are equivalent if their corresponding reactant and product species are pairwise equivalent.
+Species equivalence imposes reaction equivalence: two reactions are equivalent if their corresponding reactant and product species sets are pairwise equivalent.
 \[ \begin{array}{l}
 \mbox{$\forall r, \tilde{r} \in R $} \begin{array}{c}
 	\mbox{$r = \langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle,$}\\
@@ -132,15 +132,15 @@ Species equivalence imposes reaction equivalence: two reactions are equivalent i
 \end{array}	 
 \end{array} \]
 
-Equivalent reactions are factored together into a generalized reaction that operates with generalized species (i.e. species equivalence classes): 
+Equivalent reactions are factored together into a generalized reaction that operates with generalized species (i.e.~species equivalence classes): 
 $[r]^{\sim} = \langle\{[s^{(rs)}_1]^{\sim}, \ldots, [s^{(rs)}_k]^{\sim}\}, \{[s^{(ps)}_1]^{\sim}, \ldots, [s^{(ps)}_l]^{\sim}\}\rangle$.
 
-In order to keep the number of distinct species participating in a reaction, the restriction~(1'), analogous to the restriction~(1), must be satisfied:
+In order to maintain the number of distinct species participating in a reaction, restriction~(1'), analogous to restriction~(1), must be satisfied:
 \[ \begin{array}{lr}
 \mbox{$[s^{(rs)}_1]^{\sim} \neq \ldots \neq [s^{(rs)}_k]^{\sim} \neq [s^{(ps)}_1]^{\sim} \neq \ldots \neq [s^{(ps)}_l]^{\sim}$} & (1')
 \end{array} \]
 
-In order to avoid creation of paths in the generalized model that are not based on the evidence from the initial model, we introduce the restriction~(2): Species that do not participate in any pair of equivalent reactions and do not have any common equivalent species must not be grouped together.
+In order to avoid creation of paths in the generalized model that are not based on the evidence from the initial model, we introduce restriction~(2): Species that do not participate in any pair of equivalent reactions and do not have any common equivalent species must not be grouped together.
 \[ \begin{array}{clr}
 \mbox{$\forall s, \tilde{s} \in S\; s \sim \tilde{s} \;\Rightarrow\;\lor$} & 
 \begin{array}{l}
@@ -149,7 +149,7 @@ In order to avoid creation of paths in the generalized model that are not based 
 	\mbox{$ \exists \dot{s} \in S:\; s \tilde{\sim} \dot{s} \land \dot{s} \tilde{\sim} \tilde{s}$}.
 \end{array} & (2)
 \end{array} \]
-Note, that restriction~(2) can be reformulated as maximizing the number of species equivalence classes while keeping the reaction equivalence classes unchanged. 
+Note that restriction~(2) can be reformulated as maximizing the number of species equivalence classes while keeping the reaction equivalence classes unchanged. 
 
 The \emph{generalized model $M/\sim$} is a pair of generalized species and reaction sets (quotient sets):
 \[ \begin{array}{ccll}
@@ -158,9 +158,9 @@ The \emph{generalized model $M/\sim$} is a pair of generalized species and react
 \mbox{$R/\sim$} & \mbox{$=$} & \mbox{$\{[r_1]^{\sim}, \ldots, [r_{\tilde{m}}]^{\sim}\}$} &  \mbox{ - quotient reaction set.} 
 \end{array} \]
 
-The generalized model is a zoom out of the initial model. It provides a higher-level view by including less species and reactions, but more generic ones. For example, \textit{3-oxodecanoyl-CoA}, \textit{3-oxolauroyl-CoA}, and \textit{3-oxohexanoyl-CoA} species of the initial model can be generalized into \textit{oxo-fatty acyl-CoA}. 
+The generalized model is a \textbf{zoom out} of the initial model. It provides a higher-level view by including less species and reactions, but more generic ones. For example, \textit{3-oxodecanoyl-CoA}, \textit{3-oxolauroyl-CoA}, and \textit{3-oxohexanoyl-CoA} species of the initial model can be generalized into \textit{oxo-fatty acyl-CoA}. 
 
-Every reaction of the generalized model corresponds to at least one reaction of the initial model having the same topology (number of distinct reactant and product species) and operating with species that can be zoomed out into those participating in the generalized reaction. The appropriate level of abstraction is defined by the initial model as the most general one that satisfies restrictions (1') and (2).
+Every reaction of the generalized model corresponds to at least one reaction of the initial model having the same topology (number of distinct reactant and product species) and operating on species that can be zoomed out into those participating in the generalized reaction. The appropriate level of abstraction is defined with respect to the initial model as the most general one that satisfies restrictions (1') and (2).
 
 The method and restrictions are described in figure~\ref{fig:mg}.
 
@@ -168,7 +168,7 @@ The method and restrictions are described in figure~\ref{fig:mg}.
 \centering
 \includegraphics{Zhukova_Fig_1.eps}
 \caption{\textbf{Model generalization method and restrictions.} 
-\textbf{a)} \textit{Generalization method} first groups the species into equivalence classes, and then factors them into generalized species. The reaction equivalence classes and factoring are inferred from the species classes.
+\textbf{a)} \textit{Generalization} first groups the species into equivalence classes, and then factors them into generalized species. The reaction equivalence classes and factoring are inferred from the species classes.
 \textbf{b)} \textit{Restriction (1').} The top part shows a correct generalization that obeys the restriction. Two bottom parts show generalizations that would change the reaction stoichiometry, and thus are not allowed.
 \textbf{c)} \textit{Restriction (2).} The top part shows a correct generalization that obeys the restriction. The bottom part violates the restriction as there is no evidence in the model (i.e. no equivalent reaction) of the species $b_3$ belonging to the same equivalence class as $b_1$ and $b_2$.}
 \label{fig:mg}
