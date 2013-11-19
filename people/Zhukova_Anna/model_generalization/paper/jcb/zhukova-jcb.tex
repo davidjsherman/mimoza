@@ -560,7 +560,13 @@ We have applied our method to the genome-scale metabolic network of the yeast \t
 
 The generalization method shows the best performance if the model is well-annotated with ChEBI. The species lacking ChEBI annotations are forced to form trivial quotient species in the generalized model as there is no evidence of their biochemical similarity with any other species in ChEBI.  For 430 species in the \textit{Y.~lipolytica} model no appropriate ChEBI annotation was found, thus they could not be grouped with other species. 
 
-\emph{Peroxisome} is an example of a well-annotated compartment in the \textit{Y.~lipolytica} model: only two species have no ChEBI annotations: \emph{YLR043C disulphide} and \emph{TRX1}. The generalization process reduced the number of reactions in peroxisome from 65 to 27. Figures~\ref{fig:bf} and \ref{fig:yali} represent the peroxisome before and after the generalization.
+\emph{Peroxisome} is an example of a well-annotated compartment in the \textit{Y.~lipolytica} model: only two species have no ChEBI annotations: \emph{YLR043C disulphide} and \emph{TRX1}. The generalization process reduced the number of reactions in peroxisome from 65 to 27. Figures~\ref{fig:bf} and \ref{fig:yali} represent the peroxisome before and after the generalization and were produced using Tulip graph visualisation tool~\citep{Auber04}.
+
+The model before the grouping of equivalent reactions and species into generalized ones is shown on figure~\ref{fig:bf}: different colors correspond to different equivalence classes. The same color code is used in figure~\ref{fig:yali} representing the generalized model that operates with quotient species and reactions. For example, the violet \textit{unsaturated FA-CoA} node is a quotient of 8 species: \textit{hexadec-2-enoyl-CoA}, \textit{oleoyl-CoA}, \textit{tetradecenoyl-CoA}, \textit{trans-dec-2-enoyl-CoA}, \textit{trans-dodec-2-enoyl-CoA}, \textit{trans-hexacos-2-enoyl-CoA}, \textit{trans-octadec-2-enoyl-CoA}, and \textit{trans-tetradec-2-enoyl-CoA} (coloured violet in figure~\ref{fig:bf}). In a similar manner, the light-green \textit{acCoA oxidase} quotient reaction, that converts \textit{fatty acyl-CoA} (yellow) into \textit{unsaturated FA-CoA} (violet), generalizes 6 corresponding light-green reactions of the initial model (figure~\ref{fig:bf}).
+
+The generalized model describes \textit{$\beta$-oxidation of fatty acids} pathway~\citep{Metzler01} happening inside \textit{Y.~lypolitica} peroxisome in a generic way: as a transformation of \textit{fatty acyl-CoA} (yellow) into \textit{unsaturated FA-CoA} (violet), then into \textit{hydroxy FA-CoA} (green), \textit{3-oxo FA-CoA} (magenta), and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the initial model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species present in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). That is why the \textit{beta-oxidation} chain of the reactions in the initial model, transforming step-by-step the \emph{fatty-acyl-CoA} with the longest carbon chain into the one with the shortest chain, in the generalized model appears as a cycle (generalizing all the \textit{fatty-acyls-CoA} into one species, regardless the chain-length).
+  
+The more precise model is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (tetracosanoyl-CoA)} (red, inside the cycle in figure~\ref{fig:yali}): There exists a "short-cut" reaction, producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.
 
 Examples of using metabolic model generalization for model comparison can be found in~\citep{Zhukova}.
 
@@ -574,28 +580,17 @@ Examples of using metabolic model generalization for model comparison can be fou
 \caption{Peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000})}  
 \centerline{\includegraphics{../pics/Zhukova_Fig_2.eps}}
 \vspace*{8pt}
-\caption*{The figure shows the \textit{Y.~lypolitica} model (\emph{MODEL1111190000}) before generalization. Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products. Ubiquitous species are of smaller size and coloured gray. Specific species are divided into six non-trivial equivalence classes, and coloured accordingly (violet, light-blue, yellow, green, light-green, magenta). The specific species that form trivial equivalence classes are all coloured red. Reactions are divided into fifteen non-trivial equivalence classes, also represented by different colours. Reactions that form trivial equivalence classes are all coloured blue.
+\caption*{The figure shows the peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000}). Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products, according to SBGN notation~\citep{Moodie2011}. Ubiquitous species are of smaller size and coloured gray. Specific species are divided into six non-trivial equivalence classes, and coloured accordingly (violet, light-blue, yellow, green, light-green, magenta). The specific species that form trivial equivalence classes are all coloured red. Reactions are divided into fifteen non-trivial equivalence classes, also represented by different colours. Reactions that form trivial equivalence classes are all coloured blue. 
       
-      The size of the model does not allow for readability of the species labels, thus we do not show them.
-      
-      (The figure is produced using the Tulip~\citep{Auber04} graph visualization tool.)}
+      The size of the model does not allow for readability of the species labels, thus we do not show them.}
 \label{fig:bf}
 \end{figure}
 
 \begin{figure}[th]
-\captionsetup{labelformat=empty}
-\centering
-\includegraphics{../pics/Zhukova_Fig_3.eps}
-\caption{Generalized peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000})}  
-\end{figure}
-\clearpage
-\begin{figure}
-\captionsetup{labelformat=adja-page}
-\ContinuedFloat
-    \caption{The figure shows the generalization of the \textit{Y.~lypolitica} model (see figure~\ref{fig:bf}). This model operates with quotient species and reactions. The number given in parenthesis and the size of each node indicates how many entities it generalizes. For example, the violet \textit{unsaturated FA-CoA (8)} node is a quotient of 8 species: \textit{hexadec-2-enoyl-CoA}, \textit{oleoyl-CoA}, \textit{tetradecenoyl-CoA}, \textit{trans-dec-2-enoyl-CoA}, \textit{trans-dodec-2-enoyl-CoA}, \textit{trans-hexacos-2-enoyl-CoA}, \textit{trans-octadec-2-enoyl-CoA}, and \textit{trans-tetradec-2-enoyl-CoA} (coloured violet in figure~\ref{fig:bf}). In a similar manner, the light-green \textit{acCoA oxidase (6)} quotient reaction, that converts \textit{fatty acyl-CoA (9)} (yellow) into \textit{unsaturated FA-CoA (8)} (violet), generalizes 6 corresponding light-green reactions of the initial model (figure~\ref{fig:bf}).\\
-            The generalized model describes \textit{$\beta$-oxidation of fatty acids} pathway~\citep{Metzler01} happening inside \textit{Y.~lypolitica} peroxisome in a generic way: as a transformation of \textit{fatty acyl-CoA} (yellow) into \textit{unsaturated FA-CoA} (violet), then into \textit{hydroxy FA-CoA} (green), \textit{3-oxo FA-CoA} (magenta), and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the initial model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species present in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). That is why the \textit{beta-oxidation} chain of the reactions in the initial model, transforming step-by-step the \emph{fatty-acyl-CoA} with the longest carbon chain into the one with the shortest chain, in the generalized model appears as a cycle (generalizing all the \textit{fatty-acyls-CoA} into one species, regardless the chain-length).\\   
-               The more precise model is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (tetracosanoyl-CoA)} (red, inside the cycle): There exists a "short-cut" reaction, producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.\\     
-            (The figure is produced using the Tulip graph visualization tool.)}
+\caption{Generalized peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000})}
+\centerline{\includegraphics{../pics/Zhukova_Fig_3.eps}}
+\vspace*{8pt}
+\caption*{The figure shows the generalization of the peroxisome of the \textit{Y.~lypolitica} model (see figure~\ref{fig:bf}). This model operates with quotient species and reactions. The number given in parenthesis and the size of each node indicates how many entities it generalizes.}
 \label{fig:yali}
 \end{figure}
 
