@@ -568,7 +568,7 @@ The generalized model describes \textit{$\beta$-oxidation of fatty acids} pathwa
   
 The more precise model is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (tetracosanoyl-CoA)} (red, inside the cycle in figure~\ref{fig:yali}): There exists a "short-cut" reaction, producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.
 
-Examples of using metabolic model generalization for model comparison can be found in~\citep{Zhukova}.
+Another application of model generalization is metabolic model comparison. The generalization brings the models to the same level of abstraction and highlights the differences such as gaps. Examples can be found in~\citep{Zhukova}.
 
 
 %We have applied our method to three metabolic models that describe the \textit{$\beta$-oxidation of fatty acids} pathway: a genome-scale metabolic model of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}), and two path2model~\citep{Li10} pathways: fatty acid metabolism of the bacteria \textit{Escherichia coli} (\emph{BMID000000083160}) and of the yeast \textit{Saccharomyces cerevisiae} (\emph{BMID000000089673}). We have generalized these three models, and compared the results. 
@@ -600,13 +600,15 @@ Examples of using metabolic model generalization for model comparison can be fou
 \newpage
 \section*{Discussions}
 
-We have developed a method that provides a semantically ``zoomed-out'' view of a metabolic model, that keeps its essential structure but hides the details. 
+We have developed a method that provides a semantically zoomed-out view of a metabolic model, that keeps its essential structure but hides the details. 
 
 We have implemented our method as a Python program, that is available for download from\\ \url{http://metamogen.gforge.inria.fr}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces two SBML files, as an output. The first output file contains the generalized model. The second output file uses groups\citep{Hucka2012} extension of SBML, and contains the initial model plus the groups representing quotient species and reaction sets.
 
 We have applied our method to genome-scale metabolic model of \emph{Y. lipolytica} and have shown that it helps finding gaps and peculiarities, as well as compresses the information stored in the model, which can be used for model visualisation and model comparison.
 
 Currently the method depends on ChEBI ontology. It cannot generalize species that lack ChEBI annotations. The future work will include finding ways to overcome this limitation.
+
+The method zooms out a model to the most general level of abstraction that is consisted with the model structure, i.e. does not violate the restrictions (1) and (2). It remains to be seen if there are intermediate levels of abstraction that can be useful for the model analysis. 
 
 \bigskip
 
