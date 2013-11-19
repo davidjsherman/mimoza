@@ -52,19 +52,19 @@ joint project-team Magnome\\
 We have applied our method to genome-scale yeast metabolic models and shown that it improves understanding by helping to identify the peculiarities and potential errors.      
 \end{abstract}
 
-\paragraph*{Keywords:} metabolic modelling; generalization; genome-scale reconstruction.
+\paragraph*{Keywords:} metabolic modeling; generalization; genome-scale reconstruction.
 
 \newpage
 \section*{Introduction}
 Genome-scale metabolic models are complex networks that describe the thousands of reactions and molecular species that participate in an organism's metabolism.
-The complexity of these networks makes it difficult for human curators to understand, analyse, and verify them, since the individual reactions that demand their attention are hidden among the reactions that are correctly described. The priority targets are gaps in pathways, and reactions that are in some sense \emph{unusual}, because they represent shortcuts, alternative paths.
+The complexity of these networks makes it difficult for human curators to understand, analyze, and verify them, since the individual reactions that demand their attention are hidden among the reactions that are correctly described. The priority targets are gaps in pathways, and reactions that are in some sense \emph{unusual}, because they represent shortcuts, alternative paths.
 Efficient curation of genome-scale models requires analysis and exploration tools that synthesize high-level views of the network and focus curator attention on these small subsets of unusual reactions.
 
-Curation is still an essential part of modelling, since in most cases reactions are automatically inferred by methods that combine databases of reactions and pathways with genomic information and existing models for similar organisms~\citep{Swainston2011}. These methods are becoming more advanced, but they still may leave gaps in the model or add erroneous reactions. Genomic data for the new organism is compared to the data of the reference organism, to find genomic evidence such as the presence of catalysing enzymes for the reactions conserved in the new organism. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\citep{Thiele2010}. The models produced at each iteration are intended for computer simulation, and so describe all the reactions thought to participate in the organism's metabolism.
+Curation is performed after the automatic inference of the draft metabolic model. The inference methods combine databases of reactions and pathways with genomic information and existing models for similar organisms~\citep{Swainston2011}. Genomic data for the new organism is compared to the data of the reference organism, to find genomic evidence such as the presence of catalysing enzymes for the reactions conserved in the new organism. Starting from the inference of a draft model, the model refinement process includes several iterations of model analysis, error detection, and improvement~\citep{Thiele2010}. The models produced at each iteration are intended for computer simulation, and so describe all the reactions thought to participate in the organism's metabolism. Although automatic model inference tools and genomic comparison methods are becoming more advanced, they may still leave gaps in the model or add erroneous reactions. Curation by human experts is necessary.
 
 Much of the complexity of the reaction network comes from biochemically similar reactions that operate on slightly different substrates. For example, in the peroxisome compartment of \emph{Yarrowia lypolitica} model (\emph{MODEL1111190000}~\citep{Loira12}) 6 \emph{acetyl-CoA oxidase} reactions are present, transforming \emph{fatty acyls-CoA} different in their carbon chain length (\emph{decanoyl-CoA}, \emph{lauroyl-CoA}, etc.) into corresponding \emph{unsaturated fatty acyls-CoA}. There are also several similar reactions for other steps of \emph{beta-oxidation of fatty acyls} pathway~\citep{Metzler01}. 
-All of these details are needed for accurate computer simulation, most of them are common to many models.
-But not all of them are interesting for a curator. It is instead the differences from the common pattern that demand attention. They may be errors in the model, such as missing steps or erroneous links, or they may be organism-specific differences such as alternative pathways that are biologically interesting.
+Although all of these details are needed for accurate computer simulation, and are common to many models, 
+not all of them are interesting for a curator. It is instead the differences from the common pattern that demand attention. They may be errors in the model, such as missing steps or erroneous connections between pathways, or they may be organism-specific differences such as alternative pathways that are biologically interesting.
 
 
 %For example, if in a genome-scale model of an yeast \textit{Yarrowia lypolitica} (\emph{MODEL1111190000}~\citep{Loira12}) the enzyme \textit{EC 2.3.1.16} were missing, a whole group of \textit{Acyl-CoA:acetyl-CoA C-acyltransferase} reactions participating in the \textit{Beta-oxidation of fatty acids} pathway~\citep{Metzler01} would be eliminated: one for each of the six \textit{3-oxoacyl-CoA} species presented in the model. However, the absence of these six reactions would be hidden by the other 59 reactions in the constitutive peroxisome of \textit{Yarrowia lypolitica}, and a human expert may have difficulty noticing the error.
@@ -166,7 +166,7 @@ The method and restrictions are described in figure~\ref{fig:mg}.
 
 \begin{figure}[th]
 \centering
-\includegraphics{../pics/Zhukova_Fig_1.eps}
+\includegraphics{Zhukova_Fig_1.eps}
 \caption{\textbf{Model generalization method and restrictions.} 
 \textbf{a)} \textit{Generalization method} first groups the species into equivalence classes, and then factors them into generalized species. The reaction equivalence classes and factoring are inferred from the species classes.
 \textbf{b)} \textit{Restriction (1').} The top part shows a correct generalization that obeys the restriction. Two bottom parts show generalizations that would change the reaction stoichiometry, and thus are not allowed.
@@ -579,7 +579,7 @@ Another application of model generalization is metabolic model comparison. The g
 %We have applied our method to three metabolic models that describe the \textit{$\beta$-oxidation of fatty acids} pathway: a genome-scale metabolic model of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}), and two path2model~\citep{Li10} pathways: fatty acid metabolism of the bacteria \textit{Escherichia coli} (\emph{BMID000000083160}) and of the yeast \textit{Saccharomyces cerevisiae} (\emph{BMID000000089673}). We have generalized these three models, and compared the results. 
 
 \begin{figure}[th]
-\centerline{\includegraphics{../pics/Zhukova_Fig_2.eps}}
+\centerline{\includegraphics{Zhukova_Fig_2.eps}}
 \vspace*{8pt}
 \caption{\textbf{Peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000}).} Species are represented as circular nodes, and the reactions as square ones, connected by edges to their reactants/products, according to SBGN notation~\citep{Moodie2011}. Ubiquitous species are of smaller size and colored gray. Specific species are divided into six non-trivial equivalence classes, and colored accordingly (violet, light-blue, yellow, green, light-green, magenta). The specific species that form trivial equivalence classes are all colored red. Reactions are divided into fifteen non-trivial equivalence classes, also represented by different colors. Reactions that form trivial equivalence classes are all colored blue.       
       The size of the model does not allow for readability of the species labels, thus we do not show them.}
@@ -587,7 +587,7 @@ Another application of model generalization is metabolic model comparison. The g
 \end{figure}
 
 \begin{figure}[th]
-\centerline{\includegraphics{../pics/Zhukova_Fig_3.eps}}
+\centerline{\includegraphics{Zhukova_Fig_3.eps}}
 \vspace*{8pt}
 \caption{\textbf{The generalization of the peroxisome of the \textit{Y.~lypolitica} model} (see figure~\ref{fig:bf}). The generalized model operates on quotient species and reactions. The number given in parentheses and the size of each node indicates how many entities it generalizes.}
 \label{fig:yali}
@@ -617,7 +617,7 @@ The method zooms out a model to the most general level of abstraction that is co
 No competing financial interests exist.
 
 \newpage
- \bibliographystyle{zhukova-jcb}\bibliography{../db}
+ \bibliographystyle{zhukova-jcb}\bibliography{db}
 
 
 \section*{Additional Files}
