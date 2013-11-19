@@ -19,13 +19,8 @@
 \fi 
     \usepackage{setspace}
     \usepackage[authoryear]{natbib}
-	\usepackage{caption}
-	\captionsetup{justification=justified}
     \usepackage{fullpage}
 
-
-% the following format will be used to emulate the captions produced by fltpage
-\DeclareCaptionLabelFormat{adja-page}{\hrulefill\\#1 #2 \emph{(previous page)}}
 
 \title{Knowledge-based generalization of metabolic models}
 
@@ -158,14 +153,12 @@ Every reaction of the generalized model corresponds to at least one reaction of 
 The method and restrictions are described in figure~\ref{fig:mg}.
 
 \begin{figure}[th]
-\caption{The model generalization method}  
-\centerline{\includegraphics{../pics/Zhukova_Fig_1.eps}}
-\vspace*{8pt}
-\caption*{The figure  a) shows the generalization method, that first groups the species into equivalence classes, and then factors them into generalized species. The reaction equivalence classes and factoring are based on the species ones.
-
-The figure b) describes the restriction (1'): the top part shows a correct generalization that obeys the restriction. Two bottom parts show generalizations that change the reaction stoichiometry, and thus are not allowed.
-
-The figure c) describes the restriction (2): the top part shows a correct generalization that obeys the restriction. The bottom part violates the restriction as there is no evidence in the model (i.e. no equivalent reaction) of the species $b_3$ belonging to the same equivalence class as $b_1$ and $b_2$.}
+\centering
+\includegraphics{../pics/Zhukova_Fig_1.eps}
+\caption{\textbf{Model generalization method and restrictions.} 
+\textbf{a)} \textit{The generalization method} first groups the species into equivalence classes, and then factors them into generalized species. The reaction equivalence classes and factoring are based on the species ones.
+\textbf{b)} \textit{The restriction (1').} The top part shows a correct generalization that obeys the restriction. Two bottom parts show generalizations that change the reaction stoichiometry, and thus are not allowed.
+\textbf{c)} \textit{The restriction (2).} The top part shows a correct generalization that obeys the restriction. The bottom part violates the restriction as there is no evidence in the model (i.e. no equivalent reaction) of the species $b_3$ belonging to the same equivalence class as $b_1$ and $b_2$.}
 \label{fig:mg}
 \end{figure}
 
@@ -556,7 +549,7 @@ Any further partition of the quotient species set would imply the partition of t
 
 \newpage
 \section*{Applications}
-We have applied our method to the genome-scale metabolic network of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000} \citep{Loira12}). The generalized model is attached as additional files~1, 2. The generalization has created 100 non-trivial quotient species and 217 non-trivial quotient reactions, and reduced  the total number of species from 1847 to 1072 and of reactions from 2002 to 893. Figures representing compartments before and after generalization are attached as additional files. 
+We have applied our method to the genome-scale metabolic network of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000} \citep{Loira12}). The generalized model is attached as additional files~1, 2. The generalization has created 100 non-trivial quotient species and 217 non-trivial quotient reactions, and reduced  the total number of species from 1847 to 1072 and of reactions from 2002 to 893. %Figures representing compartments before and after generalization are attached as additional files. 
 
 The generalization method shows the best performance if the model is well-annotated with ChEBI. The species lacking ChEBI annotations are forced to form trivial quotient species in the generalized model as there is no evidence of their biochemical similarity with any other species in ChEBI.  For 430 species in the \textit{Y.~lipolytica} model no appropriate ChEBI annotation was found, thus they could not be grouped with other species. 
 
@@ -573,29 +566,20 @@ Another application of model generalization is metabolic model comparison. The g
 
 %We have applied our method to three metabolic models that describe the \textit{$\beta$-oxidation of fatty acids} pathway: a genome-scale metabolic model of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}), and two path2model~\citep{Li10} pathways: fatty acid metabolism of the bacteria \textit{Escherichia coli} (\emph{BMID000000083160}) and of the yeast \textit{Saccharomyces cerevisiae} (\emph{BMID000000089673}). We have generalized these three models, and compared the results. 
 
-
-
-
 \begin{figure}[th]
-\caption{Peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000})}  
 \centerline{\includegraphics{../pics/Zhukova_Fig_2.eps}}
 \vspace*{8pt}
-\caption*{The figure shows the peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000}). Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products, according to SBGN notation~\citep{Moodie2011}. Ubiquitous species are of smaller size and coloured gray. Specific species are divided into six non-trivial equivalence classes, and coloured accordingly (violet, light-blue, yellow, green, light-green, magenta). The specific species that form trivial equivalence classes are all coloured red. Reactions are divided into fifteen non-trivial equivalence classes, also represented by different colours. Reactions that form trivial equivalence classes are all coloured blue. 
-      
+\caption{\textbf{Peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000}).} Species are represented as circular nodes, and the reactions as squared ones, connected by edges to their reactants/products, according to SBGN notation~\citep{Moodie2011}. Ubiquitous species are of smaller size and coloured gray. Specific species are divided into six non-trivial equivalence classes, and coloured accordingly (violet, light-blue, yellow, green, light-green, magenta). The specific species that form trivial equivalence classes are all coloured red. Reactions are divided into fifteen non-trivial equivalence classes, also represented by different colours. Reactions that form trivial equivalence classes are all coloured blue.       
       The size of the model does not allow for readability of the species labels, thus we do not show them.}
 \label{fig:bf}
 \end{figure}
 
 \begin{figure}[th]
-\caption{Generalized peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000})}
 \centerline{\includegraphics{../pics/Zhukova_Fig_3.eps}}
 \vspace*{8pt}
-\caption*{The figure shows the generalization of the peroxisome of the \textit{Y.~lypolitica} model (see figure~\ref{fig:bf}). This model operates with quotient species and reactions. The number given in parenthesis and the size of each node indicates how many entities it generalizes.}
+\caption{\textbf{The generalization of the peroxisome of the \textit{Y.~lypolitica} model} (see figure~\ref{fig:bf}). The generalized model operates with quotient species and reactions. The number given in parenthesis and the size of each node indicates how many entities it generalizes.}
 \label{fig:yali}
 \end{figure}
-
-
-%The generalized \textit{$\beta$-oxidation of fatty acids} models of \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} are shown in figure~\ref{fig:gen}.
 
 \newpage
 \section*{Discussions}
@@ -608,7 +592,7 @@ We have applied our method to genome-scale metabolic model of \emph{Y. lipolytic
 
 Currently the method depends on ChEBI ontology. It cannot generalize species that lack ChEBI annotations. The future work will include finding ways to overcome this limitation.
 
-The method zooms out a model to the most general level of abstraction that is consisted with the model structure, i.e. does not violate the restrictions (1) and (2). It remains to be seen if there are intermediate levels of abstraction that can be useful for the model analysis. 
+The method zooms out a model to the most general level of abstraction that is consisted with the model structure, i.e. does not violate the restrictions (1') and (2). It remains to be seen if there are intermediate levels of abstraction that can be useful for the model analysis. 
 
 \bigskip
 
@@ -624,16 +608,6 @@ No competing financial interests exist.
  \bibliographystyle{zhukova-jcb}\bibliography{../db}
 
 
-
-
-%\subsection*{Figure 3 - Generalization of the \textit{Escherichia coli} and \textit{Saccharomyces cerevisiae} models}
-%%\includegraphics[]{../pics/sace_ecoli.png} 
-%
-%      The figure shows the generalizations of the \textit{Escherichia coli} (left) and \textit{Saccharomyces cerevisiae} (right) fatty acid oxidation models. In the generalized model of \textit{Saccharomyces cerevisiae} fatty oxidation is not a cycle, as it is in the generalized models of \textit{Escherichia coli} and of \textit{Yarrowia lypolitica} (figure~\ref{fig:yali}).  This is caused by the missing reactions operating with \textit{hydroxy fatty acyls-CoA} (green), present in the \textit{Escherichia coli} model.
-%      
-%      (The figure is produced using the Tulip graph visualization tool.)
-%\label{fig:gen}
-
 \section*{Additional Files}
   \subsection*{Additional file 1 --- The generalized SBML level 2 version 4 model of \textit{Yarrowia lipolytica} (derived from \emph{MODEL1111190000})}
     The model contains generalized reactions and species.
@@ -641,8 +615,8 @@ No competing financial interests exist.
   \subsection*{Additional file 2 --- The SBML level 3 version 1 model of \textit{Yarrowia lipolytica} (derived from \emph{MODEL1111190000}) with groups extension representing equivalent species and reactions}
     The model contains all the elements (reactions, species, etc.) of the initial \emph{MODEL1111190000} model, and is enriched with groups representing species and reaction equivalence information.
     
-    \subsection*{Additional file 3 --- Compartments of \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}) model before and after generalization}
-    A zip archive containing png pictures.
+  %  \subsection*{Additional file 3 --- Compartments of \textit{Yarrowia lipolytica} (\emph{MODEL1111190000}) model before and after generalization}
+  %  A zip archive containing png pictures.
     
 
 \end{document}  
