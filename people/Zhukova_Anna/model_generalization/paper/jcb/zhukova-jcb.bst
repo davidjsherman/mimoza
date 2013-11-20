@@ -1389,6 +1389,9 @@ FUNCTION {techreport}
   institution "institution" bibinfo.warn output
   address "address" bibinfo.check output
   format.note output
+  new.block
+  format.url output
+  new.block
   fin.entry
 }
 
