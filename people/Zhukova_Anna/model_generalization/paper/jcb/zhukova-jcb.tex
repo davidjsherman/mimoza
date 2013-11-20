@@ -20,6 +20,7 @@
     \usepackage{setspace}
     \usepackage[authoryear]{natbib}
     \usepackage{fullpage}
+    \usepackage[]{algorithm2e}
 
 
 \title{Knowledge-based generalization of metabolic models}
@@ -32,7 +33,7 @@ joint project-team Magnome\\
 351, cours de la Lib\'{e}ration F-33405 Talence cedex, France}
 
 \date{}
-\setstretch{1}
+\setstretch{2}
 \newcounter{fig}
 \newcounter{pbm}
 \newcounter{lm}
@@ -219,40 +220,38 @@ For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset
 
 \end{l1}
 
-%\paragraph*{Algorithm 1 - Computation of $\mathring{\sim}$}
-\[ \begin{array}{l}
-\mbox{\textbf{Algorithm: }Compute$\mathring{\sim}$}\\
-\mbox{\textbf{Data: }} \begin{array}{l} \mbox{$M=\langle{S, S^{(ub)}\subset{S}, R}\rangle: \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$ - metabolic model}\\ \mbox{describing $n$ species,  $\breve{n}$ among them being ubiquitous,  and $m$ reactions.} 
-\end{array}\\
-\mbox{\textbf{Result: }} \begin{array}{l} \mbox{$\mathring{\sim}$ - equivalence operation described in Lemma~1,}\\  \mbox{$M/{\mathring{\sim}} = \langle S/{\mathring{\sim}}, S^{(ub)}/{\mathring{\sim}} \subset S/{\mathring{\sim}}, R/{\mathring{\sim}} \rangle$ - corresponding generalized model.} \end{array}\\
-\mbox{~}\\
-\mbox{$S/{\mathring{\sim}} \leftarrow \emptyset;$ // resultant quotient species set $ S/{\mathring{\sim}}\subset 2^S$}\\
-\mbox{$S^{(ub)}/{\mathring{\sim}} \leftarrow \emptyset;$ // resultant quotient ubiquitous species set $ S^{(ub)}/{\mathring{\sim}}\subset 2^{S^{(ub)}}$}\\
-\mbox{$R/{\mathring{\sim}} \leftarrow \emptyset;$ // resultant quotient reaction set $ R/{\mathring{\sim}}\subset 2^R$}\\
-\mbox{$\mathring{\sim} \leftarrow \emptyset;$ // resultant equivalence operation $ {\mathring{\sim}}: S\cup{R} \rightarrow S/{\mathring{\sim}}\cup{R/{\mathring{\sim}}}$}\\
-\mbox{~}\\
-\mbox{/* Generalize ubiquitous species */}\\
-\mbox{\textbf{for }$s^{(ub)} \in S^{(ub)}$\textbf{ do}}\\
-\left| \indent\mbox{$[s^{(ub)}]^{\mathring{\sim}} \leftarrow \{s^{(ub)}\};$ // map $s^{(ub)}$ to its equivalence class}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{$S^{(ub)}/{\mathring{\sim}} \leftarrow \{[s^{(ub)}]^{\mathring{\sim}}|s^{(ub)} \in S^{(ub)}\};$}\\
-\mbox{~}\\
-\mbox{/* Generalize specific species */}\\
-\mbox{\textbf{for }$s \in S \backslash S^{(ub)}$\textbf{ do}}\\
-\left| \indent\mbox{$[s]^{\mathring{\sim}}   \leftarrow S \backslash S^{(ub)};$ // map $s$ to its equivalence class}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{$S/{\mathring{\sim}} \leftarrow {S^{(ub)}/{\mathring{\sim}}}\cup\{S \backslash S^{(ub)}\};$}\\
-\mbox{~}\\
-\mbox{/* Generalize reactions */}\\
-\mbox{// map a reaction to its generalized version that operates with generalized species}\\
-\mbox{$gen \leftarrow \lambda{r}.\langle\{[s]^{\mathring{\sim}} | s \in reactants(r)\}, \{[s]^{\mathring{\sim}} | s \in products(r)\}\rangle;$}\\
-\mbox{\textbf{for }$r \in R$\textbf{ do}}\\
-\left| \indent\mbox{$[r]^{\mathring{\sim}} \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\};$}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{$R/{\mathring{\sim}} \leftarrow \{[r]^{\mathring{\sim}}|r \in R\};$}\\
-\mbox{~}\\
-\mbox{\textbf{return }$\mathring{\sim}, \langle S/{\mathring{\sim}}, S^{(ub)}/{\mathring{\sim}}, R/{\mathring{\sim}} \rangle$}
-\end{array} \]
+\begin{algorithm}[H]
+\SetAlgoLined
+\caption{Compute$\mathring{\sim}$}
+\KwData{$M=\langle{S, S^{(ub)}\subset{S}, R}\rangle: \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$ - metabolic model describing $n$ species,  $\breve{n}$ among them being ubiquitous,  and $m$ reactions.} 
+\KwResult{$\mathring{\sim}$ - equivalence operation described in Lemma~1, $M/{\mathring{\sim}} = \langle S/{\mathring{\sim}}, S^{(ub)}/{\mathring{\sim}} \subset S/{\mathring{\sim}}, R/{\mathring{\sim}} \rangle$ - corresponding generalized model.} 
+$S/{\mathring{\sim}} \leftarrow \emptyset$ \tcp*[l]{resultant quotient species set $S/{\mathring{\sim}}\subset 2^S$}
+$S^{(ub)}/{\mathring{\sim}} \leftarrow \emptyset$ \tcp*[l]{resultant quotient ubiquitous species set $S^{(ub)}/{\mathring{\sim}}\subset 2^{S^{(ub)}}$}
+$R/{\mathring{\sim}} \leftarrow \emptyset$ \tcp*[l]{resultant quotient reaction set $R/{\mathring{\sim}}\subset 2^R$}
+$\mathring{\sim} \leftarrow \emptyset$ \tcp*[l]{resultant equivalence operation $ {\mathring{\sim}}: S\cup{R} \rightarrow S/{\mathring{\sim}}\cup{R/{\mathring{\sim}}}$}
+\BlankLine
+\tcc{Generalize ubiquitous species}
+\For{$s^{(ub)} \in S^{(ub)}$}{
+	$[s^{(ub)}]^{\mathring{\sim}} \leftarrow \{s^{(ub)}\}$ \tcp*[l]{map $s^{(ub)}$ to its equivalence class}
+}
+$S^{(ub)}/{\mathring{\sim}} \leftarrow \{[s^{(ub)}]^{\mathring{\sim}}|s^{(ub)} \in S^{(ub)}\}$\;
+\BlankLine
+\tcc{Generalize specific species}
+\For{$s \in S \backslash S^{(ub)}$}{
+	$[s]^{\mathring{\sim}}   \leftarrow S \backslash S^{(ub)}$ \tcp*[l]{map $s$ to its equivalence class}
+}
+$S/{\mathring{\sim}} \leftarrow {S^{(ub)}/{\mathring{\sim}}}\cup\{S \backslash S^{(ub)}\}$\;
+\BlankLine
+\tcc{Generalize reactions}
+\tcp{map a reaction to its generalized version that operates with generalized species}
+$gen \leftarrow \lambda{r}.\langle\{[s]^{\mathring{\sim}} | s \in reactants(r)\}, \{[s]^{\mathring{\sim}} | s \in products(r)\}\rangle$\;
+\For{$r \in R$}{
+	$[r]^{\mathring{\sim}} \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\}$\;
+}
+$R/{\mathring{\sim}} \leftarrow \{[r]^{\mathring{\sim}}|r \in R\}$\;
+\KwRet{$\mathring{\sim}, \langle S/{\mathring{\sim}}, S^{(ub)}/{\mathring{\sim}}, R/{\mathring{\sim}} \rangle$}
+\end{algorithm}
+
 The Compute$\mathring{\sim}$ algorithm forms the equivalence classes for ubiquitous and then specific species as in Definition~2 and then computes the generalized reactions.
 
 \subsection*{Step 2. Stoichiometry preserving property obedience}
@@ -271,51 +270,33 @@ we partition this species equivalence class $[s]^{{\sim}^i} = [\tilde{s}]^{{\sim
 
 At each iteration one equivalence species class is partitioned. In the worst case, the equality operation $=$ (each species is equivalent only to itself) will be achieved. As it obeys restriction~(1'), the process will terminate. \\
 
-%\subsubsection*{Algorithm 2 - Stoichiometry Preserving Property Obedience}
-\[ \begin{array}{l}
-\mbox{\textbf{Algorithm: }PreserveStoichiometry}\\
-\mbox{\textbf{Data: }} \begin{array}{l} \mbox{${\sim}$ - equivalence operation defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$,}\\ \mbox{$M/{\sim} = \langle S/{\sim}, S^{(ub)}/{\sim} \subset S/{\sim}, R/{\sim} \rangle$ - corresponding generalized model.} 
-\end{array}\\
-\mbox{\textbf{Result: }} \begin{array}{l} \mbox{$\breve{\sim}$ - equivalence operation described in Problem~3,}\\  \mbox{$M/\breve{\sim} = \langle S/\breve{\sim}, S^{(ub)}/\breve{\sim} \subset S/\breve{\sim}, R/\breve{\sim} \rangle$ - corresponding generalized model.} \end{array}\\
-\mbox{~}\\
-\mbox{$S/\breve{\sim} \leftarrow S/\sim;$ // resultant quotient species set $ S/{\breve{\sim}}\subset 2^S$}\\
-\mbox{$S^{(ub)}/\breve{\sim} \leftarrow S^{(ub)}/\sim;$ // resultant quotient ubiquitous species set $ S^{(ub)}/{\breve{\sim}}\subset 2^{S^{(ub)}}$}\\
-\mbox{$R/\breve{\sim} \leftarrow \emptyset;$ // resultant quotient reaction set $ R/{\breve{\sim}}\subset 2^R$}\\
-\mbox{$\breve{\sim} \leftarrow \sim;$ // resultant equivalence operation $ {\breve{\sim}}: S\cup{R} \rightarrow S/{\breve{\sim}}\cup{R/{\breve{\sim}}}$}\\
-\mbox{~}\\
-
-\mbox{/* Partition quotient species that do not obey the stoichiometry preserving property~(1') */}\\
-\mbox{\textbf{for }$S^{(gen)} \in \{\tilde{S}^{(gen)}\in S/\breve{\sim}| \exists s \neq \tilde{s} \in \tilde{S}^{(gen)}, r \in R:  s \in species(r) \land \tilde{s} \in species(r)\}$\textbf{ do}}\\
-\left| \indent \begin{array}{l}
-\mbox{$\Pi = Partition(S^{(gen)});$}\\
-\mbox{} \\
-\mbox{// Update $S/\breve{\sim}$} \\
-\mbox{$S/\breve{\sim} \leftarrow S/\breve{\sim}\backslash\{S^{(gen)}\};$} \\
-\mbox{$S/\breve{\sim} \leftarrow S/\breve{\sim}\cup\Pi;$} \\
-\mbox{} \\
-\mbox{// Update $\breve{\sim}$} \\
-\mbox{\textbf{for }$\tilde{S}^{(gen)} \in \Pi$\textbf{ do}} \\
-\left| \indent \begin{array}{l}
-\mbox{\textbf{for }$s \in \tilde{S}^{(gen)}$\textbf{ do}}\\
-\left| \indent\mbox{$[s]^{\breve{\sim}} \leftarrow \tilde{S}^{(gen)};$}\right. \\
-\mbox{\textbf{end}}
-\end{array}\right. \\
-\mbox{\textbf{end}}
-\end{array}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{~}\\
-\mbox{/* Generalize reactions */}\\
-
-\mbox{// map a reaction to its generalized version that operates with generalized species}\\
-\mbox{$gen \leftarrow \lambda{r}.\langle\{[s]^{\breve{\sim}} | s \in reactants(r)\}, \{[s]^{\breve{\sim}} | s \in products(r)\}\rangle;$}\\
-
-\mbox{\textbf{for }$r \in R$\textbf{ do}}\\
-\left| \indent \mbox{$[r]^{\breve{\sim}} \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\};$}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{$R/{\breve{\sim}} \leftarrow \{\breve{\sim}(r)|r \in R\};$}\\
-\mbox{~}\\
-\mbox{\textbf{return }$\breve{\sim}, \langle S/\breve{\sim}, S^{(ub)}/\breve{\sim}, R/\breve{\sim} \rangle$}
-\end{array} \]
+\begin{algorithm}[H]
+\SetAlgoLined
+\caption{PreserveStoichiometry}
+\KwData{${\sim}$ - equivalence operation defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, $M/{\sim} = \langle S/{\sim}, S^{(ub)}/{\sim} \subset S/{\sim}, R/{\sim} \rangle$ - corresponding generalized model.} 
+\KwResult{$\breve{\sim}$ - equivalence operation described in Problem~3, $M/\breve{\sim} = \langle S/\breve{\sim}, S^{(ub)}/\breve{\sim} \subset S/\breve{\sim}, R/\breve{\sim} \rangle$ - corresponding generalized model.} 
+$S/\breve{\sim} \leftarrow S/\sim$ \tcp*[l]{resultant quotient species set $ S/{\breve{\sim}}\subset 2^S$}
+$S^{(ub)}/\breve{\sim} \leftarrow S^{(ub)}/\sim$ \tcp*[l]{resultant quotient ubiquitous species set $S^{(ub)}/{\breve{\sim}}\subset 2^{S^{(ub)}}$}
+$R/\breve{\sim} \leftarrow \emptyset$ \tcp*[l]{resultant quotient reaction set $ R/{\breve{\sim}}\subset 2^R$}
+$\breve{\sim} \leftarrow \sim$ \tcp*[l]{resultant equivalence operation $ {\breve{\sim}}: S\cup{R} \rightarrow S/{\breve{\sim}}\cup{R/{\breve{\sim}}}$}
+\tcc{Partition quotient species that do not obey restriction~(1')}
+\For{$S^{(gen)} \in \{\tilde{S}^{(gen)}\in S/\breve{\sim}| \exists s \neq \tilde{s} \in \tilde{S}^{(gen)}, r \in R:  s \in species(r) \land \tilde{s} \in species(r)\}$}{
+	$\Pi = Partition(S^{(gen)})$\;	
+	$S/\breve{\sim} \leftarrow \Pi\cup{S}/\breve{\sim}\backslash\{S^{(gen)}\}$ \tcp*[l]{Update $S/\breve{\sim}$}	
+	\For{$\tilde{S}^{(gen)} \in \Pi$}{
+		\For{$s \in \tilde{S}^{(gen)}$}{
+			$[s]^{\breve{\sim}} \leftarrow \tilde{S}^{(gen)}$ \tcp*[l]{Update $\breve{\sim}$} 
+		}
+	}
+}
+\tcc{Generalize reactions}
+$gen \leftarrow \lambda{r}.\langle\{[s]^{\breve{\sim}} | s \in reactants(r)\}, \{[s]^{\breve{\sim}} | s \in products(r)\}\rangle$ \tcp{map a reaction to its generalized version that operates with generalized species}
+\For{$r \in R$}{
+	$[r]^{\breve{\sim}} \leftarrow \{\tilde{r} \in R|gen(\tilde{r})=gen(r)\}$\;
+}
+$R/{\breve{\sim}} \leftarrow \{\breve{\sim}(r)|r \in R\}$\;
+\KwRet{$\breve{\sim}, \langle S/\breve{\sim}, S^{(ub)}/\breve{\sim}, R/\breve{\sim} \rangle$}
+\end{algorithm}
 
 \subsubsection*{Species equivalence class partition}
 
@@ -455,27 +436,24 @@ To approximate the solution of the set cover problem, we use a greedy algorithm.
 \subsubsection*{Greedy Algorithm}
 Among the available subset candidates $S_i \in \Psi$, pick the one of the largest size and add it to the resulting set cover $\Pi$. Repeat this operation until all elements of $X$ are covered. \\
 
-%\subsubsection*{Algorithm 3 - Greedy Set Cover}
-\[ \begin{array}{l}
-\mbox{\textbf{Algorithm: }GreedySetCover}\\
-\mbox{\textbf{Data: }}\begin{array}{l}\mbox{$X$ - set of interest,}\\ \mbox{$\Psi \subseteq 2^X$ - set of subsets of $X$}\end{array}\\
-\mbox{\textbf{Result: }$\Pi \subseteq \Psi$ - set cover of $X$}\\
-\mbox{~}\\
-\mbox{$\Pi \leftarrow \emptyset;$ // resultant cover}\\
-\mbox{~}\\
-\mbox{\textbf{while }$X \neq \emptyset$\textbf{ do}}\\
-\left| \indent \begin{array}{l}
-\mbox{// select $S \in \Psi$ that covers maximum elements of $X$} \\
-\mbox{$S^{(max)} \leftarrow max(\Psi, criterion=\lambda{S}.\sharp{(S\cap{X}}));$} \\
-\mbox{~}\\
-\mbox{$\Psi \leftarrow \Psi\backslash\{S^{(max)}\};$}\\
-\mbox{$X \leftarrow X\backslash{S^{(max)}};$} \\
-\mbox{$\Pi \leftarrow \Pi\cup\{S^{(max)}\};$} 
-\end{array}\right.\\
-\mbox{\textbf{end}}\\
-\mbox{~}\\
-\mbox{\textbf{return }$\Pi$}
-\end{array} \]
+\begin{algorithm}[H]
+\SetAlgoLined
+\caption{GreedySetCover}
+\KwData{$X$ - set of interest, $\Psi \subseteq 2^X$ - set of subsets of $X$}
+\KwResult{$\Pi \subseteq \Psi$ - set cover of $X$}
+$\Pi \leftarrow \emptyset$ \tcp*[l]{resultant cover}
+\BlankLine
+\While{$X \neq \emptyset$}{
+	\tcp{select $S \in \Psi$ that covers maximum elements of $X$}
+	$S^{(max)} \leftarrow max(\Psi, criterion=\lambda{S}.\sharp{(S\cap{X}}))$\;
+	\BlankLine
+	$\Psi \leftarrow \Psi\backslash\{S^{(max)}\}$\;
+	$X \leftarrow X\backslash{S^{(max)}}$\;
+	$\Pi \leftarrow \Pi\cup\{S^{(max)}\}$\;
+}
+\KwRet{$\Pi$}
+\end{algorithm}
+
 Greedy set cover is a polynomial time approximation algorithm that achieves an approximation ratio of $H(\sharp X)$, where $H(n)$ is the $n$-th harmonic number: $H(n) = \sum^n_{i = 1}\frac{1}{i} \leq \ln{n} + 1$~\citep{Chvatal1979}. It is the best possible polynomial time approximation algorithm for set cover, under plausible complexity assumptions~\citep{Feige1998}. 
 
 \subsection*{Step 3. Species equivalence class number maximization}
@@ -504,61 +482,51 @@ Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S,
 
 Any further partition of the quotient species set would imply the partition of the quotient reaction set. Hence the number of species equivalence classes is maximal for the current number of reaction equivalence classes, and restriction (2) is satisfied.
 
-%\subsubsection*{Algorithm 4 - Maximization of the Number of Species Equivalence Classes}
-\[ \begin{array}{l}
-\mbox{\textbf{Algorithm: }Maximize}\\
-\mbox{\textbf{Data: }} \begin{array}{l} \mbox{${\sim}$ - equivalence operation defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$,}\\ \mbox{$M/{\sim} = \langle S/{\sim}, S^{(ub)}/{\sim} \subset S/{\sim}, R/{\sim} \rangle$ - corresponding generalized model.} 
-\end{array}\\
-\mbox{\textbf{Result: }} \begin{array}{l} \mbox{$\tilde{\sim}$ - equivalence operation described in Problem~2,}\\  \mbox{$M/\tilde{\sim} = \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim} \subset S/\tilde{\sim}, R/\tilde{\sim} \rangle$ - corresponding generalized model.} \end{array}\\
-\mbox{~}\\
-\mbox{$S/\tilde{\sim} \leftarrow \emptyset;$ // resultant quotient species set $ S/{\tilde{\sim}}\subset 2^S$}\\
-\mbox{$S^{(ub)}/\tilde{\sim} \leftarrow S^{(ub)}/\sim;$ // resultant quotient ubiquitous species set $ S^{(ub)}/{\tilde{\sim}}\subset 2^{S^{(ub)}}$}\\
-\mbox{$R/\tilde{\sim} \leftarrow R/\sim;$ // resultant quotient reaction set $ R/{\tilde{\sim}}\subset 2^R$}\\
-\mbox{$\tilde{\sim} \leftarrow \sim;$ // resultant equivalence operation $ {\tilde{\sim}}: S\cup{R} \rightarrow S/{\tilde{\sim}}\cup{R/{\tilde{\sim}}}$}\\
-\mbox{~}\\
-\mbox{/* Update specific species generalization */}\\
-\mbox{~}\\
-\mbox{// Map a species to a set of its $\sim$-equivalent species}\\
-\mbox{// that participate in $\sim$-equivalent reactions}\\
-\mbox{$r\_sim \leftarrow \lambda{s}.\{\tilde{s}\sim{s}|\exists r,\tilde{r}\in{R}: s\in reactants(r) \land \tilde{s}\in reactants(\tilde{r}) \land r \sim \tilde{r}\};$}\\
-\mbox{$p\_sim \leftarrow \lambda{s}.\{\tilde{s}\sim{s}|\exists r,\tilde{r}\in{R}: s\in products(r) \land \tilde{s}\in products(\tilde{r}) \land r \sim \tilde{r}\};$}\\
-\mbox{$sim \leftarrow \lambda{s}.r\_sim(s)\cup p\_sim(s);$}\\
-\mbox{~}\\
-\mbox{$S/\tilde{\sim} \leftarrow S^{(ub)}/\tilde{\sim} \cup \{sim(s)|s \in S\backslash S^{(ub)}\};$}\\
-\mbox{~}\\
-\mbox{// Merge all quotient species sets that intersect}\\
-\mbox{\textbf{while }$\exists S^{(gen)} \neq \tilde{S}^{(gen)} \in S/\tilde{\sim}: S^{(gen)} \cap \tilde{S}^{(gen)} \neq \emptyset$\textbf{ do}}\\
-\left| \indent\mbox{$S/\tilde{\sim} \leftarrow (S/\tilde{\sim}\backslash{\{S^{(gen)}, \tilde{S}^{(gen)}\}})\cup\{S^{(gen)}\cup \tilde{S}^{(gen)}\};$}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{~}\\
-\mbox{// Update $\tilde{\sim}$}\\
-\mbox{\textbf{for }$S^{(gen)}\in{S/\tilde{\sim}}$\textbf{ do}}\\
-\left| \indent \begin{array}{l}
-\mbox{\textbf{for }$s \in S^{(gen)}$\textbf{ do}}\\
-\left| \indent\mbox{$[s]^{\tilde{\sim}} \leftarrow S^{(gen)};$ // map $s$ to its equivalence class}\right. \\
-\mbox{\textbf{end}}
-\end{array}\right. \\
-\mbox{\textbf{end}}\\
-\mbox{~}\\
-\mbox{\textbf{return }$\tilde{\sim}, \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim}, R/\tilde{\sim} \rangle$}
-\end{array} \]
+\begin{algorithm}[H]
+\SetAlgoLined
+\caption{Maximize}
+\KwData{${\sim}$ - equivalence operation defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, $M/{\sim} = \langle S/{\sim}, S^{(ub)}/{\sim} \subset S/{\sim}, R/{\sim} \rangle$ - corresponding generalized model.} 
+\KwResult{$\tilde{\sim}$ - equivalence operation described in Problem~2, $M/\tilde{\sim} = \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim} \subset S/\tilde{\sim}, R/\tilde{\sim} \rangle$ - corresponding generalized model.}
+$S/\tilde{\sim} \leftarrow \emptyset$ \tcp*[l]{resultant quotient species set $ S/{\tilde{\sim}}\subset 2^S$}
+$S^{(ub)}/\tilde{\sim} \leftarrow S^{(ub)}/\sim$ \tcp*[l]{resultant quotient ubiquitous species set $ S^{(ub)}/{\tilde{\sim}}\subset 2^{S^{(ub)}}$}
+$R/\tilde{\sim} \leftarrow R/\sim$ \tcp*[l]{resultant quotient reaction set $ R/{\tilde{\sim}}\subset 2^R$}
+$\tilde{\sim} \leftarrow \sim$ \tcp*[l]{resultant equivalence operation $ {\tilde{\sim}}: S\cup{R} \rightarrow S/{\tilde{\sim}}\cup{R/{\tilde{\sim}}}$}
+\BlankLine
+\tcc{Update specific species generalization}
+\tcp{Map a species to a set of its $\sim$-equivalent species that participate in $\sim$-equivalent reactions}
+$r\_sim \leftarrow \lambda{s}.\{\tilde{s}\sim{s}|\exists r,\tilde{r}\in{R}: s\in reactants(r) \land \tilde{s}\in reactants(\tilde{r}) \land r \sim \tilde{r}\}$\;
+$p\_sim \leftarrow \lambda{s}.\{\tilde{s}\sim{s}|\exists r,\tilde{r}\in{R}: s\in products(r) \land \tilde{s}\in products(\tilde{r}) \land r \sim \tilde{r}\}$\;
+$sim \leftarrow \lambda{s}.r\_sim(s)\cup p\_sim(s)$\;
+\BlankLine
+$S/\tilde{\sim} \leftarrow S^{(ub)}/\tilde{\sim} \cup \{sim(s)|s \in S\backslash S^{(ub)}\}$\;
+\BlankLine
+\tcp{Merge all quotient species sets that intersect}
+\While{$\exists S^{(gen)} \neq \tilde{S}^{(gen)} \in S/\tilde{\sim}: S^{(gen)} \cap \tilde{S}^{(gen)} \neq \emptyset$}{
+	$S/\tilde{\sim} \leftarrow (S/\tilde{\sim}\backslash{\{S^{(gen)}, \tilde{S}^{(gen)}\}})\cup\{S^{(gen)}\cup \tilde{S}^{(gen)}\}$\;
+}
+\BlankLine
+\For{$S^{(gen)}\in{S/\tilde{\sim}}$}{
+	\For{$s \in S^{(gen)}$}{
+		$[s]^{\tilde{\sim}} \leftarrow S^{(gen)}$ \tcp*[l]{map $s$ to its equivalence class}
+	}
+}
+\KwRet{$\tilde{\sim}, \langle S/\tilde{\sim}, S^{(ub)}/\tilde{\sim}, R/\tilde{\sim} \rangle$}
+\end{algorithm}
 
 %\subsection*{Complete Algorithm}
 %As the most complex step of model generalization is the species partition, we precede it with the species equivalence class number maximisation step, in order to minimize the size of each species quotient class to be partitioned. We start with the equivalence operation $\mathring{\sim}$ described in Lemma~1, maximize the species equivalence class number for $\mathring{\sim}$, then obey the stoichiometry preserving property using the ChEBI ontology and greedy set cover algorithm, and finally maximize the species equivalence class number again.\\
 
 \subsection*{Complete algorithm}
-\[ \begin{array}{l}
-\mbox{\textbf{Algorithm: }Compute${\sim}$}\\
-\mbox{\textbf{Data: }}\begin{array}{l}\mbox{$M=\langle{S, S^{(ub)}\subset{S}, R}\rangle: \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$ - metabolic model}\\ \mbox{describing $n$ species,  $\breve{n}$ among them being ubiquitous,  and $m$ reactions.}\end{array}\\
-\mbox{\textbf{Result: }}\begin{array}{l}\mbox{$\sim$ - approximation of the equivalence operation described in Problem~0,}\\ \mbox{$M/\sim = \langle S/\sim, S^{(ub)}/\sim \subset S/\sim, R/\sim \rangle$ - corresponding generalized model.}\end{array}\\
-\mbox{~}\\
-\mbox{$\mathring{\sim}, M/\mathring{\sim} \leftarrow Compute\mathring{\sim}(M);$} \\
-%\mbox{$\tilde{\sim}, M/\tilde{\sim} \leftarrow Maximize(\mathring{\sim}, M/{\mathring{\sim}});$} \\
-\mbox{$\breve{\sim}, M/\breve{\sim} \leftarrow PreserveStoichiometry(\mathring{\sim}, M/{\mathring{\sim}});$} \\
-\mbox{$\sim, M/\sim \leftarrow Maximize(\breve{\sim}, M/\breve{\sim});$} \\
-\mbox{~}\\
-\mbox{\textbf{return }$\sim, M/\sim = \langle S/\sim, S^{(ub)}/\sim, R/\sim \rangle$}
-\end{array} \]
+\begin{algorithm}[H]
+\SetAlgoLined
+\caption{Compute${\sim}$}
+\KwData{$M=\langle{S, S^{(ub)}\subset{S}, R}\rangle: \sharp S = n, \sharp S^{(ub)}=\breve{n} \leq n, \sharp R = m$ - metabolic model describing $n$ species,  $\breve{n}$ among them being ubiquitous,  and $m$ reactions.}
+\KwResult{$\sim$ - approximation of the equivalence operation described in Problem~0, $M/\sim = \langle S/\sim, S^{(ub)}/\sim \subset S/\sim, R/\sim \rangle$ - corresponding generalized model.}
+$\mathring{\sim}, M/\mathring{\sim} \leftarrow Compute\mathring{\sim}(M)$\;
+$\breve{\sim}, M/\breve{\sim} \leftarrow PreserveStoichiometry(\mathring{\sim}, M/{\mathring{\sim}})$\;
+$\sim, M/\sim \leftarrow Maximize(\breve{\sim}, M/\breve{\sim})$\;
+\KwRet{$\sim, M/\sim = \langle S/\sim, S^{(ub)}/\sim, R/\sim \rangle$}
+\end{algorithm}
 
 \newpage
 \section*{Applications}

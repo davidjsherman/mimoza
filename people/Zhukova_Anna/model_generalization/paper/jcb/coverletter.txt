@@ -1,0 +1,17 @@
+Dear editorial board of Journal of Computational Biology,
+
+Please find enclosed the manuscript "Knowledge-based generalization of metabolic models", by A. Zhukova and D.J. Sherman. 
+
+In this manuscript we report a method for knowledge-based "zooming" of metabolic models that is intended to aid human understanding of genome-scale models. 
+
+The method clusters biochemical species in the model into semantically equivalent classes and generalizes them out into their common parent in the ChEBI ontology. The reactions between the same generalized species are factored into a generalized reaction. This provides a higher-level view of a model, that preserves its essential structure while hiding the details.
+
+The implementation of our method is open source and we show its applications to metabolic models. 
+
+Our work is aligned with several of your previous publications, describing methods and tools for biological models inference (e.g. Reyes et al. 2012) and analysis (e.g. Ferhat et al. 2011; Chor et al. 2007). For this reason, we hope that you will agree on the interest of this study.
+
+All co-authors have seen and approved the manuscript and there is no conflict of interest to report. We certify that the submission is original work and is not under review at any other journal.
+
+Sincerely yours,
+Anna Zhukova
+
