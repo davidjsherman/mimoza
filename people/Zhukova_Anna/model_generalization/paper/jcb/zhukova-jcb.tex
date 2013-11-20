@@ -44,7 +44,7 @@ joint project-team Magnome\\
 \newpage
 
 \begin{abstract}
-{\bf Background:} Genome-scale metabolic model reconstruction is a complicated process beginning with (semi-)automatic inference of the reactions participating in the organism's metabolism, followed by many iterations of network analysis and improvement. Despite advances in automatic model inference and analysis, reconstruction may still miss some reactions or add erroneous ones. Consequently a human expert's analysis of the model will continue to play an important role in all the iterations of the reconstruction process. This analysis is hampered by the size of the genome-scale models (typically thousands of reactions), which makes it hard for a human to understand them.
+{\bf Background:} Genome-scale metabolic model reconstruction is a complicated process beginning with (semi-)automatic inference of the reactions participating in the organism's metabolism, followed by many iterations of network analysis and improvement. Despite advances in automatic model inference and analysis tools, reconstruction may still miss some reactions or add erroneous ones. Consequently a human expert's analysis of the model will continue to play an important role in all the iterations of the reconstruction process. This analysis is hampered by the size of the genome-scale models (typically thousands of reactions), which makes it hard for a human to understand them.
 
 {\bf Results:} To aid human experts in curating and analyzing metabolic models, we have developed a method for \emph{knowledge-based generalization} that provides a higher-level view of a metabolic model, masking its inessential details while presenting its essential structure. The method groups biochemical species in the model into semantically equivalent classes based on the ChEBI ontology, identifies reactions that become equivalent with respect to the generalized species, and factors those reactions into \emph{generalized reactions}.
 
@@ -109,7 +109,7 @@ We represent a \emph{metabolic model $M$} as a pair of two sets: a set $S$ of bi
 \mbox{$R$} & \mbox{$=$} & \mbox{$\{r_1, \ldots, r_m\}$} &  \mbox{- reaction set.} 
 \end{array} \]
 
-We represent each \emph{reaction $r \in R$} as a pair of sets of species: its reactants and products. A chemical reaction may be represented by a balanced chemical equation, showing the formule of the reactants and products, and the changes that take place~\citep{Clugston2000}. This definition leads to restriction~(1) that all the species participating in the reaction must be different.
+We represent each \emph{reaction $r \in R$} as a pair of sets of species: its reactants and products. A chemical reaction may be represented by a balanced chemical equation, showing the formulae of the reactants and products, and the changes that take place~\citep{Clugston2000}. This definition leads to restriction~(1) that all the species participating in the reaction must be different.
 
 \[ \begin{array}{llr}
 \mbox{$r = $} & \mbox{$\langle\{s^{(rs)}_1, \ldots, s^{(rs)}_k\},\{s^{(ps)}_1, \ldots, s^{(ps)}_l\}\rangle
@@ -160,7 +160,7 @@ The \emph{generalized model $M/\sim$} is a pair of generalized species and react
 
 The generalized model is a \textbf{zoom out} of the initial model. It provides a higher-level view by including less species and reactions, but more generic ones. For example, \textit{3-oxodecanoyl-CoA}, \textit{3-oxolauroyl-CoA}, and \textit{3-oxohexanoyl-CoA} species of the initial model can be generalized into \textit{oxo-fatty acyl-CoA}. 
 
-Every reaction of the generalized model corresponds to at least one reaction of the initial model having the same topology (number of distinct reactant and product species) and operating on species that can be zoomed out into those participating in the generalized reaction. The appropriate level of abstraction is defined with respect to the initial model as the most general one that satisfies restrictions (1') and (2).
+Every reaction of the generalized model corresponds to at least one reaction of the initial model, having the same topology (number of distinct reactant and product species) and operating on species that can be zoomed out into those participating in the generalized reaction. The appropriate level of abstraction is defined with respect to the initial model as the most general one that satisfies restrictions (1') and (2).
 
 The method and restrictions are described in figure~\ref{fig:mg}.
 
@@ -175,20 +175,21 @@ The method and restrictions are described in figure~\ref{fig:mg}.
 \end{figure}
 
 \subsubsection*{Specific and ubiquitous species}
-We say that a \emph{ubiquitous species} is one that participates in many reactions (e.g. more than a threshold), such as \emph{water}, \emph{hydrogen}, \emph{oxygen}, etc. Grouping species increases the number of reactions they participate in, while they are already shared by many reactions and common to most of the models. During visualisation these species are often even duplicated to improve readability~\citep{Rohn2012}. That is why we do not generalize them. In the generalized model each of them forms a trivial equivalence class:
+We say that a \emph{ubiquitous species} is one that participates in many reactions (more than some threshold), such as \emph{water}, \emph{hydrogen}, \emph{oxygen}, etc. Grouping such species would increase the number of reactions each group would participate in, beyond the sharing already common to most of the models, and decrease readability; in fact, during visualisation these species are often even duplicated to improve readability~\citep{Rohn2012}. Consequently we do not generalize uniquitous species. 
+In the generalized model each forms a trivial equivalence class:
 \[ \begin{array}{l}
 \mbox{$S^{(ub)} = \{s^{(ub)}_1, \ldots, s^{(ub)}_{\breve{n}}\} \subset S: \forall i\,[s^{(ub)}_i]^{\sim} = \{s^{ub}_i\}$} 
 \end{array} \]
 
-\emph{Specific species} are the others, they are divided into non-trivial equivalence classes and generalized accordingly.  
+\emph{Specific species} are the others, which we divide into non-trivial equivalence classes and generalize accordingly.  
 
 \subsection*{Model generalization problem}
 \newtheorem{p0}[pbm]{Problem}
 \begin{p0}
-Given a metabolic model $M=\langle S, S^{(ub)} \subset S, R \rangle$ that describes $n$ species (including $\breve{n} \leq n$ ubiquitous ones) and $m$ reactions, find an equivalence operation $\sim$ that obeys the restrictions~(1') and (2), and minimizes the number of reaction equivalence classes $\sharp R/\sim$.
+Given a metabolic model $M=\langle S, S^{(ub)} \subset S, R \rangle$ that describes $n$ species (including $\breve{n} \leq n$ ubiquitous ones) and $m$ reactions, find an equivalence operation $\sim$ that obeys restrictions~(1') and (2), and minimizes the number of reaction equivalence classes $\sharp R/\sim$.
 \end{p0}
 
-We will solve the model generalization problem~1 in three steps:
+We will solve model generalization problem~1 in three steps:
 \begin{enumerate}
 \item Define the most general equivalence operation $\mathring{\sim}$ (having minimal number of species equivalence classes $\sharp{S/\mathring{\sim}}$), that does not take into account the restrictions;
 \item Modify the current equivalence operation to satisfy the restriction~(1');
@@ -207,7 +208,7 @@ Given a model $M=\langle S, S^{(ub)}\subset{S}, R \rangle : \sharp S = n, \sharp
 \end{eq0}
 \newtheorem{l1}[lm]{Lemma}
 \begin{l1}
-For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset S, R \rangle$, the corresponding quotient species set $S/\sim$ and quotient reaction set $R/\sim$ are partitions of respectively the quotient species set $S/\mathring{\sim}$ and the quotient reaction set $R/\mathring{\sim} $ induced by $\mathring{\sim}$:
+For any equivalence operation $\sim$ on the model $M=\langle S, S^{(ub)} \subset S, R \rangle$, the corresponding quotient species set $S/\sim$ and quotient reaction set $R/\sim$ are partitions of, respectively, the quotient species set $S/\mathring{\sim}$ and the quotient reaction set $R/\mathring{\sim} $ induced by $\mathring{\sim}$:
 \[ \begin{array}{c}
 \mbox{$\forall $ equivalence operation $\sim$ defined on $\langle S, S^{(ub)}, R \rangle$} \\
 \begin{array}{cl}
@@ -257,7 +258,7 @@ The Compute$\mathring{\sim}$ algorithm forms the equivalence classes for ubiquit
 \subsection*{Step 2. Stoichiometry preserving property obedience}
 \newtheorem{p2}[pbm]{Problem}
 \begin{p2}
-Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$ find an equivalence operation $\breve{\sim}$ that obeys the restriction~(1') and induces a quotient species set $S/\breve{\sim}$ of minimal size $\sharp S/\breve{\sim}$, such that $S/\breve{\sim}$ is a partition of the quotient species set $S/{\sim}$ induced by $\sim$, i.e., $\forall s \in S \; [s]^{\breve{\sim}} \subset [s]^{\sim} $. 
+Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$ find an equivalence operation $\breve{\sim}$ that obeys restriction~(1') and induces a quotient species set $S/\breve{\sim}$ of minimal size $\sharp S/\breve{\sim}$, such that $S/\breve{\sim}$ is a partition of the quotient species set $S/{\sim}$ induced by $\sim$, i.e., $\forall s \in S \; [s]^{\breve{\sim}} \subset [s]^{\sim} $. 
 \end{p2}
 \subsubsection*{Algorithm}
 We start with the given equivalence operation $\sim^0 = \sim$, and iteratively improve it, until the stoichiometry preserving property~(1') is obeyed. We denote the equivalence operation obtained at the $i$-th iteration step as $\sim^i$.
@@ -268,7 +269,7 @@ At each iteration, if there exists a species equivalence class that violates the
 \end{array} \]
 we partition this species equivalence class $[s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i}$ into two: $[s]^{{\sim}^{i+1}}  \vee [\tilde{s}]^{{\sim}^{i+1}}  = [s]^{{\sim}^i} = [\tilde{s}]^{{\sim}^i} $ to form a new approximation ${\sim}^{i+1}$ of the equivalence operation. When no species equivalence class violating the restriction~(1') can be found, the current equivalence operation is returned as result.
 
-At each iteration one equivalence species class is partitioned. In the worst case, the equality operation $=$ (each species is equivalent only to itself) will be achieved. As it obeys the restriction~(1'), the process will terminate. \\
+At each iteration one equivalence species class is partitioned. In the worst case, the equality operation $=$ (each species is equivalent only to itself) will be achieved. As it obeys restriction~(1'), the process will terminate. \\
 
 %\subsubsection*{Algorithm 2 - Stoichiometry Preserving Property Obedience}
 \[ \begin{array}{l}
@@ -338,13 +339,13 @@ At each iteration one equivalence species class is partitioned. In the worst cas
 In a species equivalence class that violates the restriction~(1') there are usually only a few conflicts present, and multiple solutions of the partition problem exist. 
 
 \subsubsection*{Species ontology}
-In order to make the choice of the species equivalence classes biologically meaningful, we use an ontology that describes hierarchical \textit{is\_a} relationships (i.e. more specific - more general) between biochemical species. %This ontology can be viewed as a directed acyclic graph, with nodes representing terms describing species, and edges representing hierarchical relationships between them. A term $T$ is an ancestor of a term $t$ if and only if there exists a path from $t$ to $T$. 
+In order to make the choice of the species equivalence classes biologically meaningful, we use an ontology that describes hierarchical \textit{is\_a} relationships (more specific to more general) between biochemical species. %This ontology can be viewed as a directed acyclic graph, with nodes representing terms describing species, and edges representing hierarchical relationships between them. A term $T$ is an ancestor of a term $t$ if and only if there exists a path from $t$ to $T$. 
 
 \newtheorem{mt}[def]{Definition}
 \begin{mt}
 A term $t$ is a \emph{model term} if it corresponds to a specific species in the metabolic model. 
 \end{mt}
-We assume that no two model terms are connected by a descendant-ancestor relationship in the ontology (Otherwise, we mark the ancestor term ubiquitous): \\
+We assume that no two model terms are connected by a descendant-ancestor (more specific--more general) relationship in the ontology; otherwise, we mark the ancestor term ubiquitous: \\
 \[ \begin{array}{c}
 \mbox{$\forall t, T \in terms \; (\exists\, species(t), species(T) \in S \land t \in descendants(T) \Rightarrow t = T)$.}
 \end{array} \]
@@ -402,15 +403,15 @@ Each ontological term $t$ defines a set $S(t)$ of its descendant leaf terms (inc
 Note, that in this case an exact cover always exists, e.g. the one formed by all the leaf terms.
 
 \subsubsection*{Choice of the ontology}
-We assume that any term that violates property~(1'') is removed from the ontology. Note, that the term $T$ is also removed.
+We assume that any term that violates property~(1'') is removed from the ontology. Note that the term $T$ is also removed.
 
-If the ontology has no multiple inheritance, i.e. $\forall S, \tilde{S} \in \Psi \; S \cap \tilde{S} \neq \emptyset \Rightarrow S \subseteq \tilde{S} \lor \tilde{S} \subseteq S$, the problem becomes trivial: The set of the root terms forms the solution. The size of the solution though depends on the characteristics of the ontology, e.g. for a completely flat ontology (i.e., with no relationships) the solution consists of singleton equivalence classes.
+If the ontology has no multiple inheritance, i.e. $\forall S, \tilde{S} \in \Psi \; S \cap \tilde{S} \neq \emptyset \Rightarrow S \subseteq \tilde{S} \lor \tilde{S} \subseteq S$, the problem becomes trivial: the set of the root terms forms the solution. The size of the solution, though, depends on the characteristics of the ontology, e.g. for a completely flat ontology (i.e., with no relationships) the solution consists of singleton equivalence classes.
 
-If the multiple inheritance is allowed, any $\Psi \subseteq 2^X$ becomes possible, and the problem becomes \textit{NP}-complete. 
+If multiple inheritance is allowed, any $\Psi \subseteq 2^X$ becomes possible, and the problem becomes \textit{NP}-complete. 
 
-We will use the ChEBI ontology~\citep{deMatos10} of chemical compounds, as it is \textit{de facto} a standard for species annotation in metabolic models. ChEBI consists of three main branches: \textit{chemical entity}, \textit{role}, and \textit{subatomic particle}. The \textit{chemical entity} branch describes terms useful for annotation of biochemical species in a metabolic model. %As of ChEBI version 101, this branch contains 37693 terms, among which 29888 are leaves. ChEBI has multiple inheritance with average number of parents 1.4 per term. Average number of siblings is also 1.4 per term. Maximal depth in the \textit{chemical entity} branch is 28, while the average one is 11.
+We use the ChEBI ontology~\citep{deMatos10} of chemical compounds, as it is \textit{de facto} a standard for species annotation in metabolic models. ChEBI consists of three main branches: \textit{chemical entity}, \textit{role}, and \textit{subatomic particle}. The \textit{chemical entity} branch describes terms useful for annotation of biochemical species in a metabolic model. %As of ChEBI version 101, this branch contains 37693 terms, among which 29888 are leaves. ChEBI has multiple inheritance with average number of parents 1.4 per term. Average number of siblings is also 1.4 per term. Maximal depth in the \textit{chemical entity} branch is 28, while the average one is 11.
 
-The level of details in the ChEBI hierarchy is not uniform: some sub-branches are more developed than others, which makes equally precise terms to be placed unequally deep in the hierarchical tree. For example, both \textit{hydrogen peroxide (CHEBI:16240)} and \textit{decanoyl-CoA (CHEBI:28493)} terms describe precise chemical molecules; but \textit{hydrogen peroxide} is only 5 terms away from the \textit{chemical entity} in the ChEBI hierarchy, while \textit{decanoyl-CoA} is 11 terms away. 
+The level of detail in the ChEBI hierarchy is not uniform: some sub-branches are more developed than others, so equally precise terms may be placed unequally deep in the hierarchical tree. For example, both \textit{hydrogen peroxide (CHEBI:16240)} and \textit{decanoyl-CoA (CHEBI:28493)} terms describe precise chemical molecules; but \textit{hydrogen peroxide} is only 5 terms away from the \textit{chemical entity} in the ChEBI hierarchy, while \textit{decanoyl-CoA} is 11 terms away. 
 
 Besides that, different types of classification are combined together in the hierarchical tree, leading to multiple inheritance. For example, in the \textit{fatty-acid (CHEBI:35366)} sub-branch, several classification types are present, including:
 \begin{itemize}
@@ -435,7 +436,7 @@ Besides that, different types of classification are combined together in the hie
 \end{itemize}
 \end{itemize}
 
-Moreover, using only hierarchical relationships in the ChEBI ontology is not always enough. Examples show, that similar reactions can happen to the acid and the base in a conjugate acid-base pair. A conjugate acid-base pair is two species, one an acid and one a base, that differ from each other through the loss or gain of a proton~\citep{stoker2012general}. For instance, in the Rhea database of chemical reactions~\citep{Alcantara2012}, the \textit{acyl-CoA oxidase (RHEA:28354)} reaction: $\textit{decanoyl-CoA} + \textit{FAD} + \textit{H+} \rightarrow \textit{trans-dec-2-enoyl-CoA} + $\textit{FADH$_2$} is found for both \textit{decanoyl-CoA~(CHEBI:28493)} and its conjugate base \textit{decanoyl-CoA(4-)~(CHEBI:61430)}. But hierarchically these species are very far from each other in the ChEBI ontology: Their least common ancestor is \textit{molecular entity (CHEBI:23367)}, a direct descendant of the root \textit{chemical entity}. To establish a conjugate acid-base pair correspondence in the ChEBI ontology not the hierarchical (\textit{is\_a}) but special \textit{is\_conjugate\_base\_of}/\textit{is\_conjugate\_acid\_of} relationships are used. To maximize the chances of a conjugate acid-base pair being in the same quotient species set, we generalize the hierarchical relationship.
+Moreover, using only hierarchical relationships in the ChEBI ontology is not always enough. Examples show, that similar reactions can happen to the acid and the base in a conjugate acid-base pair. A conjugate acid-base pair is two species, one an acid and one a base, that differ from each other through the loss or gain of a proton~\citep{stoker2012general}. For instance, in the Rhea database of chemical reactions~\citep{Alcantara2012}, the \textit{acyl-CoA oxidase (RHEA:28354)} reaction: $\textit{decanoyl-CoA} + \textit{FAD} + \textit{H+} \rightarrow \textit{trans-dec-2-enoyl-CoA} + $\textit{FADH$_2$} is found for both \textit{decanoyl-CoA~(CHEBI:28493)} and its conjugate base \textit{decanoyl-CoA(4-)~(CHEBI:61430)}. But hierarchically these species are very far from each other in the ChEBI ontology: Their least common ancestor is \textit{molecular entity (CHEBI:23367)}, a direct descendant of the root \textit{chemical entity}. To establish a conjugate acid-base pair correspondence in the ChEBI ontology, not the hierarchical (\textit{is\_a}) but the special \textit{is\_conjugate\_base\_of}/\textit{is\_conjugate\_acid\_of} relationships are used. To maximize the chances of a conjugate acid-base pair being in the same quotient species set, we generalize the hierarchical relationship.
 
 \newtheorem{dirgent}[def]{Definition}
 \begin{dirgent}
@@ -447,12 +448,12 @@ Term $t$ is a \emph{generalized direct descendant/ancestor} of a term $T$ if and
 Term $t$ is a \emph{generalized descendant/ancestor} of a term $T$ if and only if $t$ is a generalized direct descendant/ancestor of $T$ or of any generalized descendant/ancestor of $T$.
 \end{gent} 
 
-We extend $\Psi$ so that it has closure under the operation of relative complement: $\forall S,\tilde{S} \in \Psi \; S\backslash\tilde{S} \in \Psi$. This allows for solving the set cover problem instead of the exact cover one:  As $\Psi$ is closed under the operation of complement intersection, we can obtain an exact set cover $\tilde{C}$ from any set cover $C = \{S_1, S_2, \ldots, S_m\}$ by replacing its elements with their relative complements with the previous elements of $C$: $\tilde{C} = \{S_1, S_2 \backslash S_1, \ldots, S_m \backslash \bigcup^{m - 1}_{i = 1}{S_i}\}$.
+We extend $\Psi$ so that it is closed under the operation of relative complement: $\forall S,\tilde{S} \in \Psi \; S\backslash\tilde{S} \in \Psi$. This allows for solving the set cover problem instead of the exact cover one:  As $\Psi$ is closed under the operation of complement intersection, we can obtain an exact set cover $\tilde{C}$ from any set cover $C = \{S_1, S_2, \ldots, S_m\}$ by replacing its elements with their relative complements with the previous elements of $C$: $\tilde{C} = \{S_1, S_2 \backslash S_1, \ldots, S_m \backslash \bigcup^{m - 1}_{i = 1}{S_i}\}$.
 
 To approximate the solution of the set cover problem, we use a greedy algorithm.
 
 \subsubsection*{Greedy Algorithm}
-Among the available subset candidates $S_i \in \Psi$ pick the one of the largest size and add it to the resulting set cover $\Pi$. Repeat this operation until all elements of $X$ are covered. \\
+Among the available subset candidates $S_i \in \Psi$, pick the one of the largest size and add it to the resulting set cover $\Pi$. Repeat this operation until all elements of $X$ are covered. \\
 
 %\subsubsection*{Algorithm 3 - Greedy Set Cover}
 \[ \begin{array}{l}
@@ -475,7 +476,7 @@ Among the available subset candidates $S_i \in \Psi$ pick the one of the largest
 \mbox{~}\\
 \mbox{\textbf{return }$\Pi$}
 \end{array} \]
-Greedy set cover is a polynomial time approximation algorithm that achieves an approximation ratio of $H(\sharp X)$, where $H(n)$ is the $n$-th harmonic number: $H(n) = \sum^n_{i = 1}\frac{1}{i} \leq \ln{n} + 1$~\citep{Chvatal1979}. It is the best-possible polynomial time approximation algorithm for set cover, under plausible complexity assumptions~\citep{Feige1998}. 
+Greedy set cover is a polynomial time approximation algorithm that achieves an approximation ratio of $H(\sharp X)$, where $H(n)$ is the $n$-th harmonic number: $H(n) = \sum^n_{i = 1}\frac{1}{i} \leq \ln{n} + 1$~\citep{Chvatal1979}. It is the best possible polynomial time approximation algorithm for set cover, under plausible complexity assumptions~\citep{Feige1998}. 
 
 \subsection*{Step 3. Species equivalence class number maximization}
 \newtheorem{p1}[pbm]{Problem}
@@ -483,7 +484,7 @@ Greedy set cover is a polynomial time approximation algorithm that achieves an a
 Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S, S^{(ub)}\subset{S}, R \rangle$, find an equivalence operation $\tilde{\sim}$ that obeys restriction~(2) and does not change the reaction equivalence classes: $R/\sim = R/\tilde{\sim}$. 
 \end{p1}
 \subsubsection*{Algorithm}
-To satisfy the restriction~(2) we associate each species $s$ in the initial model with a pair of reaction equivalence classes sets in the quotient reaction set $R/{\sim}$: induced by reactions where it participates as a reactant or product. \\
+To satisfy restriction~(2) we associate each species $s$ in the initial model with a pair of sets of reaction equivalence classes in the quotient reaction set $R/{\sim}$, induced by reactions where it participates as a reactant or product. \\
 $s \rightarrow \langle R^{(rs)}_s = \{[r^{(rs)}_1]^{\sim}, \ldots, [r^{(rs)}_o]^{\sim}\}, R^{(ps)}_s = \{[r^{(ps)}_1]^{\sim}, \ldots, [r^{(ps)}_t]^{\sim}\}\rangle$.
 
 \newtheorem{eq1}[def]{Definition}\label{equiv1}
@@ -501,7 +502,7 @@ Given an equivalence operation $\sim$ defined on a metabolic model $M=\langle S,
 \end{array} \]
 \end{eq1}
 
-Any further partition of the quotient species set would imply the partition of the quotient reaction set. Hence the number of species equivalence classes is maximal for the current number of reaction equivalence classes, and the restriction (2) is satisfied.
+Any further partition of the quotient species set would imply the partition of the quotient reaction set. Hence the number of species equivalence classes is maximal for the current number of reaction equivalence classes, and restriction (2) is satisfied.
 
 %\subsubsection*{Algorithm 4 - Maximization of the Number of Species Equivalence Classes}
 \[ \begin{array}{l}
@@ -561,7 +562,7 @@ Any further partition of the quotient species set would imply the partition of t
 
 \newpage
 \section*{Applications}
-To illustrate the model generalization method we show its application to the genome-scale metabolic network of the yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000} \citep{Loira12}). The generalized model is attached as additional files~1, 2. The generalization has created 100 non-trivial quotient species and 217 non-trivial quotient reactions, and reduced  the total number of species from 1847 to 1072 and of reactions from 2002 to 893. %Figures representing compartments before and after generalization are attached as additional files. 
+To illustrate the model generalization method we show its application to the genome-scale metabolic network of the lipid-accumulating yeast \textit{Yarrowia lipolytica} (\emph{MODEL1111190000} \citep{Loira12}). The generalized model is attached as additional files~1, 2. The generalization has created 100 non-trivial quotient species and 217 non-trivial quotient reactions, and reduced  the total number of species from 1847 to 1072 and of reactions from 2002 to 893. %Figures representing compartments before and after generalization are attached as additional files. 
 
 The generalization method shows the best performance if the model is well-annotated with ChEBI. The species lacking ChEBI annotations are forced to form trivial quotient species in the generalized model as there is no evidence of their biochemical similarity with any other species in ChEBI.  For 430 species in the \textit{Y.~lipolytica} model no appropriate ChEBI annotation was found, thus they could not be grouped with other species. 
 
@@ -569,9 +570,9 @@ The generalization method shows the best performance if the model is well-annota
 
 The model before the grouping of equivalent reactions and species into generalized ones is shown on figure~\ref{fig:bf}: different colors correspond to different equivalence classes. The same color code is used in figure~\ref{fig:yali} representing the generalized model that operates with quotient species and reactions. For example, the violet \textit{unsaturated FA-CoA} node is a quotient of 8 species: \textit{hexadec-2-enoyl-CoA}, \textit{oleoyl-CoA}, \textit{tetradecenoyl-CoA}, \textit{trans-dec-2-enoyl-CoA}, \textit{trans-dodec-2-enoyl-CoA}, \textit{trans-hexacos-2-enoyl-CoA}, \textit{trans-octadec-2-enoyl-CoA}, and \textit{trans-tetradec-2-enoyl-CoA} (colored violet in figure~\ref{fig:bf}). In a similar manner, the light-green \textit{acCoA oxidase} quotient reaction, that converts \textit{fatty acyl-CoA} (yellow) into \textit{unsaturated FA-CoA} (violet), generalizes 6 corresponding light-green reactions of the initial model (figure~\ref{fig:bf}).
 
-The generalized model describes \textit{$\beta$-oxidation of fatty acids} pathway~\citep{Metzler01} happening inside \textit{Y.~lypolitica} peroxisome in a generic way: as a transformation of \textit{fatty acyl-CoA} (yellow) into \textit{unsaturated FA-CoA} (violet), then into \textit{hydroxy FA-CoA} (green), \textit{3-oxo FA-CoA} (magenta), and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the initial model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species present in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). That is why the \textit{beta-oxidation} chain of the reactions in the initial model, transforming step-by-step the \emph{fatty-acyl-CoA} with the longest carbon chain into the one with the shortest chain, in the generalized model appears as a cycle (generalizing all the \textit{fatty-acyls-CoA} into one species, regardless the chain-length).
+The generalized model describes the \textit{$\beta$-oxidation of fatty acids} pathway~\citep{Metzler01} happening inside the \textit{Y.~lypolitica} peroxisome in a generic way: as a transformation of \textit{fatty acyl-CoA} (yellow) into \textit{unsaturated FA-CoA} (violet), then into \textit{hydroxy FA-CoA} (green), \textit{3-oxo FA-CoA} (magenta), and back to \textit{fatty acyl-CoA} (with a shorter carbon chain); while the initial model describes the same process in more details, specifying those reactions for each of the \textit{fatty acyl-CoA} species present in the organisms' cell (e.g. \textit{decanoyl-CoA}, \textit{dodecanoyl-CoA}, etc.). That is why the \textit{beta-oxidation} chain of the reactions in the initial model, transforming step-by-step the \emph{fatty-acyl-CoA} with the longest carbon chain into the one with the shortest chain, in the generalized model appears as a cycle (generalizing all the \textit{fatty-acyls-CoA} into one species, regardless the chain-length).
   
-The more precise model is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (tetracosanoyl-CoA)} (red, inside the cycle in figure~\ref{fig:yali}): There exists a "short-cut" reaction, producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.
+The more precise model is needed for simulation, while the more general one is clearer to a human, and reveals the main properties of the model. For example, the generalized model highlights the fact that there is a particularity concerning \textit{C24:0-CoA (tetracosanoyl-CoA)} (red, inside the cycle in figure~\ref{fig:yali}): there exists a "short-cut" reaction, producing it directly from another \textit{fatty acyl-CoA} (yellow), avoiding the usual four-reaction beta-oxidation chain, used for other \textit{fatty acyls-CoA}.
 
 Another application of model generalization is metabolic model comparison. The generalization brings the models to the same level of abstraction and highlights the differences such as gaps. Examples can be found in~\citep{Zhukova}.
 
@@ -582,7 +583,7 @@ Another application of model generalization is metabolic model comparison. The g
 \centerline{\includegraphics{Zhukova_Fig_2.eps}}
 \vspace*{8pt}
 \caption{\textbf{Peroxisome of the \textit{Y.~lypolitica} model (\emph{MODEL1111190000}).} Species are represented as circular nodes, and the reactions as square ones, connected by edges to their reactants/products, according to SBGN notation~\citep{Moodie2011}. Ubiquitous species are of smaller size and colored gray. Specific species are divided into six non-trivial equivalence classes, and colored accordingly (violet, light-blue, yellow, green, light-green, magenta). The specific species that form trivial equivalence classes are all colored red. Reactions are divided into fifteen non-trivial equivalence classes, also represented by different colors. Reactions that form trivial equivalence classes are all colored blue.       
-      The size of the model does not allow for readability of the species labels, thus we do not show them.}
+      The size of the model does not allow for readablee species labels, so they are omitted.}
 \label{fig:bf}
 \end{figure}
 
@@ -594,24 +595,27 @@ Another application of model generalization is metabolic model comparison. The g
 \end{figure}
 
 \newpage
-\section*{Discussions}
+\section*{Discussion}
 
 We have developed a method that provides a semantically zoomed-out view of a metabolic model, that keeps its essential structure but hides the details. 
 
 We have implemented our method as a Python program, that is available for download from\\ \url{http://metamogen.gforge.inria.fr}. It takes an SBML model as an input, annotates its species with ChEBI terms (if the annotations are not present in the model) and generalizes it. It produces two SBML files, as an output. The first output file contains the generalized model. The second output file uses groups\citep{Hucka2012} extension of SBML, and contains the initial model plus the groups representing quotient species and reaction sets.
 
-We have applied our method to genome-scale metabolic model of \emph{Y. lipolytica} and have shown that it helps finding gaps and peculiarities, as well as compresses the information stored in the model, which can be used for model visualisation and model comparison.
+We have applied our method to genome-scale metabolic models of yeasts.
+We have illustrated it here on the lipid-accumulating yeast \emph{Y. lipolytica} and have shown that generalization helps finding gaps and peculiarities, as well as compresses the information stored in the model, which can be used for model visualisation and model comparison. In the example, the chain of $\beta$-oxidation of fatty acids reactions in the of constitutive peroxisome of \emph{Y.~lipolytica} are generalized to a cycle of reactions, highlighting the alternative path for \textit{C24:0-CoA (tetracosanoyl-CoA)}.
 
-Currently the method depends on the ChEBI ontology. It cannot generalize species that lack ChEBI annotations. The future work will include finding ways to overcome this limitation.
+Currently the generalization method depends on the ChEBI ontology. It cannot generalize species that lack ChEBI annotations. In future work we will overcome this limitation.
 
-The method zooms out a model to the most general level of abstraction that is consisted with the model structure, i.e. does not violate the restrictions (1') and (2). It remains to be seen if there are intermediate levels of abstraction that can be useful for the model analysis. 
+The method zooms out a model to the most general level of abstraction that is consisted with the model structure, i.e. does not violate the restrictions (1') and (2). It remains to be seen whether there are intermediate levels of abstraction that can be useful for model analysis. 
+In particular it may be interesting to define the maximal generalization for a group of organisms, in order to highlight the specific differences of the individual models with respect to a common generalization.
 
 \bigskip
 
 \section*{Acknowledgements}
-  The authors would like to thank Drs. Romain Bourqui and Antoine Lambert of the LaBRI MABioVis team for advice on graph layout.
-  
-  AZ was supported by a CORDI-S doctoral fellowship from Inria.
+The authors would like to thank Drs. Romain Bourqui and Antoine Lambert of the LaBRI MABioVis team for advice on graph layout.
+
+\noindent  
+AZ was supported by a CORDI-S doctoral fellowship from Inria.
 
 \section*{Author Disclosure Statement}
 No competing financial interests exist.
