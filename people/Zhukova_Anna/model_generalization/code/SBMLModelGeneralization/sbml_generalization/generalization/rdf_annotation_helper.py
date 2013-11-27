@@ -1,4 +1,4 @@
-from libsbml import CVTermList, RDFAnnotationParser, BIOLOGICAL_QUALIFIER, CVTerm, BQB_OCCURS_IN, BQB_IS
+from libsbml import CVTermList, RDFAnnotationParser, BIOLOGICAL_QUALIFIER, CVTerm, BQB_OCCURS_IN, BQB_IS, BQB_IS_VERSION_OF
 
 
 __author__ = 'anna'
@@ -6,6 +6,10 @@ __author__ = 'anna'
 
 def get_is_qualifier():
     return BQB_IS
+
+
+def get_is_vo_qualifier():
+    return BQB_IS_VERSION_OF
 
 
 def getQualifierValue(annotation, qualifierType):

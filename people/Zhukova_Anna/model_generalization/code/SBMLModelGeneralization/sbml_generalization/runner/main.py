@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from StdSuites.AppleScript_Suite import inches
 
 import getopt
 import sys
+from libsbml import SBMLReader
+from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.logger import log
 

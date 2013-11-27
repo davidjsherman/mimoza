@@ -4,7 +4,7 @@ from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.misc import add_to_map, invert_map
 from sbml_generalization.utils.obo_ontology import to_identifiers_org_format
 from rdf_annotation_helper import addAnnotation, getAllQualifierValues
-from reaction_filters import getProducts, getReactants, get_compartment, getReactionParticipants
+from reaction_filters import getProducts, getReactants, get_compartment, getReactionParticipants, getGeneAssociation
 
 GROUP_TYPE_EQUIV = "equivalent"
 
@@ -260,7 +260,10 @@ def copy_reaction(model, prototype, species_id_old2new, param_id_old2new, unit_i
 def remove_is_a_reactions(input_model):
     to_remove = []
     for reaction in input_model.getListOfReactions():
-        if 1 == reaction.getNumReactants() == reaction.getNumProducts():  # and reaction.getName().find("isa ") != -1:
+        if 1 == reaction.getNumReactants() == reaction.getNumProducts() and reaction.getName().find(
+                "isa ") != -1 and input_model.getCompartment(
+                reaction.getListOfReactants().get(0).getSpecies()) == input_model.getCompartment(
+                reaction.getListOfReactants().get(0).getSpecies()):
             to_remove.append(reaction.getId())
     for r_id in to_remove:
         input_model.removeReaction(r_id)
@@ -646,6 +649,16 @@ def parse_group_sbml(groups_sbml, chebi):
     else:
         raise GrPlError("groups plugin not installed")
     return r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps
+
+
+def get_species_info(s, model):
+    return {"compartment": model.getCompartment(s.getCompartment()).getName(), "id": s.getId(), "name": s.getName(),
+            "reaction": False}
+
+
+def get_reaction_info(r, model):
+    return {"geneAssociation": getGeneAssociation(r), "id": r.getId(), "name": r.getName(),
+            "reaction": True, "reversible": r.getReversible()}
 
 
 class GrPlError(Exception):

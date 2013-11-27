@@ -178,6 +178,7 @@ def fix_stoichiometry(reactions, term_id2clu, species_id2term_id, onto):
         conflicts = get_conflicts(reactions, term_ids, species_id2term_id)
         if not conflicts:
             continue
+            #print [[onto.getTerm(it).getName() for it in trms] for trms in conflicts]
         psi, set2score = get_psi_set(onto, term_ids, conflicts)
         i = 0
         for ts in greedy(term_ids, psi, set2score):
@@ -216,69 +217,58 @@ def get_psi_set(onto, term_ids, conflicts):
     if not common_ancestor_terms:
         common_ancestor_terms = onto.getRoots()
 
-    # sets defined by the least common ancestors
-    basics, psi, set2score = [], set(), {}
-    for T in common_ancestor_terms:
-        element = get_covered_term_ids(T)
+    psi, basics, set2score = set(), [], {}
+
+    def process(element, score):
         basics.append(element)
         element = tuple(sorted(element))
-        level = onto.getLevel(T)
-        set2score[element] = (3, sum(level) / len(level), sum(level) / len(level))
         psi.add(element)
+        set2score[element] = score
+        return element
 
-    # sets defined by the least common ancestors' children
+    # sets defined by the least common ancestors
+    #print "ANCESTORS: ", [t.getName() for t in common_ancestor_terms]
     for T in common_ancestor_terms:
-        options = onto.getAnyChildren(T, False, set())
-        for t in options:
-            covered_t_ids = get_covered_term_ids(t)
-            if len(covered_t_ids) == 0:
+        T_element = get_covered_term_ids(T)
+        T_level = onto.getLevel(T)
+        process(T_element, (3, sum(T_level) / len(T_level)))
+        for t in onto.getAnyChildren(T, False, set()):
+            element = get_covered_term_ids(t)
+            if not element:
                 continue
-            element = tuple(sorted(covered_t_ids))
-            psi.add(element)
             level = onto.getLevel(t)
-            set2score[element] = (3, sum(level) / len(level), sum(level) / len(level))
+            process(element, (3, sum(level) / len(level)))
+            # complement set
+            complement = T_element - element
+            if complement:
+                process(complement, (2, sum(T_level) / len(T_level)))
 
-            # compliment sets of those defined by the least common ancestors' children
-            for basic in basics:
-                complement_set = basic - covered_t_ids
-                if len(complement_set) > 0:
-                    c_element = tuple(sorted(complement_set))
-                    if c_element in psi:
-                        continue
-                    psi.add(c_element)
-                    set2score[c_element] = avg_tup(set2score[element])
-                    # if len(psi) > 50:
-                    #     psi = {tuple(t) for t in filter(lambda it: good(set(it), conflicts), psi)}
-
-    # for t in terms:
-    #     element = (t,)
-    #     psi.add(element)
-    #     level = onto.getLevel(t)
-    #     set2score[element] = 1#(3, max(level), min(level))
+    def avg_tup(s0, s1):
+        i0, j0 = set2score[tuple(sorted(s0))]
+        i1, j1 = set2score[tuple(sorted(s1))]
+        return min(i0, i1) - 1, min(j0, j1)
 
     # the differences between sets already in Psi
-    to_add = set()
-    ps = list(psi)
-    i = 0
-    for s in psi:
-        i += 1
-        for ss in ps[i:]:
-            sss = tuple(sorted(set(s) - set(ss)))
-            if sss and not sss in psi:
-                to_add.add(sss)
-                set2score[sss] = avg_tup(set2score[s])
-            sss = tuple(sorted(set(ss) - set(s)))
-            if sss and not sss in psi:
-                to_add.add(sss)
-                set2score[sss] = avg_tup(set2score[ss])
-    psi |= to_add
+    for _ in [0, 2]:
+        to_add = []
+        i = 0
+        for basic in basics:
+            i += 1
+            for element in basics[i:]:
+                for complement_set in (basic - element, element - basic):
+                    if len(complement_set) > 0:
+                        c_element = tuple(sorted(complement_set))
+                        if c_element in psi:
+                            continue
+                        psi.add(c_element)
+                        to_add.append(complement_set)
+                        set2score[c_element] = avg_tup(element, basic)
+        basics += to_add
 
-    return [term_set for term_set in psi if good(set(term_set))], set2score
-
-
-def avg_tup(u):
-    i0, j0, k0 = u
-    return i0 - 1, j0, k0
+    result = [term_set for term_set in psi if good(set(term_set))]
+    #for ts in result:
+    #    print [onto.getTerm(t).getName() for t in ts], set2score[tuple(sorted(ts))]
+    return result, set2score
 
 
 def greedy(terms, psi, set2score):
@@ -303,7 +293,8 @@ def update(term_id2clu, onto):
         if options:
             common_ancestor_term = options.pop()
         else:
-            name = common_ancestors.pop().getName() + " (another)" if common_ancestors else ' or '.join([t.getName() for t in terms])
+            name = common_ancestors.pop().getName() + " (another)" if common_ancestors else ' or '.join(
+                [t.getName() for t in terms])
             common_ancestor_term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
             onto.addTerm(common_ancestor_term)
             i += 1
@@ -324,15 +315,15 @@ def fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term
     #log(verbose, "  computing eq 0...")
     term_id2clu = compute_eq0(interesting_term_ids, onto)
     #log_clusters(term_id2clu, onto, verbose)
-    #log(verbose, "  maximizing...")
+    log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
     filter_clu_to_terms(term_id2clu)
-    #log_clusters(term_id2clu, onto, verbose)
-    #log(verbose, "  preserving stoichiometry...")
+    log_clusters(term_id2clu, onto, verbose)
+    log(verbose, "  preserving stoichiometry...")
     term_id2clu = fix_stoichiometry(reactions, term_id2clu, species_id2chebi_id, onto)
     filter_clu_to_terms(term_id2clu)
-    #log_clusters(term_id2clu, onto, verbose)
-    #log(verbose, "  maximizing...")
+    log_clusters(term_id2clu, onto, verbose)
+    log(verbose, "  maximizing...")
     term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
     filter_clu_to_terms(term_id2clu)
     #log_clusters(term_id2clu, onto, verbose)

@@ -34,7 +34,7 @@ def log_clusters(term_id2clu, onto, verbose):
         if len(term_ids) == 1:
             continue
         blueprint.append(len(term_ids))
-        print "   ", onto.getTerm(clu).getName(), " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in
+        print "   ", onto.getTerm(clu).getName() if isinstance(clu, str) else clu, " (", len(term_ids), ") <-> ", [onto.getTerm(it).getName() for it in
                                                                                   term_ids]
     print "   ", sorted(blueprint)
     print

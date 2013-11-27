@@ -1,4 +1,7 @@
-from libsbml import BQB_IS, BQB_IS_VERSION_OF
+from Finder.Files import _Prop_has_scripting_terminology
+from libsbml import BQB_IS, BQB_IS_VERSION_OF, SBMLReader
+import sys
+from sbml_generalization.utils.misc import invert_map
 from obo_ontology import parse, get_go, miriam_to_term_id
 
 from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues
@@ -16,6 +19,7 @@ GO_ENVELOPE = 'go:0031975'
 GO_EXTRACELLULAR = 'go:0005576'
 GO_ORGANELLE = 'go:0043226'
 GO_CELL = 'go:0005623'
+GO_LIPID_PARTICLE = 'go:0005811'
 
 __author__ = 'anna'
 
@@ -28,12 +32,82 @@ isAorPartOf = lambda t_id, onto, candidates: {it for it in candidates if
 
 
 def get_go_term(annotation, qualifier, onto):
+    if not annotation:
+        return None
     for go_id in getAllQualifierValues(annotation, qualifier):
         go_id = miriam_to_term_id(go_id)
         term = onto.getTerm(go_id)
         if term:
             return term
     return None
+
+
+def main(argv=None):
+    sbml = "/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000.xml"
+    doc = SBMLReader().readSBML(sbml)
+    model = doc.getModel()
+    onto = parse(get_go())
+    comp_go = get_comp2go(model, onto)
+
+    org2parts, cyto, others = sort_comps(onto, comp_go)
+    for part, org in org2parts.iteritems():
+        print model.getCompartment(org).getName(), model.getCompartment(part).getName()
+    print [model.getCompartment(it).getName() for it in cyto]
+    print [model.getCompartment(it).getName() for it in others]
+    print [model.getCompartment(it).getName() for it in set(comp_go.keys()) - (cyto | others | set(org2parts.keys()))]
+
+
+def get_comp2go(model, onto):
+    comp2go = {}
+    for comp in model.getListOfCompartments():
+        annotation = comp.getAnnotation()
+        term = get_go_term(annotation, BQB_IS, onto)
+        if not term:
+            term = get_go_term(annotation, BQB_IS_VERSION_OF, onto)
+        if not term:
+            term_ids = onto.getIdsByName(comp.getName())
+            if term_ids:
+                term = onto.getTerm(term_ids.pop())
+            else:
+                term = None
+        comp2go[comp.getId()] = term.getId() if term else ''
+    return comp2go
+
+
+def sort_comps(onto, comp2go):
+    terms = {onto.getTerm(it) for it in comp2go.itervalues() if it and onto.getTerm(it)}
+    term2comp_id = {}
+    for comp_id, go_id in comp2go.iteritems():
+        if go_id:
+            term2comp_id[go_id] = comp_id
+
+    # cell
+    inside_cell = isAorPartOf(GO_CELL, onto, terms)
+
+    # organelle
+    organelle_parts = partOf(GO_ORGANELLE, onto, terms) | partOf(GO_NUCLEUS, onto, terms) | partOf(GO_LIPID_PARTICLE,
+                                                                                                   onto, terms)
+    not_org_parts = terms - organelle_parts
+    organelles = isA(GO_ORGANELLE, onto, not_org_parts) | isA(GO_NUCLEUS, onto, not_org_parts) | isA(GO_LIPID_PARTICLE,
+                                                                                                     onto,
+                                                                                                     not_org_parts)
+    organelle_parts |= organelles
+    organelle_part2organelle = {term2comp_id[it.getId()]: term2comp_id[it.getId()] for it in organelles}
+    organelle_ids = {it.getId() for it in organelles}
+    for it in organelle_parts:
+        orgs = onto.partOf(it.getId(), organelle_ids)
+        if orgs:
+            organelle_part2organelle[term2comp_id[it.getId()]] = term2comp_id[orgs.pop()]
+
+    cytoplasms = {term2comp_id[it.getId()] for it in isA(GO_CYTOPLASM, onto, inside_cell)}
+
+    inside_cell = {term2comp_id[it.getId()] for it in inside_cell}
+    #outside_cell = terms - inside_cell
+    #
+    ## extracellular
+    #extracellulars = isAorPartOf(GO_EXTRACELLULAR, onto, outside_cell)
+
+    return organelle_part2organelle, cytoplasms, inside_cell
 
 
 def nest_compartments(model):
@@ -314,3 +388,7 @@ def get_outer_most(onto, matches):
         if no_better_candidate:
             return it
     return None
+
+
+if __name__ == "__main__":
+    sys.exit(main())

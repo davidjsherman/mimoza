@@ -1,6 +1,8 @@
+from libsbml import SBMLReader
 from misc import add_to_map
 from obo_ontology import miriam_to_term_id, Term, to_identifiers_org_format
-from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation, get_is_qualifier
+from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation, \
+    get_is_qualifier, get_is_vo_qualifier
 
 __author__ = 'anna'
 
@@ -9,9 +11,17 @@ def get_is_annotations(entity):
     return (miriam_to_term_id(it) for it in getAllQualifierValues(entity.getAnnotation(), get_is_qualifier()))
 
 
+def get_is_vo_annotations(entity):
+    return (miriam_to_term_id(it) for it in getAllQualifierValues(entity.getAnnotation(), get_is_vo_qualifier()))
+
+
 def get_term(entity, chebi):
     for is_annotation in get_is_annotations(entity):
         term = chebi.getTerm(is_annotation)
+        if term:
+            return term
+    for is_vo_annotation in get_is_vo_annotations(entity):
+        term = chebi.getTerm(is_vo_annotation)
         if term:
             return term
     return None
@@ -62,6 +72,7 @@ def get_species_term(species, chebi, model):
 
 
 def get_species_to_chebi(model, chebi):
+
     species2chebi = {}
     used_terms = set()
     entity2species = {}
@@ -93,6 +104,7 @@ def get_species_to_chebi(model, chebi):
         if not possibilities:
             possibilities = chebi.getIdsByName(name_bis)
         if not possibilities:
+            #if entity.getName().find("protein") == -1: print entity.getName(), entity.getId()
             while chebi.getTerm("chebi:unknown_{0}".format(i)):
                 i += 1
             term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
