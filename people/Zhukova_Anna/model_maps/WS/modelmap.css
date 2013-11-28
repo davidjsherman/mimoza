@@ -1,0 +1,78 @@
+body {
+    background-color: #ffffff;
+    vertical-align: middle;
+}
+h1 {
+    text-color: #ac3131;
+    color: #ac3131;
+    text-align: center;
+    font-family: "Lucida Sans Unicode";
+    font-size: 20px;
+    line-height: 26px;
+}
+li {
+    font-family: "Lucida Sans Unicode";
+    font-size: 13px;
+    line-height: 17px;
+}
+p {
+    font-family: "Lucida Sans Unicode";
+    font-size: 13px;
+    line-height: 17px;
+    vertical-align: middle;
+}
+a {
+    text-color: #ac3131;
+    color: #ac3131;
+    font-family: "Lucida Sans Unicode";
+    font-size: 13px;
+    line-height: 17px;
+    margin: 0px;
+    padding: 0px;
+    display:inline-block;
+    vertical-align:middle;
+}
+a:visited {
+    text-color: #773131;
+    color: #773131;
+    font-family: "Lucida Sans Unicode";
+    font-size: 13px;
+    line-height: 17px;
+    margin: 0px;
+    padding: 0px;
+    display:inline-block;
+    vertical-align:middle;
+}
+div.margin {
+    text-align: justify;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    margin: 0px;
+    vertical-align: middle;
+}
+
+div.nomargin {
+    text-align: justify;
+    padding: 0px;
+    margin: 0px;
+    vertical-align: middle;
+}
+
+span.pant {
+    text-color: #ac3131;
+    color: #ac3131;
+    font-weight: bold;
+    vertical-align: middle;
+}
+div.image {
+    padding-top: 25px;
+    vertical-align: middle;
+    text-align: center;
+}
+p.indent {
+    padding-left: 50px;
+    padding-right: 50px;
+    vertical-align: middle;
+}

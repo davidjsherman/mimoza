@@ -9,10 +9,18 @@
 
 <body>
 <!--<button type="button" onclick="centerMap()">Centre<br>map</button>-->
-<div id="explanations">
-    <p><span class="pant">Zoom in</span> to see a more detailed model.</p>
-    <p><span class="pant">Zoom out</span> to see the generalized model.</p>
-    <p><span class="pant">Click</span> on species and reactions to see annotations.</p>
+<div id="explanations" class="margin">
+    <p><span class="pant">Zoom in</span> to see the more detailed
+  model. <span class="pant">Zoom out</span> to see the generalized
+  model. <span class="pant">Click</span> on species and reactions to see
+  their annotations.</p>
+</div>
+<div>
+    <form name="search_form" onclick="search();">
+        <label>
+            <input type="text" name="search_input">
+        </label><input type="button" value="Search" >
+    </form>
 </div>
 <div class="nomargin" id="map" style="width: 1024px; height: 1024px"></div>
 
@@ -83,6 +91,10 @@
                 }
                 var popup = L.popup({autoPan: true, keepInView:true}).setContent(content).setLatLng(map.unproject(feature.geometry.coordinates, 1));
                 layer.bindPopup(popup);
+                srch = document.search_form.search_input.value.toLowerCase()
+                if (srch == feature.properties.name.toLowerCase()){
+                    popup.openOn(map)
+                }
 
             }
         });
@@ -106,8 +118,13 @@
         }
     });
 
-    function centerMap() {
-        map.setView([0, 0], map.getZoom());
+//    function centerMap() {
+//        map.setView([0, 0], map.getZoom());
+//        getJson(gjsn);
+//    }
+
+    function search() {
+        getJson(gjsn);
     }
 
     L.tileLayer('./peroxisome/{z}/{x}/{y}.png', {
