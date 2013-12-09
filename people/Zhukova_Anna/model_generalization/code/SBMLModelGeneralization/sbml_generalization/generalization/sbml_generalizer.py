@@ -2,7 +2,7 @@ from libsbml import SBMLReader
 from sbml_generalization.utils.logger import log, log_r_clusters
 from reaction_filters import filterReactionByNotTransport, filterReactionByCompartmentOfAllParticipants
 from sbml_helper import save_as_generalized_sbml, save_as_comp_generalized_sbml, save_as_chain_shortened_sbml, \
-    remove_is_a_reactions, model_to_l3v1, annotate_ubiquitous
+    remove_is_a_reactions, model_to_l3v1, annotate_ubiquitous, remove_unused_elements
 from mark_ubiquitous import getCofactors
 from model_generalizer import map2chebi, shorten_chains, generalize_species, generalize_reactions
 
@@ -17,6 +17,7 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, sh_ch
     input_model = input_doc.getModel()
 
     remove_is_a_reactions(input_model)
+    remove_unused_elements(input_model)
     ## go only for reactions inside organelles
     reactions = [reaction for reaction in input_model.getListOfReactions() if
                  filterReactionByNotTransport(reaction, input_model)]

@@ -1,4 +1,4 @@
-from libsbml import SBMLReader
+from libsbml import SBMLReader, Species
 from misc import add_to_map
 from obo_ontology import miriam_to_term_id, Term, to_identifiers_org_format
 from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation, \
@@ -28,11 +28,6 @@ def get_term(entity, chebi):
 
 
 def normalize(name):
-    end = name.find("[")
-    if end == -1:
-        end = name.find("_")
-    if end != -1:
-        name = name[:end]
     return name.strip()
 
 
@@ -100,6 +95,10 @@ def get_species_to_chebi(model, chebi):
     fake_terms = set()
     for entity, species_set in entity2species.iteritems():
         name, name_bis = get_names(entity)
+        if isinstance(entity, Species):
+            index = name.find("[{0}]".format(model.getCompartment(entity.getCompartment()).getName()))
+            if -1 != index:
+                name = name[:index].strip()
         possibilities = chebi.getIdsByName(name)
         if not possibilities:
             possibilities = chebi.getIdsByName(name_bis)

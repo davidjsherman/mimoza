@@ -36,8 +36,6 @@ def need_to_reverse((ubiquitous_reactants, ubiquitous_products, specific_reactan
 
 def get_key_elements(r, s_id2clu, s_id2term_id):
     reactants, products = getReactants(r), getProducts(r)
-    #chebi_transform = lambda s_ids: {s_id2term_id[s_id] if (s_id in s_id2term_id) else s_id for s_id in s_ids}
-    #reactants, products = chebi_transform(reactants), chebi_transform(products)
 
     def classify(s_ids):
         specific, ubiquitous = [], []
@@ -78,7 +76,7 @@ def get_p_reactions_by_term(t_id, reactions, term_id2s_ids):
     return (r for r in reactions if len(term_id2s_ids[t_id] & getProducts(r)) > 0)
 
 
-def get_reactions_ry_term(t_id, reactions, term_id2s_ids):
+def get_reactions_by_term(t_id, reactions, term_id2s_ids):
     return (r for r in reactions if len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0)
 
 
@@ -104,12 +102,11 @@ def merge_based_on_neighbours(lst):
                 neighbours |= new_neighbours
                 terms |= new_terms
                 to_remove.append((new_neighbours, new_terms))
-        new_lst = [it for it in new_lst if not it in to_remove]
-        new_lst.append((neighbours, terms))
+        new_lst = [it for it in new_lst if not it in to_remove] + [(neighbours, terms)]
     return new_lst
 
 
-def maximize(reactions, term_id2clu, species_id2term_id):
+def maximize(reactions, term_id2clu, species_id2term_id, onto):
     clu2term_ids = invert_map(term_id2clu)
     term_id2s_ids = invert_map(species_id2term_id)
     s_id2clu = {s_id: term_id2clu[t] for (s_id, t) in species_id2term_id.iteritems() if t in term_id2clu}
@@ -117,23 +114,21 @@ def maximize(reactions, term_id2clu, species_id2term_id):
     r2clu = generalize_reactions(reactions, s_id2clu, species_id2term_id)
 
     for (clu, term_ids) in clu2term_ids.iteritems():
+        #print [onto.getTerm(it).getName() for it in term_ids]
         if len(term_ids) <= 1:
             continue
         neighbours2term_ids = {}
-        neighbourless_terms = []
+        neighbourless_terms = set()
         for t_id in term_ids:
-            # reactions this t_id participated in
-            transform_r = lambda r: ("in", r2clu[r]) if aligned_to_v_key(r, term_id2clu, species_id2term_id) else (
-                "out", r2clu[r])
-            transform_p = lambda r: ("out", r2clu[r]) if aligned_to_v_key(r, term_id2clu, species_id2term_id) else (
-                "in", r2clu[r])
-            neighbours = {transform_r(r) for r in get_r_reactions_by_term(t_id, reactions, term_id2s_ids)} | \
-                         {transform_p(r) for r in get_p_reactions_by_term(t_id, reactions, term_id2s_ids)}
+            neighbours = {("in" if t_id in get_vertical_key(r, s_id2clu, species_id2term_id)[3] else "out", r2clu[r])
+                          for r in
+                          get_reactions_by_term(t_id, reactions, term_id2s_ids)}
             if neighbours:
                 key = tuple(sorted(neighbours))
                 add_to_map(neighbours2term_ids, key, t_id)
             else:
-                neighbourless_terms.append(t_id)
+                neighbourless_terms.add(t_id)
+            #print onto.getTerm(t_id).getName(), neighbours
         new_lst = merge_based_on_neighbours(neighbours2term_ids.iteritems())
         i = 0
         if len(new_lst) > 1:
@@ -165,7 +160,7 @@ def get_conflicts(reactions, term_ids, species_id2term_id):
     r2term_ids = {}
     term2s_ids = invert_map(species_id2term_id)
     for t_id in term_ids:
-        for r in get_reactions_ry_term(t_id, reactions, term2s_ids):
+        for r in get_reactions_by_term(t_id, reactions, term2s_ids):
             add_to_map(r2term_ids, r, t_id)
     return [terms for terms in r2term_ids.itervalues() if len(terms) > 1]
 
@@ -220,14 +215,16 @@ def get_psi_set(onto, term_ids, conflicts):
     psi, basics, set2score = set(), [], {}
 
     def process(element, score):
+        el = tuple(sorted(element))
+        if element in psi:
+            return False
         basics.append(element)
-        element = tuple(sorted(element))
-        psi.add(element)
-        set2score[element] = score
-        return element
+        psi.add(el)
+        set2score[el] = score
+        return True
 
     # sets defined by the least common ancestors
-    #print "ANCESTORS: ", [t.getName() for t in common_ancestor_terms]
+    # print "ANCESTORS: ", [t.getName() for t in common_ancestor_terms]
     for T in common_ancestor_terms:
         T_element = get_covered_term_ids(T)
         T_level = onto.getLevel(T)
@@ -237,11 +234,11 @@ def get_psi_set(onto, term_ids, conflicts):
             if not element:
                 continue
             level = onto.getLevel(t)
-            process(element, (3, sum(level) / len(level)))
-            # complement set
-            complement = T_element - element
-            if complement:
-                process(complement, (2, sum(T_level) / len(T_level)))
+            if process(element, (3, sum(level) / len(level))):
+                # complement set
+                complement = T_element - element
+                if complement:
+                    process(complement, (2, sum(T_level) / len(T_level)))
 
     def avg_tup(s0, s1):
         i0, j0 = set2score[tuple(sorted(s0))]
@@ -249,7 +246,7 @@ def get_psi_set(onto, term_ids, conflicts):
         return min(i0, i1) - 1, min(j0, j1)
 
     # the differences between sets already in Psi
-    for _ in [0, 2]:
+    for _ in [0, 3]:
         to_add = []
         i = 0
         for basic in basics:
@@ -315,16 +312,16 @@ def fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term
     #log(verbose, "  computing eq 0...")
     term_id2clu = compute_eq0(interesting_term_ids, onto)
     #log_clusters(term_id2clu, onto, verbose)
-    log(verbose, "  maximizing...")
-    term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
+    #log(verbose, "  maximizing...")
+    term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id, onto)
     filter_clu_to_terms(term_id2clu)
-    log_clusters(term_id2clu, onto, verbose)
-    log(verbose, "  preserving stoichiometry...")
+    #log_clusters(term_id2clu, onto, verbose)
+    #log(verbose, "  preserving stoichiometry...")
     term_id2clu = fix_stoichiometry(reactions, term_id2clu, species_id2chebi_id, onto)
     filter_clu_to_terms(term_id2clu)
-    log_clusters(term_id2clu, onto, verbose)
-    log(verbose, "  maximizing...")
-    term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id)
+    #log_clusters(term_id2clu, onto, verbose)
+    #log(verbose, "  maximizing...")
+    term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id, onto)
     filter_clu_to_terms(term_id2clu)
     #log_clusters(term_id2clu, onto, verbose)
     return term_id2clu

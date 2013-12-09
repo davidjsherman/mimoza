@@ -226,20 +226,6 @@ def get_compartment(reaction, model):
     return model.getSpecies(s_id).getCompartment()
 
 
-def check_if_not_transport(reaction, model):
-    c_id = None
-    for speciesId in getReactants(reaction) | getProducts(reaction):
-        species = model.getSpecies(speciesId)
-        compartment_id = species.getCompartment()
-        if not compartment_id:
-            return False
-        if not c_id:
-            c_id = compartment_id
-        if compartment_id != c_id:
-            return False
-    return True
-
-
 def _getPrefixedNotesValue(notes, result, prefix):
     if not notes:
         return
