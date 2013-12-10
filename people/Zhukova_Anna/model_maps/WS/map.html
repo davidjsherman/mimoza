@@ -64,7 +64,7 @@
             },
             onEachFeature: function (feature, layer) {
                 var content = '';
-                if (feature.properties.reaction) {
+                if ('reaction' == feature.properties.type) {
                     var ga = feature.properties.gene_association;
                     var genes = ga.match(/YALI[\d|\w]+/g);
                     ga = ga.toLowerCase();
@@ -79,15 +79,15 @@
                     while (ga.indexOf('\n') != -1) {
                         ga = ga.replace('\n', '<br>');
                     }
-                    content = "<div class='nomargin'><p>Catalyzed by an enzyme encoded by the following combination of genes:<br>" + ga + "</p></div>";
+                    content = feature.properties.name + "<br>" + feature.properties.formula + "<div class='nomargin'><p>Gene association:<br>" + ga + "</p></div>";
                 } else {
-                    var ch = feature.properties.chebi.toUpperCase();
-                    if (ch.indexOf("UNKNOWN") == -1) {
-                        ch = "<a href=\'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=" + ch + "\' target=\'_blank\'>" + ch + "</a>";
+                    var ch = feature.properties.chebi;
+                    if (ch && ch.toUpperCase().indexOf("UNKNOWN") == -1) {
+                        ch = " (<a href=\'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=" + ch.toUpperCase() + "\' target=\'_blank\'>" + ch.toUpperCase() + "</a>)";
                     } else {
-                        ch = "<i>no ChEBI id :(</i>";
+                        ch = "";
                     }
-                    content = ch;
+                    content = feature.properties.name +  ch;
                 }
                 var popup = L.popup({autoPan: true, keepInView:true}).setContent(content).setLatLng(map.unproject(feature.geometry.coordinates, 1));
                 layer.bindPopup(popup);
@@ -107,12 +107,12 @@
         var style = document.getElementById('map').style;
         if (map.getZoom() >= 3) {
             if (simpCounter == 0) {
-                getJson(gjsn_f);
+                getJson(gjsn);
                 simpCounter = 1;
             }
         } else if (map.getZoom() <= 2) {
             if (simpCounter == 1) {
-                getJson(gjsn);
+                getJson(gjsn_f);
                 simpCounter = 0;
             }
         }
