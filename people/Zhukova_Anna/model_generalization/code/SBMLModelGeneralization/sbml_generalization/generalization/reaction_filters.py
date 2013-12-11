@@ -229,7 +229,7 @@ def get_compartment(reaction, model):
 def _getPrefixedNotesValue(notes, result, prefix):
     if not notes:
         return
-    for i in range(0, notes.getNumChildren()):
+    for i in xrange(0, notes.getNumChildren()):
         child = notes.getChild(i)
         note = child.getCharacters()
         if note:

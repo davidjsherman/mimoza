@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from collections import defaultdict
 from misc import add_to_map, remove_from_map
 import misc
 
@@ -117,16 +118,18 @@ def subOntology(onto, terms_collection, relationships={"is_a"}, step=None, min_d
     for t in terms_collection:
         addT(t, step)
 
-    # for level in sorted(level2term.keys()):
-    #     print level, " : ", level2term[level]
     return inducedOntology(terms, onto, relationships)
 
 
 def save(onto, path):
+    processed = set()
     with open(path, 'w') as f:
         for term in onto.getAllTerms():
-            f.write("[Term]\n")
             id_ = term.getId()
+            if id_ in processed:
+                continue
+            processed.add(id_)
+            f.write("[Term]\n")
             f.write("id: {0}\n".format(id_))
             for a_id in term.getAllIds():
                 if a_id == id_:
@@ -180,13 +183,13 @@ def parse(obo_file):
             if comment != -1:
                 value = value[0:comment].strip()
             if prefix == "id":
-                term.setId(value.lower())
+                term.setId(value)
             elif prefix == "alt_id":
-                term.addAltId(value.lower())
+                term.addAltId(value)
             elif prefix == "name":
                 term.setName(value)
             elif prefix == "is_a":
-                parent = ontology.getTerm(value.lower())
+                parent = ontology.getTerm(value)
                 if parent:
                     parent.children |= {term}
                 else:
@@ -217,7 +220,7 @@ def parse(obo_file):
                 modifier = value.find("{")
                 if modifier != -1:
                     value = value[:modifier]
-                term.addAltId(value.strip().lower().replace(" ", "."))
+                term.addAltId(value.strip().replace(" ", "."))
 
     if term:
         ontology.addTerm(term)
@@ -287,14 +290,14 @@ class Ontology:
         self.roots = set()
         self.id2term = {}
         self.alt_id2term = {}
-        self.name2term_ids = {}
+        self.name2term_ids = defaultdict(set)
         self.rel_map = {}
 
     def getAllTerms(self):
-        return set(self.id2term.values())
+        return self.id2term.values()
 
     def getAllTermIds(self):
-        return set(self.id2term.keys())
+        return set(self.id2term.iterkeys())
 
     def getLeaves(self):
         return {it for it in self.id2term.itervalues() if not it.getChildren()}
@@ -333,14 +336,12 @@ class Ontology:
         t_id = term.getId()
         self.id2term[t_id] = term
         for alt_id in term.getAllIds():
-            alt_id = alt_id.lower()
+            alt_id = alt_id
             self.alt_id2term[alt_id] = term
         names = set(term.getSynonyms())
         names.add(term.getName())
         for name in names:
             name = name.lower().strip()
-            if not (name in self.name2term_ids):
-                self.name2term_ids[name] = set()
             self.name2term_ids[name].add(t_id)
         if not term.getParentIds():
             self.roots.add(term)
@@ -355,7 +356,6 @@ class Ontology:
         if t_id in self.id2term:
             del self.id2term[t_id]
         for alt_id in term.getAllIds():
-            alt_id = alt_id.lower()
             if alt_id in self.alt_id2term:
                 del self.alt_id2term[alt_id]
         names = set(term.getSynonyms())

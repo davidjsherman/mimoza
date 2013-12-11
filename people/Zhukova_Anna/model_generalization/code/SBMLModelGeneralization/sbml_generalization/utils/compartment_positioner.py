@@ -54,7 +54,7 @@ def main(argv=None):
         print model.getCompartment(org).getName(), model.getCompartment(part).getName()
     print [model.getCompartment(it).getName() for it in cyto]
     print [model.getCompartment(it).getName() for it in others]
-    print [model.getCompartment(it).getName() for it in set(comp_go.keys()) - (cyto | others | set(org2parts.keys()))]
+    print [model.getCompartment(it).getName() for it in set(comp_go.iterkeys()) - (cyto | others | set(org2parts.iterkeys()))]
 
 
 def get_comp2go(model, onto):
@@ -168,7 +168,7 @@ def nest_compartments_with_gene_ontology(t_ids, onto):
             out = onto.getTerm(out)
         comp2out[term] = out
 
-    comps = set(comp2out.keys())
+    comps = set(comp2out.iterkeys())
     # cell
     inside_cell = isAorPartOf(GO_CELL, onto, comps)
 
@@ -224,7 +224,7 @@ def nest_compartments_with_gene_ontology(t_ids, onto):
                 comp2out[organelle] = out
 
     # surround those that are not surrounded, by extracellular
-    for comp in comp2out.keys():
+    for comp in comp2out.iterkeys():
         if comp in inside_cell:
             if not comp2out[comp]:
                 if comp in organelle_parts and comp != cell_outer:

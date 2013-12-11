@@ -17,7 +17,7 @@ def getQualifierValue(annotation, qualifierType):
         return None
     cvTerms = CVTermList()
     RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
-    for i in range(cvTerms.getSize()):
+    for i in xrange(cvTerms.getSize()):
         term = cvTerms.get(i)
         if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifierType == term.getBiologicalQualifierType():
             return term.getResourceURI(0).replace("%3A", ":")
@@ -42,7 +42,7 @@ def getPrefixedQualifierValues(annotation, qualifierType, prefix):
     cvTerms = CVTermList()
     RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
     result = set()
-    for i in range(cvTerms.getSize()):
+    for i in xrange(cvTerms.getSize()):
         term = cvTerms.get(i)
         if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifierType == term.getBiologicalQualifierType():
             value = term.getResourceURI(0).replace("%3A", ":")
@@ -69,7 +69,7 @@ def isAnnotationEmpty(element):
         return True
     cvTerms = CVTermList()
     RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
-    for i in range(cvTerms.getSize()):
+    for i in xrange(cvTerms.getSize()):
         term = cvTerms.get(i)
         if term.getResources():
             return False
