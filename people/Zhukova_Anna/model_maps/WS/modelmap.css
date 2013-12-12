@@ -10,6 +10,14 @@ h1 {
     font-size: 20px;
     line-height: 26px;
 }
+h2 {
+    text-color: #ac3131;
+    color: #ac3131;
+    text-align: center;
+    font-family: "Lucida Sans Unicode";
+    font-size: 14px;
+    line-height: 18px;
+}
 li {
     font-family: "Lucida Sans Unicode";
     font-size: 13px;
@@ -20,6 +28,22 @@ p {
     font-size: 13px;
     line-height: 17px;
     vertical-align: middle;
+}
+th {
+    text-align: center;
+}
+.centre {
+    text-align: center;
+}
+td a, p.popup a {
+    font-size: 10px;
+}
+p.popup {
+    max-width: 512px;
+}
+p.popup table {
+    max-width: 512px;
+    width: 90%;
 }
 a {
     text-color: #ac3131;

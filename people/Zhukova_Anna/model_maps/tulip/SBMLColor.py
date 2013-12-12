@@ -6,6 +6,7 @@ grey = tlp.Color(200, 200, 200)
 light_red = tlp.Color(255, 100, 100)
 light_blue = tlp.Color(100, 100, 255)
 white = tlp.Color(255, 255, 255)
+transparent = tlp.Color(0, 0, 0, 0)
 
 class SBMLColor(tlp.Algorithm):
 	def __init__(self, context):
@@ -25,7 +26,7 @@ class SBMLColor(tlp.Algorithm):
 		viewBorderColor =  self.graph.getColorProperty("viewBorderColor")
 		viewBorderWidth =  self.graph.getDoubleProperty("viewBorderWidth")
 		
-		viewColor.setAllNodeValue(grey)
+#		viewColor.setAllNodeValue(grey)
 		viewColor.setAllEdgeValue(grey)
 		viewBorderWidth.setAllNodeValue(2)
 		
@@ -42,7 +43,18 @@ class SBMLColor(tlp.Algorithm):
 		for n in self.graph.getNodes():			
 			comp = compartment[n]
 			c = get_col(comp)
-			viewColor[n] = c if not ubiquitous[n] else grey
+			type_ = self.graph['type'][n]
+			if 'compartment' == type_:
+				viewColor[n] = transparent
+				viewBorderColor[n] = grey
+				continue
+			if not type_ in ['reaction', 'species']:
+				viewBorderColor[n] == transparent
+				continue
+			if self.graph.isMetaNode(n):
+				viewColor[n] = tlp.Color(c.getR(), c.getG(), c.getB(), 80)
+			else:
+				viewColor[n] = c if not ubiquitous[n] else grey
 			cs = {get_col(compartment[m]) for m in self.graph.getInOutNodes(n)} - {c}
 			viewBorderColor[n] = cs.pop() if cs else viewColor[n]
 			

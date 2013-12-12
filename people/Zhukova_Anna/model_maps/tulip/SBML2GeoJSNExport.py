@@ -8,7 +8,24 @@ _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x+y for x in _NUMERALS for y in _NUMERALS)}
 LOWERCASE, UPPERCASE = 'x', 'X'
 DIMENSION = 512
+MARGIN = 3.8
 	
+	
+def get_gene_association_list(ga):
+	gann = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
+	if not gann:
+		return ''
+	res = to_cnf(gann, False)
+	gann = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
+	return gann
+	
+			
+def get_formula(graph, n):
+	ins = '&'.join(["{0} * {1}".format(int(graph['stoichiometry'][e]), graph['name'][graph.source(e)]) for e in graph.getInEdges(n)])
+	outs = '&'.join(["{0} * {1}".format(int(graph['stoichiometry'][e]), graph['name'][graph.target(e)]) for e in graph.getOutEdges(n)])
+	return ins, outs	
+	
+				
 class SBML2GeoJSNExport(tlp.Algorithm):
 	def __init__(self, context):
 		tlp.Algorithm.__init__(self, context)
@@ -25,7 +42,6 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 		layout = graph.getLayoutProperty("viewLayout")
 		size = graph.getSizeProperty("viewSize")
 		color = graph.getColorProperty("viewColor")
-		fake = graph.getBooleanProperty("fake")
 		chebi = graph.getStringProperty("chebi_id")
 		
 		(m_x, m_y), (M_x, M_y) = getMinMax(graph)
@@ -33,25 +49,19 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 		y_scale = DIMENSION/(M_y - m_y)
 		
 		features = []
-		
-		def stoich(e):
-			st = int(graph['stoichiometry'][e])
-			return '' if 1 == st else st
 			
 		for n in graph.getNodes():
-			if fake[n]: continue
+			if not type_[n] in ['reaction', 'species']:
+				continue
 			geom = geojson.Point([(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale])
-			props = {"name": name[n], "color": triplet(color[n]), \
+			props = {"id": graph['id'][n], "name": name[n], "color": triplet(color[n]), \
 				"radius": size[n].getW() * x_scale, "type": type_[n]}
 			if 'reaction' == type_[n]:
-				gann = ga[n].replace(' and ', ' & ').replace(' or ', ' | ').replace('(and ', '(& ').replace('(or ', '(| ').replace(' and)', ' &)').replace(' or)', ' |)')
-				if gann:
-					res = to_cnf(gann, False)
-					gann = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
-				props["gene_association"] = gann
-				ins = ' + '.join(["{0} * {1}".format(stoich(e), graph['name'][graph.source(e)]) for e in graph.getInEdges(n)])
-				outs = ' + '.join(["{0} * {1}".format(stoich(e), graph['name'][graph.source(e)]) for e in graph.getOutEdges(n)])
-				props["formula"] = ins + (' -> ' if graph['reversible'][n] else ' <-> ') + outs				
+				props["gene_association"] = get_gene_association_list(ga[n])
+				props["reversible"] = graph['reversible'][n]
+				ins, outs = get_formula(graph, n)	
+				props['reactants'] = ins
+				props['products'] = outs			
 			else:
 				props["chebi"] = chebi[n]
 			f = geojson.Feature(geometry=geom, properties=props)
@@ -59,7 +69,7 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 		fc = geojson.FeatureCollection(features, \
 			geometry=geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]]))
 		with open(self.dataSet["file::GeoJSON"], 'w') as f:
-			f.write("var gjsn = {0}\n".format(geojson.dumps(fc).replace('"id": null', '')))
+			f.write("var gjsn_{1} = {0}\n".format(geojson.dumps(fc).replace('"id": null', ''), graph.getName()))
 		return True
 
 # The line below does the magic to register the plugin to the plugin database
@@ -97,5 +107,5 @@ def getMinMax(graph):
 		m_x -= (h - w) / 2
 		M_x += (h - w) / 2
 		
-	return (m_x, m_y), (M_x, M_y)
+	return (m_x - MARGIN, m_y - MARGIN), (M_x + MARGIN, M_y + MARGIN)
 	

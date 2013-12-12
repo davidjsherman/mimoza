@@ -31,6 +31,9 @@ tulipplugins.registerPluginOfGroup("SBMLResizer", "SBMLResizer", "anna", "09/12/
 def get_n_size(graph, n):
 	ubiquitous =  graph.getBooleanProperty("ubiquitous")
 	viewMetaGraph = graph.getGraphProperty("viewMetaGraph")
+	if 'compartment' == graph['type'][n]:
+		bb = tlp.computeBoundingBox(viewMetaGraph[n])
+		return tlp.Size(bb.getW(), bb.getH())
 	num = 1
 	if graph.isMetaNode(n):
 		num = viewMetaGraph[n].numberOfNodes()

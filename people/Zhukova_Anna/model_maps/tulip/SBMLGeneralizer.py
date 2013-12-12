@@ -84,3 +84,6 @@ def factor_nodes(graph):
 		root["name"][metaNode] = root["viewLabel"][metaNode]
 		
 	root.delSubGraph(clone)
+	for n in (graph.getNodes() if 'reaction' == graph['type'][n] and graph.isMetaNode(n)):
+		for e in graph.getInOutEdges(n):
+			graph['stoichiometry'][e] = graph['stoichiometry'][graph["viewMetaGraph"][e][0]]

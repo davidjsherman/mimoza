@@ -31,8 +31,7 @@ class SBMLGeneralizationBasedLayout(tlp.Algorithm):
 			graph.getRoot()["viewBorderWidth"][n] = 1
 			graph.getRoot()["viewBorderColor"][n] = tlp.Color(255, 255, 255)
 		clone = graph.getSuperGraph().inducedSubGraph(nds)
-		clone.setName(graph.getName() + " (clone)")
-		fake = clone.getBooleanProperty("fake")
+		clone.setName(graph.getName() + "_full")
 		vl = {}
 		fakenn2color = {}
 		
@@ -76,16 +75,15 @@ class SBMLGeneralizationBasedLayout(tlp.Algorithm):
 			mg = viewMetaGraph[n]
 					
 			# add a fake node to keep a common background for similar nodes
-	#		nn = clone.addNode()
-	#		clone["viewSize"][nn] = graph["viewSize"][n]
-	#		clone["viewShape"][nn] = graph["viewShape"][n]			
-	#		clone["viewBorderWidth"][nn] = 0	
-	#		clone["viewBorderColor"][nn] = graph["viewBorderColor"][n]
-	#		co = graph["viewLayout"][n]
-	#		clone["viewLayout"][nn] = tlp.Coord(co.getX(), co.getY(), 0)
-	#		fakenn2color[nn] = mn2color[n]
-	#		clone["reaction"][nn] = False
-	#		clone["fake"][nn] = True
+			nn = clone.addNode()
+			clone["viewSize"][nn] = graph["viewSize"][n]
+			clone["viewShape"][nn] = graph["viewShape"][n]			
+			clone["viewBorderWidth"][nn] = 0	
+			clone["viewBorderColor"][nn] = graph["viewBorderColor"][n]
+			co = graph["viewLayout"][n]
+			clone["viewLayout"][nn] = tlp.Coord(co.getX(), co.getY(), 0)
+			fakenn2color[nn] = mn2color[n]
+			clone["type"][nn] = 'background'
 			
 			meta_neighbours = lambda nodes: sorted([t for t in nodes if graph.isMetaNode(t)], \
 			key=lambda t: -viewSize[t].getW())

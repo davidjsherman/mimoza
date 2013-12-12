@@ -91,10 +91,16 @@ class SBMLImport(tlp.ImportModule):
 			if dot == -1:
 				dot = sbml_file.find(".xml")
 			chebi = parse(get_chebi())
+			
+			reader = SBMLReader()
+			input_document = reader.readSBML(sbml_file)
+			input_model = input_document.getModel()
 
 			r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps, species_id2chebi_id = {}, {}, {}, set(), {}
 			try:
 				r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
+        		cofactors = getCofactors(chebi)
+				chebi, species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, chebi)
 			except GrPlError:
 				pass
 			if not r_id2g_id and not ub_sps:
@@ -102,12 +108,9 @@ class SBMLImport(tlp.ImportModule):
 				out_sbml = "{0}_generalized.xml".format(sbml_file[0:dot] if dot != -1 else sbml_file)
 				r_id2g_id, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps = \
 					generalize_model(groups_sbml, out_sbml, sbml_file, chebi, cofactors=None, sh_chains=False,
-					                 verbose=False, using_compartments=True)
+					                 verbose=False)
 
 			# do your custom processing on the sbml file here
-			reader = SBMLReader()
-			input_document = reader.readSBML(sbml_file)
-			input_model = input_document.getModel()
 			check_names(input_model)
 			check_compartments(input_model)
 
