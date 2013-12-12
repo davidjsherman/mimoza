@@ -32,8 +32,9 @@
 <div class="nomargin" id="map" style="width: 1024px; height: 1024px"></div>
 
 <script>
+    map = initializeMap(4);
     var name2popup = {};
-    map = initializeMap(gjsn__peroxisome, gjsn__peroxisome_full, name2popup);
+    getComplexJson(map, gjsn__peroxisome, gjsn__peroxisome_full, name2popup);
 
 
 //    function centerMap() {

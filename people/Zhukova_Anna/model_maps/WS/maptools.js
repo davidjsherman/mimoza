@@ -68,33 +68,15 @@ function formatLink(comp) {
 }
 
 
-function initializeMap(json_zo, json_zi, name2popup) {
+function initializeMap(max_zoom) {
     var map = L.map('map', {
-        maxZoom: 4,
+        maxZoom: max_zoom,
         minZoom: 2,
         crs: L.CRS.Simple
     }).setView([0, 0], 2);
-    var southWest = map.unproject([0, 4096], 4);
-    var northEast = map.unproject([4096, 0], 4);
+    var southWest = map.unproject([0, 1024], 2);
+    var northEast = map.unproject([1024, 0], 2);
     map.setMaxBounds(new L.LatLngBounds(southWest, northEast));
-
-    getJson(map, json_zo, name2popup);
-
-    var zo = true;
-    map.on('zoomend', function (e) {
-        var style = document.getElementById('map').style;
-        if (map.getZoom() >= 3) {
-            if (zo) {
-                getJson(map, json_zi, name2popup);
-                zo = false;
-            }
-        } else if (map.getZoom() <= 2) {
-            if (!zo) {
-                getJson(map, json_zo, name2popup);
-                zo = true;
-            }
-        }
-    });
     return map;
 }
 
@@ -134,17 +116,28 @@ function addPopups(map, name2popup, feature, layer) {
     name2popup[feature.properties.name.toLowerCase()] = popup;
 }
 
-function getJson(map, jsn, name2popup) {
-    try {
-        for (var prop in name2popup) {
-            if (name2popup.hasOwnProperty(prop)) {
-                delete name2popup[prop];
+
+function getComplexJson(map, json_zo, json_zi, name2popup) {
+    var geojsonLayer = getSimpleJson(map, json_zo, name2popup);
+
+    var zo = true;
+    map.on('zoomend', function (e) {
+        if (map.getZoom() >= 3) {
+            if (zo) {
+                geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
+                zo = false;
+            }
+        } else if (map.getZoom() <= 2) {
+            if (!zo) {
+                geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
+                zo = true;
             }
         }
-        map.removeLayer(geojsonLayer);
-    } catch (err) {
-    }
-    geojsonLayer = L.geoJson(jsn, {
+    });
+}
+
+function getSimpleJson(map, jsn, name2popup) {
+    return L.geoJson(jsn, {
         pointToLayer: function(feature, latlng) {
             return pnt2layer(map, feature, latlng);
         },
@@ -152,7 +145,16 @@ function getJson(map, jsn, name2popup) {
             addPopups(map, name2popup, feature, layer);
         }
     }).addTo(map);
-    return name2popup;
+}
+
+function getJson(map, jsn, name2popup, geojsonLayer) {
+    for (var prop in name2popup) {
+        if (name2popup.hasOwnProperty(prop)) {
+            delete name2popup[prop];
+        }
+    }
+    map.removeLayer(geojsonLayer);
+    return getSimpleJson(map, jsn, name2popup);
 }
 
 function search(map, name2popup) {
