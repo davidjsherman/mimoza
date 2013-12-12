@@ -60,6 +60,13 @@ function formatChebi(ch) {
     return "";
 }
 
+function formatLink(comp) {
+    if (comp) {
+        return "<a href=\'" + comp + ".html\' target=\'_blank\'>Go inside</a>";
+    }
+    return "";
+}
+
 
 function initializeMap(json_zo, json_zi, name2popup) {
     var map = L.map('map', {
@@ -91,6 +98,42 @@ function initializeMap(json_zo, json_zi, name2popup) {
     return map;
 }
 
+function pnt2layer(map, feature, latlng) {
+    var e = feature.geometry.coordinates;
+    var col = feature.properties.color;
+    var x = e[0], y = e[1];
+    var w = feature.properties.width / 2;
+    var h = feature.properties.height / 2;
+    var southWest = map.unproject([x - w, y + h], 1),
+        northEast = map.unproject([x + w, y - h], 1),
+        bounds = new L.LatLngBounds(southWest, northEast);
+    return L.rectangle(bounds, {
+        color: feature.properties.color,
+        fillColor: feature.properties.color,
+        fillOpacity: 0,
+        opacity: 1,
+        weight: 0
+    });
+}
+
+function addPopups(map, name2popup, feature, layer) {
+    var content = '';
+    if ('reaction' == feature.properties.type) {
+        var ga_res = formatGA(feature.properties.gene_association);
+        var formula = formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products);
+        content = '<h2><b>' + feature.properties.name + "</h2><p class='popup'>" + formula + '</p><p class="popup">'+ ga_res + "</p>";
+    } else if ('species' == feature.properties.type) {
+        var ch = formatChebi(feature.properties.chebi);
+        content = '<h2>' + feature.properties.name + "</h2><p>" + ch + "</p>";
+    } else if ('compartment' == feature.properties.type) {
+        var link = formatLink(feature.properties.name);
+        content = '<h2>' + feature.properties.name + "</h2><p>" + link + "</p>";
+    }
+    var popup = L.popup({autoPan: true, keepInView:true, maxWidth:1020}).setContent(content).setLatLng(map.unproject(feature.geometry.coordinates, 1));
+    layer.bindPopup(popup);
+    name2popup[feature.properties.name.toLowerCase()] = popup;
+}
+
 function getJson(map, jsn, name2popup) {
     try {
         for (var prop in name2popup) {
@@ -102,38 +145,13 @@ function getJson(map, jsn, name2popup) {
     } catch (err) {
     }
     geojsonLayer = L.geoJson(jsn, {
-        pointToLayer: function (feature, latlng) {
-            var e = feature.geometry.coordinates;
-            var col = feature.properties.color;
-            var x = e[0], y = e[1];
-            var r = feature.properties.radius / 2;
-            var southWest = map.unproject([x - r, y + r], 1),
-                northEast = map.unproject([x + r, y - r], 1),
-                bounds = new L.LatLngBounds(southWest, northEast);
-            return L.rectangle(bounds, {
-                color: feature.properties.color,
-                fillColor: feature.properties.color,
-                fillOpacity: 0,
-                opacity: 1,
-                weight: 0
-            });
+        pointToLayer: function(feature, latlng) {
+            return pnt2layer(map, feature, latlng);
         },
-        onEachFeature: function (feature, layer) {
-            var content = '';
-            if ('reaction' == feature.properties.type) {
-                var ga_res = formatGA(feature.properties.gene_association);
-                var formula = formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products);
-                content = '<h2><b>' + feature.properties.name + "</h2><p class='popup'>" + formula + '</p><p class="popup">'+ ga_res + "</p>";
-            } else {
-                var ch = formatChebi(feature.properties.chebi);
-                content = '<h2>' + feature.properties.name + "</h2><p>" + ch + "</p>";
-            }
-            var popup = L.popup({autoPan: true, keepInView:true, maxWidth:1020}).setContent(content).setLatLng(map.unproject(feature.geometry.coordinates, 1));
-            layer.bindPopup(popup);
-            name2popup[feature.properties.name.toLowerCase()] = popup;
+        onEachFeature: function(feature, layer) {
+            addPopups(map, name2popup, feature, layer);
         }
-    });
-    geojsonLayer.addTo(map);
+    }).addTo(map);
     return name2popup;
 }
 

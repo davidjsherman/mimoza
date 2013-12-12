@@ -15,9 +15,12 @@ def get_gene_association_list(ga):
 	gann = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
 	if not gann:
 		return ''
-	res = to_cnf(gann, False)
-	gann = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
-	return gann
+	try:
+		res = to_cnf(gann, False)
+		gann = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
+		return gann
+	except:
+		return ''
 	
 			
 def get_formula(graph, n):
@@ -51,11 +54,11 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 		features = []
 			
 		for n in graph.getNodes():
-			if not type_[n] in ['reaction', 'species']:
+			if not type_[n] in ['reaction', 'species', 'compartment']:
 				continue
 			geom = geojson.Point([(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale])
 			props = {"id": graph['id'][n], "name": name[n], "color": triplet(color[n]), \
-				"radius": size[n].getW() * x_scale, "type": type_[n]}
+				"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,  "type": type_[n]}
 			if 'reaction' == type_[n]:
 				props["gene_association"] = get_gene_association_list(ga[n])
 				props["reversible"] = graph['reversible'][n]

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <link rel="stylesheet" href="./leaflet.css"/>
+    <link rel='shortcut icon' type='image/x-icon' href='fav.ico' />
+    <link rel="stylesheet" type="text/css" href="modelmap.css">
+</head>
+
+<body>
+<!--<button type="button" onclick="centerMap()">Centre<br>map</button>-->
+<div id="explanations" class="margin">
+    <p><span class="pant">Zoom in</span> to see the more detailed
+  model. <span class="pant">Zoom out</span> to see the generalized
+  model. <span class="pant">Click</span> on species and reactions to see
+  their annotations.</p>
+</div>
+
+<script src="./leaflet.js" type="text/javascript"></script>
+<script src="./maptools.js" type="text/javascript"></script>
+<script src="http://code.jquery.com/jquery-1.10.2.min.js" type="text/javascript"></script>
+<script src="./cyto.json" type="text/javascript"></script>
+<div>
+    <form name="search_form" onclick="search(map, name2popup);">
+        <label>
+            <input type="text" name="search_input">
+        </label><input type="button" value="Search" >
+    </form>
+</div>
+<!--our viewpoint-->
+<div class="nomargin" id="map" style="width: 1024px; height: 1024px"></div>
+
+<script>
+    var name2popup = {};
+    map = initializeMap(gjsn__cytoplasm, gjsn__cytoplasm, name2popup);
+
+
+//    function centerMap() {
+//        map.setView([0, 0], map.getZoom());
+//        getJson(gjsn);
+//    }
+
+
+
+    L.tileLayer('./cytoplasm/{z}/{x}/{y}.png', {
+        continuousWorld: true,
+        noWrap: true,
+        tileSize: 256,
+        reuseTiles: true,
+        maxZoom: 4,
+        minZoom: 1,
+        attribution: 'Cytoplasm of <a href="http://www.ebi.ac.uk/biomodels-main/MODEL1111190000">Y. lipolytica</a>',
+        tms: true
+    }).addTo(map);
+</script>
+</body>
+
+</html>

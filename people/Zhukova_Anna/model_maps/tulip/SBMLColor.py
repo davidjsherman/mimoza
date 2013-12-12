@@ -3,6 +3,7 @@ import tulipplugins
 import colorsys
 
 grey = tlp.Color(200, 200, 200)
+transparent_grey = tlp.Color(200, 200, 200, 80)
 light_red = tlp.Color(255, 100, 100)
 light_blue = tlp.Color(100, 100, 255)
 white = tlp.Color(255, 255, 255)
@@ -45,7 +46,7 @@ class SBMLColor(tlp.Algorithm):
 			c = get_col(comp)
 			type_ = self.graph['type'][n]
 			if 'compartment' == type_:
-				viewColor[n] = transparent
+				viewColor[n] = transparent_grey
 				viewBorderColor[n] = grey
 				continue
 			if not type_ in ['reaction', 'species']:
