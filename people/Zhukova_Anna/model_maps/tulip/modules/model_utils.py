@@ -121,15 +121,21 @@ def merge_nodes(graph, ns):
 	n = ns[0]
 	ns = ns[1:]
 	for m in ns:
-		for from_m in root.getInNodes(m):
+		for old_e in root.getInEdges(m):
+			from_m = root.source(old_e)
 			e = root.addEdge(from_m, n)
+			for propName in root.getProperties():
+				root[propName][e] = root[propName][old_e]
 			for gr in graphs_to_update:
 				if gr.isElement(from_m) and gr.isElement(m):
 					if not gr.isElement(n):
 						gr.addNode(n)	
 					gr.addEdge(e)
-		for to_m in root.getOutNodes(m):
+		for old_e in root.getOutEdges(m):
+			to_m = root.target(old_e)
 			e = root.addEdge(n, to_m)
+			for propName in root.getProperties():
+				root[propName][e] = root[propName][old_e]
 			for gr in graphs_to_update:
 				if gr.isElement(to_m) and gr.isElement(m):
 					if not gr.isElement(n):
