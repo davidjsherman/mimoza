@@ -24,7 +24,7 @@ class SBMLGeneralizationBasedLayout(tlp.Algorithm):
 				ns = list(mg.getNodes())
 				nds.extend(ns)
 				c = graph["viewColor"][n]
-				mn2color[n] = tlp.Color(c.getR(), c.getG(), c.getB(), 200)
+				mn2color[n] = c
 			else:
 				nds.append(n)
 		for n in nds:

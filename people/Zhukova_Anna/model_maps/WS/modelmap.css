@@ -45,6 +45,18 @@ p.popup table {
     max-width: 512px;
     width: 90%;
 }
+h1 a{
+    text-color: #ac3131;
+    color: #ac3131;
+    text-align: center;
+    font-family: "Lucida Sans Unicode";
+    font-size: 18px;
+    line-height: 26px;
+    margin: 0px;
+    padding: 0px;
+    display:inline-block;
+    vertical-align:middle;
+}
 a {
     text-color: #ac3131;
     color: #ac3131;
@@ -59,13 +71,6 @@ a {
 a:visited {
     text-color: #773131;
     color: #773131;
-    font-family: "Lucida Sans Unicode";
-    font-size: 13px;
-    line-height: 17px;
-    margin: 0px;
-    padding: 0px;
-    display:inline-block;
-    vertical-align:middle;
 }
 div.margin {
     text-align: justify;
