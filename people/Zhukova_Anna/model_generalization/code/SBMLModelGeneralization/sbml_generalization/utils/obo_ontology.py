@@ -154,7 +154,7 @@ def save(onto, path):
             f.write("is_transitive: false\n")
 
 
-def parse(obo_file):
+def parse(obo_file, relationships=None):
     if not obo_file or obo_file.find(".obo") == -1 or not os.path.exists(obo_file):
         return None
     ontology = Ontology()
@@ -200,7 +200,8 @@ def parse(obo_file):
                 if comment_start != -1:
                     value = value[0:comment_start]
                 first, second = value.strip().split(" ")
-                ontology.addRelationship(term.getId(), first, second.lower())
+                if not relationships or first in relationships:
+                    ontology.addRelationship(term.getId(), first, second.lower())
             elif prefix == "synonym":
                 start = value.find('"')
                 if start == -1:

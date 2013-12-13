@@ -40,10 +40,10 @@ def log_clusters(term_id2clu, onto, verbose):
     print
 
 
-def log_r_clusters(r2clu, verbose):
+def log_r_clusters(r_id2clu, model, verbose):
     if not verbose:
         return
-    clu2r = invert_map(r2clu)
+    clu2r = invert_map(r_id2clu)
     print "quotient reaction sets:"
     blueprint = []
     for clu in sorted(clu2r.iterkeys(), key=lambda k: -len(clu2r[k])):
@@ -51,6 +51,6 @@ def log_r_clusters(r2clu, verbose):
         if len(rs) == 1:
             continue
         blueprint.append(len(rs))
-        print "   ", list(rs)[0].getName(), " (", len(rs), ") "
+        print "   ", model.getReaction(list(rs)[0]).getName(), " (", len(rs), ") "
     print "   ", sorted(blueprint)
     print

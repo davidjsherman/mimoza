@@ -1,6 +1,6 @@
 from collections import defaultdict
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
-from sbml_generalization.utils.logger import log, log_chains, log_clusters, log_r_clusters
+from sbml_generalization.utils.logger import log_chains, log_clusters
 from sbml_generalization.utils.misc import add_to_map, invert_map
 from sbml_generalization.utils.obo_ontology import Term, subOntology
 from reaction_filters import getReactants, getProducts
@@ -13,12 +13,11 @@ __author__ = 'anna'
 EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
 
 
-def get_reactions_to_factor(reactions, s_id2clu, s_id2term_id):
-	vk2r = {}
-	for r in reactions:
-		key = get_vertical_key(r, s_id2clu, s_id2term_id)
-		add_to_map(vk2r, key, r)
-	return vk2r.values()
+def get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id):
+	vk2r = defaultdict(set)
+	for r in model.getListOfReactions():
+		vk2r[get_vertical_key(r, s_id2clu, s_id2term_id)].add(r.getId())
+	return vk2r.itervalues()
 
 
 def get_vertical_key(r, s_id2clu, s_id2term_id):
@@ -59,14 +58,13 @@ def aligned_to_v_key(r, term_id2clu, s_id2term_id):
 	return not need_to_reverse(get_key_elements(r, term_id2clu, s_id2term_id))
 
 
-def generalize_reactions(reactions, s_id2clu, s_id2term_id):
-	rs_clusters = get_reactions_to_factor(reactions, s_id2clu, s_id2term_id)
-	r2clu, i = {}, 0
-	for rs in rs_clusters:
-		for r in rs:
-			r2clu[r] = i
+def generalize_reactions(model, s_id2clu, s_id2term_id):
+	r_id2clu, i = {}, 0
+	for r_ids in get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id):
+		for r_id in r_ids:
+			r_id2clu[r_id] = i
 		i += 1
-	return r2clu
+	return r_id2clu
 
 
 def get_r_reactions_by_term(t_id, reactions, term_id2s_ids):
@@ -77,8 +75,8 @@ def get_p_reactions_by_term(t_id, reactions, term_id2s_ids):
 	return (r for r in reactions if len(term_id2s_ids[t_id] & getProducts(r)) > 0)
 
 
-def get_reactions_by_term(t_id, reactions, term_id2s_ids):
-	return (r for r in reactions if len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0)
+def get_reactions_by_term(t_id, model, term_id2s_ids):
+	return (r for r in model.getListOfReactions() if len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0)
 
 
 def get_r_reactions_by_species(s_id, reactions):
@@ -107,14 +105,17 @@ def merge_based_on_neighbours(lst):
 	return new_lst
 
 
-def maximize(reactions, term_id2clu, species_id2term_id, s_id2c_id, onto):
+def maximize(model, term_id2clu, species_id2term_id):
 	clu2term_ids = invert_map(term_id2clu)
 	term_id2s_ids = defaultdict(set)
+	s_id2clu = {}
 	for s_id, t_id in species_id2term_id.iteritems():
-		term_id2s_ids[(t_id, s_id2c_id[s_id])].add(s_id)
-	s_id2clu = {s_id: term_id2clu[t, s_id2c_id[s_id]] for (s_id, t) in species_id2term_id.iteritems() if (t, s_id2c_id[s_id]) in term_id2clu}
+		c_id = model.getSpecies(s_id).getCompartment()
+		term_id2s_ids[t_id, c_id].add(s_id)
+		if (t_id, c_id) in term_id2clu:
+			s_id2clu[s_id] = term_id2clu[t_id, c_id]
 
-	r2clu = generalize_reactions(reactions, s_id2clu, species_id2term_id)
+	r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id)
 
 	for (clu, term_ids) in clu2term_ids.iteritems():
 		#print [onto.getTerm(it).getName() for it in term_ids]
@@ -123,8 +124,8 @@ def maximize(reactions, term_id2clu, species_id2term_id, s_id2c_id, onto):
 		neighbours2term_ids = {}
 		neighbourless_terms = set()
 		for t_id in term_ids:
-			neighbours = {("in" if t_id in get_vertical_key(r, s_id2clu, species_id2term_id)[3] else "out", r2clu[r])
-			              for r in get_reactions_by_term(t_id, reactions, term_id2s_ids)}
+			neighbours = {("in" if t_id in get_vertical_key(r, s_id2clu, species_id2term_id)[3] else "out", r_id2clu[r.getId()])
+			              for r in get_reactions_by_term(t_id, model, term_id2s_ids)}
 			if neighbours:
 				key = tuple(neighbours)
 				add_to_map(neighbours2term_ids, key, t_id)
@@ -158,23 +159,25 @@ def compute_eq0(interesting_term_ids, comp_ids, onto):
 	return term_id2clu
 
 
-def get_conflicts(reactions, term_ids, species_id2term_id, s_id2c_id):
-	r2term_ids = {}
+def get_conflicts(model, term_ids, species_id2term_id):
 	term_id2s_ids = defaultdict(set)
 	for s_id, t_id in species_id2term_id.iteritems():
-		term_id2s_ids[(t_id, s_id2c_id[s_id])].add(s_id)
+		c_id = model.getSpecies(s_id).getCompartment()
+		if (t_id, c_id) in term_ids:
+			term_id2s_ids[t_id, c_id].add(s_id)
+	r2term_ids = defaultdict(set)
 	for t_id in term_ids:
-		for r in get_reactions_by_term(t_id, reactions, term_id2s_ids):
-			add_to_map(r2term_ids, r, t_id)
+		for r in get_reactions_by_term(t_id, model, term_id2s_ids):
+			r2term_ids[r.getId()].add(t_id)
 	return [{t_id for (t_id, _) in terms} for terms in r2term_ids.itervalues() if len(terms) > 1]
 
 
-def fix_stoichiometry(reactions, term_id2clu, species_id2term_id, s_id2c_id, onto):
+def fix_stoichiometry(model, term_id2clu, species_id2term_id, onto):
 	clu2term_ids = invert_map(term_id2clu)
 	for clu, term_ids in clu2term_ids.iteritems():
 		if len(term_ids) <= 1:
 			continue
-		conflicts = get_conflicts(reactions, term_ids, species_id2term_id, s_id2c_id)
+		conflicts = get_conflicts(model, term_ids, species_id2term_id)
 		if not conflicts:
 			continue
 			#print [[onto.getTerm(it).getName() for it in trms] for trms in conflicts]
@@ -309,34 +312,38 @@ def filter_clu_to_terms(term2clu):
 			del term2clu[terms.pop()]
 
 
-def fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, s_id2c_id, verbose):
+def fix_incompatibilities(model, onto, species_id2chebi_id, interesting_term_ids, verbose):
 	#log(verbose, "  computing eq 0...")
-	term_id2clu = compute_eq0(interesting_term_ids, set(s_id2c_id.itervalues()), onto)
+	term_id2clu = compute_eq0(interesting_term_ids, {c.getId() for c in model.getListOfCompartments()}, onto)
 	#log_clusters(term_id2clu, onto, verbose)
 	#log(verbose, "  maximizing...")
-	term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id, s_id2c_id, onto)
+	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id)
 	filter_clu_to_terms(term_id2clu)
 	#log_clusters(term_id2clu, onto, verbose)
 	#log(verbose, "  preserving stoichiometry...")
-	term_id2clu = fix_stoichiometry(reactions, term_id2clu, species_id2chebi_id, s_id2c_id, onto)
+	term_id2clu = fix_stoichiometry(model, term_id2clu, species_id2chebi_id, onto)
 	filter_clu_to_terms(term_id2clu)
 	#log_clusters(term_id2clu, onto, verbose)
 	#log(verbose, "  maximizing...")
-	term_id2clu = maximize(reactions, term_id2clu, species_id2chebi_id, s_id2c_id, onto)
+	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id)
 	filter_clu_to_terms(term_id2clu)
 	#log_clusters(term_id2clu, onto, verbose)
 	return term_id2clu
 
 
-def generalize_species(reactions, species_id2chebi_id, ubiquitous_chebi_ids, s_id2c_id, onto, verbose=False):
+def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
 	interesting_term_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
-	term_id2clu = fix_incompatibilities(reactions, onto, species_id2chebi_id, interesting_term_ids, s_id2c_id, verbose)
+	term_id2clu = fix_incompatibilities(model, onto, species_id2chebi_id, interesting_term_ids, verbose)
 	if not term_id2clu:
 		return {}
 	term_id2clu = update(term_id2clu, onto)
 	log_clusters(term_id2clu, onto, verbose)
-	return {s_id: (s_id2c_id[s_id], onto.getTerm(term_id2clu[t, s_id2c_id[s_id]][1])) for (s_id, t) in species_id2chebi_id.iteritems() if (t, s_id2c_id[s_id]) in term_id2clu}
-
+	result = {}
+	for (s_id, t) in species_id2chebi_id.iteritems():
+		c_id = model.getSpecies(s_id).getCompartment()
+		if (t, c_id) in term_id2clu:
+			result[s_id] = (c_id, onto.getTerm(term_id2clu[t, c_id][1]))
+	return result
 
 def get_ubiquitous_reactants_products(r, ubiquitous_ids):
 	reactants, products = getReactants(r), getProducts(r)

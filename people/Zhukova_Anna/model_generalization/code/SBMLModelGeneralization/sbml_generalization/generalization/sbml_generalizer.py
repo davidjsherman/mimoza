@@ -1,10 +1,10 @@
+from StdSuites.AppleScript_Suite import inches
 from libsbml import SBMLReader
 from sbml_generalization.utils.logger import log, log_r_clusters
-from reaction_filters import filterReactionByNotTransport
-from sbml_helper import save_as_comp_generalized_sbml, save_as_chain_shortened_sbml, \
+from sbml_helper import save_as_comp_generalized_sbml, \
     remove_is_a_reactions, model_to_l3v1, annotate_ubiquitous, remove_unused_elements
 from mark_ubiquitous import getCofactors
-from model_generalizer import map2chebi, shorten_chains, generalize_species, generalize_reactions
+from model_generalizer import map2chebi, generalize_species, generalize_reactions
 
 
 __author__ = 'anna'
@@ -51,10 +51,8 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, sh_ch
     #                #reactions = [rn for rn in input_model.getListOfReactions() if filterReactionByNotTransport(rn, input_model)]
 
     # generalize
-    reactions = [rn for rn in input_model.getListOfReactions()]
-    s_id2c_id = {s.getId(): s.getCompartment() for s in input_model.getListOfSpecies()}
-    s_id2clu = generalize_species(reactions, species_id2chebi_id, ubiquitous_chebi_ids, s_id2c_id, ontology, verbose)
-    r2clu = generalize_reactions(reactions, s_id2clu, species_id2chebi_id)
-    log_r_clusters(r2clu, verbose)
-    r_id2g_eq, s_id2gr_id = save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu, verbose)
+    s_id2clu = generalize_species(input_model, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
+    r_id2clu = generalize_reactions(input_model, s_id2clu, species_id2chebi_id)
+    log_r_clusters(r_id2clu, input_model, verbose)
+    r_id2g_eq, s_id2gr_id = save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, s_id2clu, verbose)
     return r_id2g_eq, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps

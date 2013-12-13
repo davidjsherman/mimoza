@@ -3,6 +3,7 @@
 
 import getopt
 import sys
+from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.logger import log
 
@@ -29,7 +30,7 @@ def main(argv=None):
 	try:
 		chebi, in_sbml, out_sbml, groups_sbml, sh_chains, verbose = process_args(argv)
 		log(verbose, "parsing ChEBI...")
-		ontology = parse(chebi)
+		ontology = parse(chebi, EQUIVALENT_TERM_RELATIONSHIPS | {'has_role'})
 		generalize_model(groups_sbml, out_sbml, in_sbml, ontology, None, sh_chains, verbose)
 	except Usage, err:
 		print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
