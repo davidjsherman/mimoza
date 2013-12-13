@@ -2,7 +2,7 @@ from collections import defaultdict
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.utils.logger import log_chains, log_clusters
 from sbml_generalization.utils.misc import add_to_map, invert_map
-from sbml_generalization.utils.obo_ontology import Term, subOntology
+from sbml_generalization.utils.obo_ontology import Term, subOntology, filter_ontology
 from reaction_filters import getReactants, getProducts
 
 from sbml_generalization.generalization.mark_ubiquitous import getUbiquitousSpeciesSet
@@ -432,10 +432,8 @@ def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 
 def map2chebi(cofactors, input_model, onto):
 	species_id2chebi_id, fake_terms = get_species_to_chebi(input_model, onto)
-	terms = (onto.getTerm(t_id) for t_id in species_id2chebi_id.itervalues())
-	ontology = subOntology(onto, terms, relationships={'is_a'} | EQUIVALENT_TERM_RELATIONSHIPS, step=None, min_deepness=11)
-	for t in fake_terms:
-		onto.removeTerm(t)
-	cofactor_ids = {cofactor_id for cofactor_id in cofactors if ontology.getTerm(cofactor_id)}
-	ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(input_model, species_id2chebi_id, ontology)
-	return ontology, species_id2chebi_id, ubiquitous_chebi_ids
+	terms = (onto.getTerm(t_id) for t_id in species_id2chebi_id.itervalues() if not onto.getTerm(t_id) in fake_terms)
+	filter_ontology(onto, terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS, min_deepness=11)
+	cofactor_ids = {cofactor_id for cofactor_id in cofactors if onto.getTerm(cofactor_id)}
+	ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(input_model, species_id2chebi_id, onto)
+	return species_id2chebi_id, ubiquitous_chebi_ids

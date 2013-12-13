@@ -24,7 +24,7 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, sh_ch
     log(verbose, "mapping species to ChEBI...")
     if not cofactors:
         cofactors = getCofactors(onto)
-    ontology, species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, onto)
+    species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, onto)
 
     model_to_l3v1(groups_sbml, input_model)
     r_id2g_eq, r_id2ch_id, s_id2gr_id = {}, {}, {}
@@ -51,7 +51,7 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, sh_ch
     #                #reactions = [rn for rn in input_model.getListOfReactions() if filterReactionByNotTransport(rn, input_model)]
 
     # generalize
-    s_id2clu = generalize_species(input_model, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
+    s_id2clu = generalize_species(input_model, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose)
     r_id2clu = generalize_reactions(input_model, s_id2clu, species_id2chebi_id)
     log_r_clusters(r_id2clu, input_model, verbose)
     r_id2g_eq, s_id2gr_id = save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, s_id2clu, verbose)
