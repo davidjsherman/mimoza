@@ -23,6 +23,11 @@ li {
     font-size: 13px;
     line-height: 17px;
 }
+
+.capitalize {
+    text-transform:capitalize;
+}
+
 p {
     font-family: "Lucida Sans Unicode";
     font-size: 13px;
@@ -100,8 +105,19 @@ div.image {
     vertical-align: middle;
     text-align: center;
 }
-p.indent {
+.indent {
     padding-left: 50px;
     padding-right: 50px;
     vertical-align: middle;
+}
+
+ul.menu
+{
+    list-style-type:none;
+    margin:0;
+    padding:0;
+}
+ul.menu li
+{
+    display:inline;
 }

@@ -66,7 +66,7 @@ function formatChebi(ch) {
 
 function formatLink(comp) {
     if (comp) {
-        return "<a href=\'" + comp + ".html\' target=\'_blank\'>Go inside</a>";
+        return "<a href=\'./compartment.html?name=" + comp + "\'>Go inside</a>";
     }
     return "";
 }
@@ -121,6 +121,18 @@ function addPopups(map, name2popup, feature, layer) {
 }
 
 
+function getGeoJson(map, json, name2popup) {
+    if (json == null || json.length == 0){
+        // pass
+    } else if (json.length == 1) {
+        getSimpleJson(map, json[0], name2popup);
+    } else {
+        getComplexJson(map, json[0], json[1], name2popup);
+    }
+}
+
+
+
 function getComplexJson(map, json_zo, json_zi, name2popup) {
     var geojsonLayer = getSimpleJson(map, json_zo, name2popup);
 
@@ -166,4 +178,13 @@ function search(map, name2popup) {
     if (srch && name2popup[srch]){
         name2popup[srch].openOn(map);
     }
+}
+
+function gup (name) {
+    name = new RegExp('[?&]' + name.replace (/([[\]])/, '\\$1') + '=([^&#]*)');
+    return (window.location.href.match(name) || ['', ''])[1];
+}
+
+function centerMap() {
+    map.setView([0, 0], map.getZoom());
 }
