@@ -22,7 +22,7 @@ def comp_to_meta_node(meta_graph, comp, out_comp):
 	meta_graph["viewLabel"][meta_node] = comp
 	meta_graph["name"][meta_node] = comp
 	meta_graph["compartment"][meta_node] = out_comp
-	meta_graph["type"][meta_node] = compartment
+	meta_graph["type"][meta_node] = 'compartment'
 	meta_graph["viewShape"][meta_node] = 18
 	meta_graph["viewColor"][meta_node] = tlp.Color(200,200,200,80)
 	

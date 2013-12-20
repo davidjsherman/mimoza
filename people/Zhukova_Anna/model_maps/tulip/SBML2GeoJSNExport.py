@@ -53,22 +53,32 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 		
 		features = []
 			
+		def get_coords(n):
+			return [(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale]
+			
+		for e in graph.getEdges():
+			s, t = graph.source(e), graph.target(e)
+			geom = geojson.MultiPoint([get_coords(s), get_coords(t)])
+			props = {"color": triplet(color[e]), "width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,  "type": 'edge', "stoichiometry": graph['stoichiometry'][e]}
+			f = geojson.Feature(geometry=geom, properties=props)
+			features.append(f)	
+			
 		for n in graph.getNodes():
-			if not type_[n] in ['reaction', 'species', 'compartment']:
+			if not type_[n] in ['reaction', 'species', 'compartment', 'background']:
 				continue
-			geom = geojson.Point([(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale])
+			geom = geojson.Point(get_coords(n))
 			props = {"id": graph['id'][n], "name": name[n], "color": triplet(color[n]), \
 				"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,  "type": type_[n]}
 			if 'reaction' == type_[n]:
-				props["gene_association"] = get_gene_association_list(ga[n])
-				props["reversible"] = graph['reversible'][n]
 				ins, outs = get_formula(graph, n)	
-				props['reactants'] = ins
-				props['products'] = outs			
-			else:
+				props.update({"gene_association":  get_gene_association_list(ga[n]), "reversible": graph['reversible'][n], 'reactants': ins, 'products': outs})	
+			elif 'species' == type_[n]:
 				props["chebi"] = chebi[n]
+			elif 'background' == type_[n]:
+				props['shape'] = graph['viewShape'][n]
 			f = geojson.Feature(geometry=geom, properties=props)
-			features.append(f)				
+			features.append(f)
+						
 		fc = geojson.FeatureCollection(features, \
 			geometry=geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]]))
 		with open(self.dataSet["file::GeoJSON"], 'w') as f:

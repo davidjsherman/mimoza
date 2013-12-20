@@ -121,3 +121,13 @@ ul.menu li
 {
     display:inline;
 }
+
+.leaflet-popup-close-button {
+    display:none;
+}
+
+.leaflet-label-overlay {
+    line-height:0px;
+    margin-top: 9px;
+    position:absolute;
+}

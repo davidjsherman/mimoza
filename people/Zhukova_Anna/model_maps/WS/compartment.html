@@ -24,7 +24,8 @@
   their annotations.</p>
 </div>
 
-<script src="./leaflet.js" type="text/javascript"></script>
+<script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js" type="text/javascript"></script>
+<script src="http://leaflet.github.io/Leaflet.label/leaflet.label.js" type="text/javascript"></script>
 <script src="./maptools.js" type="text/javascript"></script>
 <script src="http://code.jquery.com/jquery-1.10.2.min.js" type="text/javascript"></script>
 
@@ -49,6 +50,9 @@
     var comp2geojson = {'mitochondrion': [gjsn__mitochondrion, gjsn__mitochondrion_full], 'cytoplasm': [gjsn__cytoplasm], 'peroxisome': [gjsn__peroxisome, gjsn__peroxisome_full]};
 
     var compartment = gup('name');
+    if (!compartment) {
+        compartment = 'peroxisome';
+    }
 
     var span = document.getElementById('comp');
     while (span.firstChild) {
@@ -61,7 +65,7 @@
     getGeoJson(map, comp2geojson[compartment], name2popup);
 
 
-    L.tileLayer('./' + compartment + '/{z}/{x}/{y}.png', {
+    L.tileLayer('./compartment/{z}/{x}/{y}.png', {
         continuousWorld: true,
         noWrap: true,
         tileSize: 256,

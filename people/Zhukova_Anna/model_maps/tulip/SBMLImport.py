@@ -6,7 +6,9 @@ from sbml_generalization.generalization.sbml_helper import parse_group_sbml, GrP
 from sbml_generalization.utils.compartment_positioner import nest_compartments, get_comp2go, sort_comps
 from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
+from sbml_generalization.generalization.model_generalizer import map2chebi
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
+from sbml_generalization.generalization.mark_ubiquitous import getCofactors
 from model_utils import cloneNode
 
 class SBMLImport(tlp.ImportModule):
@@ -99,8 +101,8 @@ class SBMLImport(tlp.ImportModule):
 			r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps, species_id2chebi_id = {}, {}, {}, set(), {}
 			try:
 				r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
-        		cofactors = getCofactors(chebi)
-				chebi, species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, chebi)
+				cofactors = getCofactors(chebi)
+				species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, chebi)
 			except GrPlError:
 				pass
 			if not r_id2g_id and not ub_sps:

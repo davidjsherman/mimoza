@@ -2305,56 +2305,34 @@
         }
     }), o.rectangle = function (t, e) {
         return new o.Rectangle(t, e)
-    }, o.Circle = o.Path.extend({
-        initialize: function (t, e, i) {
-            o.Path.prototype.initialize.call(this, i), this._latlng = o.latLng(t), this._mRadius = e
-        },
-        options: {
-            fill: !0
-        },
-        setLatLng: function (t) {
-            return this._latlng = o.latLng(t), this.redraw()
-        },
-        setRadius: function (t) {
-            return this._mRadius = t, this.redraw()
-        },
-        projectLatlngs: function () {
-            var t = this._getLngRadius(),
-                e = this._latlng,
-                i = this._map.latLngToLayerPoint([e.lat, e.lng - t]);
-            this._point = this._map.latLngToLayerPoint(e), this._radius = Math.max(this._point.x - i.x, 1)
-        },
-        getBounds: function () {
-            var t = this._getLngRadius(),
-                e = 360 * (this._mRadius / 40075017),
-                i = this._latlng;
-            return new o.LatLngBounds([i.lat - e, i.lng - t], [i.lat + e, i.lng + t])
-        },
-        getLatLng: function () {
-            return this._latlng
-        },
-        getPathString: function () {
-            var t = this._point,
-                e = this._radius;
-            return this._checkIfEmpty() ? "" : o.Browser.svg ? "M" + t.x + "," + (t.y - e) + "A" + e + "," + e + ",0,1,1," + (t.x - .1) + "," + (t.y - e) + " z" : (t._round(), e = Math.round(e), "AL " + t.x + "," + t.y + " " + e + "," + e + " 0," + 23592600)
-        },
-        getRadius: function () {
-            return this._mRadius
-        },
-        _getLatRadius: function () {
-            return 360 * (this._mRadius.radius / 40075017)
-        },
-        _getLngRadius: function () {
-            return this._getLatRadius() / Math.cos(o.LatLng.DEG_TO_RAD * this._latlng.lat)
-        },
-        _checkIfEmpty: function () {
-            if (!this._map) return !1;
-            var t = this._map._pathViewport,
-                e = this._radius,
-                i = this._point;
-            return i.x - e > t.max.x || i.y - e > t.max.y || i.x + e < t.min.x || i.y + e < t.min.y
-        }
-    }), o.circle = function (t, e, i) {
+    }, o.Circle = o.Path.extend({initialize: function (t, e, i) {
+        o.Path.prototype.initialize.call(this, i), this._latlng = o.latLng(t), this._mRadius = e
+    }, options: {fill: !0}, setLatLng: function (t) {
+        return this._latlng = o.latLng(t), this.redraw()
+    }, setRadius: function (t) {
+        return this._mRadius = t, this.redraw()
+    }, projectLatlngs: function () {
+        var t = this._getLngRadius(), e = this._latlng, i = this._map.latLngToLayerPoint([e.lat, e.lng - t]);
+        this._point = this._map.latLngToLayerPoint(e), this._radius = Math.max(this._point.x - i.x, 1)
+    }, getBounds: function () {
+        var t = this._getLngRadius(), e = this._mRadius / 40075017 * 360, i = this._latlng;
+        return new o.LatLngBounds([i.lat - e, i.lng - t], [i.lat + e, i.lng + t])
+    }, getLatLng: function () {
+        return this._latlng
+    }, getPathString: function () {
+        var t = this._point, e = this._radius;
+        return this._checkIfEmpty() ? "" : o.Browser.svg ? "M" + t.x + "," + (t.y - e) + "A" + e + "," + e + ",0,1,1," + (t.x - .1) + "," + (t.y - e) + " z" : (t._round(), e = Math.round(e), "AL " + t.x + "," + t.y + " " + e + "," + e + " 0,23592600")
+    }, getRadius: function () {
+        return this._mRadius
+    }, _getLatRadius: function () {
+        return this._mRadius / 40075017 * 360
+    }, _getLngRadius: function () {
+        return this._getLatRadius() / Math.cos(o.LatLng.DEG_TO_RAD * this._latlng.lat)
+    }, _checkIfEmpty: function () {
+        if (!this._map)return!1;
+        var t = this._map._pathViewport, e = this._radius, i = this._point;
+        return i.x - e > t.max.x || i.y - e > t.max.y || i.x + e < t.min.x || i.y + e < t.min.y
+    }}), o.circle = function (t, e, i) {
         return new o.Circle(t, e, i)
     }, o.CircleMarker = o.Circle.extend({
         options: {

@@ -75,8 +75,8 @@ function formatLink(comp) {
 function initializeMap(max_zoom) {
     var map = L.map('map', {
         maxZoom: max_zoom,
-        minZoom: 2,
-        crs: L.CRS.Simple
+        minZoom: 2
+//        crs: L.CRS.Simple
     }).setView([0, 0], 2);
     var southWest = map.unproject([0, 1024], 2);
     var northEast = map.unproject([1024, 0], 2);
@@ -84,22 +84,46 @@ function initializeMap(max_zoom) {
     return map;
 }
 
-function pnt2layer(map, feature, latlng) {
+function pnt2layer(map, feature) {
     var e = feature.geometry.coordinates;
-    var col = feature.properties.color;
-    var x = e[0], y = e[1];
+    var props = {
+        color: 'white',
+        fillColor: feature.properties.color,
+        fillOpacity: 1,
+        opacity: 1,
+        weight: 1,
+        fill: true
+    };
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
-    var southWest = map.unproject([x - w, y + h], 1),
-        northEast = map.unproject([x + w, y - h], 1),
+    if ('edge' == feature.properties.type) {
+        props['weight'] = w * 2;
+        props['lineCap'] = 'arrow';
+        props['clickable'] = false;
+        props['color'] = feature.properties.color;
+        return L.polyline([map.unproject(e[0], 1), map.unproject(e[1],1)], props);
+    }
+    var x = e[0], y = e[1];
+    if ('reaction' == feature.properties.type || 'compartment' == feature.properties.type) {
+        var southWest = map.unproject([x - w, y + h], 1),
+            northEast = map.unproject([x + w, y - h], 1),
+            bounds = new L.LatLngBounds(southWest, northEast);
+        return L.rectangle(bounds, props);
+    }
+    if ('species' == feature.properties.type) {
+        var r = map.unproject([x - w, y], 1).distanceTo(map.unproject([x, y], 1));
+        return L.circle(map.unproject(e, 1), r, props);
+    }
+    if ('background' == feature.properties.type) {
+        r = map.unproject([x - w, y], 1).distanceTo(map.unproject([x, y], 1));
+        southWest = map.unproject([x - w, y + h], 1);
+        northEast = map.unproject([x + w, y - h], 1);
         bounds = new L.LatLngBounds(southWest, northEast);
-    return L.rectangle(bounds, {
-        color: feature.properties.color,
-        fillColor: feature.properties.color,
-        fillOpacity: 0,
-        opacity: 1,
-        weight: 0
-    });
+        props['fillOpacity'] = 0.3;
+        props['weight'] = 0;
+        return 14 == feature.properties.shape ? L.circle(map.unproject(e, 1), r, props) : L.rectangle(bounds, props);
+    }
+    return null;
 }
 
 function addPopups(map, name2popup, feature, layer) {
@@ -115,8 +139,11 @@ function addPopups(map, name2popup, feature, layer) {
         var link = formatLink(feature.properties.name);
         content = '<h2>' + feature.properties.name + "</h2><p>" + link + "</p>";
     }
-    var popup = L.popup({autoPan: true, keepInView:true, maxWidth:1020}).setContent(content).setLatLng(map.unproject(feature.geometry.coordinates, 1));
-    layer.bindPopup(popup);
+    if ('edge' == feature.properties.type) {
+        return
+    }
+    var popup = L.popup({autoPan: true, keepInView:true, maxWidth:1020}).setContent(content);
+    layer.bindPopup(popup); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
     name2popup[feature.properties.name.toLowerCase()] = popup;
 }
 
@@ -155,7 +182,7 @@ function getComplexJson(map, json_zo, json_zi, name2popup) {
 function getSimpleJson(map, jsn, name2popup) {
     return L.geoJson(jsn, {
         pointToLayer: function(feature, latlng) {
-            return pnt2layer(map, feature, latlng);
+            return pnt2layer(map, feature);
         },
         onEachFeature: function(feature, layer) {
             addPopups(map, name2popup, feature, layer);

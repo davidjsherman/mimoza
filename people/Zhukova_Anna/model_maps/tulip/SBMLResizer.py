@@ -33,7 +33,7 @@ def get_n_size(graph, n):
 	viewMetaGraph = graph.getGraphProperty("viewMetaGraph")
 	if 'compartment' == graph['type'][n]:
 		bb = tlp.computeBoundingBox(viewMetaGraph[n])
-		return tlp.Size(bb.getW(), bb.getH())
+		return tlp.Size(bb.width(), bb.height())
 	num = 1
 	if graph.isMetaNode(n):
 		num = viewMetaGraph[n].numberOfNodes()
