@@ -76,52 +76,77 @@ function initializeMap(max_zoom) {
     var map = L.map('map', {
         maxZoom: max_zoom,
         minZoom: 2
-//        crs: L.CRS.Simple
-    }).setView([0, 0], 2);
-    var southWest = map.unproject([0, 1024], 2);
-    var northEast = map.unproject([1024, 0], 2);
-    map.setMaxBounds(new L.LatLngBounds(southWest, northEast));
+        //crs: L.CRS.Simple
+    });
+    var southWest = map.unproject([0, 512], 1);
+    var northEast = map.unproject([512, 0], 1);
+    var bounds = new L.LatLngBounds(southWest, northEast);
+    map.setView(bounds.getCenter(), 2);
+    map.setMaxBounds(bounds);
     return map;
 }
 
 function pnt2layer(map, feature) {
     var e = feature.geometry.coordinates;
+    var w = feature.properties.width / 2;
+    var h = feature.properties.height / 2;
     var props = {
-        color: 'white',
+        name: feature.properties.name,
+        color: feature.properties.bcolor,
         fillColor: feature.properties.color,
         fillOpacity: 1,
         opacity: 1,
         weight: 1,
         fill: true
     };
-    var w = feature.properties.width / 2;
-    var h = feature.properties.height / 2;
     if ('edge' == feature.properties.type) {
         props['weight'] = w * 2;
         props['lineCap'] = 'arrow';
         props['clickable'] = false;
         props['color'] = feature.properties.color;
-        return L.polyline([map.unproject(e[0], 1), map.unproject(e[1],1)], props);
+        return L.polyline([map.unproject(e[0], 1), map.unproject(e[1], 1)], props);
     }
     var x = e[0], y = e[1];
-    if ('reaction' == feature.properties.type || 'compartment' == feature.properties.type) {
-        var southWest = map.unproject([x - w, y + h], 1),
-            northEast = map.unproject([x + w, y - h], 1),
-            bounds = new L.LatLngBounds(southWest, northEast);
-        return L.rectangle(bounds, props);
-    }
-    if ('species' == feature.properties.type) {
-        var r = map.unproject([x - w, y], 1).distanceTo(map.unproject([x, y], 1));
-        return L.circle(map.unproject(e, 1), r, props);
-    }
-    if ('background' == feature.properties.type) {
-        r = map.unproject([x - w, y], 1).distanceTo(map.unproject([x, y], 1));
-        southWest = map.unproject([x - w, y + h], 1);
-        northEast = map.unproject([x + w, y - h], 1);
+    var southWest = map.unproject([x - w, y + h], 1),
+        northEast = map.unproject([x + w, y - h], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
+    var r_x = map.unproject([x - w / 2, y], 1).distanceTo(map.unproject([x + w / 2, y], 1)),
+        r_y = map.unproject([x, y + h/ 2], 1).distanceTo(map.unproject([x, y - h/2], 1));
+    var r = (r_x + r_y) / 2;
+    var centre = map.unproject(e, 1);
+//    var centre = bounds.getCenter();
+    if ('background' == feature.properties.type) {
         props['fillOpacity'] = 0.3;
         props['weight'] = 0;
-        return 14 == feature.properties.shape ? L.circle(map.unproject(e, 1), r, props) : L.rectangle(bounds, props);
+        props['clickable'] = false;
+        if (14 == feature.properties.shape) {
+            var circle = L.circle(centre, r, props);
+//            var circle = L.circleMarker(centre, props);
+//            circle.setRadius(w * map.getZoom());
+            return circle;
+        } else {
+            return  L.rectangle(bounds, props);
+        }
+    }
+    var cl = ("species" == feature.properties.type) ? 'sticky round' : 'sticky';
+    var label = L.marker(centre,
+        {
+            icon: L.divIcon({
+                className: 'count-icon',
+                html: '<div style="max-width:' + w * map.getZoom() * 2 +'";max-height:' + h * map.getZoom() * 2 + '"><p id="' + feature.properties.id + '" class="fittext">' + feature.properties.name + '</p></div>', //'<span class="' + cl + '">' + feature.properties.name + '</span>',
+                iconSize: [w * map.getZoom() * 2, h * map.getZoom() * 2]
+            })
+        }
+    );
+    if ('reaction' == feature.properties.type || 'compartment' == feature.properties.type) {
+        var rect = L.rectangle(bounds, props);
+        return L.featureGroup([rect, label]);
+    }
+    if ('species' == feature.properties.type) {
+        r = southWest.distanceTo(northEast) / (2 * Math.sqrt(2));
+        var circle = L.circle(centre, r, props);
+//        return circle;
+        return L.featureGroup([label, circle]);
     }
     return null;
 }
@@ -163,24 +188,24 @@ function getGeoJson(map, json, name2popup) {
 function getComplexJson(map, json_zo, json_zi, name2popup) {
     var geojsonLayer = getSimpleJson(map, json_zo, name2popup);
 
-    var zo = true;
+//    var zo = true;
     map.on('zoomend', function (e) {
         if (map.getZoom() >= 3) {
-            if (zo) {
+//            if (zo) {
                 geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
-                zo = false;
-            }
+//                zo = false;
+//            }
         } else if (map.getZoom() <= 2) {
-            if (!zo) {
+//            if (!zo) {
                 geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
-                zo = true;
-            }
+//                zo = true;
+//            }
         }
     });
 }
 
 function getSimpleJson(map, jsn, name2popup) {
-    return L.geoJson(jsn, {
+    var jsn = L.geoJson(jsn, {
         pointToLayer: function(feature, latlng) {
             return pnt2layer(map, feature);
         },
@@ -188,6 +213,11 @@ function getSimpleJson(map, jsn, name2popup) {
             addPopups(map, name2popup, feature, layer);
         }
     }).addTo(map);
+    var elements = document.getElementsByClassName('fittext');
+    for (var i = 0; i < elements.length; i++) {
+        fitText(elements[i], 0.6);
+    }
+    return jsn;
 }
 
 function getJson(map, jsn, name2popup, geojsonLayer) {
