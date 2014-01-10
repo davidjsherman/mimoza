@@ -3,7 +3,7 @@
  */
 
 function formatLabel(feature, w, h) {
-    var style = 'border:0px solid red; height:' + h + 'px; width:' + w + 'px; overflow:hidden; font-size:12px; line-height:auto; text-align:center; vertical-align:middle;';
+    var style = 'border:0px solid red; height:' + h + 'px; width:' + w + 'px; overflow:hidden; font-size:14px; line-height:auto;';
     return '<div style="' + style + '" id="' + feature.properties.id + '" class="fittext">' + feature.properties.name + '</div>';
 }
 
@@ -106,22 +106,29 @@ function pnt2layer(map, feature) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
+    if ('edge' == feature.properties.type) {
+        return L.polyline([map.unproject(e[0], 1), map.unproject(e[1], 1)], {
+            color: feature.properties.color,
+            fillColor: feature.properties.color,
+            fillOpacity: 1,
+            opacity: 1,
+            weight: map.getZoom() * w,
+            lineCap: 'arrow',
+            clickable: false,
+            fill: true
+        });
+    }
     var props = {
         name: feature.properties.name,
+        id: feature.properties.id,
         color: feature.properties.bcolor,
         fillColor: feature.properties.color,
-        fillOpacity: 1,
+        fillOpacity: 'background' == feature.properties.type ? 0.3 : 1,
         opacity: 1,
-        weight: map.getZoom() / 2,
-        fill: true
+        weight: 'background' == feature.properties.type ? 0 : map.getZoom() / 2,
+        fill: true,
+        clickable: 'background' != feature.properties.type
     };
-    if ('edge' == feature.properties.type) {
-        props['weight'] = w * map.getZoom();
-        props['lineCap'] = 'arrow';
-        props['clickable'] = false;
-        props['color'] = feature.properties.color;
-        return L.polyline([map.unproject(e[0], 1), map.unproject(e[1], 1)], props);
-    }
     var x = e[0], y = e[1];
     if (('species' == feature.properties.type) || ('background' == feature.properties.type) && (14 == feature.properties.shape)) {
         w /= Math.sqrt(2);
@@ -130,18 +137,12 @@ function pnt2layer(map, feature) {
     var southWest = map.unproject([x - w, y + h], 1),
         northEast = map.unproject([x + w, y - h], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
-    var r = southWest.distanceTo(northEast) / 2; //uproject(map, x, y, w, h);
+    var d = southWest.distanceTo(northEast);
 //    var centre = map.unproject(e, 1);
     var centre = bounds.getCenter();
     if ('background' == feature.properties.type) {
-        props['fillOpacity'] = 0.3;
-        props['weight'] = 0;
-        props['clickable'] = false;
         if (14 == feature.properties.shape) {
-            var circle = L.circle(centre, r, props);
-//            var circle = L.circleMarker(centre, props);
-//            circle.setRadius(w * map.getZoom());
-            return circle;
+            return L.circle(centre, d / 1.8, props);
         } else {
             return  L.rectangle(bounds, props);
         }
@@ -161,10 +162,8 @@ function pnt2layer(map, feature) {
         return L.featureGroup([rect, label]);
     }
     if ('species' == feature.properties.type) {
-        r = southWest.distanceTo(northEast) / (2 * Math.sqrt(2));
-        var circle = L.circle(centre, r, props);
-//        return circle;
-        return L.featureGroup([label, circle]);
+        var circle = L.circle(centre, d / 2, props);
+        return L.featureGroup([circle, label]);
     }
     return null;
 }
@@ -205,19 +204,42 @@ function getGeoJson(map, json, name2popup) {
 
 function getComplexJson(map, json_zo, json_zi, name2popup) {
     var geojsonLayer = getSimpleJson(map, json_zo, name2popup);
-
-//    var zo = true;
+    var zo = map.getZoom();
     map.on('zoomend', function (e) {
-        if (map.getZoom() >= 4) {
-//            if (zo) {
+        if (map.getZoom() >= 3) {
+            if (zo < 3) {
                 geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
-//                zo = false;
-//            }
-        } else {
-//            if (!zo) {
+                zo = map.getZoom();
+                elements = document.getElementsByClassName('fittext');
+                return;
+            }
+        } else if (zo >= 3) {
                 geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
-//                zo = true;
-//            }
+                zo = map.getZoom();
+                elements = document.getElementsByClassName('fittext');
+                return;
+        }
+        fitLabels(map, zo);
+        zo = map.getZoom();
+    });
+}
+
+function fitLabels(map, zo){
+    $('.fittext').each(function(i, obj) {
+        var old_height = $(this).height();
+        $(this).height((old_height * map.getZoom()) / zo);
+        var height = $(this).height();
+        var old_width = $(this).width();
+        $(this).width((old_width * map.getZoom()) / zo);
+        var width = $(this).width();
+        var offset = $(this).offset();
+        $(this).offset({ top: offset.top + (old_height- height) / 2, left: offset.left + (old_width - width) / 2});
+        var $d = $('<div/>');
+        $(this).wrapInner($d);
+        var $i = $('#' + $(this).attr('id') + ' div')[0];
+        while($i.scrollHeight > height) {
+            size = parseInt($(this).css("font-size"), 10);
+            $(this).css("font-size", size - 1);
         }
     });
 }
@@ -231,29 +253,6 @@ function getSimpleJson(map, jsn, name2popup) {
             addPopups(map, name2popup, feature, layer);
         }
     }).addTo(map);
-    var elements = document.getElementsByClassName('fittext');
-    console.log('rejson');
-    console.log(map.getZoom());
-
-    $(function() {
-        var elements = document.getElementsByClassName('fittext');
-        for (var i = 0; i < elements.length; i++) {
-            var $h = $('#' + elements[i].id);
-            var $d = $('<div/>');
-            $h.wrapInner($d);
-            var $i = $('#' + elements[i].id + ' div')[0];
-            var height = $h.height();
-            var innerHeight = $i.scrollHeight;
-            while(innerHeight > height) {
-                size = parseInt($h.css("font-size"), 10);
-                $h.css("font-size", size - 1);
-                innerHeight = $i.scrollHeight;
-            }
-            if(height > innerHeight) {
-                $h.height(innerHeight);
-            }
-        }
-    });
     return result;
 }
 
