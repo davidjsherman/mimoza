@@ -2,6 +2,8 @@ from tulip import *
 import tulipplugins
 import geojson
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts
+from sbml_generalization.utils.obo_ontology import parse, get_chebi
+from rename import get_short_name
 
 
 _NUMERALS = '0123456789abcdefABCDEF'
@@ -41,10 +43,10 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 		graph = self.graph
 		ga =  graph.getStringProperty("geneAssociation")
 		type_ =  graph.getStringProperty("type")
-		name = graph.getStringProperty("name")
 		layout = graph.getLayoutProperty("viewLayout")
 		size = graph.getSizeProperty("viewSize")
 		color = graph.getColorProperty("viewColor")
+		b_color = graph.getColorProperty("viewBorderColor")
 		chebi = graph.getStringProperty("chebi_id")
 		
 		(m_x, m_y), (M_x, M_y) = getMinMax(graph)
@@ -55,6 +57,10 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 			
 		def get_coords(n):
 			return [(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale]
+			
+		onto = parse(get_chebi())
+		def name(n):
+			return get_short_name(graph, n, onto)
 			
 		for e in graph.getEdges():
 			s, t = graph.source(e), graph.target(e)
@@ -67,7 +73,7 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 			if not type_[n] in ['reaction', 'species', 'compartment', 'background']:
 				continue
 			geom = geojson.Point(get_coords(n))
-			props = {"id": graph['id'][n], "name": name[n], "color": triplet(color[n]), \
+			props = {"id": graph['id'][n], "name": name(n), "color": triplet(color[n]), "bcolor": triplet(b_color[n]),\
 				"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,  "type": type_[n]}
 			if 'reaction' == type_[n]:
 				ins, outs = get_formula(graph, n)	

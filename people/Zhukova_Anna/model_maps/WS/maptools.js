@@ -2,6 +2,12 @@
  * Created by anna on 12/12/13.
  */
 
+function formatLabel(feature, w, h) {
+    var style = 'border:0px solid red; height:' + h + 'px; width:' + w + 'px; overflow:hidden; font-size:12px; line-height:auto; text-align:center; vertical-align:middle;';
+    return '<div style="' + style + '" id="' + feature.properties.id + '" class="fittext">' + feature.properties.name + '</div>';
+}
+
+
 function formatGA(ga) {
     var ga_res = '';
     if (ga) {
@@ -26,6 +32,7 @@ function formatGA(ga) {
     }
     return ga_res
 }
+
 
 function formatFormula(reversible, reactants, products) {
     reactants = reactants.split('&');
@@ -64,6 +71,7 @@ function formatChebi(ch) {
     return "";
 }
 
+
 function formatLink(comp) {
     if (comp) {
         return "<a href=\'./compartment.html?name=" + comp + "\'>Go inside</a>";
@@ -75,7 +83,7 @@ function formatLink(comp) {
 function initializeMap(max_zoom) {
     var map = L.map('map', {
         maxZoom: max_zoom,
-        minZoom: 2
+        minZoom: 1
         //crs: L.CRS.Simple
     });
     var southWest = map.unproject([0, 512], 1);
@@ -85,6 +93,14 @@ function initializeMap(max_zoom) {
     map.setMaxBounds(bounds);
     return map;
 }
+
+
+function uproject(map, x, y, w, h) {
+    var r_x = map.unproject([x - w / 2, y], 1).distanceTo(map.unproject([x + w / 2, y], 1)),
+        r_y = map.unproject([x, y + h/ 2], 1).distanceTo(map.unproject([x, y - h/2], 1));
+    return (r_x + r_y) / 2;
+}
+
 
 function pnt2layer(map, feature) {
     var e = feature.geometry.coordinates;
@@ -96,25 +112,27 @@ function pnt2layer(map, feature) {
         fillColor: feature.properties.color,
         fillOpacity: 1,
         opacity: 1,
-        weight: 1,
+        weight: map.getZoom() / 2,
         fill: true
     };
     if ('edge' == feature.properties.type) {
-        props['weight'] = w * 2;
+        props['weight'] = w * map.getZoom();
         props['lineCap'] = 'arrow';
         props['clickable'] = false;
         props['color'] = feature.properties.color;
         return L.polyline([map.unproject(e[0], 1), map.unproject(e[1], 1)], props);
     }
     var x = e[0], y = e[1];
+    if (('species' == feature.properties.type) || ('background' == feature.properties.type) && (14 == feature.properties.shape)) {
+        w /= Math.sqrt(2);
+        h /= Math.sqrt(2);
+    }
     var southWest = map.unproject([x - w, y + h], 1),
         northEast = map.unproject([x + w, y - h], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
-    var r_x = map.unproject([x - w / 2, y], 1).distanceTo(map.unproject([x + w / 2, y], 1)),
-        r_y = map.unproject([x, y + h/ 2], 1).distanceTo(map.unproject([x, y - h/2], 1));
-    var r = (r_x + r_y) / 2;
-    var centre = map.unproject(e, 1);
-//    var centre = bounds.getCenter();
+    var r = southWest.distanceTo(northEast) / 2; //uproject(map, x, y, w, h);
+//    var centre = map.unproject(e, 1);
+    var centre = bounds.getCenter();
     if ('background' == feature.properties.type) {
         props['fillOpacity'] = 0.3;
         props['weight'] = 0;
@@ -133,7 +151,7 @@ function pnt2layer(map, feature) {
         {
             icon: L.divIcon({
                 className: 'count-icon',
-                html: '<div style="max-width:' + w * map.getZoom() * 2 +'";max-height:' + h * map.getZoom() * 2 + '"><p id="' + feature.properties.id + '" class="fittext">' + feature.properties.name + '</p></div>', //'<span class="' + cl + '">' + feature.properties.name + '</span>',
+                html: formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
                 iconSize: [w * map.getZoom() * 2, h * map.getZoom() * 2]
             })
         }
@@ -190,12 +208,12 @@ function getComplexJson(map, json_zo, json_zi, name2popup) {
 
 //    var zo = true;
     map.on('zoomend', function (e) {
-        if (map.getZoom() >= 3) {
+        if (map.getZoom() >= 4) {
 //            if (zo) {
                 geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
 //                zo = false;
 //            }
-        } else if (map.getZoom() <= 2) {
+        } else {
 //            if (!zo) {
                 geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
 //                zo = true;
@@ -205,7 +223,7 @@ function getComplexJson(map, json_zo, json_zi, name2popup) {
 }
 
 function getSimpleJson(map, jsn, name2popup) {
-    var jsn = L.geoJson(jsn, {
+    var result = L.geoJson(jsn, {
         pointToLayer: function(feature, latlng) {
             return pnt2layer(map, feature);
         },
@@ -214,10 +232,29 @@ function getSimpleJson(map, jsn, name2popup) {
         }
     }).addTo(map);
     var elements = document.getElementsByClassName('fittext');
-    for (var i = 0; i < elements.length; i++) {
-        fitText(elements[i], 0.6);
-    }
-    return jsn;
+    console.log('rejson');
+    console.log(map.getZoom());
+
+    $(function() {
+        var elements = document.getElementsByClassName('fittext');
+        for (var i = 0; i < elements.length; i++) {
+            var $h = $('#' + elements[i].id);
+            var $d = $('<div/>');
+            $h.wrapInner($d);
+            var $i = $('#' + elements[i].id + ' div')[0];
+            var height = $h.height();
+            var innerHeight = $i.scrollHeight;
+            while(innerHeight > height) {
+                size = parseInt($h.css("font-size"), 10);
+                $h.css("font-size", size - 1);
+                innerHeight = $i.scrollHeight;
+            }
+            if(height > innerHeight) {
+                $h.height(innerHeight);
+            }
+        }
+    });
+    return result;
 }
 
 function getJson(map, jsn, name2popup, geojsonLayer) {

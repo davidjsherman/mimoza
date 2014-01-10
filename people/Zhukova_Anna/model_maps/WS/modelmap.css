@@ -34,6 +34,47 @@ p {
     line-height: 17px;
     vertical-align: middle;
 }
+
+/*html, body, p { margin: 0; padding: 0; font-family: sans-serif;}*/
+
+/*.ellipsis {*/
+    /*overflow: hidden;*/
+    /*height: 200px;*/
+    /*line-height: 25px;*/
+    /*margin: 20px;*/
+    /*border: 0px solid #AAA; }*/
+
+/*.ellipsis:before {*/
+    /*content:"";*/
+    /*float: left;*/
+    /*width: 5px; height: 200px; }*/
+
+/*.ellipsis > *:first-child {*/
+    /*float: right;*/
+    /*width: 100%;*/
+    /*margin-left: -5px; }*/
+
+/*.ellipsis:after {*/
+    /*content: "\02026";*/
+
+    /*box-sizing: content-box;*/
+    /*-webkit-box-sizing: content-box;*/
+    /*-moz-box-sizing: content-box;*/
+
+    /*float: right; position: relative;*/
+    /*top: -25px; left: 100%;*/
+    /*width: 3em; margin-left: -3em;*/
+    /*padding-right: 5px;*/
+
+    /*text-align: right;*/
+
+    /*background: -webkit-gradient(linear, left top, right top,*/
+    /*from(rgba(255, 255, 255, 0)), to(white), color-stop(50%, white));*/
+    /*background: -moz-linear-gradient(to right, rgba(255, 255, 255, 0), white 50%, white);*/
+    /*background: -o-linear-gradient(to right, rgba(255, 255, 255, 0), white 50%, white);*/
+    /*background: -ms-linear-gradient(to right, rgba(255, 255, 255, 0), white 50%, white);*/
+    /*background: linear-gradient(to right, rgba(255, 255, 255, 0), white 50%, white); }*/
+
 th {
     text-align: center;
 }
@@ -87,8 +128,8 @@ div.margin {
     vertical-align: middle;
 }
 
-div.nomargin {
-    text-align: justify;
+.nomargin {
+    text-align: center;
     padding: 0px;
     margin: 0px;
     vertical-align: middle;
@@ -133,29 +174,25 @@ ul.menu li
 }
 
 .count-icon {
-    border: 1px black;
+    /*margin: 0px;*/
+    /*padding: 0px;*/
     /*text-align:center;*/
     /*vertical-align:middle;*/
-    /*border-radius:50%;*/
     /*display: inline-block;*/
+}
+/*.sticky {*/
+    /*max-width: 90%;*/
+    /*max-height: 90%;*/
+    /*text-align:center;*/
+    /*vertical-align:middle;*/
+    /*white-space: nowrap;*/
+    /*overflow: hidden;*/
+    /*text-overflow: ellipsis;*/
+/*}*/
+
+/*.round {*/
+    /*display: inline-block;*/
+    /*border-radius:50%;*/
     /*-moz-border-radius:50%;*/
     /*-webkit-border-radius: 50%;*/
-}
-.sticky {
-    font-size: 10px;
-    display: inline-block;
-    max-width: 95%;
-    max-height: 95%;
-    text-align:center;
-    vertical-align:middle;
-    overflow: hidden;
-    text-overflow: '..';
-    /*white-space: nowrap; */
-}
-
-.round {
-    display: inline-block;
-    border-radius:50%;
-    -moz-border-radius:50%;
-    -webkit-border-radius: 50%;
-}
+/*}*/
