@@ -147,24 +147,26 @@ function pnt2layer(map, feature) {
             return  L.rectangle(bounds, props);
         }
     }
-    var label = L.marker(centre,
-        {
-            icon: L.divIcon({
-                className: 'count-icon',
-                html: formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
-                iconSize: [w * map.getZoom() * 2, h * map.getZoom() * 2]
-            })
-        }
-    );
+    var node = null;
     if ('reaction' == feature.properties.type || 'compartment' == feature.properties.type) {
-        var rect = L.rectangle(bounds, props);
-        return L.featureGroup([rect, label]);
+        node = L.rectangle(bounds, props);
     }
     if ('species' == feature.properties.type) {
-        var circle = L.circle(centre, d / 2, props);
-        return L.featureGroup([circle, label]);
+        node = L.circle(centre, d / 2, props);
     }
-    return null;
+    if (node) { //&& w * map.getZoom() >= 10) {
+        var label = L.marker(centre,
+            {
+                icon: L.divIcon({
+                    className: 'count-icon',
+                    html: formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
+                    iconSize: [w * map.getZoom() * 2, h * map.getZoom() * 2]
+                })
+            }
+        );
+        return L.featureGroup([node, label]);
+    }
+    return node;
 }
 
 function addPopups(name2popup, feature, layer) {
@@ -225,19 +227,21 @@ function fitLabels(zn, zo){
         var height = (old_height * zn) / zo;
         var old_width = $(this).width();
         var width = (old_width * zn) / zo;
+        var size = width / 3;
         $(this).css({
             'height': height,
             'width': width,
-            'font-size': 18
+            'font-size': size
         });
         var offset = $(this).offset();
         $(this).offset({ top: offset.top + (old_height - height) / 2, left: offset.left + (old_width - width) / 2});
-        $(this).wrapInner("<div class='wrap'></div>");
-        var $i = $(this).children('.wrap')[0];
-        var size = 18;
-        while($i.scrollHeight > height && size > 4) {
-            size--;
-            $(this).css("font-size", size);
+        if (width >= 10 && size > 4) {
+            $(this).wrapInner("<div class='wrap'></div>");
+            var $i = $(this).children('.wrap')[0];
+            while($i.scrollHeight > height && size > 4) {
+                size--;
+                $(this).css("font-size", size);
+            }
         }
     });
 //    $('.wrap').children().unwrap();
