@@ -198,6 +198,7 @@ function getGeoJson(map, json, name2popup) {
     } else {
         getComplexJson(map, json[0], json[1], name2popup);
     }
+    fitLabels(map.getZoom(), map.getZoom());
 }
 
 
@@ -209,39 +210,35 @@ function getComplexJson(map, json_zo, json_zi, name2popup) {
         if (map.getZoom() >= 3) {
             if (zo < 3) {
                 geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
-                zo = map.getZoom();
-                elements = document.getElementsByClassName('fittext');
-                return;
             }
         } else if (zo >= 3) {
                 geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
-                zo = map.getZoom();
-                elements = document.getElementsByClassName('fittext');
-                return;
         }
-        fitLabels(map, zo);
+        fitLabels(map.getZoom(), zo);
         zo = map.getZoom();
     });
 }
 
-function fitLabels(map, zo){
-    $('.fittext').each(function(i, obj) {
+function fitLabels(zn, zo){
+    console.log('fit lbls');
+    $('.fittext', '#map').each(function(i, obj) {
         var old_height = $(this).height();
-        $(this).height((old_height * map.getZoom()) / zo);
-        var height = $(this).height();
+        var height = (old_height * zn) / zo;
+        $(this).height(height);
         var old_width = $(this).width();
-        $(this).width((old_width * map.getZoom()) / zo);
-        var width = $(this).width();
+        var width = (old_width * zn) / zo;
+        $(this).width(width);
         var offset = $(this).offset();
-        $(this).offset({ top: offset.top + (old_height- height) / 2, left: offset.left + (old_width - width) / 2});
-        var $d = $('<div/>');
-        $(this).wrapInner($d);
-        var $i = $('#' + $(this).attr('id') + ' div')[0];
-        while($i.scrollHeight > height) {
-            size = parseInt($(this).css("font-size"), 10);
-            $(this).css("font-size", size - 1);
-        }
+        $(this).offset({ top: offset.top + (old_height - height) / 2, left: offset.left + (old_width - width) / 2});
+        $(this).wrapInner("<div class='wrap'></div>");
+        var $i = $(this).children('.wrap')[0];
+        var size = 18;
+        do {
+            $(this).css("font-size", size);
+            size--;
+        } while($i.scrollHeight > height && size >= 4);
     });
+//    $('.wrap').children().unwrap();
 }
 
 function getSimpleJson(map, jsn, name2popup) {
