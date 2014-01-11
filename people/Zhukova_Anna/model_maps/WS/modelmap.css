@@ -6,7 +6,7 @@ h1 {
     text-color: #ac3131;
     color: #ac3131;
     text-align: center;
-    font-family: "Lucida Sans Unicode";
+    font-family: "Lucida Sans Unicode",monospace;
     font-size: 20px;
     line-height: 26px;
 }
@@ -14,12 +14,12 @@ h2 {
     text-color: #ac3131;
     color: #ac3131;
     text-align: center;
-    font-family: "Lucida Sans Unicode";
+    font-family: "Lucida Sans Unicode",monospace;
     font-size: 14px;
     line-height: 18px;
 }
 li {
-    font-family: "Lucida Sans Unicode";
+    font-family: "Lucida Sans Unicode",monospace;
     font-size: 13px;
     line-height: 17px;
 }
@@ -29,51 +29,11 @@ li {
 }
 
 p {
-    font-family: "Lucida Sans Unicode";
+    font-family: "Lucida Sans Unicode",monospace;
     font-size: 13px;
     line-height: 17px;
     vertical-align: middle;
 }
-
-/*html, body, p { margin: 0; padding: 0; font-family: sans-serif;}*/
-
-/*.ellipsis {*/
-    /*overflow: hidden;*/
-    /*height: 200px;*/
-    /*line-height: 25px;*/
-    /*margin: 20px;*/
-    /*border: 0px solid #AAA; }*/
-
-/*.ellipsis:before {*/
-    /*content:"";*/
-    /*float: left;*/
-    /*width: 5px; height: 200px; }*/
-
-/*.ellipsis > *:first-child {*/
-    /*float: right;*/
-    /*width: 100%;*/
-    /*margin-left: -5px; }*/
-
-/*.ellipsis:after {*/
-    /*content: "\02026";*/
-
-    /*box-sizing: content-box;*/
-    /*-webkit-box-sizing: content-box;*/
-    /*-moz-box-sizing: content-box;*/
-
-    /*float: right; position: relative;*/
-    /*top: -25px; left: 100%;*/
-    /*width: 3em; margin-left: -3em;*/
-    /*padding-right: 5px;*/
-
-    /*text-align: right;*/
-
-    /*background: -webkit-gradient(linear, left top, right top,*/
-    /*from(rgba(255, 255, 255, 0)), to(white), color-stop(50%, white));*/
-    /*background: -moz-linear-gradient(to right, rgba(255, 255, 255, 0), white 50%, white);*/
-    /*background: -o-linear-gradient(to right, rgba(255, 255, 255, 0), white 50%, white);*/
-    /*background: -ms-linear-gradient(to right, rgba(255, 255, 255, 0), white 50%, white);*/
-    /*background: linear-gradient(to right, rgba(255, 255, 255, 0), white 50%, white); }*/
 
 th {
     text-align: center;
@@ -95,22 +55,22 @@ h1 a{
     text-color: #ac3131;
     color: #ac3131;
     text-align: center;
-    font-family: "Lucida Sans Unicode";
+    font-family: "Lucida Sans Unicode",monospace;
     font-size: 18px;
     line-height: 26px;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     display:inline-block;
     vertical-align:middle;
 }
 a {
     text-color: #ac3131;
     color: #ac3131;
-    font-family: "Lucida Sans Unicode";
+    font-family: "Lucida Sans Unicode",monospace;
     font-size: 13px;
     line-height: 17px;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     display:inline-block;
     vertical-align:middle;
 }
@@ -124,14 +84,14 @@ div.margin {
     padding-right: 10px;
     padding-bottom: 5px;
     padding-top: 5px;
-    margin: 0px;
+    margin: 0;
     vertical-align: middle;
 }
 
 .nomargin {
     text-align: center;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
     vertical-align: middle;
 }
 
@@ -174,25 +134,4 @@ ul.menu li
 }
 
 .count-icon {
-    /*margin: 0px;*/
-    /*padding: 0px;*/
-    /*text-align:center;*/
-    /*vertical-align:middle;*/
-    /*display: inline-block;*/
 }
-/*.sticky {*/
-    /*max-width: 90%;*/
-    /*max-height: 90%;*/
-    /*text-align:center;*/
-    /*vertical-align:middle;*/
-    /*white-space: nowrap;*/
-    /*overflow: hidden;*/
-    /*text-overflow: ellipsis;*/
-/*}*/
-
-/*.round {*/
-    /*display: inline-block;*/
-    /*border-radius:50%;*/
-    /*-moz-border-radius:50%;*/
-    /*-webkit-border-radius: 50%;*/
-/*}*/

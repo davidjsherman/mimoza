@@ -4,7 +4,7 @@
 
 function formatLabel(feature, w, h) {
     var style = 'border:0px solid red; height:' + h + 'px; width:' + w + 'px; overflow:hidden; font-size:14px; line-height:auto;';
-    return '<div style="' + style + '" id="' + feature.properties.id + '" class="fittext">' + feature.properties.name + '</div>';
+    return '<div class="fittext" style="' + style + '">' + feature.properties.name + '</div>';
 }
 
 
@@ -147,7 +147,6 @@ function pnt2layer(map, feature) {
             return  L.rectangle(bounds, props);
         }
     }
-    var cl = ("species" == feature.properties.type) ? 'sticky round' : 'sticky';
     var label = L.marker(centre,
         {
             icon: L.divIcon({
@@ -168,7 +167,7 @@ function pnt2layer(map, feature) {
     return null;
 }
 
-function addPopups(map, name2popup, feature, layer) {
+function addPopups(name2popup, feature, layer) {
     var content = '';
     if ('reaction' == feature.properties.type) {
         var ga_res = formatGA(feature.properties.gene_association);
@@ -220,37 +219,39 @@ function getComplexJson(map, json_zo, json_zi, name2popup) {
 }
 
 function fitLabels(zn, zo){
-    console.log('fit lbls');
+    console.log('fitting labels into nodes');
     $('.fittext', '#map').each(function(i, obj) {
         var old_height = $(this).height();
         var height = (old_height * zn) / zo;
-        $(this).height(height);
         var old_width = $(this).width();
         var width = (old_width * zn) / zo;
-        $(this).width(width);
+        $(this).css({
+            'height': height,
+            'width': width,
+            'font-size': 18
+        });
         var offset = $(this).offset();
         $(this).offset({ top: offset.top + (old_height - height) / 2, left: offset.left + (old_width - width) / 2});
         $(this).wrapInner("<div class='wrap'></div>");
         var $i = $(this).children('.wrap')[0];
         var size = 18;
-        do {
-            $(this).css("font-size", size);
+        while($i.scrollHeight > height && size > 4) {
             size--;
-        } while($i.scrollHeight > height && size >= 4);
+            $(this).css("font-size", size);
+        }
     });
 //    $('.wrap').children().unwrap();
 }
 
 function getSimpleJson(map, jsn, name2popup) {
-    var result = L.geoJson(jsn, {
+    return L.geoJson(jsn, {
         pointToLayer: function(feature, latlng) {
             return pnt2layer(map, feature);
         },
         onEachFeature: function(feature, layer) {
-            addPopups(map, name2popup, feature, layer);
+            addPopups(name2popup, feature, layer);
         }
     }).addTo(map);
-    return result;
 }
 
 function getJson(map, jsn, name2popup, geojsonLayer) {
