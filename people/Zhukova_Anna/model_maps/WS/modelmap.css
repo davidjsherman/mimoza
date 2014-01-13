@@ -144,4 +144,6 @@ ul.menu li
     font-size:14px;
     line-height: auto;
     text-overflow: ellipsis;
+    text-align: center;
+    vertical-align: middle;
 }
