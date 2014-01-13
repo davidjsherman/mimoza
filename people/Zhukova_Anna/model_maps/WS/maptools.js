@@ -38,12 +38,12 @@ function formatFormula(reversible, reactants, products) {
     reactants = reactants.split('&');
     products = products.split('&');
     var res = '<table border="0"><tr>';
-//    res += '<tr><td><table border="0"><tr><th colspan="2">Reactants</th></tr>';
-    res += '<tr><td><table border="0"><tr><th>Reactants</th></tr>';
+    res += '<tr><td><table border="0"><tr><th colspan="2">Reactants</th></tr>';
+//    res += '<tr><td><table border="0"><tr><th>Reactants</th></tr>';
     for (var i = 0, len = reactants.length; i < len; i++) {
         sv = reactants[i].split(' * ');
-//        res += '<tr><td>' + sv[0] + '</td><td>' + sv[1] + '</td></tr>';
-        res += '<tr><td>' + sv[1] + '</td></tr>';
+        res += '<tr><td>' + sv[0] + '</td><td>' + sv[1] + '</td></tr>';
+//        res += '<tr><td>' + sv[1] + '</td></tr>';
     }
     res += '</table></td>';
     if (reversible) {
@@ -51,12 +51,12 @@ function formatFormula(reversible, reactants, products) {
     } else {
         res += '<th class="centre">-&gt;</th>';
     }
-//    res += '<td><table border="0"><tr><th colspan="2">Products</th></tr>';
-    res += '<td><table border="0"><tr><th>Products</th></tr>';
+    res += '<td><table border="0"><tr><th colspan="2">Products</th></tr>';
+//    res += '<td><table border="0"><tr><th>Products</th></tr>';
     for (i = 0, len = products.length; i < len; i++) {
         sv = products[i].split(' * ');
-//        res += '<tr><td>' + sv[0] + '</td><td>' + sv[1] + '</td></tr>';
-        res += '<tr><td>' + sv[1] + '</td></tr>';
+        res += '<tr><td>' + sv[0] + '</td><td>' + sv[1] + '</td></tr>';
+//        res += '<tr><td>' + sv[1] + '</td></tr>';
     }
     res += '</table></td></tr>';
     res += '</tr></table>';
@@ -227,7 +227,7 @@ function fitLabels(zn, zo){
         var height = (old_height * zn) / zo;
         var old_width = $(this).width();
         var width = (old_width * zn) / zo;
-        var size = width / 3;
+        var size = Math.max(width / 5, 5);
         $(this).css({
             'height': height,
             'width': width,
@@ -235,14 +235,14 @@ function fitLabels(zn, zo){
         });
         var offset = $(this).offset();
         $(this).offset({ top: offset.top + (old_height - height) / 2, left: offset.left + (old_width - width) / 2});
-        if (width >= 10 && size > 4) {
-            $(this).wrapInner("<div class='wrap'></div>");
-            var $i = $(this).children('.wrap')[0];
-            while($i.scrollHeight > height && size > 4) {
-                size--;
-                $(this).css("font-size", size);
-            }
-        }
+//        if (width >= 12 && size > 6) {
+//            $(this).wrapInner("<div class='wrap'></div>");
+//            var $i = $(this).children('.wrap')[0];
+//            while($i.scrollHeight > height && size > 6) {
+//                size--;
+//                $(this).css("font-size", size);
+//            }
+//        }
     });
 //    $('.wrap').children().unwrap();
 }
