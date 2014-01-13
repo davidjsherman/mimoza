@@ -2,12 +2,6 @@
  * Created by anna on 12/12/13.
  */
 
-function formatLabel(feature, w, h) {
-    var style = 'border:0px solid red; height:' + h + 'px; width:' + w + 'px; overflow:hidden; font-size:14px; line-height:auto;';
-    return '<div class="fittext" style="' + style + '">' + feature.properties.name + '</div>';
-}
-
-
 function formatGA(ga) {
     var ga_res = '';
     if (ga) {
@@ -159,7 +153,7 @@ function pnt2layer(map, feature) {
             {
                 icon: L.divIcon({
                     className: 'count-icon',
-                    html: formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
+                    html: feature.properties.name,//formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
                     iconSize: [w * map.getZoom() * 2, h * map.getZoom() * 2]
                 })
             }
@@ -199,7 +193,7 @@ function getGeoJson(map, json, name2popup) {
     } else {
         getComplexJson(map, json[0], json[1], name2popup);
     }
-    fitLabels(map.getZoom(), map.getZoom());
+    fitSimpleLabels();
 }
 
 
@@ -208,33 +202,56 @@ function getComplexJson(map, json_zo, json_zi, name2popup) {
     var geojsonLayer = getSimpleJson(map, json_zo, name2popup);
     var zo = map.getZoom();
     map.on('zoomend', function (e) {
-        if (map.getZoom() >= 3) {
-            if (zo < 3) {
-                geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
-            }
-        } else if (zo >= 3) {
-                geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
+        var zn = map.getZoom();
+        if (zn >= 3 && zo < 3) {
+            geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
+            fitSimpleLabels();
+        } else if (zn < 3 && zo >= 3) {
+            geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
+            fitSimpleLabels();
+        } else {
+            fitLabels(zn, zo);
         }
-        fitLabels(map.getZoom(), zo);
         zo = map.getZoom();
+    });
+}
+
+function fitSimpleLabels(){
+    console.log('fitting labels into nodes');
+    $('.count-icon', '#map').each(function(i, obj) {
+        var width = $(this).width();
+        var size = width < 8 ? 0 : Math.max(width / 5, 8);
+        $(this).css({
+            'font-size': size
+        });
     });
 }
 
 function fitLabels(zn, zo){
     console.log('fitting labels into nodes');
-    $('.fittext', '#map').each(function(i, obj) {
-        var old_height = $(this).height();
-        var height = (old_height * zn) / zo;
+    var pow = Math.pow(2, zn - zo);
+    var width2css = {};
+    $('.count-icon', '#map').each(function(i, obj) {
+//        var old_height = $(this).height();
+//        var height = old_height * pow;
         var old_width = $(this).width();
-        var width = (old_width * zn) / zo;
-        var size = Math.max(width / 5, 5);
-        $(this).css({
-            'height': height,
-            'width': width,
-            'font-size': size
-        });
+        if (old_width in width2css) {
+            $(this).css(width2css[old_width]);
+        } else {
+            var width = old_width * pow;
+            var size = width < 10 ? 0 : Math.max(width / 5, 8);
+            var css = {
+                'height': width,//height,
+                'width': width,
+                'font-size': size
+                //'top': $(this).offset().top + (old_height - height) / 2
+            };
+            $(this).css(css);
+            width2css[old_width] = css;
+        }
         var offset = $(this).offset();
-        $(this).offset({ top: offset.top + (old_height - height) / 2, left: offset.left + (old_width - width) / 2});
+        var shift = old_width * (1 - pow) / 2;
+        $(this).offset({ top: offset.top + shift, left: offset.left + shift});//{ top: offset.top + (old_height - height) / 2, left: offset.left + (old_width - width) / 2});
 //        if (width >= 12 && size > 6) {
 //            $(this).wrapInner("<div class='wrap'></div>");
 //            var $i = $(this).children('.wrap')[0];

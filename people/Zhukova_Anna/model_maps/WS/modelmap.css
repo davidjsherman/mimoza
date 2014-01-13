@@ -120,7 +120,9 @@ ul.menu
 }
 ul.menu li
 {
-    display:inline;
+    margin-right: 5px;
+    margin-left: 5px;
+    display: inline;
 }
 
 .leaflet-popup-close-button {
@@ -134,4 +136,12 @@ ul.menu li
 }
 
 .count-icon {
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    border:0px solid red;
+    overflow:hidden;
+    font-size:14px;
+    line-height: auto;
+    text-overflow: ellipsis;
 }
