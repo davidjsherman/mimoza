@@ -25,9 +25,9 @@ def get_gene_association_list(ga):
 		return ''
 	
 			
-def get_formula(graph, n):
-	ins = '&'.join(["{0} * {1}".format(int(graph['stoichiometry'][e]), graph['name'][graph.source(e)]) for e in graph.getInEdges(n)])
-	outs = '&'.join(["{0} * {1}".format(int(graph['stoichiometry'][e]), graph['name'][graph.target(e)]) for e in graph.getOutEdges(n)])
+def get_formula(graph, n, onto):
+	ins = '&'.join(["{0} * {1}".format(int(graph['stoichiometry'][e]), get_short_name(graph, graph.source(e), onto)) for e in graph.getInEdges(n)])
+	outs = '&'.join(["{0} * {1}".format(int(graph['stoichiometry'][e]), get_short_name(graph, graph.target(e), onto)) for e in graph.getOutEdges(n)])
 	return ins, outs	
 	
 				
@@ -59,8 +59,6 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 			return [(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale]
 			
 		onto = parse(get_chebi())
-		def name(n):
-			return get_short_name(graph, n, onto)
 			
 		for e in graph.getEdges():
 			s, t = graph.source(e), graph.target(e)
@@ -73,10 +71,10 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 			if not type_[n] in ['reaction', 'species', 'compartment', 'background']:
 				continue
 			geom = geojson.Point(get_coords(n))
-			props = {"id": graph['id'][n], "name": name(n), "color": triplet(color[n]), "bcolor": triplet(b_color[n]),\
+			props = {"id": graph['id'][n], "name": get_short_name(graph, n, onto), "color": triplet(color[n]), "bcolor": triplet(b_color[n]),\
 				"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,  "type": type_[n]}
 			if 'reaction' == type_[n]:
-				ins, outs = get_formula(graph, n)	
+				ins, outs = get_formula(graph, n, onto)	
 				props.update({"gene_association":  get_gene_association_list(ga[n]), "reversible": graph['reversible'][n], 'reactants': ins, 'products': outs})	
 			elif 'species' == type_[n]:
 				props["chebi"] = chebi[n]
@@ -88,7 +86,7 @@ class SBML2GeoJSNExport(tlp.Algorithm):
 		fc = geojson.FeatureCollection(features, \
 			geometry=geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]]))
 		with open(self.dataSet["file::GeoJSON"], 'w') as f:
-			f.write("var gjsn_{1} = {0}\n".format(geojson.dumps(fc).replace('"id": null', ''), graph.getName()))
+			f.write("var gjsn_{1} = {0}\n".format(geojson.dumps(fc).replace('"id": null', ''), graph.getName().replace(' ', '_').lower().strip()))
 		return True
 
 # The line below does the magic to register the plugin to the plugin database

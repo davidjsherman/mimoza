@@ -82,7 +82,8 @@ class SBMLGeneralizationBasedLayout(tlp.Algorithm):
 			clone["viewBorderColor"][nn] = graph["viewBorderColor"][n]
 			co = graph["viewLayout"][n]
 			clone["viewLayout"][nn] = tlp.Coord(co.getX(), co.getY(), 0)
-			fakenn2color[nn] = mn2color[n]
+			clone["viewColor"][nn] = mn2color[n]
+#			fakenn2color[nn] = mn2color[n]
 			clone["type"][nn] = 'background'
 			
 			meta_neighbours = lambda nodes: sorted([t for t in nodes if graph.isMetaNode(t)], \
@@ -131,8 +132,8 @@ class SBMLGeneralizationBasedLayout(tlp.Algorithm):
 				clone["viewLayout"][m] = mg["viewLayout"][m]
 		vrr(clone)
 		vrr(graph)
-		for nn, c in fakenn2color.iteritems():
-			clone["viewColor"][nn] = c
+#		for nn, c in fakenn2color.iteritems():
+#			clone["viewColor"][nn] = c
 		return True
 
 # The line below does the magic to register the plugin to the plugin database

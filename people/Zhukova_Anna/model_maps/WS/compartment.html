@@ -11,8 +11,12 @@
 <ul class="menu">
     <li><a href="./compartment.html?name=cytoplasm">Cytoplasm</a></li>
     <li><a href="./compartment.html?name=peroxisome">Peroxisome</a></li>
-    <li><a href="./compartment.html?name=er">Endoplasmic Reticulum</a></li>
+    <li><a href="./compartment.html?name=endoplasmic_reticulum">Endoplasmic Reticulum</a></li>
     <li><a href="./compartment.html?name=lipid_particle">Lipid Particle</a></li>
+    <li><a href="./compartment.html?name=golgi">Golgi</a></li>
+    <li><a href="./compartment.html?name=nucleus">Nucleus</a></li>
+    <li><a href="./compartment.html?name=vacuole">Vacuole</a></li>
+    <li><a href="./compartment.html?name=mitochondrion">Mitochondrion</a></li>
 </ul>
 
 <h1 class="capitalize"><span id='comp'>Compartment</span> of <i>Y. lipolytica</i> (<a href="http://www.ebi.ac.uk/biomodels-main/MODEL1111190000">MODEL1111190000</a>)</h1>
@@ -35,6 +39,23 @@
 
 <script src="./pero_f.json" type="text/javascript"></script>
 <script src="./pero.json" type="text/javascript"></script>
+
+<script src="./lp_f.json" type="text/javascript"></script>
+<script src="./lp.json" type="text/javascript"></script>
+
+<script src="./er_f.json" type="text/javascript"></script>
+<script src="./er.json" type="text/javascript"></script>
+
+<script src="./golgi_f.json" type="text/javascript"></script>
+<script src="./golgi.json" type="text/javascript"></script>
+
+<script src="./vacuole_f.json" type="text/javascript"></script>
+<script src="./vacuole.json" type="text/javascript"></script>
+
+<script src="./nucleus_f.json" type="text/javascript"></script>
+<script src="./nucleus.json" type="text/javascript"></script>
+
+
 <div>
     <form name="search_form" onclick="search(map, name2popup);">
         <label>
@@ -46,7 +67,15 @@
 <div class="nomargin" id="map" style="width: 1024px; height: 1024px"></div>
 
 <script>
-    var comp2geojson = {'mitochondrion': [gjsn__mitochondrion, gjsn__mitochondrion_full], 'cytoplasm': [gjsn__cytoplasm], 'peroxisome': [gjsn__peroxisome, gjsn__peroxisome_full]};
+    var comp2geojson = {'mitochondrion': [gjsn__mitochondrion, gjsn__mitochondrion_full],
+        'cytoplasm': [gjsn__cytoplasm],
+        'golgi': [gjsn__golgi, gjsn__golgi_full],
+        'vacuole': [gjsn__vacuole, gjsn__vacuole_full],
+        'nucleus': [gjsn__nucleus, gjsn__nucleus_full],
+        'peroxisome': [gjsn__peroxisome, gjsn__peroxisome_full],
+        'lipid_particle': [gjsn__lipid_particle, gjsn__lipid_particle_full],
+        'endoplasmic_reticulum': [gjsn__endoplasmic_reticulum, gjsn__endoplasmic_reticulum_full]
+    };
 
     var compartment = gup('name');
     if (!compartment) {
@@ -64,7 +93,7 @@
     getGeoJson(map, comp2geojson[compartment], name2popup);
 
 
-    L.tileLayer('./white.png', {
+    L.tileLayer('./white.jpg', {
         continuousWorld: true,
         noWrap: true,
         tileSize: 256,
