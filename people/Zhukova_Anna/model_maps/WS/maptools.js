@@ -106,11 +106,16 @@ function pnt2layer(map, feature) {
             fillColor: feature.properties.color,
             fillOpacity: 1,
             opacity: 1,
-            weight: map.getZoom() * w,
+            weight: w * Math.pow(2, map.getZoom() - 1),
             lineCap: 'arrow',
             clickable: false,
             fill: true
         });
+    }
+    var x = e[0], y = e[1];
+    if (('species' == feature.properties.type) || ('background' == feature.properties.type) && (14 == feature.properties.shape)) {
+        w /= Math.sqrt(2);
+        h /= Math.sqrt(2);
     }
     var props = {
         name: feature.properties.name,
@@ -119,15 +124,10 @@ function pnt2layer(map, feature) {
         fillColor: feature.properties.color,
         fillOpacity: 'background' == feature.properties.type ? 0.3 : 1,
         opacity: 1,
-        weight: 'background' == feature.properties.type ? 0 : map.getZoom() / 2,
+        weight: 'background' == feature.properties.type ? 0 : w / 10 * Math.pow(2, map.getZoom() - 1),
         fill: true,
         clickable: 'background' != feature.properties.type
     };
-    var x = e[0], y = e[1];
-    if (('species' == feature.properties.type) || ('background' == feature.properties.type) && (14 == feature.properties.shape)) {
-        w /= Math.sqrt(2);
-        h /= Math.sqrt(2);
-    }
     var southWest = map.unproject([x - w, y + h], 1),
         northEast = map.unproject([x + w, y - h], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
@@ -154,7 +154,7 @@ function pnt2layer(map, feature) {
                 icon: L.divIcon({
                     className: 'count-icon',
                     html: feature.properties.name,//formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
-                    iconSize: [w * map.getZoom() * 2, h * map.getZoom() * 2]
+                    iconSize: [w * Math.pow(2, map.getZoom() - 1) * 1.8, h * Math.pow(2, map.getZoom() - 1) * 1.8]
                 })
             }
         );

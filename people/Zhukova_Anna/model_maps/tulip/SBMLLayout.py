@@ -170,15 +170,15 @@ def layout(graph, margin=5):
 		layout_circle(qo, margin)		
 		copy_layout(qo, gr)
 		layout_ub_sps(gr)
-		remove_overlaps(gr, margin)	
+#		remove_overlaps(gr, margin)	
 		copy_layout(gr, graph)
 		
 	for gr in mess:
 		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not gr["ubiquitous"][n]])
 		layout_force(qo, margin)		
+		remove_overlaps(qo, margin)
 		copy_layout(qo, gr)
-		layout_ub_sps(gr)
-		remove_overlaps(gr, margin)	
+		layout_ub_sps(gr)	
 		copy_layout(gr, graph)
 		
 	graph.delAllSubGraphs(sub)
