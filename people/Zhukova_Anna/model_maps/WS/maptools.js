@@ -148,7 +148,7 @@ function pnt2layer(map, feature) {
     if ('species' == feature.properties.type) {
         node = L.circle(centre, d / 2, props);
     }
-    if (node) { //&& w * map.getZoom() >= 10) {
+    if (node && w * Math.pow(2, (map.getZoom() >= 3 ? map.getMaxZoom() : 3) - 1) >= 25) {
         var label = L.marker(centre,
             {
                 icon: L.divIcon({
@@ -232,16 +232,16 @@ function fitLabels(zn, zo){
     var pow = Math.pow(2, zn - zo);
     var width2css = {};
     $('.count-icon', '#map').each(function(i, obj) {
-//        var old_height = $(this).height();
-//        var height = old_height * pow;
         var old_width = $(this).width();
         if (old_width in width2css) {
             $(this).css(width2css[old_width]);
         } else {
             var width = old_width * pow;
+            var old_height = $(this).height();
+            var height = old_height * pow;
             var size = width < 10 ? 0 : Math.max(width / 5, 8);
             var css = {
-                'height': width,//height,
+                'height': height,
                 'width': width,
                 'font-size': size
                 //'top': $(this).offset().top + (old_height - height) / 2
