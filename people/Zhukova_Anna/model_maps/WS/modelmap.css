@@ -39,18 +39,31 @@ th {
     text-align: center;
 }
 .centre {
+    position:center;
     text-align: center;
+    vertical-align: middle;    
 }
 td a, p.popup a {
     font-size: 10px;
 }
 p.popup {
-    max-width: 512px;
+    width: auto;
+    max-width: 1020px;
 }
 p.popup table {
-    max-width: 512px;
-    width: 90%;
+    width:auto;
+    max-width: 1020px;
+    font-size: 13px;
+    display: inline-block;
 }
+
+p.popup table td {
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 h1 a{
     text-color: #ac3131;
     color: #ac3131;

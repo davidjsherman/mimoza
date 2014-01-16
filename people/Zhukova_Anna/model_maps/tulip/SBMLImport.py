@@ -1,4 +1,5 @@
 from tulip import *
+from libsbml import SBMLReader
 import tulipplugins
 import traceback
 from modules.sbml2tlp import import_sbml
@@ -11,7 +12,11 @@ class SBMLImport(tlp.ImportModule):
 
 	def importGraph(self):
 		try:
-			import_sbml(self.graph, self.dataSet["file::filename"])
+			sbml_file = self.dataSet["file::filename"]
+			reader = SBMLReader()
+			input_document = reader.readSBML(sbml_file)
+			input_model = input_document.getModel()
+			import_sbml(self.graph, input_model, sbml_file)
 			return True
 		# this is a workaround to avoid a crash from Tulip when an exception is raised
 		# in the import code

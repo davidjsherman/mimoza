@@ -14,7 +14,7 @@ __author__ = 'anna'
 arrowShape = 50
 
 
-def process_generalized_entities(chebi, dot, input_model, sbml_file):
+def process_generalized_entities(chebi, input_model, sbml_file):
 	r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps, species_id2chebi_id = {}, {}, {}, set(), {}
 	try:
 		r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
@@ -23,6 +23,9 @@ def process_generalized_entities(chebi, dot, input_model, sbml_file):
 	except GrPlError:
 		pass
 	if not r_id2g_id and not ub_sps:
+		dot = sbml_file.find(".sbml")
+		if dot == -1:
+			dot = sbml_file.find(".xml")
 		groups_sbml = "{0}_with_groups.xml".format(sbml_file[0:dot] if dot != -1 else sbml_file)
 		out_sbml = "{0}_generalized.xml".format(sbml_file[0:dot] if dot != -1 else sbml_file)
 		r_id2g_id, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, out_sbml,
@@ -122,17 +125,10 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model, ub_sps):
 		graph["compartment"][n] = get_r_comp(all_comps)
 
 
-def import_sbml(graph, sbml_file):
-	dot = sbml_file.find(".sbml")
-	if dot == -1:
-		dot = sbml_file.find(".xml")
+def import_sbml(graph, input_model, sbml_file):
 	chebi = parse(get_chebi())
 
-	reader = SBMLReader()
-	input_document = reader.readSBML(sbml_file)
-	input_model = input_document.getModel()
-
-	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = process_generalized_entities(chebi, dot,
+	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = process_generalized_entities(chebi,
 	                                                                                              input_model,
 	                                                                                              sbml_file)
 	check_names(input_model)

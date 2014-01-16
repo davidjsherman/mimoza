@@ -1,5 +1,6 @@
 from tulip import tlp
 import sys
+from libsbml import SBMLReader
 from modules.color import color
 from modules.factoring import factor_nodes, factor_comps
 from modules.geojson_helper import tulip2geojson
@@ -9,12 +10,16 @@ from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
 dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
+sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_pero_with_groups.xml'
 
 
 def main(argv=None):
 	graph = tlp.newGraph()
 	# sbml -> tulip graph
-	graph = import_sbml(graph, '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_pero_with_groups.xml')
+	reader = SBMLReader()
+	input_document = reader.readSBML(sbml_file)
+	input_model = input_document.getModel()
+	graph = import_sbml(graph, input_model, sbml_file)
 	print len([n for n in graph.getNodes()])
 
 	# generalized species/reactions -> metanodes
@@ -53,7 +58,7 @@ def main(argv=None):
 
 
 
-	generate_html(graph.getName(), dir + 'comp.html', organelle2meta_node.keys())
+	generate_html(input_model, dir + 'comp.html', organelle2meta_node.keys())
 
 
 

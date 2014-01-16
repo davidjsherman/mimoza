@@ -6,7 +6,7 @@ function formatGA(ga) {
     var ga_res = '';
     if (ga) {
         var or_closes = ga.split('&');
-        ga_res = '<table border="0"><tr><th colspan="' + or_closes.length + '">Gene association</th></tr><tr>';
+        ga_res = '<table border="0"><tr class="centre"><th colspan="' + (2 * or_closes.length - 1) + '"  class="centre">Gene association</th></tr><tr>';
         for (i = 0, len = or_closes.length; i < len; i++) {
             var or_close = or_closes[i];
             ga_res += '<td><table border="0">';
@@ -32,27 +32,27 @@ function formatFormula(reversible, reactants, products) {
     reactants = reactants.split('&');
     products = products.split('&');
     var res = '<table border="0"><tr>';
-    res += '<tr><td><table border="0"><tr><th colspan="2">Reactants</th></tr>';
-//    res += '<tr><td><table border="0"><tr><th>Reactants</th></tr>';
+   
+    res += '<td><table border="0">'; //<tr><th colspan="2">Reactants</th></tr>';
     for (var i = 0, len = reactants.length; i < len; i++) {
         sv = reactants[i].split(' * ');
-        res += '<tr><td>' + sv[0] + '</td><td>' + sv[1] + '</td></tr>';
-//        res += '<tr><td>' + sv[1] + '</td></tr>';
+        res += '<tr><td>' + sv[0] + '&nbsp;</td><td>' + sv[1] + '</td></tr>';
     }
     res += '</table></td>';
+
     if (reversible) {
-        res += '<th class="centre">&lt;-&gt;</th>';
+        res += '<th class="centre">&#8596;</th>';
     } else {
-        res += '<th class="centre">-&gt;</th>';
+        res += '<th class="centre">&#65515;</th>';
     }
-    res += '<td><table border="0"><tr><th colspan="2">Products</th></tr>';
-//    res += '<td><table border="0"><tr><th>Products</th></tr>';
+
+    res += '<td><table border="0">'; //<tr><th colspan="2">Products</th></tr>';
     for (i = 0, len = products.length; i < len; i++) {
         sv = products[i].split(' * ');
-        res += '<tr><td>' + sv[0] + '</td><td>' + sv[1] + '</td></tr>';
-//        res += '<tr><td>' + sv[1] + '</td></tr>';
+        res += '<tr><td>' + sv[0] + '&nbsp;</td><td>' + sv[1] + '</td></tr>';
     }
-    res += '</table></td></tr>';
+    res += '</table></td>';
+
     res += '</tr></table>';
     return res
 }
@@ -168,13 +168,13 @@ function addPopups(name2popup, feature, layer) {
     if ('reaction' == feature.properties.type) {
         var ga_res = formatGA(feature.properties.gene_association);
         var formula = formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products);
-        content = '<h2><b>' + feature.properties.name + "</h2><p class='popup'>" + formula + '</p><p class="popup">'+ ga_res + "</p>";
+        content = '<h2><b>' + feature.properties.name + "</h2><p class='popup centre'>" + formula + '</p><p class="popup centre">'+ ga_res + "</p>";
     } else if ('species' == feature.properties.type) {
         var ch = formatChebi(feature.properties.chebi);
-        content = '<h2>' + feature.properties.name + "</h2><p>" + ch + "</p>";
+        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'>" + ch + "</p>";
     } else if ('compartment' == feature.properties.type) {
         var link = formatLink(feature.properties.name);
-        content = '<h2>' + feature.properties.name + "</h2><p>" + link + "</p>";
+        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'>" + link + "</p>";
     }
     if ('edge' == feature.properties.type) {
         return
