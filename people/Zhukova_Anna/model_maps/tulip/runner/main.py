@@ -3,10 +3,12 @@ import sys
 from modules.color import color
 from modules.factoring import factor_nodes, factor_comps
 from modules.geojson_helper import tulip2geojson
+from modules.html_generator import generate_html
 from modules.layout_utils import layout_generalization_based, layout
 from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
+dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
 
 
 def main(argv=None):
@@ -43,8 +45,15 @@ def main(argv=None):
 		print len([n for n in comp_graph_full.getNodes()])
 
 		# export to geojson
-		tulip2geojson(comp_graph_full, '/Users/anna/Documents/PhD/magnome/model_generalization/code/perox_f.json')
-		tulip2geojson(comp_graph, '/Users/anna/Documents/PhD/magnome/model_generalization/code/perox.json')
+		organelle = organelle.lower().replace(' ', '_')
+		full_json = '{0}{1}_f.json'.format(dir, organelle)
+		tulip2geojson(comp_graph_full, full_json)
+		generalized_json = '{0}{1}.json'.format(dir, organelle)
+		tulip2geojson(comp_graph, generalized_json)
+
+
+
+	generate_html(graph.getName(), dir + 'comp.html', organelle2meta_node.keys())
 
 
 
