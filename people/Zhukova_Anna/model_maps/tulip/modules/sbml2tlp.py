@@ -232,20 +232,20 @@ def mark_ancestors(graph, r_eq2clu, r_ch2clu, s2clu):
 		if 'reaction' == type_[n]:
 			if id_[n] in r_eq2clu:
 				gr_id, gr_name = r_eq2clu[id_[n]]
-			elif id_[n] in r_ch2clu:
-				gr_id, gr_name = r_ch2clu[id_[n]]
-				if gr_id in r_eq2clu:
-					clu = r_eq2clu[gr_id]
-					gr_id += ":" + clu[0]
-					gr_name += ":" + clu[1]
+			# elif id_[n] in r_ch2clu:
+			# 	gr_id, gr_name = r_ch2clu[id_[n]]
+			# 	if gr_id in r_eq2clu:
+			# 		clu = r_eq2clu[gr_id]
+			# 		gr_id += ":" + clu[0]
+			# 		gr_name += ":" + clu[1]
 		elif id_[n] in s2clu:
-			gr_id, gr_name, term = s2clu[id_[n]]
+			gr_id, term = s2clu[id_[n]]
+			if term:
+				gr_name = term.getName()
 		if gr_name:
 			anc_name[n] = gr_name
 		if gr_id:
 			anc_id[n] = gr_id
 		if term:
-			print term
-			# TODO: fix it
-			# anc_ch_id[n] = term.getId()
+			anc_ch_id[n] = term.getId()
 
