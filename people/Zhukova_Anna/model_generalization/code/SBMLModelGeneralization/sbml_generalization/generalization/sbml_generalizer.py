@@ -1,4 +1,3 @@
-from StdSuites.AppleScript_Suite import inches
 from libsbml import SBMLReader
 from sbml_generalization.utils.logger import log, log_r_clusters
 from sbml_helper import save_as_comp_generalized_sbml, \

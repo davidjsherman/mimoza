@@ -405,7 +405,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
 					                             name="{0} ({1})".format(clu.getName(), len(s_ids)))
 					addAnnotation(new_species, BQB_IS, to_identifiers_org_format(clu.getId()))
 					for s_id in s_ids:
-						s_id2gr_id[s_id] = new_species.getId(), clu.getName(), clu
+						s_id2gr_id[s_id] = new_species.getId(), clu
 
 					if groups_sbml and groups_plugin:
 						# save as a group
@@ -495,7 +495,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 				                             name="{0} ({1}) [{2}]".format(t.getName(), len(s_ids), comp.getName()))
 				addAnnotation(new_species, BQB_IS, to_identifiers_org_format(t.getId()))
 				for s_id in s_ids:
-					s_id2gr_id[s_id] = new_species.getId(), t.getName(), c_id
+					s_id2gr_id[s_id] = new_species.getId(), t
 
 				if groups_sbml and groups_plugin:
 					# save as a group
@@ -638,7 +638,7 @@ def parse_group_sbml(groups_sbml, chebi):
 					ub_sps = set(gr_members)
 				elif GROUP_TYPE_EQUIV == gr_type:
 					for s_id in gr_members:
-						s_id2gr_id[s_id] = gr_id, gr_name, get_term(group, chebi)
+						s_id2gr_id[s_id] = gr_id, get_term(group, chebi)
 	else:
 		raise GrPlError("groups plugin not installed")
 	return r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps

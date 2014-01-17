@@ -381,17 +381,20 @@ class Ontology:
 
 
 	def filterRelationships(self, rel_to_keep):
+		to_remove = set()
 		for rel_set in self.rel_map.itervalues():
 			for (subj, rel, obj) in rel_set:
 				if not rel in rel_to_keep:
-					if subj in self.rel_map:
-						self.rel_map[subj] -= {(subj, rel, obj)}
-						if not self.rel_map[subj]:
-							del self.rel_map[subj]
-					if obj in self.rel_map:
-						self.rel_map[obj] -= {(subj, rel, obj)}
-						if not self.rel_map[obj]:
-							del self.rel_map[obj]
+					to_remove.add((subj, rel, obj))
+		for (subj, rel, obj) in to_remove:
+			if subj in self.rel_map:
+				self.rel_map[subj] -= {(subj, rel, obj)}
+				if not self.rel_map[subj]:
+					del self.rel_map[subj]
+			if obj in self.rel_map:
+				self.rel_map[obj] -= {(subj, rel, obj)}
+				if not self.rel_map[obj]:
+					del self.rel_map[obj]
 
 
 	def removeTerm(self, term, brutally=False):
