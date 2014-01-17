@@ -10,7 +10,7 @@ from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
 dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
-sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_pero_with_groups.xml'
+sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
 
 
 def main(argv=None):
@@ -57,8 +57,10 @@ def main(argv=None):
 		tulip2geojson(comp_graph, generalized_json)
 
 
-
 	generate_html(input_model, dir + 'comp.html', organelle2meta_node.keys())
+
+	# TODO: why doesn't it work??
+	tlp.saveGraph(graph.getRoot(), dir + 'graph.tlpx')
 
 
 

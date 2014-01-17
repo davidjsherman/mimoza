@@ -245,5 +245,7 @@ def mark_ancestors(graph, r_eq2clu, r_ch2clu, s2clu):
 		if gr_id:
 			anc_id[n] = gr_id
 		if term:
-			anc_ch_id[n] = term.getId()
+			print term
+			# TODO: fix it
+			# anc_ch_id[n] = term.getId()
 

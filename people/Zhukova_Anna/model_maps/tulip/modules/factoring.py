@@ -47,7 +47,6 @@ def factor_nodes(graph):
 			graph[prop][metaNode] = clone[prop][n]
 		graph["id"][metaNode] = clone["ancestor_id"][n]
 		graph["name"][metaNode] = clone["ancestor_name"][n]
-		sz = root["viewSize"][n]
 		root["viewSize"][metaNode] = get_n_size(root, metaNode)
 
 		if 'reaction' == type_:
@@ -96,4 +95,5 @@ def factor_comps(meta_graph):
 	for organelle in root.getAttribute("organelles").split(";"):
 		meta_node = comp_to_meta_node(meta_graph, organelle, cytoplasm)
 		organelle2meta_node[organelle] = meta_node
+	resize_edges(meta_graph)
 	return organelle2meta_node
