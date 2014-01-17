@@ -34,8 +34,8 @@ def getKey(n, graph):
 
 
 def color(graph):
-	viewColor =  graph.getColorProperty("viewColor")
-	viewBorderColor =  graph.getColorProperty("viewBorderColor")
+	view_color = graph.getColorProperty("viewColor")
+	view_border_color = graph.getColorProperty("viewBorderColor")
 
 	keys = {getKey(n, graph) for n in graph.getNodes() if graph['type'][n] == 'reaction'}
 	i = len(keys)
@@ -52,7 +52,6 @@ def color(graph):
 
 	key2color.update(dict(zip(keys, colors)))
 
-
 	root = graph.getRoot()
 	organelles = root.getAttribute("organelles").split(";")
 	cyto = root.getAttribute("cytoplasm")
@@ -62,7 +61,7 @@ def color(graph):
 	key2border_color = dict(zip(organelles + [cyto], colors[1:]))
 
 
-	viewBorderColor.setAllNodeValue(white)
+	view_border_color.setAllNodeValue(white)
 
 	for n in graph.getNodes():
 		type_ = graph['type'][n]
@@ -74,27 +73,28 @@ def color(graph):
 				comp_m = graph['compartment'][m]
 				if comp != comp_m:
 					if comp_m in key2border_color:
-						viewBorderColor[n] = key2border_color[comp_m]
+						view_border_color[n] = key2border_color[comp_m]
 					else:
-						viewBorderColor[n] = colors[0]
+						view_border_color[n] = colors[0]
 					found = True
 					break
-			if found: break
+			if found:
+				break
 
 		if 'compartment' == type_:
-			viewColor[n] = transparent_grey
+			view_color[n] = transparent_grey
 			continue
 		a = 255
 		if 'reaction' == type_:
 			r, g, b = key2color[getKey(n, graph)]
 			if graph.isMetaNode(n):
 				a = 100
-			viewColor[n] = tlp.Color(r, g, b, a)
+			view_color[n] = tlp.Color(r, g, b, a)
 			for e in graph.getInOutEdges(n):
 				if graph['ubiquitous'][graph.target(e)] or graph['ubiquitous'][graph.source(e)]:
-					viewColor[e] = grey
+					view_color[e] = grey
 				else:
-					viewColor[e] = tlp.Color(r, g, b, 100 if graph.isMetaEdge(e) else 255)
+					view_color[e] = tlp.Color(r, g, b, 100 if graph.isMetaEdge(e) else 255)
 		if 'species' == type_:
 			if graph['ubiquitous'][n]:
 				r, g, b = 180, 180, 180
@@ -102,4 +102,4 @@ def color(graph):
 				r, g, b = key2color[getKey(n, graph)]
 				if graph.isMetaNode(n):
 					a = 100
-			viewColor[n] = tlp.Color(r, g, b, a)
+			view_color[n] = tlp.Color(r, g, b, a)
