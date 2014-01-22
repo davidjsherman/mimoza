@@ -73,8 +73,22 @@ function formatLink(comp) {
     return "";
 }
 
+function adjustMapSize() {
+    var dimention = Math.min($(window).height(), $(window).width());//screen.height, screen.width);
+    var size = Math.max(256, Math.pow(2, Math.floor(Math.log(dimention)/Math.log(2))));
+    var $map_div = $("#map");
+    var old_width = $map_div.width();
+    if (old_width != size) {
+        $map_div.css({
+            'height': size,
+            'width': size
+        });
+    }
+}
 
 function initializeMap(max_zoom) {
+    adjustMapSize(null);
+
     var map = L.map('map', {
         maxZoom: max_zoom,
         minZoom: 1
@@ -85,6 +99,8 @@ function initializeMap(max_zoom) {
     var bounds = new L.LatLngBounds(southWest, northEast);
     map.setView(bounds.getCenter(), 2);
     map.setMaxBounds(bounds);
+
+    window.onresize = function(event) {adjustMapSize();};
     return map;
 }
 

@@ -82,6 +82,10 @@
         compartment = 'peroxisome';
     }
 
+
+
+
+
     var span = document.getElementById('comp');
     while (span.firstChild) {
         span.removeChild(span.firstChild);
@@ -91,6 +95,7 @@
     map = initializeMap(5);
     var name2popup = {};
     getGeoJson(map, comp2geojson[compartment], name2popup);
+
 
 
     L.tileLayer('./white.jpg', {

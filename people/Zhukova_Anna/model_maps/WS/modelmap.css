@@ -39,7 +39,6 @@ th {
     text-align: center;
 }
 .centre {
-    position:center;
     text-align: center;
     vertical-align: middle;    
 }
@@ -106,6 +105,10 @@ div.margin {
     padding: 0;
     margin: 0;
     vertical-align: middle;
+}
+
+#map {
+    border: 1px solid #ac3131;
 }
 
 span.pant {
