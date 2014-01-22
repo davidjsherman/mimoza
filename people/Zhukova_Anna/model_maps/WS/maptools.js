@@ -195,7 +195,7 @@ function addPopups(name2popup, feature, layer) {
     if ('edge' == feature.properties.type) {
         return
     }
-    var popup = L.popup({autoPan: true, keepInView:true, maxWidth:1020}).setContent(content);
+    var popup = L.popup({autoPan: true, keepInView:false, maxWidth:1020}).setContent(content);
     layer.bindPopup(popup); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
     name2popup[feature.properties.name.toLowerCase()] = popup;
 }
