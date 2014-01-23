@@ -2,7 +2,7 @@ from collections import defaultdict
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.utils.logger import log_chains, log_clusters
 from sbml_generalization.utils.misc import add_to_map, invert_map
-from sbml_generalization.utils.obo_ontology import Term, subOntology, filter_ontology
+from sbml_generalization.utils.obo_ontology import Term, filter_ontology
 from reaction_filters import getReactants, getProducts
 
 from sbml_generalization.generalization.mark_ubiquitous import getUbiquitousSpeciesSet
@@ -339,10 +339,20 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 	term_id2clu = update(term_id2clu, onto)
 	log_clusters(term_id2clu, onto, verbose)
 	result = {}
+	t_c_id2species = defaultdict(set)
 	for (s_id, t) in species_id2chebi_id.iteritems():
 		c_id = model.getSpecies(s_id).getCompartment()
 		if (t, c_id) in term_id2clu:
 			result[s_id] = (c_id, onto.getTerm(term_id2clu[t, c_id][1]))
+		else:
+			t_c_id2species[(t, c_id)].add(s_id)
+	# If there were several species in the same compartment
+	# with the same ChEBI id, let's cluster them, too.
+	for ((t, c_id), s_set) in t_c_id2species.iteritems():
+		if len(s_set) > 1:
+			term = onto.getTerm(t)
+			for s_id in s_set:
+				result[s_id] = (c_id, term)
 	return result
 
 def get_ubiquitous_reactants_products(r, ubiquitous_ids):
