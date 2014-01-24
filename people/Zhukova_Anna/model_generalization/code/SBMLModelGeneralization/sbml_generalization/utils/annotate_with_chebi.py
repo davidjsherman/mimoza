@@ -92,7 +92,7 @@ def get_species_to_chebi(model, chebi):
             add_to_map(entity2species, entity, species)
     i = 0
     # annotate unannotated
-    fake_terms = set()
+    # fake_terms = set()
     for entity, species_set in entity2species.iteritems():
         name, name_bis = get_names(entity)
         if isinstance(entity, Species):
@@ -121,4 +121,4 @@ def get_species_to_chebi(model, chebi):
             species2chebi[species.getId()] = term.getId()
         addAnnotation(entity, get_is_qualifier(), to_identifiers_org_format(term.getId()))
         used_terms.add(term)
-    return species2chebi, fake_terms
+    return species2chebi#, fake_terms

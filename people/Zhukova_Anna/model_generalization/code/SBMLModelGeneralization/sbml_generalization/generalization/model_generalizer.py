@@ -463,8 +463,9 @@ def get_simplified_key(r, ubiquitous_ids):
 
 
 def map2chebi(cofactors, input_model, onto):
-	species_id2chebi_id, fake_terms = get_species_to_chebi(input_model, onto)
-	terms = (onto.getTerm(t_id) for t_id in species_id2chebi_id.itervalues() if not onto.getTerm(t_id) in fake_terms)
+	# species_id2chebi_id, fake_terms = get_species_to_chebi(input_model, onto)
+	species_id2chebi_id = get_species_to_chebi(input_model, onto)
+	terms = (onto.getTerm(t_id) for t_id in species_id2chebi_id.itervalues()) # if not onto.getTerm(t_id) in fake_terms)
 	filter_ontology(onto, terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS, min_deepness=11)
 	cofactor_ids = {cofactor_id for cofactor_id in cofactors if onto.getTerm(cofactor_id)}
 	ubiquitous_chebi_ids = cofactor_ids | getUbiquitousSpeciesSet(input_model, species_id2chebi_id, onto)
