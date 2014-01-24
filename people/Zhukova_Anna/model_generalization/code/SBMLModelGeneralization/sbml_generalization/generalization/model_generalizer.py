@@ -13,16 +13,16 @@ __author__ = 'anna'
 EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
 
 
-def get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id):
+def get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	vk2r = defaultdict(set)
 	for r in model.getListOfReactions():
-		vk2r[get_vertical_key(r, s_id2clu, s_id2term_id)].add(r.getId())
+		vk2r[get_vertical_key(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)].add(r.getId())
 	return vk2r.itervalues()
 
 
-def get_vertical_key(r, s_id2clu, s_id2term_id):
-	ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes \
-		= get_key_elements(r, s_id2clu, s_id2term_id)
+def get_vertical_key(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
+	ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes = \
+		get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
 	if r.getReversible() and need_to_reverse(
 			(ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes,)):
 		return ubiquitous_products, ubiquitous_reactants, specific_product_classes, specific_reactant_classes
@@ -31,19 +31,28 @@ def get_vertical_key(r, s_id2clu, s_id2term_id):
 
 def need_to_reverse((ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes, )):
 	return (ubiquitous_reactants > ubiquitous_products) or (
-		not ubiquitous_reactants and not ubiquitous_products and specific_reactant_classes > specific_product_classes)
+		not ubiquitous_reactants and not ubiquitous_products and (
+			len(specific_reactant_classes) > len(specific_product_classes) or (
+				len(specific_reactant_classes) == len(
+					specific_product_classes) and specific_reactant_classes > specific_product_classes)))
 
 
-def get_key_elements(r, s_id2clu, s_id2term_id):
+def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	reactants, products = getReactants(r), getProducts(r)
 
 	def classify(s_ids):
 		specific, ubiquitous = [], []
 		for s_id in s_ids:
-			if s_id in s_id2clu:
-				specific.append(s_id2clu[s_id])
+			if not s_id in s_id2term_id:
+				specific.append(s_id)
 			else:
-				ubiquitous.append(s_id2term_id[s_id] if s_id in s_id2term_id else s_id)
+				t_id = s_id2term_id[s_id]
+				if t_id in ubiquitous_chebi_ids:
+					ubiquitous.append(t_id)
+				elif s_id in s_id2clu:
+					specific.append(s_id2clu[s_id])
+				else:
+					specific.append(s_id)
 		transform = lambda collection: tuple(sorted(collection))
 		return transform(specific), transform(ubiquitous)
 
@@ -52,15 +61,15 @@ def get_key_elements(r, s_id2clu, s_id2term_id):
 	return ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes
 
 
-def aligned_to_v_key(r, term_id2clu, s_id2term_id):
-	if not r.getReversible():
-		return True
-	return not need_to_reverse(get_key_elements(r, term_id2clu, s_id2term_id))
+# def aligned_to_v_key(r, term_id2clu, s_id2term_id, ubiquitous_chebi_ids):
+# 	if not r.getReversible():
+# 		return True
+# 	return not need_to_reverse(get_key_elements(r, term_id2clu, s_id2term_id, ubiquitous_chebi_ids))
 
 
-def generalize_reactions(model, s_id2clu, s_id2term_id):
+def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	r_id2clu, i = {}, 0
-	for r_ids in get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id):
+	for r_ids in get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 		for r_id in r_ids:
 			r_id2clu[r_id] = i
 		i += 1
@@ -105,7 +114,7 @@ def merge_based_on_neighbours(lst):
 	return new_lst
 
 
-def maximize(model, term_id2clu, species_id2term_id):
+def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 	clu2term_ids = invert_map(term_id2clu)
 	term_id2s_ids = defaultdict(set)
 	s_id2clu = {}
@@ -115,7 +124,7 @@ def maximize(model, term_id2clu, species_id2term_id):
 		if (t_id, c_id) in term_id2clu:
 			s_id2clu[s_id] = term_id2clu[t_id, c_id]
 
-	r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id)
+	r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)
 
 	for (clu, term_ids) in clu2term_ids.iteritems():
 		#print [onto.getTerm(it).getName() for it in term_ids]
@@ -125,7 +134,7 @@ def maximize(model, term_id2clu, species_id2term_id):
 		neighbourless_terms = set()
 		for t_id in term_ids:
 			neighbours = {
-				("in" if t_id in get_vertical_key(r, s_id2clu, species_id2term_id)[3] else "out", r_id2clu[r.getId()]) for r
+				("in" if t_id in get_vertical_key(r, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)[3] else "out", r_id2clu[r.getId()]) for r
 				in get_reactions_by_term(t_id, model, term_id2s_ids)}
 			if neighbours:
 				key = tuple(neighbours)
@@ -216,10 +225,10 @@ def get_psi_set(onto, term_ids, conflicts):
 	def get_conflict_num(t_set):
 		if not t_set or len(t_set) == 1:
 			return 0
-		result = 0
+		res = 0
 		for c_ts in conflicts:
-			result += len(t_set & c_ts) / 2
-		return result
+			res += len(t_set & c_ts) / 2
+		return res
 
 	get_covered_term_ids = lambda term: {sub_t.getId() for sub_t in onto.get_sub_tree(term) if
 	                                     sub_t.getId() in term_ids}
@@ -338,12 +347,13 @@ def filter_clu_to_terms(term2clu):
 			del term2clu[terms.pop()]
 
 
-def fix_incompatibilities(model, onto, species_id2chebi_id, interesting_term_ids, verbose):
+def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids, verbose):
+	interesting_term_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
 	log(verbose, "  computing eq 0...")
 	term_id2clu = compute_eq0(interesting_term_ids, {c.getId() for c in model.getListOfCompartments()}, onto)
 	log_clusters(term_id2clu, onto, verbose, True)
 	log(verbose, "  maximizing...")
-	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id)
+	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
 	filter_clu_to_terms(term_id2clu)
 	log_clusters(term_id2clu, onto, verbose, True)
 	log(verbose, "  preserving stoichiometry...")
@@ -351,14 +361,13 @@ def fix_incompatibilities(model, onto, species_id2chebi_id, interesting_term_ids
 	filter_clu_to_terms(term_id2clu)
 	log_clusters(term_id2clu, onto, verbose, True)
 	log(verbose, "  maximizing...")
-	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id)
+	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
 	filter_clu_to_terms(term_id2clu)
 	return term_id2clu
 
 
 def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
-	interesting_term_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
-	term_id2clu = fix_incompatibilities(model, onto, species_id2chebi_id, interesting_term_ids, verbose)
+	term_id2clu = fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids, verbose)
 	if not term_id2clu:
 		return {}
 	term_id2clu = update(term_id2clu, onto)
@@ -381,19 +390,20 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 	return result
 
 
-def simplified_need_to_reverse(r, ubiquitous_ids):
-	if not r.getReversible():
-		return False
-	return getReactants(r) & ubiquitous_ids > getProducts(r) & ubiquitous_ids
-
-
-def get_simplified_key(r, ubiquitous_ids):
-	reactants, products = getReactants(r), getProducts(r)
-	ubiquitous_reactants, ubiquitous_products = reactants & ubiquitous_ids, products & ubiquitous_ids
-	srs_len, sps_len = len(reactants - ubiquitous_reactants), len(products - ubiquitous_products)
-	if r.getReversible() and simplified_need_to_reverse(r, ubiquitous_ids):
-		return ubiquitous_products, ubiquitous_reactants, sps_len, srs_len
-	return ubiquitous_reactants, ubiquitous_products, srs_len, sps_len,
+# def simplified_need_to_reverse(r, ubiquitous_ids):
+# 	if not r.getReversible():
+# 		return False
+# 	return getReactants(r) & ubiquitous_ids > getProducts(r) & ubiquitous_ids
+#
+#
+# def get_simplified_key(r, ubiquitous_ids):
+# 	get_vertical_key(r, s_id2clu, s_id2term_id)
+# 	reactants, products = getReactants(r), getProducts(r)
+# 	ubiquitous_reactants, ubiquitous_products = reactants & ubiquitous_ids, products & ubiquitous_ids
+# 	srs_len, sps_len = len(reactants - ubiquitous_reactants), len(products - ubiquitous_products)
+# 	if r.getReversible() and simplified_need_to_reverse(r, ubiquitous_ids):
+# 		return ubiquitous_products, ubiquitous_reactants, sps_len, srs_len
+# 	return ubiquitous_reactants, ubiquitous_products, srs_len, sps_len,
 
 
 # def shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
