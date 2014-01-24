@@ -103,16 +103,16 @@ def get_species_to_chebi(model, chebi):
         if not possibilities:
             possibilities = chebi.getIdsByName(name_bis)
         if not possibilities:
-            #if entity.getName().find("protein") == -1: print entity.getName(), entity.getId()
-            while chebi.getTerm("chebi:unknown_{0}".format(i)):
-                i += 1
-            term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
-            term.addSynonym(name_bis)
-            chebi.addTerm(term)
-            fake_terms.add(term)
-            used_terms.add(term)
-            for species in species_set:
-                species2chebi[species.getId()] = term.getId()
+            # #if entity.getName().find("protein") == -1: print entity.getName(), entity.getId()
+            # while chebi.getTerm("chebi:unknown_{0}".format(i)):
+            #     i += 1
+            # term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
+            # term.addSynonym(name_bis)
+            # chebi.addTerm(term)
+            # fake_terms.add(term)
+            # used_terms.add(term)
+            # for species in species_set:
+            #     species2chebi[species.getId()] = term.getId()
             continue
         possibilities = {chebi.getTerm(it) for it in possibilities}
         intersection = possibilities & used_terms
