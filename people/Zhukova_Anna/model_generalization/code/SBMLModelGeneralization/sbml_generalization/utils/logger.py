@@ -23,7 +23,7 @@ def log_chains(chains, verbose):
     print "   ", sorted(blueprint)
 
 
-def log_clusters(term_id2clu, onto, verbose):
+def log_clusters(term_id2clu, onto, verbose, blueprint_only=False):
     if not verbose:
         return
     clu2term = invert_map(term_id2clu)
@@ -34,7 +34,8 @@ def log_clusters(term_id2clu, onto, verbose):
         if len(term_ids) == 1:
             continue
         blueprint.append(len(term_ids))
-        print "   ", (onto.getTerm(clu[1]).getName(), clu[0]) if isinstance(clu[1], str) else clu, " (", len(term_ids), ") <-> ", [onto.getTerm(it[0]).getName() for it in
+        if not blueprint_only:
+            print "   ", (onto.getTerm(clu[1]).getName(), clu[0]) if isinstance(clu[1], str) else clu, " (", len(term_ids), ") <-> ", [onto.getTerm(it[0]).getName() for it in
                                                                                   term_ids]
     print "   ", sorted(blueprint)
     print
@@ -51,6 +52,6 @@ def log_r_clusters(r_id2clu, model, verbose):
         if len(rs) == 1:
             continue
         blueprint.append(len(rs))
-        print "   ", model.getReaction(list(rs)[0]).getName(), " (", len(rs), ") "
+        # print "   ", model.getReaction(list(rs)[0]).getName(), " (", len(rs), ") "
     print "   ", sorted(blueprint)
     print

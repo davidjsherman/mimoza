@@ -535,11 +535,15 @@ class Ontology:
 			result |= self.getAnyChildren(kid, direct, checked, relationships)
 		return result
 
+
 	def getEquivalentsAndChildren(self, term, relationships=None):
 		return {term} | self.getEquivalentTerms(term, rel=None, direction=0, relationships=relationships) | \
 		       self.getAnyChildren(term, direct=False, checked=set(), relationships=relationships)
 
-	def getAnyParents(self, term, direct=True, checked=None, relationships=None):
+
+	def getAnyParents(self, term, direct=True, checked=None, relationships=None, depth=None):
+		if depth is not None and depth <= 0:
+			return set()
 		if not checked:
 			checked = set()
 		terms = {term} | self.getEquivalentTerms(term, None, 0, relationships)
@@ -549,13 +553,39 @@ class Ontology:
 			direct_parents |= parents
 			for par in parents:
 				direct_parents |= self.getEquivalentTerms(par, None, 0, relationships)
-		if direct:
+		if direct or 1 == depth:
 			return direct_parents
 		checked |= terms
 		result = set(direct_parents)
 		for parent in direct_parents - checked:
-			result |= self.getAnyParents(parent, direct, checked, relationships)
+			result |= self.getAnyParents(parent, direct, checked, relationships, depth - 1 if depth is not None else depth)
 		return result
+
+
+	def getAnyParentsOfLevel(self, term, checked=None, relationships=None, depth=None):
+		if depth is None:
+			return self.getAnyParents(term, False, checked, relationships, depth)
+		if depth <= 0:
+			return set()
+		if not checked:
+			checked = set()
+		terms = {term} | self.getEquivalentTerms(term, None, 0, relationships)
+		direct_parents = set()
+		for it in terms:
+			parents = {self.getTerm(t_id) for t_id in it.getParentIds()}
+			direct_parents |= parents
+			for par in parents:
+				direct_parents |= self.getEquivalentTerms(par, None, 0, relationships)
+		if not direct_parents:
+			return terms
+		if 1 == depth:
+			return direct_parents
+		checked |= terms
+		result = set()
+		for parent in direct_parents - checked:
+			result |= self.getAnyParentsOfLevel(parent, checked, relationships, depth - 1)
+		return result
+
 
 	def getRoots(self):
 		return set(self.roots)
@@ -564,16 +594,16 @@ class Ontology:
 		name = name.lower()
 		return set(self.name2term_ids[name]) if name in self.name2term_ids else set()
 
-	def commonPts(self, terms):
-		if not terms:
+	def commonPts(self, terms, depth=None):
+		if not terms or depth is not None and depth <= 0:
 			return None
 		terms = set(terms)
 		first = terms.pop()
-		common = self.getAnyParents(first, False, set()) | self.getEquivalentTerms(first) | {first}
+		common = self.getAnyParents(first, False, set(), None, depth) | self.getEquivalentTerms(first) | {first}
 		# print " draft ", [t.getName() for t in common]
 		for t in terms:
 			# print "  and ", [t.getName() for t in self.getAnyParents(t, False) | self.getEqualTerms(t) | {t}]
-			common &= self.getAnyParents(t, False, set()) | self.getEquivalentTerms(t) | {t}
+			common &= self.getAnyParents(t, False, set(), None, depth) | self.getEquivalentTerms(t) | {t}
 			# print "  draft ", [t.getName() for t in common]
 		result = set(common)
 		# print " common ", [t.getName() for t in common]
