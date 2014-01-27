@@ -1,3 +1,4 @@
+from collections import defaultdict
 from genericpath import isfile, exists
 from os import listdir, makedirs
 from shutil import copyfile
@@ -6,7 +7,6 @@ from libsbml import SBMLReader, os
 from sbml_generalization.utils.annotate_with_chebi import get_species_term
 from sbml_generalization.generalization.reaction_filters import getReactants, getProducts
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
-from sbml_generalization.utils.misc import add_to_map
 from sbml_generalization.utils.obo_ontology import parse
 from main import ROOT_DIR
 
@@ -15,13 +15,13 @@ __author__ = 'anna'
 
 
 def count_fa_coa_oxidation(model, the_terms, chebi):
-    the_species = dict()
+    the_species = defaultdict(set)
     for species in model.getListOfSpecies():
         i = 0
         s_term = get_species_term(species, chebi, model)
         for terms in the_terms:
             if s_term in terms:
-                add_to_map(the_species, i, species.getId())
+                the_species[i].add(species.getId())
                 break
             i += 1
 
@@ -33,7 +33,7 @@ def count_fa_coa_oxidation(model, the_terms, chebi):
             the_s_ids.append((the_species[id1], the_species[id2],))
         else:
             the_s_ids.append(tuple())
-    the_reactions = dict()
+    the_reactions = defaultdict(set)
     for reaction in model.getListOfReactions():
         i = 0
         for r_ids in the_s_ids:
@@ -42,7 +42,7 @@ def count_fa_coa_oxidation(model, the_terms, chebi):
                 rs, ps = getReactants(reaction), getProducts(reaction)
                 if rs & s_id1 and ps & s_id2 or rs & s_id2 and ps & s_id1:
                 # if filterReactionByBetweenSpecies(reaction, s_id1, s_id2):
-                    add_to_map(the_reactions, i, reaction.getId())
+                    the_reactions[i].add(reaction.getId())
                     break
             i += 1
     return tuple(the_species.keys()), tuple(the_reactions.keys()), tuple(

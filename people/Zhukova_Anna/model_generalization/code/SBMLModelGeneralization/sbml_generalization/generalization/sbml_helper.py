@@ -1,7 +1,8 @@
+from collections import defaultdict
 from libsbml import *
 from sbml_generalization.utils.annotate_with_chebi import get_term
 from sbml_generalization.utils.logger import log
-from sbml_generalization.utils.misc import add_to_map, invert_map
+from sbml_generalization.utils.misc import invert_map
 from sbml_generalization.utils.obo_ontology import to_identifiers_org_format
 from rdf_annotation_helper import addAnnotation, getAllQualifierValues
 from reaction_filters import getProducts, getReactants, get_compartment, getReactionParticipants, getGeneAssociation
@@ -394,11 +395,11 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
 		i = 0
 		clu2s_ids = invert_map(s_id2clu)
 		for clu, species_ids in clu2s_ids.iteritems():
-			comp2s_ids = {}
+			comp2s_ids = defaultdict(set)
 			for s_id in species_ids:
 				species = input_model.getSpecies(s_id)
 				c_id = species.getCompartment()
-				add_to_map(comp2s_ids, c_id, s_id)
+				comp2s_ids[c_id].add(s_id)
 			for c_id, s_ids in comp2s_ids.iteritems():
 				if len(s_ids) > 1:
 					new_species = create_species(generalized_model, c_id, type_id=None,
@@ -423,10 +424,10 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
 		generalize_species = lambda species_id: s_id2gr_id[species_id][0] if (species_id in s_id2gr_id) else species_id
 		s_id_to_generalize = set(s_id2gr_id.iterkeys())
 		for clu, r_set in clu2rs.iteritems():
-			comp2rs = {}
+			comp2rs = defaultdict(set)
 			for r in r_set:
 				c_id = get_compartment(r, input_model)
-				add_to_map(comp2rs, c_id, r)
+				comp2rs[c_id].add(r)
 			for c_id, rs in comp2rs.iteritems():
 				representative = list(rs)[0]
 				reactants = getReactants(representative)

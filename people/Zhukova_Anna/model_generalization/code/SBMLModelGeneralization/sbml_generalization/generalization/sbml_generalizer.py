@@ -1,7 +1,9 @@
+from collections import defaultdict
 from libsbml import SBMLReader
+from sbml_generalization.generalization.reaction_filters import get_reactions_by_species
+from sbml_generalization.generalization.vertical_key import get_vertical_key
 from sbml_generalization.utils.logger import log, log_r_clusters
-from sbml_helper import save_as_comp_generalized_sbml, \
-	remove_is_a_reactions, model_to_l3v1, annotate_ubiquitous, remove_unused_elements
+from sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, model_to_l3v1, annotate_ubiquitous, remove_unused_elements
 from mark_ubiquitous import getCofactors
 from model_generalizer import map2chebi, generalize_species, generalize_reactions, get_reaction_ids_to_factor
 
@@ -47,16 +49,36 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, sh_ch
 	#            if not input_model.getSpecies(s_id):
 	#                del species_id2chebi_id[s_id]
 	#                # update reactions, go only for reactions inside organelles
-	#                #reactions = [rn for rn in input_model.getListOfReactions() if filterReactionByNotTransport(rn, input_model)]
+	#                #reactions = [rn for rn in input_model.getListOfReactions() \
+	# if filterReactionByNotTransport(rn, input_model)]
 
 	# generalize
 	s_id2clu = generalize_species(input_model, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose)
 
-	# vk2rs = get_reaction_ids_to_factor(input_model, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
-	# for species in input_model.getListOfSpecies():
-	# 	s_id = species.getId()
-	# 	if s_id in species_id2chebi_id:
-	# 		continue
+	vks = get_reaction_ids_to_factor(input_model, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
+	sk2vks = defaultdict(set)
+	for (ub_rs, ub_ps, rs, ps) in vks.keys():
+		rns = vks[(ub_rs, ub_ps, rs, ps)]
+		if len(rns) > 1 and (ub_rs or ub_ps):
+			simple_key = (ub_rs, ub_ps, len(rs), len(ps))
+			sk2vks[simple_key].add((ub_rs, ub_ps, rs, ps))
+
+	reactions = {r for r in input_model.getListOfReactions()}
+	for species in input_model.getListOfSpecies():
+		s_id = species.getId()
+		if s_id in species_id2chebi_id:
+			continue
+		rs = get_reactions_by_species(s_id, reactions)
+		for r in rs:
+			(ub_rs, ub_ps, rs, ps) = get_vertical_key(r, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
+			s_k = (ub_rs, ub_ps, len(rs), len(ps))
+			if s_k in sk2vks:
+				print '----------'
+				print 'SK: ', s_k
+				print rs, ps
+				for (ub_rs, ub_ps, rs, ps) in sk2vks[s_k]:
+					print ' ', rs, ps
+
 
 
 	r_id2clu = generalize_reactions(input_model, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)

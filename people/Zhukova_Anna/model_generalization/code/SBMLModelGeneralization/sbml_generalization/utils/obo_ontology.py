@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 from collections import defaultdict
-from misc import add_to_map, remove_from_map
+from misc import remove_from_map
 import misc
 
 URN_MIRIAM = "urn:miriam:"
@@ -321,7 +321,7 @@ class Ontology:
 		self.id2term = {}
 		self.alt_id2term = {}
 		self.name2term_ids = defaultdict(set)
-		self.rel_map = {}
+		self.rel_map = defaultdict(set)
 
 	def getAllTerms(self):
 		return self.id2term.values()
@@ -334,9 +334,9 @@ class Ontology:
 
 	def addRelationship(self, subj, rel, obj):
 		relationship = (subj, rel, obj)
-		add_to_map(self.rel_map, subj, relationship)
-		add_to_map(self.rel_map, obj, relationship)
-		add_to_map(self.rel_map, rel, relationship)
+		self.rel_map[subj].add(relationship)
+		self.rel_map[obj].add(relationship)
+		self.rel_map[rel].add(relationship)
 
 	# role: 0 for any, 1 for subj, 2 for obj
 	def getTermRelationships(self, term_id, rel=None, role=0):

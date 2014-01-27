@@ -1,11 +1,6 @@
+from collections import defaultdict
+
 __author__ = 'anna'
-
-
-def add_to_map(m, key, value):
-    if key in m:
-        m[key].add(value)
-    else:
-        m[key] = {value}
 
 
 def remove_from_map(mp, key, value):
@@ -16,7 +11,7 @@ def remove_from_map(mp, key, value):
 
 
 def invert_map(key2value):
-    value2keys = {}
+    value2keys = defaultdict(set)
     for key, value in key2value.iteritems():
-        add_to_map(value2keys, value, key)
+        value2keys[value].add(key)
     return value2keys
