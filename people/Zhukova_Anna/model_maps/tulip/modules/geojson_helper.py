@@ -41,12 +41,18 @@ def tulip2geojson(graph, geojson_file):
 		f = geojson.Feature(geometry=geom, properties=props)
 		features.append(f)
 
-	for n in graph.getNodes():
-		if not type_[n] in ['reaction', 'species', 'compartment', 'background']:
-			continue
+	for n in (n for n in graph.getNodes() if 'background' == type_[n]):
 		geom = geojson.Point(get_coords(n))
-		props = {"id": graph['id'][n], "name": get_short_name(graph, n, onto), "color": triplet(color[n]),
-		         "bcolor": triplet(b_color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		         "type": type_[n], 'shape': graph['viewShape'][n]}
+		f = geojson.Feature(geometry=geom, properties=props)
+		features.append(f)
+
+	for n in (n for n in graph.getNodes() if type_[n] in ['reaction', 'species', 'compartment']):
+		geom = geojson.Point(get_coords(n))
+		props = {"id": graph['id'][n], "name": graph['name'][n], "label": get_short_name(graph, n, onto),
+		         "color": triplet(color[n]), "border": triplet(b_color[n]),
+		         "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
 		         "type": type_[n]}
 		if 'reaction' == type_[n]:
 			ins, outs = get_formula(graph, n, onto)
@@ -54,8 +60,6 @@ def tulip2geojson(graph, geojson_file):
 			              'reactants': ins, 'products': outs})
 		elif 'species' == type_[n]:
 			props["chebi"] = chebi[n]
-		elif 'background' == type_[n]:
-			props['shape'] = graph['viewShape'][n]
 		f = geojson.Feature(geometry=geom, properties=props)
 		features.append(f)
 

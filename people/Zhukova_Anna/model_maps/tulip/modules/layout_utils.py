@@ -341,7 +341,7 @@ def show_reversibility(graph):
 				viewSrcAnchorShape[e] = -1
 
 
-def layout_generalization_based(graph):
+def layout_generalization_based(graph, do_not_open=None):
 	viewLayout =  graph.getLayoutProperty("viewLayout")
 	viewMetaGraph =  graph.getGraphProperty("viewMetaGraph")
 	viewSize =  graph.getSizeProperty("viewSize")
@@ -349,7 +349,7 @@ def layout_generalization_based(graph):
 	nds = []
 	mn2color = {}
 	for n in graph.getNodes():
-		if graph.isMetaNode(n):
+		if graph.isMetaNode(n) and (not do_not_open or not n in do_not_open):
 			mg = viewMetaGraph[n]
 			ns = list(mg.getNodes())
 			nds.extend(ns)
@@ -364,7 +364,7 @@ def layout_generalization_based(graph):
 	clone.setName(graph.getName() + "_full")
 	vl = {}
 
-	meta_ns = {n for n in graph.getNodes() if graph.isMetaNode(n)}
+	meta_ns = {n for n in graph.getNodes() if graph.isMetaNode(n) and (not do_not_open or not n in do_not_open)}
 	meta_sps = {n for n in meta_ns if 'species' == graph["type"][n]}
 	meta_rs = meta_ns - meta_sps
 
@@ -374,7 +374,7 @@ def layout_generalization_based(graph):
 		rs = set(graph.getInOutNodes(s)) & meta_rs
 		sps = set()
 		for r in rs:
-			sps |= set(graph.getInOutNodes(s)) & meta_sps
+			sps |= set(graph.getInOutNodes(r)) & meta_sps
 		depends_on[s] = sps - {s}
 		our_sps |= set(viewMetaGraph[s].getNodes())
 

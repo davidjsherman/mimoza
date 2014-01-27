@@ -97,3 +97,11 @@ def factor_comps(meta_graph):
 		organelle2meta_node[organelle] = meta_node
 	resize_edges(meta_graph)
 	return organelle2meta_node
+
+
+def factor_cyto(meta_graph):
+	root = meta_graph.getRoot()
+	cytoplasm = root.getAttribute("cytoplasm")
+	meta_node = comp_to_meta_node(meta_graph, cytoplasm, 'extracellular')
+	resize_edges(meta_graph)
+	return cytoplasm, meta_node

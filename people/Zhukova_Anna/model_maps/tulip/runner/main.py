@@ -2,7 +2,7 @@ from tulip import tlp
 import sys
 from libsbml import SBMLReader
 from modules.color import color
-from modules.factoring import factor_nodes, factor_comps
+from modules.factoring import factor_nodes, factor_comps, factor_cyto
 from modules.geojson_helper import tulip2geojson
 from modules.html_generator import generate_html
 from modules.layout_utils import layout_generalization_based, layout
@@ -10,7 +10,7 @@ from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
 dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
-sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_golgi.xml'
+sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_cyto_with_groups.xml'
 
 
 def main(argv=None):
@@ -43,6 +43,15 @@ def main(argv=None):
 		# generalization-based layout for the full graph
 		comp_graph_full = layout_generalization_based(comp_graph)
 		organelle2graphs[organelle] = [comp_graph, comp_graph_full]
+
+	cytoplasm, meta_node = factor_cyto(meta_graph)
+	comp_graph = meta_graph["viewMetaGraph"][meta_node]
+	# layout
+	layout(comp_graph)
+	# generalization-based layout for the full graph
+	comp_graph_full = layout_generalization_based(comp_graph, set(organelle2meta_node.values()))
+	organelle2graphs[cytoplasm] = [comp_graph, comp_graph_full]
+	organelle2meta_node[cytoplasm] = meta_node
 
 	# color
 	color(graph)

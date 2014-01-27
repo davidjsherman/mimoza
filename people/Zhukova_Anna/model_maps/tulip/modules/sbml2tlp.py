@@ -32,7 +32,7 @@ def process_generalized_entities(chebi, input_model, sbml_file):
 		                                                                                  sbml_file, chebi,
 		                                                                                  cofactors=None,
 		                                                                                  sh_chains=False,
-		                                                                                  verbose=False)
+		                                                                                  verbose=True)
 
 	return r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
 

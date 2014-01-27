@@ -1,6 +1,8 @@
 from tulip import *
 import tulipplugins
-from graph_tools import findSubGraphByName, comp_to_meta_node
+from modules.factoring import comp_to_meta_node
+from modules.graph_tools import findSubGraphByName
+
 
 class SBMLCytoGeneralizer(tlp.Algorithm):
 	def __init__(self, context):
