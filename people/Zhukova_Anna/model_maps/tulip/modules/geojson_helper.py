@@ -14,13 +14,14 @@ MARGIN = 3.8
 
 
 def tulip2geojson(graph, geojson_file):
-	ga = graph.getStringProperty("geneAssociation")
-	type_ = graph.getStringProperty("type")
-	layout = graph.getLayoutProperty("viewLayout")
-	size = graph.getSizeProperty("viewSize")
-	color = graph.getColorProperty("viewColor")
-	b_color = graph.getColorProperty("viewBorderColor")
-	chebi = graph.getStringProperty("chebi_id")
+	ga = graph.getRoot().getStringProperty("geneAssociation")
+	type_ = graph.getRoot().getStringProperty("type")
+	layout = graph.getRoot().getLayoutProperty("viewLayout")
+	size = graph.getRoot().getSizeProperty("viewSize")
+	shape = graph.getRoot()['viewShape']
+	color = graph.getRoot().getColorProperty("viewColor")
+	b_color = graph.getRoot().getColorProperty("viewBorderColor")
+	chebi = graph.getRoot().getStringProperty("chebi_id")
 
 	(m_x, m_y), (M_x, M_y) = get_min_max(graph)
 	x_scale = DIMENSION / (M_x - m_x)
@@ -44,7 +45,7 @@ def tulip2geojson(graph, geojson_file):
 	for n in (n for n in graph.getNodes() if 'background' == type_[n]):
 		geom = geojson.Point(get_coords(n))
 		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-		         "type": type_[n], 'shape': graph['viewShape'][n]}
+		         "type": type_[n], 'shape': shape[n]}
 		f = geojson.Feature(geometry=geom, properties=props)
 		features.append(f)
 
@@ -62,6 +63,13 @@ def tulip2geojson(graph, geojson_file):
 			props["chebi"] = chebi[n]
 		f = geojson.Feature(geometry=geom, properties=props)
 		features.append(f)
+		# if graph.isMetaNode(n):
+		# 	for n in graph['viewMetaGraph'][n].getNodes():
+		# 		geom = geojson.Point(get_coords(n))
+		# 		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		# 		         "type": 'background', 'shape': shape[n]}
+		# 		f = geojson.Feature(geometry=geom, properties=props)
+		# 		features.append(f)
 
 	fc = geojson.FeatureCollection(features, geometry=geojson.Polygon(
 		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]]))

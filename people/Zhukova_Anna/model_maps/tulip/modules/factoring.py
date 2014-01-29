@@ -1,5 +1,6 @@
+from collections import defaultdict
 from tulip import tlp
-from modules.graph_tools import getSize
+from modules.graph_tools import get_size
 from modules.merge_inside_comp import mic
 from modules.model_utils import merge_nodes
 from modules.resize import get_n_size, resize_edges
@@ -26,15 +27,11 @@ def factor_nodes(graph):
 		if len(nodes) <= 1:
 			continue
 		all_nodes = list(nodes)
-		id2ubN = {}
+		id2ubN = defaultdict(set)
 		if 'reaction' == type_:
 			for node in nodes:
 				for n in (n for n in graph.getInOutNodes(node) if isUb[n]):
-					id_ = graph["id"][n]
-					if id2ubN.has_key(id_):
-						id2ubN[id_].append(n)
-					else:
-						id2ubN[id_] = [n]
+					id2ubN[graph["id"][n]].add(n)
 			for ubs in id2ubN.itervalues():
 				merge_nodes(graph, ubs)
 
@@ -77,7 +74,7 @@ def comp_to_meta_node(meta_graph, comp, out_comp):
 	meta_node = meta_graph.createMetaNode(ns, False)
 	comp_graph = meta_graph["viewMetaGraph"][meta_node]
 	comp_graph.setName("_" + comp)
-	meta_graph["viewSize"][meta_node] = getSize(comp_graph)
+	meta_graph["viewSize"][meta_node] = get_size(comp_graph)
 	meta_graph["viewLabel"][meta_node] = comp
 	meta_graph["name"][meta_node] = comp
 	meta_graph["compartment"][meta_node] = out_comp

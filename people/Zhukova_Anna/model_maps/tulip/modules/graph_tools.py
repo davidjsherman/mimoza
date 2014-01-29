@@ -13,12 +13,7 @@ def findSubGraphByName(root, name):
 	return checkCollection(list(root.getSubGraphs()), name)
 
 	
-def getSize(gr):
-	try:
-		ds = tlp.getDefaultPluginParameters("SBMLLayout", gr)
-		tlp.applyAlgorithm(gr, ds, "SBMLLayout")
-	except:
-		pass
+def get_size(gr):
 	bb = tlp.computeBoundingBox(gr)
 	return tlp.Size(bb.width(), bb.height())
 	# tlp.Size(bbNew.width(), bbNew.height())

@@ -7,7 +7,7 @@ from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.generalization.model_generalizer import map2chebi
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
 from sbml_generalization.generalization.mark_ubiquitous import getCofactors
-from modules.model_utils import cloneNode
+from modules.model_utils import clone_node
 
 __author__ = 'anna'
 
@@ -213,7 +213,7 @@ def create_props(graph):
 
 def duplicate_nodes(graph):
 	for n in (n for n in graph.getNodes() if graph["ubiquitous"][n]):
-		cloneNode(graph, n)
+		clone_node(graph, n)
 
 
 def clean(graph):
