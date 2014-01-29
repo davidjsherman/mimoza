@@ -492,9 +492,13 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 		for (c_id, t), s_ids in clu2s_ids.iteritems():
 			comp = input_model.getCompartment(c_id)
 			if len(s_ids) > 1:
+				t_name, t_id = (t.getName(), t.getId()) if not isinstance(t, tuple) else (
+					' or '.join(input_model.getSpecies(s_id).getName() for s_id in s_ids), None)
+				if not t_id:
+					t = t_name
 				new_species = create_species(generalized_model, comp.getId(), type_id=None,
-				                             name="{0} ({1}) [{2}]".format(t.getName(), len(s_ids), comp.getName()))
-				addAnnotation(new_species, BQB_IS, to_identifiers_org_format(t.getId()))
+				                             name="{0} ({1}) [{2}]".format(t_name, len(s_ids), comp.getName()))
+				addAnnotation(new_species, BQB_IS, to_identifiers_org_format(t_id))
 				for s_id in s_ids:
 					s_id2gr_id[s_id] = new_species.getId(), t
 
@@ -504,8 +508,9 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 					s_group.setId(new_species.getId())
 					s_group.setKind(GROUP_KIND_CLASSIFICATION)
 					s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
-					s_group.setName("{0} [{1}]".format(t.getName(), comp.getName()))
-					addAnnotation(s_group, BQB_IS, to_identifiers_org_format(t.getId()))
+					s_group.setName("{0} [{1}]".format(t_name, comp.getName()))
+					if t_id:
+						addAnnotation(s_group, BQB_IS, to_identifiers_org_format(t_id))
 					for s_id in s_ids:
 						member = s_group.createMember()
 						member.setSymbol(s_id)

@@ -263,8 +263,8 @@ def get_p_reactions_by_term(t_id, reactions, term_id2s_ids):
 	return (r for r in reactions if len(term_id2s_ids[t_id] & getProducts(r)) > 0)
 
 
-def get_reactions_by_term(t_id, model, term_id2s_ids):
-	return (r for r in model.getListOfReactions() if len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0)
+def get_reactions_by_term(t_id, reactions, term_id2s_ids):
+	return (r for r in reactions if len(term_id2s_ids[t_id] & (getReactants(r) | getProducts(r))) > 0)
 
 
 def get_r_reactions_by_species(s_id, reactions):

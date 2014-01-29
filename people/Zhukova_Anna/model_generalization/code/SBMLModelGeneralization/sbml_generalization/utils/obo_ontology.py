@@ -517,6 +517,7 @@ class Ontology:
 		return self.getAnyChildren(t, False, set(), relationships) | self.getEquivalentTerms(t, None, 0,
 		                                                                                     relationships) | {t}
 
+
 	def getAnyChildren(self, term, direct=True, checked=None, relationships=None):
 		if not checked:
 			checked = set()

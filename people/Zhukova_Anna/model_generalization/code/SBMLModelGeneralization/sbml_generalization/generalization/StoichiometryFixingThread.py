@@ -45,8 +45,9 @@ class StoichiometryFixingThread(threading.Thread):
 			if (t_id, c_id) in self.term_ids:
 				term_id2s_ids[t_id, c_id].add(s_id)
 		r2term_ids = defaultdict(set)
+		rs = list(self.model.getListOfReactions())
 		for t_id in self.term_ids:
-			for r in get_reactions_by_term(t_id, self.model, term_id2s_ids):
+			for r in get_reactions_by_term(t_id, rs, term_id2s_ids):
 				r2term_ids[r.getId()].add(t_id)
 		return [{t_id for (t_id, _) in terms} for terms in r2term_ids.itervalues() if len(terms) > 1]
 
@@ -113,7 +114,7 @@ class StoichiometryFixingThread(threading.Thread):
 					if complement:
 						process(complement, (2, T_level), basics)
 
-		if len(self.term_ids) < 30:
+		if len(self.term_ids) + len(conflicts) < 60:
 			# the differences between sets already in Psi
 			for _ in xrange(2):
 				to_add = []

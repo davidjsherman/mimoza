@@ -318,6 +318,7 @@ def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids
 	log(verbose, "  maximizing...")
 	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
 	filter_clu_to_terms(term_id2clu)
+	log_clusters(term_id2clu, onto, verbose, True)
 	return term_id2clu
 
 
@@ -326,13 +327,13 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 	if not term_id2clu:
 		return {}
 	term_id2clu = update(term_id2clu, onto)
-	log_clusters(term_id2clu, onto, verbose)
-	result = {}
+	# log_clusters(term_id2clu, onto, verbose)
+	s_id2clu = {}
 	t_c_id2species = defaultdict(set)
 	for (s_id, t) in species_id2chebi_id.iteritems():
 		c_id = model.getSpecies(s_id).getCompartment()
 		if (t, c_id) in term_id2clu:
-			result[s_id] = (c_id, onto.getTerm(term_id2clu[t, c_id][1]))
+			s_id2clu[s_id] = (c_id, onto.getTerm(term_id2clu[t, c_id][1]))
 		else:
 			t_c_id2species[(t, c_id)].add(s_id)
 	# If there were several species in the same compartment
@@ -341,8 +342,8 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 		if len(s_set) > 1:
 			term = onto.getTerm(t)
 			for s_id in s_set:
-				result[s_id] = (c_id, term)
-	return result
+				s_id2clu[s_id] = (c_id, term)
+	return s_id2clu
 
 
 # def simplified_need_to_reverse(r, ubiquitous_ids):
