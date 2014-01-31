@@ -83,7 +83,16 @@ function adjustMapSize() {
             'height': size,
             'width': size
         });
+	$(".leaflet-popup").css({
+	    "maxWidth": size,
+            'maxHeight': size
+	});
+	$(".leaflet-popup-content").css({
+	    "maxWidth": size - 10,
+            'maxHeight': size - 10
+	});
     }
+    
 }
 
 function initializeMap(max_zoom) {
@@ -92,9 +101,8 @@ function initializeMap(max_zoom) {
     var map = L.map('map', {
         maxZoom: max_zoom,
         minZoom: 0,
-	attributionControl: false,
-	padding: [156, 156],
-        //crs: L.CRS.Simple
+	    attributionControl: false,
+	    padding: [156, 156],
     });
     var southWest = map.unproject([0 - margin, 512 + margin], 1);
     var northEast = map.unproject([512 + margin, 0 - margin], 1);
@@ -155,6 +163,7 @@ function pnt2layer(map, feature) {
     var props = {
         name: feature.properties.name,
 	title: feature.properties.name,
+	alt: feature.properties.name,
         id: feature.properties.id,
         color: feature.properties.border,
         fillColor: feature.properties.color,
@@ -224,8 +233,9 @@ function addPopups(map, name2popup, feature, layer) {
     var southWest = map.unproject([x - w, y + h], 1),
         northEast = map.unproject([x + w, y - h], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
-    var popup = L.popup({autoPan:true, keepInView:true, maxWidth:1023, maxHeight:1023,  autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
-    layer.bindPopup(popup); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
+    var size = $('#map').height();
+    var popup = L.popup({autoPan:true, keepInView:true, maxWidth:size - 2, maxHeight:size - 2,  autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
+    layer.bindPopup(popup).bindLabel(content); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
     if (feature.properties.name) {
 	name2popup[feature.properties.name] = popup;
     }

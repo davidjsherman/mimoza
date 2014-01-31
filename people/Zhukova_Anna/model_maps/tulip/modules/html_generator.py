@@ -106,8 +106,9 @@ def add_js(default_organelle, org2scripts, page):
 
 def generate_html(model, html_file, organelles):
 	page = markup.page()
-	scripts = ['http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js', 'http://code.jquery.com/jquery-2.0.3.min.js',
-	           'http://code.jquery.com/ui/1.10.4/jquery-ui.js', '../maptools.js']
+	scripts = ['../lib/leaflet/leaflet.js', '../lib/leaflet_label/leaflet.label.js',
+	           'http://code.jquery.com/jquery-2.0.3.min.js', 'http://code.jquery.com/ui/1.10.4/jquery-ui.js',
+	           '../maptools.js']
 	default_organelle = ''
 	org2scripts = '{'
 	for organelle in organelles:
@@ -121,7 +122,8 @@ def generate_html(model, html_file, organelles):
 	model_name = model.getName()
 	if not model_name:
 		model_name = model_id
-	page.init(title=model_name, css=['../modelmap.css', '../leaflet.css',
+	page.init(title=model_name, css=['../modelmap.css',
+	                                 '../lib/leaflet/leaflet.css', '../lib/leaflet_label/leaflet.label.css',
 	                                 'http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css'],
 	          script=scripts, fav='../fav.ico')
 
