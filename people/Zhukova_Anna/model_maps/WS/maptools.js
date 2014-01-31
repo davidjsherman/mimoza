@@ -68,7 +68,7 @@ function formatChebi(ch) {
 
 function formatLink(comp) {
     if (comp) {
-        return "<a href=\'./compartment.html?name=" + comp + "\'>Go inside</a>";
+        return "<a href=\'./comp.html?name=" + comp + "\'>Go inside</a>";
     }
     return "";
 }
@@ -77,7 +77,7 @@ function adjustMapSize() {
     var dimention = Math.min($(window).height(), $(window).width());//screen.height, screen.width);
     var size = Math.max(256, Math.pow(2, Math.floor(Math.log(dimention)/Math.log(2))));
     var $map_div = $("#map");
-    var old_width = $map_div.width();
+    var old_width = $map_div.height();
     if (old_width != size) {
         $map_div.css({
             'height': size,
@@ -87,20 +87,38 @@ function adjustMapSize() {
 }
 
 function initializeMap(max_zoom) {
-    adjustMapSize(null);
-
+    adjustMapSize();
+    var margin = 156;
     var map = L.map('map', {
         maxZoom: max_zoom,
-        minZoom: 1
+        minZoom: 0,
+	attributionControl: false,
+	padding: [156, 156],
         //crs: L.CRS.Simple
     });
-    var southWest = map.unproject([0, 512], 1);
-    var northEast = map.unproject([512, 0], 1);
+    var southWest = map.unproject([0 - margin, 512 + margin], 1);
+    var northEast = map.unproject([512 + margin, 0 - margin], 1);
     var bounds = new L.LatLngBounds(southWest, northEast);
-    map.setView(bounds.getCenter(), 2);
+    map.setView(bounds.getCenter(), 1);
     map.setMaxBounds(bounds);
+    var popup = null;
+    map.on('popupopen', function(e) {
+	console.log(e.popup);
+	popup = e.popup;
+    });
+    map.on('dragstart', function(e) {
+	if (popup) {
+	    console.log(e);
+	    map.closePopup(popup);
+	    popup.options['keepInView'] = false;
+	    map.openPopup(popup);
+	    popup.options['keepInView'] = true;
+	    popup = null;
+	}
+    });    
 
-    window.onresize = function(event) {adjustMapSize();};
+    window.onresize = function(event) {adjustMapSize();};   
+    
     return map;
 }
 
@@ -123,7 +141,8 @@ function pnt2layer(map, feature) {
             fillOpacity: 1,
             opacity: 1,
             weight: w * Math.pow(2, map.getZoom() - 1),
-            lineCap: 'arrow',
+            lineCap: 'round',
+            lineJoin: 'round',
             clickable: false,
             fill: true
         });
@@ -135,11 +154,14 @@ function pnt2layer(map, feature) {
     }
     var props = {
         name: feature.properties.name,
+	title: feature.properties.name,
         id: feature.properties.id,
-        color: feature.properties.bcolor,
+        color: feature.properties.border,
         fillColor: feature.properties.color,
         fillOpacity: 'background' == feature.properties.type ? 0.3 : 1,
         opacity: 1,
+        lineCap: 'round',
+        lineJoin: 'round',
         weight: 'background' == feature.properties.type ? 0 : w / 10 * Math.pow(2, map.getZoom() - 1),
         fill: true,
         clickable: 'background' != feature.properties.type
@@ -169,7 +191,7 @@ function pnt2layer(map, feature) {
             {
                 icon: L.divIcon({
                     className: 'count-icon',
-                    html: feature.properties.name,//formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
+                    html: feature.properties.label,//formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
                     iconSize: [w * Math.pow(2, map.getZoom() - 1) * 1.8, h * Math.pow(2, map.getZoom() - 1) * 1.8]
                 })
             }
@@ -179,15 +201,15 @@ function pnt2layer(map, feature) {
     return node;
 }
 
-function addPopups(name2popup, feature, layer) {
+function addPopups(map, name2popup, feature, layer) {
     var content = '';
     if ('reaction' == feature.properties.type) {
         var ga_res = formatGA(feature.properties.gene_association);
         var formula = formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products);
-        content = '<h2><b>' + feature.properties.name + "</h2><p class='popup centre'>" + formula + '</p><p class="popup centre">'+ ga_res + "</p>";
+        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p><p class="popup centre">'+ ga_res + "</p>";
     } else if ('species' == feature.properties.type) {
         var ch = formatChebi(feature.properties.chebi);
-        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'>" + ch + "</p>";
+        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + ch + "</p>";
     } else if ('compartment' == feature.properties.type) {
         var link = formatLink(feature.properties.name);
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'>" + link + "</p>";
@@ -195,9 +217,27 @@ function addPopups(name2popup, feature, layer) {
     if ('edge' == feature.properties.type) {
         return
     }
-    var popup = L.popup({autoPan: true, keepInView:false, maxWidth:1020}).setContent(content);
+    var e = feature.geometry.coordinates;
+    var w = feature.properties.width / 2;
+    var h = feature.properties.height / 2;
+    var x = e[0], y = e[1];
+    var southWest = map.unproject([x - w, y + h], 1),
+        northEast = map.unproject([x + w, y - h], 1),
+        bounds = new L.LatLngBounds(southWest, northEast);
+    var popup = L.popup({autoPan:true, keepInView:true, maxWidth:1023, maxHeight:1023,  autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
     layer.bindPopup(popup); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
-    name2popup[feature.properties.name.toLowerCase()] = popup;
+    if (feature.properties.name) {
+	name2popup[feature.properties.name] = popup;
+    }
+    if (feature.properties.label) {
+	name2popup[feature.properties.label] = popup;
+    }
+    if (feature.properties.id) {
+	name2popup[feature.properties.id] = popup;
+    }
+    if (feature.properties.chebi) {
+	name2popup[feature.properties.chebi] = popup;
+    }
 }
 
 
@@ -210,6 +250,7 @@ function getGeoJson(map, json, name2popup) {
         getComplexJson(map, json[0], json[1], name2popup);
     }
     fitSimpleLabels();
+    setAutocomplete(map, name2popup);
 }
 
 
@@ -222,9 +263,11 @@ function getComplexJson(map, json_zo, json_zi, name2popup) {
         if (zn >= 3 && zo < 3) {
             geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
             fitSimpleLabels();
+	    setAutocomplete(map, name2popup);
         } else if (zn < 3 && zo >= 3) {
             geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
             fitSimpleLabels();
+	    setAutocomplete(map, name2popup);
         } else {
             fitLabels(zn, zo);
         }
@@ -240,6 +283,19 @@ function fitSimpleLabels(){
         $(this).css({
             'font-size': size
         });
+    });
+}
+
+function setAutocomplete(map, name2popup){
+    var availableTags = Object.keys(name2popup);
+    $("#tags").autocomplete({
+      source: availableTags
+    });
+    $('#tags').keypress(function(e) {
+         if (e.keyCode == '13') {
+             e.preventDefault();
+             search(map, name2popup);
+         }
     });
 }
 
@@ -286,7 +342,7 @@ function getSimpleJson(map, jsn, name2popup) {
             return pnt2layer(map, feature);
         },
         onEachFeature: function(feature, layer) {
-            addPopups(name2popup, feature, layer);
+            addPopups(map, name2popup, feature, layer);
         }
     }).addTo(map);
 }
@@ -302,7 +358,7 @@ function getJson(map, jsn, name2popup, geojsonLayer) {
 }
 
 function search(map, name2popup) {
-    var srch = document.search_form.search_input.value.toLowerCase();
+    var srch = document.search_form.search_input.value;
     if (srch && name2popup[srch]){
         name2popup[srch].openOn(map);
     }

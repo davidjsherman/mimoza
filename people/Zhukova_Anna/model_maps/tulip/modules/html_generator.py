@@ -18,7 +18,7 @@ def add_header(model_id, model_name, page):
 
 
 def add_compartment_menu(html_file, organelles, page):
-	page.ul(class_='menu')
+	page.ul(class_='menu margin centre')
 	for organelle in organelles:
 		page.li()
 		page.a(organelle, href='{0}?name={1}'.format(html_file, normalize(organelle)))
@@ -33,7 +33,7 @@ def add_search(page):
 				<input type="button" value="Search" >
 			</form>
 		</div> """
-	page.div(class_='nomargin', id='search')
+	page.div(class_='margin', id='search')
 	page.form(name="search_form", onclick="search(map, name2popup);")
 	page.label('')
 	page.input(id="tags", type="text", name="search_input")
@@ -62,8 +62,8 @@ def add_explanations(page):
 
 
 def add_map(page):
-	""" <div class="nomargin" id="map" style="width: 1024px; height: 1024px"></div> """
-	page.div('', class_='nomargin', id='map', style="width: 1024px; height: 1024px")
+	""" <div class="margin" id="map" style="width: 1024px; height: 1024px"></div> """
+	page.div('', class_='margin', id='map', style="width: 1024px; height: 1024px")
 
 
 def add_model_description(model, page):
@@ -90,14 +90,13 @@ def add_js(default_organelle, org2scripts, page):
 			getGeoJson(map, comp2geojson[compartment], name2popup);
 
 
-			L.tileLayer('../white.jpg', {
+			L.tileLayer('../white512.jpg', {
 				continuousWorld: true,
 				noWrap: true,
-				tileSize: 256,
-				maxZoom: 4,
-				minZoom: 1,
+				tileSize: 512,
+				maxZoom: 5,
+				minZoom: 0,
 				tms: true,
-				unloadInvisibleTiles: false,
 				updateWhenIdle: true,
 				reuseTiles: true
 			}).addTo(map);
@@ -107,7 +106,7 @@ def add_js(default_organelle, org2scripts, page):
 
 def generate_html(model, html_file, organelles):
 	page = markup.page()
-	scripts = ['http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js', 'http://code.jquery.com/jquery-2.0.3.min.js',
+	scripts = ['http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js', 'http://code.jquery.com/jquery-2.0.3.min.js',
 	           'http://code.jquery.com/ui/1.10.4/jquery-ui.js', '../maptools.js']
 	default_organelle = ''
 	org2scripts = '{'
@@ -128,6 +127,7 @@ def generate_html(model, html_file, organelles):
 
 	add_header(model_id, model_name, page)
 
+	page.div(class_='centre', id='all')
 	add_compartment_menu(html_file, organelles, page)
 
 	add_explanations(page)
@@ -137,6 +137,7 @@ def generate_html(model, html_file, organelles):
 	add_map(page)
 
 	add_model_description(model, page)
+	page.div.close()
 
 	add_js(default_organelle, org2scripts, page)
 

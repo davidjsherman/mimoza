@@ -98,14 +98,14 @@
 
 
 
-    L.tileLayer('./white.jpg', {
+    L.tileLayer('./white512.jpg', {
         continuousWorld: true,
         noWrap: true,
-        tileSize: 256,
+        tileSize: 512,
         maxZoom: 4,
-        minZoom: 1,
+        minZoom: 0,
         tms: true,
-        unloadInvisibleTiles: false,
+        unloadInvisibleTiles: true,
         updateWhenIdle: true,
         reuseTiles: true
     }).addTo(map);
