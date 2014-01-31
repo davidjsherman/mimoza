@@ -26,6 +26,23 @@ def add_compartment_menu(html_file, organelles, page):
 	page.ul.close()
 
 
+def add_search(page):
+	""" <div>
+			<form name="search_form" onclick="search(map, name2popup);">
+				<label><input id="tags" type="text" name="search_input"></label>
+				<input type="button" value="Search" >
+			</form>
+		</div> """
+	page.div(class_='nomargin', id='search')
+	page.form(name="search_form", onclick="search(map, name2popup);")
+	page.label('')
+	page.input(id="tags", type="text", name="search_input")
+	page.label.close()
+	page.input(type="button", value="Search")
+	page.form.close()
+	page.div.close()
+
+
 def add_explanations(page):
 	""" <div id="explanations" class="margin"><p>
 			<span class="pant">Zoom in</span> to see the more detailed model.
@@ -73,7 +90,7 @@ def add_js(default_organelle, org2scripts, page):
 			getGeoJson(map, comp2geojson[compartment], name2popup);
 
 
-			L.tileLayer('./white.jpg', {
+			L.tileLayer('../white.jpg', {
 				continuousWorld: true,
 				noWrap: true,
 				tileSize: 256,
@@ -91,7 +108,7 @@ def add_js(default_organelle, org2scripts, page):
 def generate_html(model, html_file, organelles):
 	page = markup.page()
 	scripts = ['http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js', 'http://code.jquery.com/jquery-2.0.3.min.js',
-			   './maptools.js']
+	           'http://code.jquery.com/ui/1.10.4/jquery-ui.js', '../maptools.js']
 	default_organelle = ''
 	org2scripts = '{'
 	for organelle in organelles:
@@ -105,13 +122,17 @@ def generate_html(model, html_file, organelles):
 	model_name = model.getName()
 	if not model_name:
 		model_name = model_id
-	page.init(title=model_name, css=['./modelmap.css', './leaflet.css'], script=scripts, fav='./fav.ico')
+	page.init(title=model_name, css=['../modelmap.css', '../leaflet.css',
+	                                 'http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css'],
+	          script=scripts, fav='../fav.ico')
 
 	add_header(model_id, model_name, page)
 
 	add_compartment_menu(html_file, organelles, page)
 
 	add_explanations(page)
+
+	add_search(page)
 
 	add_map(page)
 

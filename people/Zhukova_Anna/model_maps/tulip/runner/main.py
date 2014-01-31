@@ -1,6 +1,6 @@
 from tulip import tlp
 import sys
-from libsbml import SBMLReader
+from libsbml import SBMLReader, os
 from modules.color import color
 from modules.factoring import factor_nodes, factor_comps, factor_cyto
 from modules.geojson_helper import tulip2geojson
@@ -10,7 +10,8 @@ from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
 dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
-sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
+# sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
+sbml_file = '/Users/anna/Downloads/MODEL1212060001_with_groups.xml'
 
 
 def main(argv=None):
@@ -20,6 +21,7 @@ def main(argv=None):
 	input_document = reader.readSBML(sbml_file)
 	input_model = input_document.getModel()
 	graph = import_sbml(graph, input_model, sbml_file)
+	model_id = input_model.getId()
 
 	# generalized species/reactions -> metanodes
 	ns = list(graph.getNodes())
@@ -53,21 +55,22 @@ def main(argv=None):
 	organelle2graphs[cytoplasm] = [comp_graph, comp_graph_full]
 	organelle2meta_node[cytoplasm] = meta_node
 
+	m_dir = '{0}/{1}'.format(dir, model_id)
+	if not os.path.exists(m_dir):
+		os.makedirs(m_dir)
 	# color
 	color(graph)
 	for organelle, graphs in organelle2graphs.iteritems():
 		# export to geojson
 		organelle = organelle.lower().replace(' ', '_')
-		full_json = '{0}{1}_f.json'.format(dir, organelle)
+		full_json = '{0}/{1}_f.json'.format(m_dir, organelle)
 		tulip2geojson(graphs[1], full_json)
-		generalized_json = '{0}{1}.json'.format(dir, organelle)
+		generalized_json = '{0}/{1}.json'.format(m_dir, organelle)
 		tulip2geojson(graphs[0], generalized_json)
-
-
-	generate_html(input_model, dir + 'comp.html', organelle2meta_node.keys())
+	generate_html(input_model, '{0}/comp.html'.format(m_dir), organelle2meta_node.keys())
 
 	# TODO: why doesn't it work??
-	tlp.saveGraph(graph.getRoot(), dir + 'graph.tlpx')
+	# tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')
 
 
 
