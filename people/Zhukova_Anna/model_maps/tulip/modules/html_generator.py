@@ -6,6 +6,10 @@ def normalize(organelle):
 	return organelle.lower().replace(' ', '_')
 
 
+def denormalize(organelle):
+	return organelle.replace('_', ' ')
+
+
 def add_header(model_id, model_name, page):
 	""" <h1 class="capitalize">
 			<span id='comp'>Compartments</span> of <a href="http://www.ebi.ac.uk/biomodels-main/model_id">model_name</a>
@@ -21,7 +25,7 @@ def add_compartment_menu(html_file, organelles, page):
 	page.ul(class_='menu margin centre')
 	for organelle in organelles:
 		page.li()
-		page.a(organelle, href='{0}?name={1}'.format(html_file, normalize(organelle)))
+		page.a(denormalize(organelle), href='{0}?name={1}'.format(html_file, normalize(organelle)))
 		page.li.close()
 	page.ul.close()
 
@@ -83,7 +87,7 @@ def add_js(default_organelle, org2scripts, page):
 			while (span.firstChild) {
 				span.removeChild(span.firstChild);
 			}
-			span.appendChild(document.createTextNode(compartment));
+			span.appendChild(document.createTextNode(compartment.replace('_', ' ')));
 
 			map = initializeMap(5);
 			var name2popup = {};

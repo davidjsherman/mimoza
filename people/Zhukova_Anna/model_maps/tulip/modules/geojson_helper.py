@@ -14,121 +14,125 @@ MARGIN = 3.8
 
 
 def tulip2geojson(graph, geojson_file):
-    ga = graph.getRoot().getStringProperty("geneAssociation")
-    type_ = graph.getRoot().getStringProperty("type")
-    layout = graph.getRoot().getLayoutProperty("viewLayout")
-    size = graph.getRoot().getSizeProperty("viewSize")
-    shape = graph.getRoot()['viewShape']
-    color = graph.getRoot().getColorProperty("viewColor")
-    b_color = graph.getRoot().getColorProperty("viewBorderColor")
-    chebi = graph.getRoot().getStringProperty("chebi_id")
+	ga = graph.getRoot().getStringProperty("geneAssociation")
+	type_ = graph.getRoot().getStringProperty("type")
+	layout = graph.getRoot().getLayoutProperty("viewLayout")
+	size = graph.getRoot().getSizeProperty("viewSize")
+	shape = graph.getRoot()['viewShape']
+	color = graph.getRoot().getColorProperty("viewColor")
+	b_color = graph.getRoot().getColorProperty("viewBorderColor")
+	chebi = graph.getRoot().getStringProperty("chebi_id")
 
-    (m_x, m_y), (M_x, M_y) = get_min_max(graph)
-    x_scale = DIMENSION / (M_x - m_x)
-    y_scale = DIMENSION / (M_y - m_y)
+	(m_x, m_y), (M_x, M_y) = get_min_max(graph)
+	x_scale = DIMENSION / (M_x - m_x)
+	y_scale = DIMENSION / (M_y - m_y)
 
-    features = []
+	features = []
 
-    def get_coords(n):
-        return [(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale]
+	def get_coords(n):
+		return [(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale]
 
-    onto = parse(get_chebi())
+	onto = parse(get_chebi())
 
-    for e in graph.getEdges():
-        s, t = graph.source(e), graph.target(e)
-        geom = geojson.MultiPoint([get_coords(s), get_coords(t)])
-        props = {"color": triplet(color[e]), "width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
-                 "type": 'edge', "stoichiometry": graph['stoichiometry'][e]}
-        f = geojson.Feature(geometry=geom, properties=props)
-        features.append(f)
+	for e in graph.getEdges():
+		s, t = graph.source(e), graph.target(e)
+		geom = geojson.MultiPoint([get_coords(s), get_coords(t)])
+		props = {"color": triplet(color[e]), "width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
+		         "type": 'edge', "stoichiometry": graph['stoichiometry'][e]}
+		f = geojson.Feature(geometry=geom, properties=props)
+		features.append(f)
 
-    for n in (n for n in graph.getNodes() if 'background' == type_[n]):
-        geom = geojson.Point(get_coords(n))
-        props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-                 "type": type_[n], 'shape': shape[n]}
-        f = geojson.Feature(geometry=geom, properties=props)
-        features.append(f)
+	for n in (n for n in graph.getNodes() if 'background' == type_[n]):
+		geom = geojson.Point(get_coords(n))
+		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		         "type": type_[n], 'shape': shape[n]}
+		f = geojson.Feature(geometry=geom, properties=props)
+		features.append(f)
 
-    for n in (n for n in graph.getNodes() if type_[n] in ['reaction', 'species', 'compartment']):
-        geom = geojson.Point(get_coords(n))
-        props = {"id": graph['id'][n], "name": graph['name'][n], "label": get_short_name(graph, n, onto),
-                 "color": triplet(color[n]), "border": triplet(b_color[n]),
-                 "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-                 "type": type_[n]}
-        if 'reaction' == type_[n]:
-            ins, outs = get_formula(graph, n, onto)
-            props.update({"gene_association": get_gene_association_list(ga[n]), "reversible": graph['reversible'][n],
-                          'reactants': ins, 'products': outs})
-        elif 'species' == type_[n]:
-            props["chebi"] = chebi[n]
-        f = geojson.Feature(geometry=geom, properties=props)
-        features.append(f)
-        # if graph.isMetaNode(n):
-        # 	for n in graph['viewMetaGraph'][n].getNodes():
-        # 		geom = geojson.Point(get_coords(n))
-        # 		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-        # 		         "type": 'background', 'shape': shape[n]}
-        # 		f = geojson.Feature(geometry=geom, properties=props)
-        # 		features.append(f)
+	for n in (n for n in graph.getNodes() if type_[n] in ['reaction', 'species', 'compartment']):
+		geom = geojson.Point(get_coords(n))
+		props = {"id": graph['id'][n], "name": graph['name'][n], "label": get_short_name(graph, n, onto),
+		         "color": triplet(color[n]), "border": triplet(b_color[n]),
+		         "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		         "type": type_[n]}
+		if 'reaction' == type_[n]:
+			ins, outs = get_formula(graph, n, onto)
+			props.update({"gene_association": get_gene_association_list(ga[n]), "reversible": graph['reversible'][n],
+			              'reactants': ins, 'products': outs})
+		elif 'species' == type_[n]:
+			props["chebi"] = chebi[n]
+		f = geojson.Feature(geometry=geom, properties=props)
+		features.append(f)
+		# if graph.isMetaNode(n):
+		# 	for n in graph['viewMetaGraph'][n].getNodes():
+		# 		geom = geojson.Point(get_coords(n))
+		# 		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		# 		         "type": 'background', 'shape': shape[n]}
+		# 		f = geojson.Feature(geometry=geom, properties=props)
+		# 		features.append(f)
 
-    fc = geojson.FeatureCollection(features, geometry=geojson.Polygon(
-        [[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]]))
-    with open(geojson_file, 'w+') as f:
-        f.write("var gjsn_{1} = {0}\n".format(geojson.dumps(fc).replace('"id": null', ''),
-                                              graph.getName().replace(' ', '_').lower().strip()))
+	fc = geojson.FeatureCollection(features, geometry=geojson.Polygon(
+		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]]))
+	with open(geojson_file, 'w+') as f:
+		f.write("var gjsn_{1} = {0}\n".format(geojson.dumps(fc).replace('"id": null', ''),
+		                                      graph.getName().replace(' ', '_').lower().strip()))
 
 
 def get_gene_association_list(ga):
-    gann = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
-    if not gann:
-        return ''
-    try:
-        res = to_cnf(gann, False)
-        gann = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
-        return gann
-    except:
-        return ''
+	gann = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
+	if not gann:
+		return ''
+	try:
+		res = to_cnf(gann, False)
+		gann = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
+		return gann
+	except:
+		return ''
 
 
 def get_formula(graph, n, onto):
-    ins = '&'.join(
-        ["{0} * {1}".format(int(graph['stoichiometry'][e]), get_short_name(graph, graph.source(e), onto)) for e in
-         graph.getInEdges(n)])
-    outs = '&'.join(
-        ["{0} * {1}".format(int(graph['stoichiometry'][e]), get_short_name(graph, graph.target(e), onto)) for e in
-         graph.getOutEdges(n)])
-    return ins, outs
+	def get_node(e, get_nd):
+		nd = get_nd(e)
+		if 'compartment' != graph['type'][nd]:
+			return nd
+		for e in graph['viewMetaGraph'][e]:
+			return get_nd(e)
+	formatter = lambda edges, get_nd: '&'.join(
+		["{0} * {1}".format(int(graph['stoichiometry'][e]), graph.getRoot()['name'][get_node(e, get_nd)]) for e in edges])
+	ins = formatter(graph.getInEdges(n), lambda e: graph.getRoot().source(e))
+	outs = formatter(graph.getOutEdges(n), lambda e: graph.getRoot().target(e))
+	return ins, outs
 
 
 def rgb(triplet):
-    return (_HEXDEC[triplet[0:2]], _HEXDEC[triplet[2:4]], _HEXDEC[triplet[4:6]])
+	return (_HEXDEC[triplet[0:2]], _HEXDEC[triplet[2:4]], _HEXDEC[triplet[4:6]])
 
 
 def triplet(c, lettercase=LOWERCASE):
-    return '#' + format((c.getR() << 16 | c.getG() << 8 | c.getB()), '06' + lettercase)
+	return '#' + format((c.getR() << 16 | c.getG() << 8 | c.getB()), '06' + lettercase)
 
 
 def get_min_max(graph):
-    layout = graph.getLayoutProperty("viewLayout")
-    size = graph.getSizeProperty("viewSize")
+	layout = graph.getLayoutProperty("viewLayout")
+	size = graph.getSizeProperty("viewSize")
 
-    m = lambda l, s: (l.getX() - s.getW() / 2, l.getY() - s.getH() / 2)
-    M = lambda l, s: (l.getX() + s.getW() / 2, l.getY() + s.getH() / 2)
-    mM = lambda n: (m(layout[n], size[n]), M(layout[n], size[n]))
-    (m_x, m_y), (M_x, M_y) = mM(graph.getNodes().next())
-    for n in graph.getNodes():
-        (m_x_, m_y_), (M_x_, M_y_) = mM(n)
-        if m_x_ < m_x: m_x = m_x_
-        if m_y_ < m_y: m_y = m_y_
-        if M_x_ > M_x: M_x = M_x_
-        if M_y_ > M_y: M_y = M_y_
+	m = lambda l, s: (l.getX() - s.getW() / 2, l.getY() - s.getH() / 2)
+	M = lambda l, s: (l.getX() + s.getW() / 2, l.getY() + s.getH() / 2)
+	mM = lambda n: (m(layout[n], size[n]), M(layout[n], size[n]))
+	(m_x, m_y), (M_x, M_y) = mM(graph.getNodes().next())
+	for n in graph.getNodes():
+		(m_x_, m_y_), (M_x_, M_y_) = mM(n)
+		if m_x_ < m_x: m_x = m_x_
+		if m_y_ < m_y: m_y = m_y_
+		if M_x_ > M_x: M_x = M_x_
+		if M_y_ > M_y: M_y = M_y_
 
-    w, h = M_x - m_x, M_y - m_y
-    if w > h:
-        m_y -= (w - h) / 2
-        M_y += (w - h) / 2
-    elif h > w:
-        m_x -= (h - w) / 2
-        M_x += (h - w) / 2
+	w, h = M_x - m_x, M_y - m_y
+	if w > h:
+		m_y -= (w - h) / 2
+		M_y += (w - h) / 2
+	elif h > w:
+		m_x -= (h - w) / 2
+		M_x += (h - w) / 2
 
-    return (m_x - MARGIN, m_y - MARGIN), (M_x + MARGIN, M_y + MARGIN)
+	return (m_x - MARGIN, m_y - MARGIN), (M_x + MARGIN, M_y + MARGIN)

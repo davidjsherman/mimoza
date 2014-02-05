@@ -1,6 +1,5 @@
-from tulip import *
-
 def get_short_name(graph, n, onto):
+	graph = graph.getRoot()
 	short_name = graph["name"][n]
 	
 	# remove compartment from the name,
@@ -18,7 +17,7 @@ def get_short_name(graph, n, onto):
 			if not short_name: 
 				short_name = term.getName()
 			for alt in alts:
-				if len(alt) < len(short_name):
+				if alt and len(alt) < len(short_name):
 					short_name = alt
 					
 	# number of factored entities
