@@ -5,7 +5,7 @@ from modules.color import color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm
 from modules.geojson_helper import tulip2geojson
 from modules.html_generator import generate_html
-from modules.layout_utils import layout, layout_generalization_based
+from modules.layout_utils import layout, layout_generalization_based, layout_comp, layout_cytoplasm
 from modules.resize import get_comp_size
 from modules.sbml2tlp import import_sbml
 
@@ -71,7 +71,7 @@ def main(argv=None):
 	root['viewSize'][meta_node] = get_comp_size(graph, meta_node)
 	comp_graph = root["viewMetaGraph"][meta_node]
 	# layout
-	layout(comp_graph)
+	layout_cytoplasm(comp_graph)
 	# color
 	color(graph)
 	# generalization-based layout for the full graph

@@ -88,6 +88,18 @@ def neighbours(ns, org_ns, graph, processed, limit=500):
 	return ns | neighbours(all_ns, org_ns, graph, processed, limit - len(ns))
 
 
+def layout_cytoplasm(graph, margin=5):
+	root = graph.getRoot()
+	sub = graph.inducedSubGraph([n for n in graph.getNodes()])
+	qo = sub.inducedSubGraph([n for n in sub.getNodes() if not root["ubiquitous"][n]])
+	layout_force(qo, margin)
+	remove_overlaps(qo, margin)
+	graph.delAllSubGraphs(sub)
+	layout_ub_sps(graph)
+	pack_cc(graph)
+	layout_ub_sps(graph)
+
+
 def layout_comp(graph):
 	root = graph.getRoot()
 
@@ -121,20 +133,8 @@ def layout_comp(graph):
 #	sub.applyAlgorithm("Edge bundling")
 	for m in mns:
 		sub.openMetaNode(m)
-	# copy_layout(sub, graph)
 	graph.delAllSubGraphs(ssub)
 	layout_ub_sps(graph)
-
-
-# def copy_layout(from_gr, to_gr):
-# 	root = to_gr.getRoot()
-# 	for n in from_gr.getNodes():
-# 		if to_gr.isElement(n):
-# 			to_gr.getRoot()["viewLayout"][n] = from_gr["viewLayout"][n]
-# 			for m in (m for m in from_gr.getInNodes(n) if to_gr.isElement(m)):
-# 				e = to_gr.existEdge(m, n)
-# 				if e:
-# 					to_gr.getRoot()["viewLayout"][e] = from_gr["viewLayout"][e]
 
 
 def layout_hierarchically(qo, margin=5):
@@ -203,23 +203,18 @@ def layout(graph, margin=5):
 			if not side:
 				side = get_side(graph)
 			lo_a_line(qo, side)
-		# copy_layout(qo, graph)
 
 	for gr in cycles:
 		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root["ubiquitous"][n]])
 		layout_circle(qo, margin)
-		# copy_layout(qo, gr)
 		layout_ub_sps(gr)
 #		remove_overlaps(gr, margin)
-		# copy_layout(gr, graph)
 
 	for gr in mess:
 		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root["ubiquitous"][n]])
 		layout_force(qo, margin)
 		remove_overlaps(qo, margin)
-		# copy_layout(qo, gr)
 		layout_ub_sps(gr)
-		# copy_layout(gr, graph)
 
 	graph.delAllSubGraphs(sub)
 
@@ -289,7 +284,9 @@ def lo_a_line(graph, side=None):
 	processed = set()
 	x, y = 0, side
 	max_h = 0
+
 	def process_n(n, x, y, max_h):
+
 		def get_coord(s, x, y, max_h):
 			x += s.getW() / 2 + 2
 			if x > side:
@@ -382,11 +379,10 @@ def layout_generalization_based(graph, do_not_open=None):
 		for n in do_not_open:
 			mg = view_meta_graph[n]
 			mg_lo_min = view_layout.getMin(mg)
-			bb = tlp.computeBoundingBox(mg)
-			# scale_factor = (view_size[n].width() - 10) / bb.width()
-			# view_layout.scale(tlp.Coord(scale_factor, scale_factor, 0), mg.getNodes(), mg.getEdges())
 			n_lo, n_sz = view_layout[n], view_size[n]
-			view_layout.translate(tlp.Coord(n_lo.getX() - n_sz.width() / 2 - mg_lo_min.getX() + 5, n_lo.getY() - n_sz.height() / 2  - mg_lo_min.getY() + 5), mg.getNodes(), mg.getEdges())
+			view_layout.translate(tlp.Coord(n_lo.getX() - n_sz.width() / 2 - mg_lo_min.getX() + n_sz.width() * 0.05,
+			                                n_lo.getY() - n_sz.height() / 2 - mg_lo_min.getY() + n_sz.height() * 0.05),
+			                      mg.getNodes(), mg.getEdges())
 
 	vl = {}
 

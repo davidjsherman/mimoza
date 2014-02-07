@@ -43,7 +43,7 @@ def get_comp_size(graph, n):
 	view_meta_graph = root.getGraphProperty("viewMetaGraph")
 	comp_graph = view_meta_graph[n]
 	bb = tlp.computeBoundingBox(comp_graph)
-	return tlp.Size(bb.width(), bb.height())
+	return tlp.Size(bb.width() * 1.1 , bb.height() * 1.1)
 
 
 def resize_edges(graph):
