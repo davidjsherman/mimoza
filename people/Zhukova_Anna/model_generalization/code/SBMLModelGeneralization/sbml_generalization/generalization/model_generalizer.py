@@ -22,12 +22,6 @@ def get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id, ubiquitous_chebi_i
 	return vk2r
 
 
-# def aligned_to_v_key(r, term_id2clu, s_id2term_id, ubiquitous_chebi_ids):
-# 	if not r.getReversible():
-# 		return True
-# 	return not need_to_reverse(get_key_elements(r, term_id2clu, s_id2term_id, ubiquitous_chebi_ids))
-
-
 def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	r_id2clu, i = {}, 0
 	for r_ids in get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids).itervalues():
@@ -35,20 +29,6 @@ def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 			r_id2clu[r_id] = i
 		i += 1
 	return r_id2clu
-
-
-# def merge_based_on_neighbours(lst):
-# 	new_lst = []
-# 	for neighbours, terms in lst:
-# 		neighbours = set(neighbours)
-# 		to_remove = []
-# 		for (new_neighbours, new_terms) in new_lst:
-# 			if neighbours & new_neighbours:
-# 				neighbours |= new_neighbours
-# 				terms |= new_terms
-# 				to_remove.append((new_neighbours, new_terms))
-# 		new_lst = [it for it in new_lst if not it in to_remove] + [(neighbours, terms)]
-# 	return new_lst
 
 
 def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
@@ -65,33 +45,8 @@ def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 
 	thrds = []
 	for (clu, term_ids) in clu2term_ids.iteritems():
-		#print [onto.getTerm(it).getName() for it in term_ids]
 		if len(term_ids) <= 1:
 			continue
-		# neighbours2term_ids = {}
-		# neighbourless_terms = set()
-		# for t_id in term_ids:
-		# 	neighbours = {
-		# 		("in" if t_id in get_vertical_key(r, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)[3] else "out",
-		# 		 r_id2clu[r.getId()]) for r
-		# 		in get_reactions_by_term(t_id, model, term_id2s_ids)}
-		# 	if neighbours:
-		# 		key = tuple(neighbours)
-		# 		add_to_map(neighbours2term_ids, key, t_id)
-		# 	else:
-		# 		neighbourless_terms.add(t_id)
-		# 	#print onto.getTerm(t_id).getName(), neighbours
-		# new_lst = merge_based_on_neighbours(neighbours2term_ids.iteritems())
-		# i = 0
-		# if len(new_lst) > 1:
-		# 	for neighbours, term_ids in new_lst:
-		# 		n_clu = clu + (i,)
-		# 		i += 1
-		# 		for t in term_ids:
-		# 			term_id2clu[t] = n_clu
-		# for t in neighbourless_terms:
-		# 	term_id2clu[t] = clu + (i,)
-		# 	i += 1
 
 		thread = MaximizingThread(model, term_ids, term_id2s_ids, species_id2term_id, clu, term_id2clu, s_id2clu,
 	             ubiquitous_chebi_ids, r_id2clu)
@@ -103,10 +58,8 @@ def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 
 
 def compute_eq0(interesting_term_ids, comp_ids, onto):
-	#clu = (0,)
 	term_id2clu = {}
 	i = 0
-	# psi = [tuple(t.getId() for t in onto.get_sub_tree(root)) for root in onto.getRoots()]
 	roots = set()
 	for t in interesting_term_ids:
 		term = onto.getTerm(t)
@@ -123,143 +76,18 @@ def compute_eq0(interesting_term_ids, comp_ids, onto):
 	return term_id2clu
 
 
-# def get_conflicts(model, term_ids, species_id2term_id):
-# 	term_id2s_ids = defaultdict(set)
-# 	for s_id, t_id in species_id2term_id.iteritems():
-# 		c_id = model.getSpecies(s_id).getCompartment()
-# 		if (t_id, c_id) in term_ids:
-# 			term_id2s_ids[t_id, c_id].add(s_id)
-# 	r2term_ids = defaultdict(set)
-# 	for t_id in term_ids:
-# 		for r in get_reactions_by_term(t_id, model, term_id2s_ids):
-# 			r2term_ids[r.getId()].add(t_id)
-# 	return [{t_id for (t_id, _) in terms} for terms in r2term_ids.itervalues() if len(terms) > 1]
-
-
-
-
 def fix_stoichiometry(model, term_id2clu, species_id2term_id, onto):
 	clu2term_ids = invert_map(term_id2clu)
 	thrds = []
 	for clu, term_ids in clu2term_ids.iteritems():
 		if len(term_ids) <= 1:
 			continue
-		# conflicts = get_conflicts(model, term_ids, species_id2term_id)
-		# if not conflicts:
-		# 	continue
-		# #print [[onto.getTerm(it).getName() for it in trms] for trms in conflicts]
-		# term_ids = {t_id for (t_id, _) in term_ids}
-		# psi, set2score = get_psi_set(onto, term_ids, conflicts)
-		# i = 0
-		# for ts in greedy(term_ids, psi, set2score):
-		# 	i += 1
-		# 	n_clu = clu + (i,)
-		# 	for t in ts:
-		# 		# clu[0] is a compartment_id
-		# 		term_id2clu[(t, clu[0])] = n_clu
 		thread = StoichiometryFixingThread(model, term_ids, species_id2term_id, onto, clu, term_id2clu)
 		thrds.append(thread)
 		thread.start() # This actually causes the thread to run
 	for th in thrds:
 		th.join()  # This waits until the thread has completed
-		# At this point, the thread has completed
-		# term_id2clu.update(th.term_id2clu)
 	return term_id2clu
-
-
-# def get_psi_set(onto, term_ids, conflicts):
-# 	def good(t_set):
-# 		if not t_set:
-# 			return False
-# 		if len(t_set) == 1:
-# 			return True
-# 		for c_ts in conflicts:
-# 			if len(t_set & c_ts) > 1:
-# 				return False
-# 		return True
-#
-# 	def get_conflict_num(t_set):
-# 		if not t_set or len(t_set) == 1:
-# 			return 0
-# 		res = 0
-# 		for c_ts in conflicts:
-# 			res += len(t_set & c_ts) / 2
-# 		return res
-#
-# 	get_covered_term_ids = lambda term: {sub_t.getId() for sub_t in onto.get_sub_tree(term) if
-# 	                                     sub_t.getId() in term_ids}
-#
-# 	# the least common ancestors, or roots if there are none
-# 	common_ancestor_terms = onto.commonPts({onto.getTerm(t) for t in term_ids}, 3)
-# 	if not common_ancestor_terms:
-# 		common_ancestor_terms = set()
-# 		for t in term_ids:
-# 			term = onto.getTerm(t)
-# 			# then it's a fake term
-# 			if not term:
-# 				continue
-# 			common_ancestor_terms |= onto.getAnyParentsOfLevel(term, set(), None, 3)
-#
-# 	psi, basics, set2score = set(), [], {}
-#
-# 	def process(element, score):
-# 		el = tuple(element)
-# 		if el in psi:
-# 			return False
-# 		if get_conflict_num(element) > 40:
-# 			return True
-# 		basics.append(element)
-# 		psi.add(el)
-# 		set2score[el] = score
-# 		return True
-#
-# 	# sets defined by the least common ancestors
-# 	# print "ANCESTORS: ", [t.getName() for t in common_ancestor_terms]
-# 	processed = set()
-# 	for T in common_ancestor_terms:
-# 		T_element = get_covered_term_ids(T)
-# 		T_level = onto.getLevel(T)
-# 		T_l = sum(T_level) / len(T_level)
-# 		process(T_element, (3, T_l))
-# 		for t in onto.getAnyChildren(T, False, set()):
-# 			if t in processed:
-# 				continue
-# 			processed.add(t)
-#
-# 			element = get_covered_term_ids(t)
-# 			if not element:
-# 				continue
-# 			level = onto.getLevel(t)
-# 			if process(element, (3, sum(level) / len(level))):
-# 				# complement set
-# 				complement = T_element - element
-# 				if complement:
-# 					process(complement, (2, T_l))
-#
-# 	def avg_tup(s0, s1):
-# 		i0, j0 = set2score[tuple(s0)]
-# 		i1, j1 = set2score[tuple(s1)]
-# 		return min(i0, i1) - 1, min(j0, j1)
-#
-# 	# the differences between sets already in Psi
-# 	for _ in xrange(2):
-# 		to_add = []
-# 		i = 0
-# 		for basic in basics:
-# 			i += 1
-# 			for element in basics[i:]:
-# 				for complement_set in (basic - element, element - basic):
-# 					if len(complement_set) > 0:
-# 						c_element = tuple(complement_set)
-# 						if c_element in psi:
-# 							continue
-# 						psi.add(c_element)
-# 						to_add.append(complement_set)
-# 						set2score[c_element] = avg_tup(element, basic)
-# 		basics += to_add
-#
-# 	result = [term_set for term_set in psi if good(set(term_set))]
-# 	return result, set2score
 
 
 def greedy(terms, psi, set2score):
@@ -376,20 +204,28 @@ def update_clusters(comp2r_sps, i, reactions, s_id2clu):
 					s_id2clu[s_id] = c_id, term
 
 
-def no_conflicts(elements, reactions, c_id, s_id2clu):
+def no_conflicts(elements, reactions, c_id, s_id2clu, onto):
+	clus = set(s_id2clu.values())
 	term = None
 	rs = set()
 	sps = []
 	for it in elements:
 		if isinstance(it, Term):
 			if term and term != it:
-				return None
-			term = it
+				cmmn_pts = {(c_id, tt) for tt in onto.commonPts({term, it}, 2)} - clus
+				if cmmn_pts:
+					term = cmmn_pts.pop()[1]
+					print term
+				else:
+					return None
+			else:
+				term = it
 			for s_id in (s_id for (s_id, clu) in s_id2clu.iteritems() if clu == (c_id, term)):
 				its_rs = set(get_reactions_by_species(s_id, reactions))
 				if rs & its_rs:
 					return None
 				rs |= its_rs
+				sps.append(s_id)
 		else:
 			its_rs = set(get_reactions_by_species(it, reactions))
 			if rs & its_rs:

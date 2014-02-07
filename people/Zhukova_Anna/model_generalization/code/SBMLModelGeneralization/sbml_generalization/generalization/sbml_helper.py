@@ -644,7 +644,8 @@ def parse_group_sbml(groups_sbml, chebi):
 					ub_sps = set(gr_members)
 				elif GROUP_TYPE_EQUIV == gr_type:
 					for s_id in gr_members:
-						s_id2gr_id[s_id] = gr_id, get_term(group, chebi)
+						term = get_term(group, chebi)
+						s_id2gr_id[s_id] = gr_id, term if term else gr_name
 	else:
 		raise GrPlError("groups plugin not installed")
 	return r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps
