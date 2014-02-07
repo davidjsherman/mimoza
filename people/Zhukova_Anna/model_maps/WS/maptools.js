@@ -68,7 +68,7 @@ function formatChebi(ch) {
 
 function formatLink(comp) {
     if (comp) {
-        return "<a href=\'./comp.html?name=" + comp + "\'>Go inside</a>";
+        return "<a href=\'./comp.html?name=" + comp.replace(' ', '_') + "\'>Go inside</a>";
     }
     return "";
 }
@@ -212,16 +212,20 @@ function pnt2layer(map, feature) {
 
 function addPopups(map, name2popup, feature, layer) {
     var content = '';
+    var label = '';
     if ('reaction' == feature.properties.type) {
         var ga_res = formatGA(feature.properties.gene_association);
         var formula = formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products);
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p><p class="popup centre">'+ ga_res + "</p>";
+	label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p>';
     } else if ('species' == feature.properties.type) {
         var ch = formatChebi(feature.properties.chebi);
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + ch + "</p>";
+label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p>";
     } else if ('compartment' == feature.properties.type) {
         var link = formatLink(feature.properties.name);
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'>" + link + "</p>";
+label = '<h2>' + feature.properties.name + "</h2>";
     }
     if ('edge' == feature.properties.type) {
         return
@@ -235,7 +239,7 @@ function addPopups(map, name2popup, feature, layer) {
         bounds = new L.LatLngBounds(southWest, northEast);
     var size = $('#map').height();
     var popup = L.popup({autoPan:true, keepInView:true, maxWidth:size - 2, maxHeight:size - 2,  autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
-    layer.bindPopup(popup).bindLabel(content); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
+    layer.bindPopup(popup).bindLabel(label); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
     if (feature.properties.name) {
 	name2popup[feature.properties.name] = popup;
     }
