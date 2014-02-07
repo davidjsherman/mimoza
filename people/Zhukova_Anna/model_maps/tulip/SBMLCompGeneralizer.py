@@ -9,7 +9,7 @@ class SBMLCompGeneralizer(tlp.Algorithm):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return (True, "")
+		return True, ""
 
 	def run(self):
 		meta_graph = find_subgraph_by_name(self.graph.getRoot(), "meta graph")

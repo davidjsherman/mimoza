@@ -3,14 +3,13 @@ import tulipplugins
 from modules.geojson_helper import tulip2geojson
 
 
-
 class SBML2GeoJSNExport(tlp.Algorithm):
     def __init__(self, context):
         tlp.Algorithm.__init__(self, context)
         self.addStringParameter("file::GeoJSON", "GeoJSON file to be exported.", "")
 
     def check(self):
-        return (True, "")
+        return True, ""
 
     def run(self):
         tulip2geojson(self.graph, self.dataSet["file::GeoJSON"])

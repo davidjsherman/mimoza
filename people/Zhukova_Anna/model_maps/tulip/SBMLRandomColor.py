@@ -8,7 +8,7 @@ class SBMLRandomColor(tlp.Algorithm):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return (True, "")
+		return True, ""
 
 	def run(self):
 		graph = self.graph.getRoot()

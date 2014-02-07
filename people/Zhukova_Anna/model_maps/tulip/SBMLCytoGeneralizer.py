@@ -14,13 +14,13 @@ class SBMLCytoGeneralizer(tlp.Algorithm):
 	def run(self):
 		root = self.graph.getRoot()
 		meta_graph = find_subgraph_by_name(root, "meta graph")
-		cyto = root.getAttribute("cytoplasm")
+		cytoplasm = root.getAttribute("cytoplasm")
 		extracellular = 'extracellular'
 		for n in meta_graph.getNodes():
-			if cyto != meta_graph["compartment"][n]:
-				extracellular = meta_graph["compartment"][n]
+			if cytoplasm != root["compartment"][n]:
+				extracellular = root["compartment"][n]
 			break
-		comp_to_meta_node(meta_graph, cyto, extracellular)	
+		comp_to_meta_node(meta_graph, cytoplasm, extracellular)
 		return True
 
 # The line below does the magic to register the plugin to the plugin database

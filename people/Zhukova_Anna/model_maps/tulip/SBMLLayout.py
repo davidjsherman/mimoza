@@ -8,7 +8,7 @@ class SBMLLayout(tlp.Algorithm):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return (True, "")
+		return True, ""
 
 	def run(self):
 		layout(self.graph)

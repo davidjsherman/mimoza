@@ -8,7 +8,7 @@ class SBMLGeneralizationBasedLayout(tlp.Algorithm):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return (True, "")
+		return True, ""
 
 	def run(self):
 		layout_generalization_based(self.graph)

@@ -1,14 +1,15 @@
 from tulip import *
 import tulipplugins
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from rename import get_short_name, split_into_parts
+from modules.rename import split_into_parts, get_short_name
+
 
 class SBMLRenamer(tlp.Algorithm):
 	def __init__(self, context):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return (True, "")
+		return True, ""
 
 	def run(self):
 		onto = parse(get_chebi())

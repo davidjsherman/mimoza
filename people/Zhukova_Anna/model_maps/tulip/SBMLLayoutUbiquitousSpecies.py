@@ -1,13 +1,14 @@
 from tulip import *
 import tulipplugins
-from layout_utils import layout_ub_sps
+from modules.layout_utils import layout_ub_sps
+
 
 class SBMLLayoutUbiquitousSpecies(tlp.Algorithm):
 	def __init__(self, context):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return (True, "")
+		return True, ""
 
 	def run(self):
 		layout_ub_sps(self.graph)

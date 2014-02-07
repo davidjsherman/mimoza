@@ -8,7 +8,7 @@ class SBMLGeneralizer(tlp.Algorithm):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return (True, "")
+		return True, ""
 
 	def run(self):
 		ns = list(self.graph.getNodes())
