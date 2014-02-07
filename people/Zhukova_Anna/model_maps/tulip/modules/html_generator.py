@@ -77,7 +77,7 @@ def add_model_description(model, page):
 
 
 def add_js(default_organelle, org2scripts, page):
-	page.script('var comp2geojson = {0}; var compartment = "{1}";'.format(org2scripts, default_organelle) + '''
+	page.script('var comp2geojson = {0}; var compartment = "{1}";'.format(org2scripts, normalize(default_organelle)) + '''
 		var comp = gup('name');
 		if (comp) {
 			compartment = comp;

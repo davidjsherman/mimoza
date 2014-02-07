@@ -2,7 +2,7 @@ from libsbml import SBMLReader
 from tulip import *
 from sbml_generalization.generalization.sbml_helper import parse_group_sbml, GrPlError, check_names, check_compartments
 from sbml_generalization.utils.compartment_positioner import get_comp2go, sort_comps
-from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go
+from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Term
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.generalization.model_generalizer import map2chebi
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
@@ -243,7 +243,11 @@ def mark_ancestors(graph, r_eq2clu, r_ch2clu, s2clu):
 		elif id_[n] in s2clu:
 			gr_id, term = s2clu[id_[n]]
 			if term:
-				gr_name = term.getName()
+				if isinstance(term, Term):
+					gr_name = term.getName()
+				else:
+					gr_name = term
+					term = None
 		if gr_name:
 			anc_name[n] = gr_name
 		if gr_id:

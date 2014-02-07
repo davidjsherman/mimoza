@@ -5,13 +5,13 @@ from modules.color import color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm
 from modules.geojson_helper import tulip2geojson
 from modules.html_generator import generate_html
-from modules.layout_utils import layout, layout_generalization_based, layout_comp, layout_cytoplasm
+from modules.layout_utils import layout, layout_generalization_based, layout_cytoplasm
 from modules.resize import get_comp_size
 from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
 dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
-sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_pero.xml'
+sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
 # sbml_file = '/Users/anna/Downloads/MODEL1212060001_with_groups.xml'
 
 

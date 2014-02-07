@@ -329,7 +329,7 @@ def get_alpha(lo, o_lo):
 	elif 157.5 <= alpha <= 180:
 		return 180
 	elif -180 <= alpha < -157.5:
-		return  -180
+		return -180
 	elif -157.5 <= alpha < -112.5:
 		return -135
 	elif -112.5 <= alpha < -67.5:
@@ -445,8 +445,8 @@ def layout_generalization_based(graph, do_not_open=None):
 			alpha = get_alpha(view_layout[o_n_1[0]], lo)
 		else:
 			alpha = get_alpha(view_layout[o_n_1[0]], view_layout[o_n_2[0]])
-		if alpha < 0:
-			alpha = - alpha
+		# if alpha < 0:
+		# 	alpha = - alpha
 		vl[mg] = lo.getX(), lo.getY(), alpha
 
 
