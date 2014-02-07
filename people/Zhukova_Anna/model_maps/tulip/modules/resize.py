@@ -9,12 +9,13 @@ e_size = 0.8
 
 	
 def get_n_size(graph, n):
-	ubiquitous = graph.getBooleanProperty("ubiquitous")
-	view_meta_graph = graph.getGraphProperty("viewMetaGraph")
+	root = graph.getRoot()
+	ubiquitous = root.getBooleanProperty("ubiquitous")
+	view_meta_graph = root.getGraphProperty("viewMetaGraph")
 	num = 1
 	if graph.isMetaNode(n):
 		num = view_meta_graph[n].numberOfNodes()
-	if 'reaction' == graph['type'][n]:
+	if 'reaction' == root['type'][n]:
 		s = r_size * num
 	elif ubiquitous[n]:
 		s = ub_sp_size
@@ -24,22 +25,32 @@ def get_n_size(graph, n):
 
 
 def get_e_size(graph, e):
-	ubiquitous = graph.getBooleanProperty("ubiquitous")
-	view_meta_graph = graph.getGraphProperty("viewMetaGraph")
+	root = graph.getRoot()
+	ubiquitous = root.getBooleanProperty("ubiquitous")
+	view_meta_graph = root.getGraphProperty("viewMetaGraph")
 	s, t = graph.source(e), graph.target(e)
 	if ubiquitous[s] or ubiquitous[t]:
 		return ub_e_size
-	n = s if 'reaction' == graph['type'][s] else t
+	n = s if 'reaction' == root['type'][s] else t
 	num = 1
 	if graph.isMetaNode(n):
 		num = view_meta_graph[n].numberOfNodes()
 	return e_size * num
 
 
+def get_comp_size(graph, n):
+	root = graph.getRoot()
+	view_meta_graph = root.getGraphProperty("viewMetaGraph")
+	comp_graph = view_meta_graph[n]
+	bb = tlp.computeBoundingBox(comp_graph)
+	return tlp.Size(bb.width(), bb.height())
+
+
 def resize_edges(graph):
-	view_size = graph.getSizeProperty("viewSize")
-	view_src_anchor_size = graph.getSizeProperty("viewSrcAnchorSize")
-	view_tgt_anchor_size = graph.getSizeProperty("viewTgtAnchorSize")
+	root = graph.getRoot()
+	view_size = root.getSizeProperty("viewSize")
+	view_src_anchor_size = root.getSizeProperty("viewSrcAnchorSize")
+	view_tgt_anchor_size = root.getSizeProperty("viewTgtAnchorSize")
 			
 	for e in graph.getEdges():
 		sz = get_e_size(graph, e)

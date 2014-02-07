@@ -73,7 +73,7 @@ def add_map(page):
 def add_model_description(model, page):
 	model_description = model.getNotes()
 	if model_description:
-		page.p(model_description.toXMLString(), class_='margin', id='descr')
+		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
 def add_js(default_organelle, org2scripts, page):

@@ -14,14 +14,15 @@ MARGIN = 3.8
 
 
 def tulip2geojson(graph, geojson_file):
-	ga = graph.getRoot().getStringProperty("geneAssociation")
-	type_ = graph.getRoot().getStringProperty("type")
-	layout = graph.getRoot().getLayoutProperty("viewLayout")
-	size = graph.getRoot().getSizeProperty("viewSize")
-	shape = graph.getRoot()['viewShape']
-	color = graph.getRoot().getColorProperty("viewColor")
-	b_color = graph.getRoot().getColorProperty("viewBorderColor")
-	chebi = graph.getRoot().getStringProperty("chebi_id")
+	root = graph.getRoot()
+	ga = root.getStringProperty("geneAssociation")
+	type_ = root.getStringProperty("type")
+	layout = root.getLayoutProperty("viewLayout")
+	size = root.getSizeProperty("viewSize")
+	shape = root['viewShape']
+	color = root.getColorProperty("viewColor")
+	b_color = root.getColorProperty("viewBorderColor")
+	chebi = root.getStringProperty("chebi_id")
 
 	(m_x, m_y), (M_x, M_y) = get_min_max(graph)
 	x_scale = DIMENSION / (M_x - m_x)
@@ -51,12 +52,12 @@ def tulip2geojson(graph, geojson_file):
 
 	for n in (n for n in graph.getNodes() if type_[n] in ['reaction', 'species', 'compartment']):
 		geom = geojson.Point(get_coords(n))
-		props = {"id": graph['id'][n], "name": graph['name'][n], "label": get_short_name(graph, n, onto),
+		props = {"id": root['id'][n], "name": root['name'][n], "label": get_short_name(graph, n, onto),
 		         "color": triplet(color[n]), "border": triplet(b_color[n]),
 		         "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
 		         "type": type_[n]}
 		if 'reaction' == type_[n]:
-			ins, outs = get_formula(graph, n, onto)
+			ins, outs = get_formula(graph, n)
 			props.update({"gene_association": get_gene_association_list(ga[n]), "reversible": graph['reversible'][n],
 			              'reactants': ins, 'products': outs})
 		elif 'species' == type_[n]:
@@ -90,18 +91,22 @@ def get_gene_association_list(ga):
 		return ''
 
 
-def get_formula(graph, n, onto):
-	def get_node(e, get_nd):
-		nd = get_nd(e)
-		if 'compartment' != graph['type'][nd]:
-			return nd
-		for e in graph['viewMetaGraph'][e]:
-			return get_nd(e)
-	formatter = lambda edges, get_nd: '&'.join(
-		["{0} * {1}".format(int(graph['stoichiometry'][e]), graph.getRoot()['name'][get_node(e, get_nd)]) for e in edges])
-	ins = formatter(graph.getInEdges(n), lambda e: graph.getRoot().source(e))
-	outs = formatter(graph.getOutEdges(n), lambda e: graph.getRoot().target(e))
-	return ins, outs
+def get_formula(graph, n):
+	root = graph.getRoot()
+	ins, outs = [], []
+	stoich_formatter = lambda e, nd: "{0} * {1}".format(int(root['stoichiometry'][e]), root['name'][nd])
+	for edge in graph.getInOutEdges(n):
+		es = [edge]
+		if 'compartment' == root['type'][graph.source(edge)] or 'compartment' == root['type'][graph.target(edge)]:
+			es = root['viewMetaGraph'][edge]
+		for e in es:
+			nd = root.source(e)
+			if nd == n:
+				nd = root.target(e)
+				outs.append(stoich_formatter(e, nd))
+			else:
+				ins.append(stoich_formatter(e, nd))
+	return '&'.join(ins), '&'.join(outs)
 
 
 def rgb(triplet):
@@ -113,19 +118,10 @@ def triplet(c, lettercase=LOWERCASE):
 
 
 def get_min_max(graph):
-	layout = graph.getLayoutProperty("viewLayout")
-	size = graph.getSizeProperty("viewSize")
-
-	m = lambda l, s: (l.getX() - s.getW() / 2, l.getY() - s.getH() / 2)
-	M = lambda l, s: (l.getX() + s.getW() / 2, l.getY() + s.getH() / 2)
-	mM = lambda n: (m(layout[n], size[n]), M(layout[n], size[n]))
-	(m_x, m_y), (M_x, M_y) = mM(graph.getNodes().next())
-	for n in graph.getNodes():
-		(m_x_, m_y_), (M_x_, M_y_) = mM(n)
-		if m_x_ < m_x: m_x = m_x_
-		if m_y_ < m_y: m_y = m_y_
-		if M_x_ > M_x: M_x = M_x_
-		if M_y_ > M_y: M_y = M_y_
+	lo = graph.getRoot().getLayoutProperty('viewLayout')
+	# (m_x, m_y), (M_x, M_y) = get_corners(graph)
+	m, M = lo.getMin(graph), lo.getMax(graph)
+	(m_x, m_y), (M_x, M_y) = (m.getX(), m.getY()), (M.getX(), M.getY())
 
 	w, h = M_x - m_x, M_y - m_y
 	if w > h:

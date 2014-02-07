@@ -12,39 +12,41 @@ white = tlp.Color(255, 255, 255)
 transparent = tlp.Color(0, 0, 0, 0)
 
 
-def getKey(n, graph):
-	type_ = graph['type'][n]
+def get_key(n, graph):
+	root = graph.getRoot()
+	type_ = root['type'][n]
 	if 'reaction' == type_:
-		an_id = graph['ancestor_id'][n]
+		an_id = root['ancestor_id'][n]
 		if an_id:
 			return an_id
-		return graph['id'][n]
+		return root['id'][n]
 	if 'species' == type_:
-		an_ch = graph['ancestor_chebi_id'][n]
+		an_ch = root['ancestor_chebi_id'][n]
 		if an_ch:
 			return an_ch
-		an_id = graph['ancestor_id'][n]
+		an_id = root['ancestor_id'][n]
 		if an_id:
 			return an_id
-		ch = graph['chebi_id'][n]
+		ch = root['chebi_id'][n]
 		if ch:
 			return ch
-		return graph['id'][n]
+		return root['id'][n]
 	return None
 
 
 def color(graph):
-	view_color = graph.getColorProperty("viewColor")
-	view_border_color = graph.getColorProperty("viewBorderColor")
+	root = graph.getRoot()
+	view_color = root.getColorProperty("viewColor")
+	view_border_color = root.getColorProperty("viewBorderColor")
 
-	keys = {getKey(n, graph) for n in graph.getNodes() if graph['type'][n] == 'reaction'}
+	keys = {get_key(n, graph) for n in graph.getNodes() if root['type'][n] == 'reaction'}
 	i = len(keys)
 
 	colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
 	colors = [(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
 	key2color = dict(zip(keys, colors))
 
-	keys = {getKey(n, graph) for n in graph.getNodes() if graph['type'][n] == 'species'}
+	keys = {get_key(n, graph) for n in graph.getNodes() if root['type'][n] == 'species'}
 	i = len(keys)
 
 	colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
@@ -60,17 +62,16 @@ def color(graph):
 	colors = [tlp.Color(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
 	key2border_color = dict(zip(organelles + [cyto], colors[1:]))
 
-
 	view_border_color.setAllNodeValue(white)
 
 	for n in graph.getNodes():
-		type_ = graph['type'][n]
-		comp = graph['compartment'][n]
+		type_ = root['type'][n]
+		comp = root['compartment'][n]
 		ns = root['viewMetaGraph'][n].getNodes() if root.isMetaNode(n) else [n]
 		for nn in ns:
 			found = False
 			for m in root.getInOutNodes(nn):
-				comp_m = graph['compartment'][m]
+				comp_m = root['compartment'][m]
 				if comp != comp_m:
 					if comp_m in key2border_color:
 						view_border_color[n] = key2border_color[comp_m]
@@ -82,24 +83,24 @@ def color(graph):
 				break
 
 		if 'compartment' == type_:
-			view_color[n] = transparent_grey
+			view_color[n] = key2border_color[root['name'][n]] if root['name'][n] in key2border_color else transparent_grey
 			continue
 		a = 255
 		if 'reaction' == type_:
-			r, g, b = key2color[getKey(n, graph)]
+			r, g, b = key2color[get_key(n, graph)]
 			if graph.isMetaNode(n):
 				a = 100
 			view_color[n] = tlp.Color(r, g, b, a)
 			for e in graph.getInOutEdges(n):
-				if graph['ubiquitous'][graph.target(e)] or graph['ubiquitous'][graph.source(e)]:
+				if root['ubiquitous'][graph.target(e)] or root['ubiquitous'][graph.source(e)]:
 					view_color[e] = grey
 				else:
 					view_color[e] = tlp.Color(r, g, b, 100 if graph.isMetaEdge(e) else 255)
 		if 'species' == type_:
-			if graph['ubiquitous'][n]:
+			if root['ubiquitous'][n]:
 				r, g, b = 180, 180, 180
 			else:
-				r, g, b = key2color[getKey(n, graph)]
+				r, g, b = key2color[get_key(n, graph)]
 				if graph.isMetaNode(n):
 					a = 100
 			view_color[n] = tlp.Color(r, g, b, a)

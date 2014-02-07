@@ -1,7 +1,7 @@
 from tulip import *
 import tulipplugins
 from modules.factoring import factor_comps
-from modules.graph_tools import findSubGraphByName
+from modules.graph_tools import find_subgraph_by_name
 
 
 class SBMLCompGeneralizer(tlp.Algorithm):
@@ -12,7 +12,7 @@ class SBMLCompGeneralizer(tlp.Algorithm):
 		return (True, "")
 
 	def run(self):
-		meta_graph = findSubGraphByName(self.graph.getRoot(), "meta graph")
+		meta_graph = find_subgraph_by_name(self.graph.getRoot(), "meta graph")
 		factor_comps(meta_graph)
 		return True
 

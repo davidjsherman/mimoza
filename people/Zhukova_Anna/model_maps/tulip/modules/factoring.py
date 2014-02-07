@@ -1,6 +1,5 @@
 from collections import defaultdict
 from tulip import tlp
-from modules.graph_tools import get_size
 from modules.merge_inside_comp import mic
 from modules.model_utils import merge_nodes
 from modules.resize import get_n_size, resize_edges
@@ -12,75 +11,75 @@ def factor_nodes(graph):
 	root = graph.getRoot()
 	clone = root.inducedSubGraph(list(graph.getNodes()))
 
-	ancestor2nodes = {}
+	ancestor2nodes = defaultdict(list)
 	for node in graph.getNodes():
-		ancestor = graph["ancestor_id"][node]
+		ancestor = root["ancestor_id"][node]
 		if ancestor:
-			ancestor = ancestor, graph["type"][node], graph["compartment"][node]
-			if ancestor2nodes.has_key(ancestor):
-				ancestor2nodes[ancestor].append(node)
-			else:
-				ancestor2nodes[ancestor] = [node]
+			ancestor = ancestor, root["type"][node], root["compartment"][node]
+			ancestor2nodes[ancestor].append(node)
 
-	isUb = graph["ubiquitous"]
+	is_ubiquitous = root["ubiquitous"]
 	for (ancestor, type_, comp), nodes in ancestor2nodes.iteritems():
 		if len(nodes) <= 1:
 			continue
 		all_nodes = list(nodes)
-		id2ubN = defaultdict(set)
+		id2ub_ns = defaultdict(set)
 		if 'reaction' == type_:
 			for node in nodes:
-				for n in (n for n in graph.getInOutNodes(node) if isUb[n]):
-					id2ubN[graph["id"][n]].add(n)
-			for ubs in id2ubN.itervalues():
+				for n in (n for n in graph.getInOutNodes(node) if is_ubiquitous[n]):
+					id2ub_ns[root["id"][n]].add(n)
+			for ubs in id2ub_ns.itervalues():
 				merge_nodes(graph, ubs)
 
-		metaNode = graph.createMetaNode(all_nodes, False)
-		mg = graph["viewMetaGraph"][metaNode]
+		meta_node = graph.createMetaNode(all_nodes, False)
+		mg = graph["viewMetaGraph"][meta_node]
 		n = nodes[0]
 
-		for prop in ["compartment", "type", "reversible", "ubiquitous", "viewBorderColor", "viewBorderWidth", "viewColor",\
-	             "viewLabelColor", "viewLayout", "viewSelection", "viewShape", "clone"]:
-			graph[prop][metaNode] = clone[prop][n]
-		graph["id"][metaNode] = clone["ancestor_id"][n]
-		graph["name"][metaNode] = clone["ancestor_name"][n]
-		root["viewSize"][metaNode] = get_n_size(root, metaNode)
+		for prop in ["compartment", "type", "reversible", "ubiquitous", "viewBorderColor", "viewBorderWidth",
+		             "viewColor", "viewLabelColor", "viewLayout", "viewSelection", "viewShape", "clone"]:
+			root[prop][meta_node] = root[prop][n]
+		root["id"][meta_node] = root["ancestor_id"][n]
+		root["name"][meta_node] = root["ancestor_name"][n]
+		root["viewSize"][meta_node] = get_n_size(root, meta_node)
 
 		if 'reaction' == type_:
-			mg.setName("generalized {0} ({1})".format(clone["name"][n], len(nodes)))
-			root["reversible"][metaNode] = True
+			mg.setName("generalized {0} ({1})".format(root["name"][n], len(nodes)))
+			root["reversible"][meta_node] = True
 			for n in nodes:
-				if not clone["reversible"][n]:
-					root["reversible"][metaNode] = False
+				if not root["reversible"][n]:
+					root["reversible"][meta_node] = False
 					break
-			root["geneAssociation"][metaNode] = "\nor\n".join({clone["geneAssociation"][it] for it in nodes})
+			root["geneAssociation"][meta_node] = "\nor\n".join({root["geneAssociation"][it] for it in nodes})
 		else:
-			mg.setName("{0} ({1})".format(clone["ancestor_name"][n], len(nodes)))
-			root["chebi_id"][metaNode] = clone["ancestor_chebi_id"][n]
+			mg.setName("{0} ({1})".format(root["ancestor_name"][n], len(nodes)))
+			root["chebi_id"][meta_node] = root["ancestor_chebi_id"][n]
 
-		root["viewLabel"][metaNode] = mg.getName()
-		root["name"][metaNode] = root["viewLabel"][metaNode]
+		root["viewLabel"][meta_node] = mg.getName()
+		root["name"][meta_node] = root["viewLabel"][meta_node]
 
 	root.delSubGraph(clone)
-	for n in (n for n in graph.getNodes() if 'reaction' == graph['type'][n] and graph.isMetaNode(n)):
+	for n in (n for n in graph.getNodes() if 'reaction' == root['type'][n] and graph.isMetaNode(n)):
 		for e in graph.getInOutEdges(n):
-			graph['stoichiometry'][e] = graph['stoichiometry'][list(graph["viewMetaGraph"][e])[0]]
+			root['stoichiometry'][e] = root['stoichiometry'][list(root["viewMetaGraph"][e])[0]]
 
 	resize_edges(graph)
 
 
 def comp_to_meta_node(meta_graph, comp, out_comp):
-	ns = filter(lambda n: meta_graph["compartment"][n] == comp, meta_graph.getNodes())
-	meta_node = meta_graph.createMetaNode(ns, False)
-	comp_graph = meta_graph["viewMetaGraph"][meta_node]
+	root = meta_graph.getRoot()
+	ns = filter(lambda n: root["compartment"][n] == comp, meta_graph.getNodes())
+	comp_graph = meta_graph.getSuperGraph().inducedSubGraph(ns)
+	bb = tlp.computeBoundingBox(comp_graph)
+	meta_node = meta_graph.createMetaNode(comp_graph, False)
 	comp_graph.setName("_" + comp)
-	meta_graph["viewSize"][meta_node] = get_size(comp_graph)
-	meta_graph["viewLabel"][meta_node] = comp
-	meta_graph["name"][meta_node] = comp
-	meta_graph["compartment"][meta_node] = out_comp
-	meta_graph["type"][meta_node] = 'compartment'
-	meta_graph["viewShape"][meta_node] = 18
-	meta_graph["viewColor"][meta_node] = tlp.Color(200, 200, 200, 80)
+	root["viewSize"][meta_node] = tlp.Size(bb.width(), bb.height())
+	root["viewLayout"][meta_node] = bb.center()
+	root["viewLabel"][meta_node] = comp
+	root["name"][meta_node] = comp
+	root["compartment"][meta_node] = out_comp
+	root["type"][meta_node] = 'compartment'
+	root["viewShape"][meta_node] = 18
+	root["viewColor"][meta_node] = tlp.Color(200, 200, 200, 80)
 	return meta_node
 
 
@@ -96,7 +95,7 @@ def factor_comps(meta_graph):
 	return organelle2meta_node
 
 
-def factor_cyto(meta_graph):
+def factor_cytoplasm(meta_graph):
 	root = meta_graph.getRoot()
 	cytoplasm = root.getAttribute("cytoplasm")
 	meta_node = comp_to_meta_node(meta_graph, cytoplasm, 'extracellular')

@@ -1,7 +1,7 @@
 from tulip import *
 import tulipplugins
 from modules.factoring import comp_to_meta_node
-from modules.graph_tools import findSubGraphByName
+from modules.graph_tools import find_subgraph_by_name
 
 
 class SBMLCytoGeneralizer(tlp.Algorithm):
@@ -13,7 +13,7 @@ class SBMLCytoGeneralizer(tlp.Algorithm):
 
 	def run(self):
 		root = self.graph.getRoot()
-		meta_graph = findSubGraphByName(root, "meta graph")
+		meta_graph = find_subgraph_by_name(root, "meta graph")
 		cyto = root.getAttribute("cytoplasm")
 		extracellular = 'extracellular'
 		for n in meta_graph.getNodes():

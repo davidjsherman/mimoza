@@ -212,7 +212,8 @@ def create_props(graph):
 
 
 def duplicate_nodes(graph):
-	for n in (n for n in graph.getNodes() if graph["ubiquitous"][n]):
+	root = graph.getRoot()
+	for n in (n for n in graph.getNodes() if root["ubiquitous"][n]):
 		clone_node(graph, n)
 
 
@@ -222,11 +223,12 @@ def clean(graph):
 
 
 def mark_ancestors(graph, r_eq2clu, r_ch2clu, s2clu):
-	id_ = graph.getStringProperty("id")
-	anc_id = graph.getStringProperty("ancestor_id")
-	anc_name = graph.getStringProperty("ancestor_name")
-	anc_ch_id = graph.getStringProperty("ancestor_chebi_id")
-	type_ = graph.getStringProperty("type")
+	root = graph.getRoot()
+	id_ = root.getStringProperty("id")
+	anc_id = root.getStringProperty("ancestor_id")
+	anc_name = root.getStringProperty("ancestor_name")
+	anc_ch_id = root.getStringProperty("ancestor_chebi_id")
+	type_ = root.getStringProperty("type")
 	for n in graph.getNodes():
 		gr_id, gr_name, term = None, None, None
 		if 'reaction' == type_[n]:

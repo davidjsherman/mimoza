@@ -1,10 +1,11 @@
-from tulip import *
 from model_utils import merge_nodes
 
-def mic(graph): 
-	compartment =  graph.getStringProperty("compartment")
-	ubiquitous =  graph.getBooleanProperty("ubiquitous")
-	id_ = graph.getStringProperty("id")
+
+def mic(graph):
+	root = graph.getRoot()
+	compartment = root.getStringProperty("compartment")
+	ubiquitous = root.getBooleanProperty("ubiquitous")
+	id_ = root.getStringProperty("id")
 
 	id2cool = {}
 	id2danger = {}
