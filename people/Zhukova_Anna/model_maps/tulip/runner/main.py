@@ -1,6 +1,7 @@
 from tulip import tlp
 import sys
 from libsbml import SBMLReader, os
+from shutil import copyfile
 from modules.color import color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm
 from modules.geojson_helper import tulip2geojson
@@ -11,8 +12,15 @@ from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
 dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
-sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
+sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_pero_with_groups.xml'
 # sbml_file = '/Users/anna/Downloads/MODEL1212060001_with_groups.xml'
+
+
+def create_dir(model_id):
+	m_dir = '{0}/{1}'.format(dir, model_id)
+	if not os.path.exists(m_dir):
+		os.makedirs(m_dir)
+	return m_dir
 
 
 def main(argv=None):
@@ -21,8 +29,15 @@ def main(argv=None):
 	reader = SBMLReader()
 	input_document = reader.readSBML(sbml_file)
 	input_model = input_document.getModel()
-	graph = import_sbml(graph, input_model, sbml_file)
 	model_id = input_model.getId()
+
+	m_dir = create_dir(model_id)
+	new_sbml_file = '{0}/{1}.xml'.format(m_dir, model_id)
+	if sbml_file != new_sbml_file:
+		copyfile(sbml_file, new_sbml_file)
+		# os.remove(sbml_file)
+
+	graph, groups_sbml = import_sbml(graph, input_model, new_sbml_file)
 
 	# generalized species/reactions -> metanodes
 	ns = list(graph.getNodes())
@@ -56,9 +71,6 @@ def main(argv=None):
 	# color
 	color(graph)
 
-	m_dir = '{0}/{1}'.format(dir, model_id)
-	if not os.path.exists(m_dir):
-		os.makedirs(m_dir)
 	for organelle, graphs in organelle2graphs.iteritems():
 		# export to geojson
 		organelle = organelle.lower().replace(' ', '_')
@@ -86,7 +98,7 @@ def main(argv=None):
 	generalized_json = '{0}/{1}.json'.format(m_dir, cytoplasm)
 	tulip2geojson(comp_graph, generalized_json)
 
-	generate_html(input_model, '{0}/comp.html'.format(m_dir), organelle2meta_node.keys())
+	generate_html(input_model, '{0}/comp.html'.format(m_dir), organelle2meta_node.keys(), groups_sbml)
 
 	# TODO: why doesn't it work??
 	# tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')

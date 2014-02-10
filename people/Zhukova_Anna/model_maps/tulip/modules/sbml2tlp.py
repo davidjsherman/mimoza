@@ -16,6 +16,7 @@ arrowShape = 50
 
 def process_generalized_entities(chebi, input_model, sbml_file):
 	r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps, species_id2chebi_id = {}, {}, {}, set(), {}
+	groups_sbml = None
 	try:
 		r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
 		cofactors = getCofactors(chebi)
@@ -34,7 +35,7 @@ def process_generalized_entities(chebi, input_model, sbml_file):
 		                                                                                  sh_chains=False,
 		                                                                                  verbose=True)
 
-	return r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
+	return r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml
 
 
 def species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_id, ub_sps):
@@ -128,7 +129,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model, ub_sps):
 def import_sbml(graph, input_model, sbml_file):
 	chebi = parse(get_chebi())
 
-	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = process_generalized_entities(chebi,
+	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = process_generalized_entities(chebi,
 	                                                                                              input_model,
 	                                                                                              sbml_file)
 	check_names(input_model)
@@ -176,7 +177,7 @@ def import_sbml(graph, input_model, sbml_file):
 	clean(graph)
 
 	mark_ancestors(graph, r_id2g_id, r_id2ch_id, s_id2gr_id)
-	return graph
+	return graph, groups_sbml
 
 
 def create_props(graph):

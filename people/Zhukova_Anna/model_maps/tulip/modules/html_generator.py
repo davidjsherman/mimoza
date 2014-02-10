@@ -30,6 +30,14 @@ def add_compartment_menu(html_file, organelles, page):
 	page.ul.close()
 
 
+def add_download_link(groups_sbml, page):
+	if groups_sbml:
+		page.div(class_='margin centre', id='download')
+		page.span('Download&nbsp;')
+		page.a('generalised model', href=groups_sbml)
+		page.div.close()
+
+
 def add_search(page):
 	""" <div>
 			<form name="search_form" onclick="search(map, name2popup);">
@@ -108,7 +116,7 @@ def add_js(default_organelle, org2scripts, page):
 	)
 
 
-def generate_html(model, html_file, organelles):
+def generate_html(model, html_file, organelles, groups_sbml):
 	page = markup.page()
 	scripts = ['../lib/leaflet/leaflet.js', '../lib/leaflet_label/leaflet.label.js',
 	           'http://code.jquery.com/jquery-2.0.3.min.js', 'http://code.jquery.com/ui/1.10.4/jquery-ui.js',
@@ -143,6 +151,9 @@ def generate_html(model, html_file, organelles):
 	add_map(page)
 
 	add_model_description(model, page)
+
+	add_download_link(groups_sbml, page)
+
 	page.div.close()
 
 	add_js(default_organelle, org2scripts, page)

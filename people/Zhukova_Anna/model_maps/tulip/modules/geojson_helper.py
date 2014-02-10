@@ -31,13 +31,16 @@ def tulip2geojson(graph, geojson_file):
 	features = []
 
 	def get_coords(n):
-		return [(layout[n].getX() - m_x) * x_scale, (M_y - layout[n].getY()) * y_scale]
+		return scale(layout[n].getX(), layout[n].getY())
+
+	def scale(x, y):
+		return [(x - m_x) * x_scale, (M_y - y) * y_scale]
 
 	onto = parse(get_chebi())
 
 	for e in graph.getEdges():
 		s, t = graph.source(e), graph.target(e)
-		geom = geojson.MultiPoint([get_coords(s), get_coords(t)])
+		geom = geojson.MultiPoint([get_coords(s)] + [scale(it[0], it[1]) for it in layout[e]] + [get_coords(t)])
 		props = {"color": triplet(color[e]), "width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
 		         "type": 'edge', "stoichiometry": graph['stoichiometry'][e]}
 		f = geojson.Feature(geometry=geom, properties=props)

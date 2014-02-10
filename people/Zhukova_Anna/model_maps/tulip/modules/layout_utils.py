@@ -1,6 +1,8 @@
 from tulip import *
 from math import radians, atan2, cos, sin, degrees, sqrt
 from modules.color import white
+from modules.model_utils import clone_node
+from modules.resize import ub_sp_size
 
 
 def layout_ub_sps(graph):
@@ -11,44 +13,64 @@ def layout_ub_sps(graph):
 
 	for r in (n for n in graph.getNodes() if 'reaction' == root['type'][n]):
 		x1, y1 = view_layout[r].getX(), view_layout[r].getY()
-		c = min(view_size[r].getW() * 1.8, 3.5)  # edge-after-bent length
-		for (g_n, g_e, g_n1, p) in [(graph.getInNodes, graph.getOutEdges, graph.getOutNodes, 1),
-		                            (graph.getOutNodes, graph.getInEdges, graph.getInNodes, -1)]:
-			in_n = filter(lambda n: not ubiquitous[n], g_n(r))	
-			in_ubs = filter(lambda n: ubiquitous[n], g_n(r))	
-			n = len(in_ubs)
-			if not n:
+		# c = min(view_size[r].getW() * 1.8, 3.5)  # edge-after-bent length
+		for (get_reactants, get_reaction_edges, get_products, direction) in [
+			(graph.getInNodes, graph.getOutEdges, graph.getOutNodes, 1),
+			(graph.getOutNodes, graph.getInEdges, graph.getInNodes, -1)]:
+
+			ubiquitous_reactants = filter(lambda nd: ubiquitous[nd], get_reactants(r))
+			ub_reactants_len = len(ubiquitous_reactants)
+			if not ub_reactants_len:
 				continue
-			if n % 2 == 1:
-				n += 1
-			if in_n: 
-				m = in_n[0]
-				x2, y2 = view_layout[m].getX(), view_layout[m].getY()
+			if ub_reactants_len % 2 == 1:
+				ub_reactants_len += 1
+
+			specific_reactants = filter(lambda nd: not ubiquitous[nd], get_reactants(r))
+			r_radius = view_size[r].getW() * sqrt(2) / 2
+			edge_len = ub_sp_size * ub_reactants_len / 2
+			if specific_reactants:
+				specific_reactant_example = specific_reactants[0]
+				x2, y2 = view_layout[specific_reactant_example].getX(), view_layout[specific_reactant_example].getY()
+				species_size = view_size[specific_reactant_example].getW() / 2
+				edge_len = (sqrt(pow(x1 - x2, 2) + pow(y2 - y1, 2)) - r_radius - species_size)
 			else:
-				out_n = filter(lambda n: not ubiquitous[n], g_n1(r))
-				if out_n:
-					m = out_n[0]
-					x3, y3 = view_layout[m].getX(), view_layout[m].getY()
+				specific_products = filter(lambda n: not ubiquitous[n], get_products(r))
+				if specific_products:
+					specific_product_example = specific_products[0]
+					x3, y3 = view_layout[specific_product_example].getX(), view_layout[specific_product_example].getY()
 					x2, y2 = x1 - (x3 - x1), y1 - (y3 - y1)					
 				else:
-					x2, y2 = x1 + 10 * p, y1	
-			gap = 2 * min(90, (n if n > 1 else 2) * 20)
+					x2, y2 = x1 + view_size[r].getW() + ub_sp_size * ub_reactants_len * direction, y1
+
+			# beta is the max angle between the ubiquitous and the specific edges
+			gap = 2 * min(90, max(60, ub_reactants_len * 20))
 			beta = radians(gap / 2)
-			s = view_size[r].getW() * 0.7 # distance from reaction to the edge bent
-			for ub in in_ubs:
-				e = g_e(ub).next()	
-				alpha = atan2(y2-y1, x2-x1)
+
+			# distance from reaction to the edge bent
+			bent = min(ub_sp_size, edge_len / 2)
+			s = r_radius + bent
+			ds = 2 * min((edge_len - bent), r_radius) / ub_reactants_len
+			# s += ds * ub_reactants_len / 2
+
+			for ub in ubiquitous_reactants:
+				# it is the only edge as ubiquitous species are duplicated
+				e = get_reaction_edges(ub).next()
+
+				alpha = atan2(y2 - y1, x2 - x1)
 				x0, y0 = x1 + s * cos(alpha), y1 + s * sin(alpha)
 				view_layout.setEdgeValue(e, [tlp.Coord(x0, y0)])
-				gamma = alpha - beta
+				gamma = alpha + beta
+
+				# edge-after-bent length
+				c = min(edge_len - s + r_radius - ub_sp_size, 2 * ub_sp_size)
+
 				x3, y3 = x0 + c * cos(gamma), y0 + c * sin(gamma)
 				view_layout.setNodeValue(ub, tlp.Coord(x3, y3))
 				if degrees(beta) > 0: 
-					s += 1
-				if n > 1: 
-					beta -= radians(gap/(n - 1))
+					s += ds
+				beta -= radians(gap/(ub_reactants_len - 1))
 				if degrees(beta) < 0:
-					s -= 1
+					s -= ds
 
 
 def shorten_edges(graph, margin=5):
@@ -90,6 +112,9 @@ def neighbours(ns, org_ns, graph, processed, limit=500):
 
 def layout_cytoplasm(graph, margin=5):
 	root = graph.getRoot()
+	for n in graph.getNodes():
+		if 'species' == root['type'][n] and not graph.isMetaNode(n) and graph.deg(n) >= 4:
+			clone_node(graph, n)
 	sub = graph.inducedSubGraph([n for n in graph.getNodes()])
 	qo = sub.inducedSubGraph([n for n in sub.getNodes() if not root["ubiquitous"][n]])
 	layout_force(qo, margin)
@@ -97,7 +122,8 @@ def layout_cytoplasm(graph, margin=5):
 	graph.delAllSubGraphs(sub)
 	layout_ub_sps(graph)
 	pack_cc(graph)
-	layout_ub_sps(graph)
+	graph.applyAlgorithm("Edge bundling")
+
 
 
 def layout_comp(graph):
@@ -135,6 +161,7 @@ def layout_comp(graph):
 		sub.openMetaNode(m)
 	graph.delAllSubGraphs(ssub)
 	layout_ub_sps(graph)
+	pack_cc(graph)
 
 
 def layout_hierarchically(qo, margin=5):
@@ -220,7 +247,6 @@ def layout(graph, margin=5):
 
 	layout_ub_sps(graph)
 	pack_cc(graph)
-	layout_ub_sps(graph)
 
 
 def detect_components(graph):
