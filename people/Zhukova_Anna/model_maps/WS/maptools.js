@@ -143,7 +143,7 @@ function pnt2layer(map, feature) {
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
     if ('edge' == feature.properties.type) {
-        return L.polyline([map.unproject(e[0], 1), map.unproject(e[1], 1)], {
+            return L.polyline(e.map(function(coord){return map.unproject(coord, 1)}), {
             color: feature.properties.color,
             fillColor: feature.properties.color,
             fillOpacity: 1,
@@ -152,7 +152,7 @@ function pnt2layer(map, feature) {
             lineCap: 'round',
             lineJoin: 'round',
             clickable: false,
-            fill: true
+		fill: false
         });
     }
     var x = e[0], y = e[1];
