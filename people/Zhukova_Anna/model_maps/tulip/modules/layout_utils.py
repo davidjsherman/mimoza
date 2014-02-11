@@ -393,7 +393,7 @@ def show_reversibility(graph):
 				view_src_anchor_shape[e] = -1
 
 
-def layout_generalization_based(graph, do_not_open=None):
+def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 	root = graph.getRoot()
 	view_layout = root.getLayoutProperty("viewLayout")
 	view_meta_graph = root.getGraphProperty("viewMetaGraph")
@@ -535,6 +535,12 @@ def layout_generalization_based(graph, do_not_open=None):
 
 	show_reversibility(clone)
 	show_reversibility(graph)
+
+	# if bundle_edges:
+	# 	try:
+	# 		clone.applyAlgorithm("Edge bundling")
+	# 	except:
+	# 		pass
 
 	return clone
 

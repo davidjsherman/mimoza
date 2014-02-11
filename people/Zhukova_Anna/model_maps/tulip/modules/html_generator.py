@@ -32,11 +32,13 @@ def add_compartment_menu(html_file, organelles, page):
 
 def add_download_link(groups_sbml, page):
 	if groups_sbml:
-		page.p(class_='margin just', id='download')
+		page.div(class_='margin', id='download')
+		page.p()
 		page.span('Download the&nbsp;')
 		page.a('generalised model', href=groups_sbml)
 		page.span('.')
 		page.p.close()
+		page.div.close()
 
 
 def add_search(page):

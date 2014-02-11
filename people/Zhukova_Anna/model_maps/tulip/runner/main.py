@@ -12,7 +12,7 @@ from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
 dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
-sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_pero.xml'
+sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
 # sbml_file = '/Users/anna/Downloads/MODEL1212060001_with_groups.xml'
 
 
@@ -58,28 +58,38 @@ def main(argv=None):
 		comp_graph = root["viewMetaGraph"][meta_node]
 		# layout
 		layout(comp_graph)
-		# copy_layout(comp_graph, graph.getRoot())
-
+		# color
+		color(graph)
 		# generalization-based layout for the full graph
 		comp_graph_full = layout_generalization_based(comp_graph)
 		# copy_layout(comp_graph_full, graph.getRoot())
 		organelle2graphs[organelle] = [comp_graph, comp_graph_full]
 
-	for n in organelle2meta_node.itervalues():
-		root['viewSize'][n] = get_comp_size(graph, n)
+		root['viewSize'][meta_node] = get_comp_size(graph, meta_node)
 
-	# color
-	color(graph)
-
-	for organelle, graphs in organelle2graphs.iteritems():
 		# export to geojson
 		organelle = organelle.lower().replace(' ', '_')
 		full_json = '{0}/{1}_f.json'.format(m_dir, organelle)
-		tulip2geojson(graphs[1], full_json)
+		tulip2geojson(comp_graph_full, full_json)
 		generalized_json = '{0}/{1}.json'.format(m_dir, organelle)
-		tulip2geojson(graphs[0], generalized_json)
+		tulip2geojson(comp_graph, generalized_json)
+
+	# for n in organelle2meta_node.itervalues():
+	# 	root['viewSize'][n] = get_comp_size(graph, n)
+	#
+	# # color
+	# color(graph)
+	#
+	# for organelle, graphs in organelle2graphs.iteritems():
+	# 	# export to geojson
+	# 	organelle = organelle.lower().replace(' ', '_')
+	# 	full_json = '{0}/{1}_f.json'.format(m_dir, organelle)
+	# 	tulip2geojson(graphs[1], full_json)
+	# 	generalized_json = '{0}/{1}.json'.format(m_dir, organelle)
+	# 	tulip2geojson(graphs[0], generalized_json)
 
 	cytoplasm, meta_node = factor_cytoplasm(meta_graph)
+	print cytoplasm
 	root['viewSize'][meta_node] = get_comp_size(graph, meta_node)
 	comp_graph = root["viewMetaGraph"][meta_node]
 	# layout
@@ -87,7 +97,7 @@ def main(argv=None):
 	# color
 	color(graph)
 	# generalization-based layout for the full graph
-	comp_graph_full = layout_generalization_based(comp_graph, set(organelle2meta_node.values()))
+	comp_graph_full = layout_generalization_based(comp_graph, set(organelle2meta_node.values()), True)
 	organelle2graphs[cytoplasm] = [comp_graph, comp_graph_full]
 	organelle2meta_node[cytoplasm] = meta_node
 
