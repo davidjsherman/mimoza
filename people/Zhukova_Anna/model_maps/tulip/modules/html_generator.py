@@ -32,10 +32,11 @@ def add_compartment_menu(html_file, organelles, page):
 
 def add_download_link(groups_sbml, page):
 	if groups_sbml:
-		page.div(class_='margin centre', id='download')
-		page.span('Download&nbsp;')
+		page.p(class_='margin just', id='download')
+		page.span('Download the&nbsp;')
 		page.a('generalised model', href=groups_sbml)
-		page.div.close()
+		page.span('.')
+		page.p.close()
 
 
 def add_search(page):
@@ -144,6 +145,8 @@ def generate_html(model, html_file, organelles, groups_sbml):
 	page.div(class_='centre', id='all')
 	add_compartment_menu(html_file, organelles, page)
 
+	add_download_link(groups_sbml, page)
+
 	add_explanations(page)
 
 	add_search(page)
@@ -151,8 +154,6 @@ def generate_html(model, html_file, organelles, groups_sbml):
 	add_map(page)
 
 	add_model_description(model, page)
-
-	add_download_link(groups_sbml, page)
 
 	page.div.close()
 

@@ -27,7 +27,7 @@ def layout_ub_sps(graph):
 
 			specific_reactants = filter(lambda nd: not ubiquitous[nd], get_reactants(r))
 			r_radius = view_size[r].getW() * sqrt(2) / 2
-			edge_len = ub_sp_size * ub_reactants_len / 2
+			edge_len = ub_sp_size * max(ub_reactants_len / 2, 3)
 			if specific_reactants:
 				specific_reactant_example = specific_reactants[0]
 				x2, y2 = view_layout[specific_reactant_example].getX(), view_layout[specific_reactant_example].getY()
@@ -43,34 +43,48 @@ def layout_ub_sps(graph):
 					x2, y2 = x1 + view_size[r].getW() + ub_sp_size * ub_reactants_len * direction, y1
 
 			# beta is the max angle between the ubiquitous and the specific edges
-			gap = 2 * min(90, max(60, ub_reactants_len * 20))
-			beta = radians(gap / 2)
+			gap = 2 * min(100, max(60, ub_reactants_len * 20))
+			beta0 = radians(gap / 2)
+			beta = beta0
+			d_beta = radians(gap/(ub_reactants_len - 1))
 
 			# distance from reaction to the edge bent
-			bent = min(ub_sp_size, edge_len / 2)
-			s = r_radius + bent
-			ds = 2 * min((edge_len - bent), r_radius) / ub_reactants_len
+			bent = min(ub_sp_size / 2, edge_len / 2)
+			s0 = r_radius + bent
+			s = s0
+			ds = min(2 * (edge_len - bent - ub_sp_size / 2) / ub_reactants_len, ub_sp_size)
 			# s += ds * ub_reactants_len / 2
 
+			# angle between the horizontal line and the reaction-specific-species edge
+			alpha = atan2(y2 - y1, x2 - x1)
+
+			dc = 0
+			towards_edge = -1
 			for ub in ubiquitous_reactants:
 				# it is the only edge as ubiquitous species are duplicated
 				e = get_reaction_edges(ub).next()
-
-				alpha = atan2(y2 - y1, x2 - x1)
 				x0, y0 = x1 + s * cos(alpha), y1 + s * sin(alpha)
 				view_layout.setEdgeValue(e, [tlp.Coord(x0, y0)])
-				gamma = alpha + beta
 
+				gamma = alpha + beta
 				# edge-after-bent length
-				c = min(edge_len - s + r_radius - ub_sp_size, 2 * ub_sp_size)
+				c = min(edge_len - s0 + dc + r_radius - ub_sp_size, 2 * ub_sp_size)
 
 				x3, y3 = x0 + c * cos(gamma), y0 + c * sin(gamma)
 				view_layout.setNodeValue(ub, tlp.Coord(x3, y3))
-				if degrees(beta) > 0: 
-					s += ds
-				beta -= radians(gap/(ub_reactants_len - 1))
-				if degrees(beta) < 0:
-					s -= ds
+				# if degrees(beta) > 0:
+				# 	s += ds
+				if degrees(beta) * degrees(beta + towards_edge * d_beta) < 0:
+					beta = -beta0
+					towards_edge = 1
+					s = s0
+					dc = 0
+				else:
+					beta += towards_edge * d_beta
+					s += ds / 3
+					dc += ds
+				# if degrees(beta) < 0:
+				# 	s -= ds
 
 
 def shorten_edges(graph, margin=5):
