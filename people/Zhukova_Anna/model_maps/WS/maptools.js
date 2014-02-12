@@ -138,22 +138,21 @@ function uproject(map, x, y, w, h) {
 }
 
 
-function pnt2layer(map, feature) {
+function pnt2layer(map, feature, edges) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
     if ('edge' == feature.properties.type) {
-            return L.polyline(e.map(function(coord){return map.unproject(coord, 1)}), {
+	edges.addLayer(L.polyline(e.map(function(coord){return map.unproject(coord, 1)}), {
             color: feature.properties.color,
-            fillColor: feature.properties.color,
-            fillOpacity: 1,
             opacity: 1,
             weight: w * Math.pow(2, map.getZoom() - 1),
             lineCap: 'round',
             lineJoin: 'round',
             clickable: false,
-		fill: false
-        });
+	    fill: false
+        }));
+	return edges;
     }
     var x = e[0], y = e[1];
     if (('species' == feature.properties.type) || ('background' == feature.properties.type) && (14 == feature.properties.shape)) {
@@ -256,12 +255,13 @@ label = '<h2>' + feature.properties.name + "</h2>";
 
 
 function getGeoJson(map, json, name2popup) {
+    var edges = L.layerGroup([]);
     if (json == null || json.length == 0){
         // pass
     } else if (json.length == 1) {
-        getSimpleJson(map, json[0], name2popup);
+        getSimpleJson(map, json[0], name2popup, edges);
     } else {
-        getComplexJson(map, json[0], json[1], name2popup);
+        getComplexJson(map, json[0], json[1], name2popup, edges);
     }
     fitSimpleLabels();
     setAutocomplete(map, name2popup);
@@ -269,22 +269,40 @@ function getGeoJson(map, json, name2popup) {
 
 
 
-function getComplexJson(map, json_zo, json_zi, name2popup) {
-    var geojsonLayer = getSimpleJson(map, json_zo, name2popup);
+function getComplexJson(map, json_zo, json_zi, name2popup, edges) {
+    var geojsonLayer = getSimpleJson(map, json_zo, name2popup, edges);
     var zo = map.getZoom();
     map.on('zoomend', function (e) {
         var zn = map.getZoom();
         if (zn >= 3 && zo < 3) {
-            geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer);
+            geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer, edges);
             fitSimpleLabels();
 	    setAutocomplete(map, name2popup);
         } else if (zn < 3 && zo >= 3) {
-            geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer);
+            geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer, edges);
             fitSimpleLabels();
 	    setAutocomplete(map, name2popup);
         } else {
             fitLabels(zn, zo);
-        }
+	    var layers = edges.getLayers();
+	    for (i in layers) {
+		var e = layers[i];
+		edges.removeLayer(e);
+		console.log(e.options['weight'])
+		console.log(e.options['weight'] * Math.pow(2, zn  - zo))
+		e = L.polyline(e._latlngs, {
+		    color:  e.options['color'],
+		    opacity: 1,
+		    weight:  e.options['weight'] * Math.pow(2, zn  - zo),
+		    lineCap: 'round',
+		    lineJoin: 'round',
+		    clickable: false,
+		    fill: false
+		})
+		edges.addLayer(e);
+		e.bringToBack();
+	    }
+	}
         zo = map.getZoom();
     });
 }
@@ -350,10 +368,10 @@ function fitLabels(zn, zo){
 //    $('.wrap').children().unwrap();
 }
 
-function getSimpleJson(map, jsn, name2popup) {
+function getSimpleJson(map, jsn, name2popup, edges) {
     return L.geoJson(jsn, {
         pointToLayer: function(feature, latlng) {
-            return pnt2layer(map, feature);
+            return pnt2layer(map, feature, edges);
         },
         onEachFeature: function(feature, layer) {
             addPopups(map, name2popup, feature, layer);
@@ -361,14 +379,15 @@ function getSimpleJson(map, jsn, name2popup) {
     }).addTo(map);
 }
 
-function getJson(map, jsn, name2popup, geojsonLayer) {
+function getJson(map, jsn, name2popup, geojsonLayer, edges) {
     for (var prop in name2popup) {
         if (name2popup.hasOwnProperty(prop)) {
             delete name2popup[prop];
         }
     }
+    edges.clearLayers();
     map.removeLayer(geojsonLayer);
-    return getSimpleJson(map, jsn, name2popup);
+    return getSimpleJson(map, jsn, name2popup, edges);
 }
 
 function search(map, name2popup) {
