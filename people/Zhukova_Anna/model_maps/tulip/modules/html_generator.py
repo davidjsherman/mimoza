@@ -124,11 +124,10 @@ def generate_html(model, html_file, organelles, groups_sbml):
 	scripts = ['../lib/leaflet/leaflet.js', '../lib/leaflet_label/leaflet.label.js',
 	           'http://code.jquery.com/jquery-2.0.3.min.js', 'http://code.jquery.com/ui/1.10.4/jquery-ui.js',
 	           '../maptools.js']
-	default_organelle = ''
+	default_organelle = normalize(organelles[0]) if organelles else ''
 	org2scripts = '{'
 	for organelle in organelles:
 		organelle = normalize(organelle)
-		default_organelle = organelle
 		scripts += ['./{0}_f.json'.format(organelle), './{0}.json'.format(organelle)]
 		org2scripts += "'{0}': [gjsn__{0}, gjsn__{0}_full],".format(organelle)
 	org2scripts += '}'

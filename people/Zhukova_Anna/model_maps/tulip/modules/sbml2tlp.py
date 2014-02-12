@@ -8,6 +8,7 @@ from sbml_generalization.generalization.model_generalizer import map2chebi
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
 from sbml_generalization.generalization.mark_ubiquitous import getCofactors
 from modules.model_utils import clone_node
+from modules.resize import r_size, ub_sp_size, sp_size, ub_e_size, e_size
 
 __author__ = 'anna'
 
@@ -60,8 +61,7 @@ def species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_i
 			graph["chebi_id"][n] = species_id2chebi_id[_id]
 
 		graph["viewShape"][n] = 14
-		#graph["viewColor"][n] = dark_gray if ub else light_red
-		graph["viewSize"][n] = tlp.Size(2, 2, 2) if ub else tlp.Size(3, 3, 3)
+		graph["viewSize"][n] = tlp.Size(ub_sp_size, ub_sp_size) if ub else tlp.Size(sp_size, sp_size)
 
 		indx = name.find("[{0}]".format(comp.getName()))
 		if indx != -1:
@@ -70,13 +70,30 @@ def species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_i
 	return id2n
 
 
-def reactions2nodes(get_r_comp, graph, id2n, input_model, ub_sps):
+def reactions2nodes(get_r_comp, graph, id2n, input_model):
 	get_sp_comp = lambda _id: graph["compartment"][id2n[_id]]
+
+	def link_reaction_to_species(reaction_node, sp_ref, all_comps, is_reactant=True):
+		s_id = sp_ref.getSpecies()
+		all_comps.add(get_sp_comp(s_id))
+		species_node = id2n[s_id]
+		e = graph.addEdge(species_node, reaction_node) if is_reactant else graph.addEdge(reaction_node, species_node)
+		graph["viewSrcAnchorShape"][e] = arrowShape if (not is_reactant or r.getReversible()) else -1
+		graph["viewTgtAnchorShape"][e] = -1 if (not is_reactant or r.getReversible()) else arrowShape
+		stoich = sp_ref.getStoichiometry()
+		if not stoich:
+			stoich = sp_ref.getStoichiometryMath()
+		if not stoich:
+			stoich = 1
+		graph["stoichiometry"][e] = stoich
+		graph["name"][e] = input_model.getSpecies(s_id).getName()
+		graph["viewSize"][e] = tlp.Size(ub_e_size, ub_e_size) if graph['ubiquitous'][species_node] else tlp.Size(e_size, e_size)
+
 	for r in input_model.getListOfReactions():
 		name = r.getName()
 		# do not add fake isa reactions
 		if name.find("isa ") != -1 and 1 == r.getNumReactants() == r.getNumProducts() \
-			and get_sp_comp(r.getListOfReactants().get(0).getSpecies()) == get_sp_comp(
+				and get_sp_comp(r.getListOfReactants().get(0).getSpecies()) == get_sp_comp(
 						r.getListOfProducts().get(0).getSpecies()):
 			continue
 
@@ -88,40 +105,14 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model, ub_sps):
 		graph["reversible"][n] = r.getReversible()
 
 		graph["viewShape"][n] = 7
-		#graph["viewColor"][n] = light_blue
-		graph["viewSize"][n] = tlp.Size(2, 2, 2)
+		graph["viewSize"][n] = tlp.Size(r_size, r_size)
 		graph["viewLabel"][n] = name
 
 		all_comps = set()
-		for spRef in r.getListOfReactants():
-			_id = spRef.getSpecies()
-			all_comps.add(get_sp_comp(_id))
-			e = graph.addEdge(id2n[_id], n)
-			graph["viewSrcAnchorShape"][e] = arrowShape if r.getReversible() else -1
-			graph["viewTgtAnchorShape"][e] = -1 if r.getReversible() else arrowShape
-			#graph["viewColor"][e] = dark_gray if _id in ub_sps else light_blue
-			st = spRef.getStoichiometry()
-			if not st:
-				st = spRef.getStoichiometryMath()
-			if not st:
-				st = 1
-			graph["stoichiometry"][e] = st
-			graph["name"][e] = input_model.getSpecies(_id).getName()
-
-		for spRef in r.getListOfProducts():
-			_id = spRef.getSpecies()
-			all_comps.add(get_sp_comp(_id))
-			e = graph.addEdge(n, id2n[_id])
-			graph["viewSrcAnchorShape"][e] = arrowShape
-			graph["viewTgtAnchorShape"][e] = -1
-			#graph["viewColor"][e] = dark_gray if _id in ub_sps else light_blue
-			st = spRef.getStoichiometry()
-			if not st:
-				st = spRef.getStoichiometryMath()
-			if not st:
-				st = 1
-			graph["stoichiometry"][e] = st
-			graph["name"][e] = input_model.getSpecies(_id).getName()
+		for sp_ref in r.getListOfReactants():
+			link_reaction_to_species(n, sp_ref, all_comps, is_reactant=True)
+		for sp_ref in r.getListOfProducts():
+			link_reaction_to_species(n, sp_ref, all_comps, is_reactant=False)
 
 		graph["compartment"][n] = get_r_comp(all_comps)
 
@@ -130,8 +121,8 @@ def import_sbml(graph, input_model, sbml_file):
 	chebi = parse(get_chebi())
 
 	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = process_generalized_entities(chebi,
-	                                                                                              input_model,
-	                                                                                              sbml_file)
+	                                                                                                           input_model,
+	                                                                                                           sbml_file)
 	check_names(input_model)
 	check_compartments(input_model)
 
@@ -168,7 +159,7 @@ def import_sbml(graph, input_model, sbml_file):
 	create_props(graph)
 	id2n = species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_id, ub_sps)
 
-	reactions2nodes(get_r_comp, graph, id2n, input_model, ub_sps)
+	reactions2nodes(get_r_comp, graph, id2n, input_model)
 
 	graph.setAttribute("organelles", ";".join(organelles))
 	graph.setAttribute("cytoplasm", cytoplasm)
