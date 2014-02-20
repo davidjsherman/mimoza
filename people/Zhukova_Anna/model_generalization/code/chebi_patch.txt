@@ -6,29 +6,9 @@ alt_id: CHEBI:15108
 is_a: CHEBI:16018
 
 [Term]
-id: CHEBI:76516
-name: octadec-9-ynoyl-[acyl-carrier protein]
-is_a: CHEBI:16018
-
-[Term]
 id: CHEBI:16759
 name: lauroyl-[acyl-carrier protein]
 alt_id: CHEBI:6394
 alt_id: CHEBI:14189
 alt_id: CHEBI:4677
-is_a: CHEBI:16018
-
-[Term]
-id: CHEBI:76517
-name: cis-vaccenoyl-[acyl-carrier protein]
-is_a: CHEBI:16018
-
-[Term]
-id: CHEBI:76518
-name: cis-palmitoleoyl-[acyl-carrier protein] 
-is_a: CHEBI:16018
-
-[Term]
-id: CHEBI:76519
-name: (Z)-tetradec-7-enoyl-[acyl-carrier protein] 
 is_a: CHEBI:16018

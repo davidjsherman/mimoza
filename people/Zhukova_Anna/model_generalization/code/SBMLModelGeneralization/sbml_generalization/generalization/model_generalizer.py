@@ -1,7 +1,7 @@
 from collections import defaultdict, Counter
 from sbml_generalization.generalization.MaximizingThread import MaximizingThread
 from sbml_generalization.generalization.StoichiometryFixingThread import StoichiometryFixingThread
-from sbml_generalization.generalization.reaction_filters import get_reactions_by_species
+from sbml_generalization.generalization.reaction_filters import get_reactions_by_species, getReactants, getProducts
 from sbml_generalization.generalization.vertical_key import get_vertical_key
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.utils.logger import log_clusters, log
@@ -14,11 +14,15 @@ __author__ = 'anna'
 
 EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
 
+def get_r_compartments(model, r):
+	s_ids = getReactants(r) | getProducts(r)
+	return tuple({model.getSpecies(s_id).getCompartment() for s_id in s_ids})
+
 
 def get_reaction_ids_to_factor(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	vk2r = defaultdict(set)
 	for r in model.getListOfReactions():
-		vk2r[get_vertical_key(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)].add(r.getId())
+		vk2r[(get_vertical_key(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids), get_r_compartments(model, r))].add(r.getId())
 	return vk2r
 
 
@@ -174,7 +178,7 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 				s_id2clu[s_id] = (c_id, term)
 	log(verbose, "  generalizing by simplified key...")
 	vks = get_reaction_ids_to_factor(model, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
-	simplified_key_generalization(model, s_id2clu, ubiquitous_chebi_ids, vks)
+	simplified_key_generalization(model, s_id2clu, ubiquitous_chebi_ids, vks, onto)
 	log_clusters(s_id2clu, onto, verbose, True)
 
 	return s_id2clu
@@ -191,10 +195,10 @@ def sort_by_compartment(input_model, r_sps):
 	return comp2r_sps
 
 
-def update_clusters(comp2r_sps, i, reactions, s_id2clu):
+def update_clusters(comp2r_sps, i, reactions, s_id2clu, onto):
 	for c_id, sps in comp2r_sps.iteritems():
 		if len(sps) > 1:
-			res = no_conflicts(sps, reactions, c_id, s_id2clu)
+			res = no_conflicts(sps, reactions, c_id, s_id2clu, onto)
 			if res:
 				term, sps = res
 				if not term:
@@ -235,18 +239,18 @@ def no_conflicts(elements, reactions, c_id, s_id2clu, onto):
 	return term, sps
 
 
-def simplified_key_generalization(input_model, s_id2clu, ub_sps, vks):
+def simplified_key_generalization(input_model, s_id2clu, ub_sps, vks, onto):
 	sk2vks = defaultdict(set)
-	for (ub_rs, ub_ps, rs, ps) in vks.keys():
+	for ((ub_rs, ub_ps, rs, ps), comps) in vks.keys():
 		if ub_rs or ub_ps:
-			simple_key = (ub_rs, ub_ps, len(rs), len(ps))
-			sk2vks[simple_key].add((ub_rs, ub_ps, rs, ps))
+			simple_key = ((ub_rs, ub_ps, len(rs), len(ps)), comps)
+			sk2vks[simple_key].add(((ub_rs, ub_ps, rs, ps), comps))
 	reactions = list(input_model.getListOfReactions())
 	i = 0
-	for (ub_rs, ub_ps, _, _), vks in sk2vks.iteritems():
+	for ((ub_rs, ub_ps, _, _), _), vks in sk2vks.iteritems():
 		if len(vks) > 1 and (ub_ps or ub_rs):
 			r_counter, p_counter = Counter(), Counter()
-			for (_, _, rs, ps) in vks:
+			for ((_, _, rs, ps), _) in vks:
 				r_counter.update(rs)
 				p_counter.update(ps)
 			r_max, p_max = r_counter.most_common(1), p_counter.most_common(1)
@@ -254,18 +258,18 @@ def simplified_key_generalization(input_model, s_id2clu, ub_sps, vks):
 			rp_max = max(r_max[1] if r_max else 0, p_max[1] if p_max else 0)
 			if rp_max > 1:
 				if r_max and rp_max == r_max[1]:
-					to_merge = [vk for vk in vks if r_max[0] in vk[2]]
+					to_merge = [vk for vk in vks if r_max[0] in vk[0][2]]
 				else:
-					to_merge = [vk for vk in vks if p_max[0] in vk[3]]
+					to_merge = [vk for vk in vks if p_max[0] in vk[0][3]]
 				r_sps, p_sps = set(), set()
-				common_rs = set(to_merge[0][2]) & set(to_merge[1][2])
-				common_ps = set(to_merge[0][3]) & set(to_merge[1][3])
+				common_rs = set(to_merge[0][0][2]) & set(to_merge[1][0][2])
+				common_ps = set(to_merge[0][0][3]) & set(to_merge[1][0][3])
 				# if there are less that 2 common elements, it's not enough evidence
 				if len(ub_rs) + len(ub_sps) + len(common_rs) & len(common_ps) < 2:
 					continue
 				stop = False
 				for vk in to_merge:
-					r_s, p_s = set(vk[2]) - common_rs, set(vk[3]) - common_ps
+					r_s, p_s = set(vk[0][2]) - common_rs, set(vk[0][3]) - common_ps
 					if len(r_s) > 1 or len(p_s) > 1:
 						stop = True
 						break
@@ -273,9 +277,9 @@ def simplified_key_generalization(input_model, s_id2clu, ub_sps, vks):
 					p_sps |= p_s
 				if not stop:
 					comp2r_sps = sort_by_compartment(input_model, r_sps)
-					update_clusters(comp2r_sps, i, reactions, s_id2clu)
+					update_clusters(comp2r_sps, i, reactions, s_id2clu, onto)
 					comp2p_sps = sort_by_compartment(input_model, p_sps)
-					update_clusters(comp2p_sps, i, reactions, s_id2clu)
+					update_clusters(comp2p_sps, i, reactions, s_id2clu, onto)
 
 
 # def simplified_need_to_reverse(r, ubiquitous_ids):

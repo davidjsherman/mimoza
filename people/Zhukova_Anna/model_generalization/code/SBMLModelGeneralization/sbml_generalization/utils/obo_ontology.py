@@ -46,7 +46,7 @@ def to_identifiers_org_format(t_id, prefix="obo.chebi"):
 
 def inducedOntology(terms, onto, relationships={"is_a"}):
 	induced_ontology = Ontology()
-	ids = set([it.getId() for it in terms])
+	ids = {it.getId() for it in terms}
 	for term in terms:
 		t_id = term.getId()
 		new_term = Term(t_id, term.getName(), ids & term.getParentIds())
@@ -86,8 +86,8 @@ def inducedOntology(terms, onto, relationships={"is_a"}):
 			induced_ontology.roots -= {root}
 		for a_term_id in ancestor_ids:
 			a_term = induced_ontology.getTerm(a_term_id)
-			a_term.children |= {root}
-			root.parents |= {a_term_id}
+			a_term.children.add(root)
+			root.parents.add(a_term_id)
 	return induced_ontology
 
 
@@ -220,10 +220,10 @@ def parse(obo_file, relationships=None):
 			elif prefix == "is_a":
 				parent = ontology.getTerm(value)
 				if parent:
-					parent.children |= {term}
+					parent.children.add(term)
 				else:
 					parents.add(value.lower())
-				term.parents |= {value.lower()}
+				term.parents.add(value.lower())
 			elif prefix == "relationship":
 				comment_start = value.find("!")
 				if comment_start != -1:
@@ -257,7 +257,7 @@ def parse(obo_file, relationships=None):
 	for child, parents in child2parents.iteritems():
 		child = ontology.getTerm(child)
 		for parent in parents:
-			ontology.getTerm(parent).children |= {child}
+			ontology.getTerm(parent).children.add(child)
 	return ontology
 
 

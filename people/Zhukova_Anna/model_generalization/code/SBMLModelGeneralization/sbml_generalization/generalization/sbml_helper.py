@@ -369,7 +369,7 @@ def annotate_ubiquitous(groups_sbml, ub_sps, verbose=False):
 			s_group.setName("ubiquitous species")
 			for s_id in ub_sps:
 				member = s_group.createMember()
-				member.setSymbol(s_id)
+				member.setIdRef(s_id)
 			addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_UBIQUITOUS)
 			save_as_sbml(groups_model, groups_sbml, verbose)
 
@@ -418,7 +418,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
 						addAnnotation(s_group, BQB_IS, to_identifiers_org_format(clu.getId()))
 						for s_id in s_ids:
 							member = s_group.createMember()
-							member.setSymbol(s_id)
+							member.setIdRef(s_id)
 						addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
 
 		generalize_species = lambda species_id: s_id2gr_id[species_id][0] if (species_id in s_id2gr_id) else species_id
@@ -454,7 +454,7 @@ def save_as_generalized_sbml(input_model, out_sbml, groups_sbml, r2clu, s_id2clu
 							r_group.setName("generalized {0}".format(representative.getName()))
 							for r in rs:
 								member = r_group.createMember()
-								member.setSymbol(r.getId())
+								member.setIdRef(r.getId())
 							addAnnotation(r_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
 						i += 1
 
@@ -513,7 +513,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 						addAnnotation(s_group, BQB_IS, to_identifiers_org_format(t_id))
 					for s_id in s_ids:
 						member = s_group.createMember()
-						member.setSymbol(s_id)
+						member.setIdRef(s_id)
 					addAnnotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
 
 		generalize_species = lambda species_id: s_id2gr_id[species_id][0] if (species_id in s_id2gr_id) else species_id
@@ -543,7 +543,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 						r_group.setName("generalized {0}".format(representative.getName()))
 						for r_id in r_ids:
 							member = r_group.createMember()
-							member.setSymbol(r_id)
+							member.setIdRef(r_id)
 						addAnnotation(r_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
 					i += 1
 
@@ -604,7 +604,7 @@ def save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, ver
 			for r_id in reaction_chain:
 				r = input_model.getReaction(r_id)
 				member = r_group.createMember()
-				member.setSymbol(r.getId())
+				member.setIdRef(r.getId())
 			addAnnotation(r_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_CHAIN)
 
 	for r in input_model.getListOfReactions():
