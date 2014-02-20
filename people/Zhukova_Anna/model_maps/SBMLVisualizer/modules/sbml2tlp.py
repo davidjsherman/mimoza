@@ -1,4 +1,4 @@
-from libsbml import SBMLReader
+import tulipgui
 from tulip import *
 from sbml_generalization.generalization.sbml_helper import parse_group_sbml, GrPlError, check_names, check_compartments
 from sbml_generalization.utils.compartment_positioner import get_comp2go, sort_comps

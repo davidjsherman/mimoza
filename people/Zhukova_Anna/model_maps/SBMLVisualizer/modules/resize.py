@@ -1,3 +1,4 @@
+import tulipgui
 from tulip import *
 
 sp_size = 2.5

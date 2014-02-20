@@ -1,4 +1,5 @@
 from collections import defaultdict
+import tulipgui
 from tulip import tlp
 from modules.merge_inside_comp import mic
 from modules.model_utils import merge_nodes
