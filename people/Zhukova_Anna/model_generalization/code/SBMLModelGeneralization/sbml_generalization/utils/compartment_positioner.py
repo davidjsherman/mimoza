@@ -1,9 +1,6 @@
-from Finder.Files import _Prop_has_scripting_terminology
 from libsbml import BQB_IS, BQB_IS_VERSION_OF, SBMLReader
 import sys
-from sbml_generalization.utils.misc import invert_map
 from obo_ontology import parse, get_go, miriam_to_term_id
-
 from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues
 from sbml_generalization.generalization.sbml_helper import create_compartment
 

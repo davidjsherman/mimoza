@@ -628,7 +628,7 @@ def parse_group_sbml(groups_sbml, chebi):
 	r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = {}, {}, {}, set()
 	if groups_plugin:
 		for group in groups_plugin.getListOfGroups():
-			gr_members = [it.getSymbol() for it in group.getListOfMembers()]
+			gr_members = [it.getIdRef() for it in group.getListOfMembers()]
 			gr_id, gr_name = group.getId(), group.getName()
 			gr_sbo, gr_type = group.getSBOTermID(), getAllQualifierValues(group.getAnnotation(),
 			                                                              BQB_IS_DESCRIBED_BY).next()
