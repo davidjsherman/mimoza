@@ -288,8 +288,6 @@ function getComplexJson(map, json_zo, json_zi, name2popup, edges) {
 	    for (i in layers) {
 		var e = layers[i];
 		edges.removeLayer(e);
-		console.log(e.options['weight'])
-		console.log(e.options['weight'] * Math.pow(2, zn  - zo))
 		e = L.polyline(e._latlngs, {
 		    color:  e.options['color'],
 		    opacity: 1,
@@ -395,6 +393,11 @@ function search(map, name2popup) {
     if (srch && name2popup[srch]){
         name2popup[srch].openOn(map);
     }
+}
+
+
+function submit() {
+    console.log(document.input_form.file_input.value);
 }
 
 function gup (name) {

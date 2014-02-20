@@ -1,8 +1,10 @@
+import getopt
+import tulipgui
 from tulip import tlp
 import sys
 from libsbml import SBMLReader, os
 from shutil import copyfile
-from modules.color import color
+from modules.color import simple_color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm
 from modules.geojson_helper import tulip2geojson
 from modules.html_generator import generate_html
@@ -11,13 +13,17 @@ from modules.resize import get_comp_size
 from modules.sbml2tlp import import_sbml
 
 __author__ = 'anna'
-dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
-sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
+# dir = '/Users/anna/Documents/PhD/magnome/model_maps/WS/'
+# sbml_file = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
 # sbml_file = '/Users/anna/Downloads/MODEL1212060001_with_groups.xml'
+help_message = '''
+Generalizes and visualizes the model.
+usage: main.py --model model.xml --verbose
+'''
 
 
-def create_dir(model_id):
-	m_dir = '{0}/{1}'.format(dir, model_id)
+def create_dir(directory, model_id):
+	m_dir = '{0}/{1}'.format(directory, model_id)
 	if not os.path.exists(m_dir):
 		os.makedirs(m_dir)
 	return m_dir
@@ -36,7 +42,7 @@ def process(graph, m_dir, meta_node, compartment, layout_algorithm=layout, args=
 	# layout
 	layout_algorithm(comp_graph)
 	# color
-	color(graph)
+	simple_color(graph)
 	# generalization-based layout for the full graph
 	comp_graph_full = layout_generalization_based(comp_graph, *args)
 	root['viewSize'][meta_node] = get_comp_size(graph, meta_node)
@@ -58,26 +64,34 @@ def process_generalized_entities(graph):
 	return meta_graph
 
 
-def prepare_dir(model_id):
-	m_dir = create_dir(model_id)
+def prepare_dir(directory, sbml_file, model_id):
+	m_dir = create_dir(directory, model_id)
 	new_sbml_file = '{0}/{1}.xml'.format(m_dir, model_id)
 	if sbml_file != new_sbml_file:
 		copyfile(sbml_file, new_sbml_file)
-	# os.remove(sbml_file)
+	os.remove(sbml_file)
 	return m_dir, new_sbml_file
 
 
 def main(argv=None):
+	if argv is None:
+		argv = sys.argv
+	try:
+		sbml, directory, verbose = process_args(argv)
+	except Usage, err:
+		print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
+		print >> sys.stderr, "\t for help use --help"
+		return 2
 	reader = SBMLReader()
-	input_document = reader.readSBML(sbml_file)
+	input_document = reader.readSBML(sbml)
 	input_model = input_document.getModel()
 	model_id = input_model.getId()
 
-	m_dir, new_sbml_file = prepare_dir(model_id)
+	m_dir, new_sbml_file = prepare_dir(directory, sbml, model_id)
 
 	# sbml -> tulip graph
 	graph = tlp.newGraph()
-	graph, groups_sbml = import_sbml(graph, input_model, new_sbml_file)
+	graph, groups_sbml, onto = import_sbml(graph, input_model, new_sbml_file)
 
 	# generalized species/reactions -> metanodes
 	meta_graph = process_generalized_entities(graph)
@@ -86,7 +100,7 @@ def main(argv=None):
 	compartment2meta_node = factor_comps(meta_graph)
 
 	for organelle, meta_node in compartment2meta_node.iteritems():
-		process(graph, m_dir, meta_node, organelle)
+		process(graph, m_dir, meta_node, organelle, lambda gr: layout(gr, onto))
 
 	# cytoplasm
 	cytoplasm, meta_node = factor_cytoplasm(meta_graph)
@@ -97,6 +111,31 @@ def main(argv=None):
 	# TODO: why doesn't it work??
 	# tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')
 
+
+def process_args(argv):
+	try:
+		opts, args = getopt.getopt(argv[1:], "m:d:h:v", ["help", "dir=", "model=", "verbose"])
+	except getopt.error, msg:
+		raise Usage(msg)
+	sbml, directory, verbose = None, None, False
+	# option processing
+	for option, value in opts:
+		if option in ("-h", "--help"):
+			raise Usage(help_message)
+		if option in ("-m", "--model"):
+			sbml = value
+		if option in ("-d", "--dir"):
+			directory = value
+		if option in ("-v", "--verbose"):
+			verbose = True
+	if not sbml or not directory:
+		raise Usage(help_message)
+	return sbml, directory, verbose
+
+
+class Usage(Exception):
+	def __init__(self, msg):
+		self.msg = msg
 
 
 if __name__ == "__main__":

@@ -50,7 +50,7 @@ def add_search(page):
 		</div> """
 	page.div(class_='margin', id='search')
 	page.form(name="search_form", onclick="search(map, name2popup);")
-	page.label('')
+	page.label('  ')
 	page.input(id="tags", type="text", name="search_input")
 	page.label.close()
 	page.input(type="button", value="Search")

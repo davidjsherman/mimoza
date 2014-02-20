@@ -2,6 +2,7 @@ from tulip import *
 from math import radians, atan2, cos, sin, degrees, sqrt
 from modules.color import white
 from modules.model_utils import clone_node
+from modules.predefined_layout import apply_layout
 from modules.resize import ub_sp_size
 
 
@@ -223,7 +224,7 @@ def pack_cc(graph):
 	graph.computeLayoutProperty("Connected Component Packing", root['viewLayout'], ds)
 
 
-def layout(graph, margin=5):
+def layout(graph, onto, margin=5):
 	root = graph.getRoot()
 	if graph == root:
 		graph = tlp.newCloneSubGraph(graph)
@@ -258,6 +259,8 @@ def layout(graph, margin=5):
 		layout_ub_sps(gr)
 
 	graph.delAllSubGraphs(sub)
+
+	# apply_layout(graph, onto)
 
 	layout_ub_sps(graph)
 	pack_cc(graph)

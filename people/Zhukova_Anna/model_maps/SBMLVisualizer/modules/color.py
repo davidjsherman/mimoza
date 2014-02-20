@@ -11,6 +11,14 @@ light_blue = tlp.Color(100, 100, 255)
 white = tlp.Color(255, 255, 255)
 transparent = tlp.Color(0, 0, 0, 0)
 
+orange = tlp.Color(253, 180, 98)
+yellow = tlp.Color(255, 255, 179)
+red = tlp.Color(251, 128, 114)
+blue = tlp.Color(128, 177, 211)
+green = tlp.Color(179, 222, 105)
+violet = tlp.Color(190, 186, 218)
+turquoise = tlp.Color(141, 211, 199)
+
 
 def get_key(n, graph):
 	root = graph.getRoot()
@@ -104,3 +112,45 @@ def color(graph):
 				if graph.isMetaNode(n):
 					a = 100
 			view_color[n] = tlp.Color(r, g, b, a)
+
+
+def simple_color(graph):
+	root = graph.getRoot()
+	view_color = root.getColorProperty("viewColor")
+	view_border_color = root.getColorProperty("viewBorderColor")
+	view_border_color.setAllNodeValue(white)
+
+	for n in root.getNodes():
+		type_ = root['type'][n]
+		if 'compartment' == type_:
+			view_color[n] = yellow
+		elif 'reaction' == type_:
+			is_transport = len({root['compartment'][m] for m in root.getInOutNodes(n)}) > 1
+			if root.isMetaNode(n):
+				view_color[n] = turquoise if is_transport else violet
+			else:
+				view_color[n] = green if is_transport else blue
+			for e in root.getInOutEdges(n):
+				if root['ubiquitous'][root.target(e)] or root['ubiquitous'][root.source(e)]:
+					view_color[e] = grey
+				else:
+					view_color[e] = view_color[n]
+		elif 'species' == type_:
+			if root['ubiquitous'][n]:
+				view_color[n] = grey
+			else:
+				if root.isMetaNode(n):
+					view_color[n] = orange
+					comp = root['compartment'][n]
+					found = False
+					for nn in root['viewMetaGraph'][n].getNodes():
+						for m in root.getInOutNodes(nn):
+							comp_m = root['compartment'][m]
+							if comp != comp_m:
+								view_border_color[n] = violet
+								found = True
+								break
+						if found:
+							break
+				else:
+					view_color[n] = red

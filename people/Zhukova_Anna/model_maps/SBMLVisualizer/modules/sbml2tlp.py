@@ -168,7 +168,7 @@ def import_sbml(graph, input_model, sbml_file):
 	clean(graph)
 
 	mark_ancestors(graph, r_id2g_id, r_id2ch_id, s_id2gr_id)
-	return graph, groups_sbml
+	return graph, groups_sbml, chebi
 
 
 def create_props(graph):
