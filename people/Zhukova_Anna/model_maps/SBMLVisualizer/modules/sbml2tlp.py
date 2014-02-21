@@ -1,5 +1,5 @@
-import tulipgui
 from tulip import *
+
 from sbml_generalization.generalization.sbml_helper import parse_group_sbml, GrPlError, check_names, check_compartments
 from sbml_generalization.utils.compartment_positioner import get_comp2go, sort_comps
 from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Term
@@ -7,36 +7,14 @@ from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.generalization.model_generalizer import map2chebi
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
 from sbml_generalization.generalization.mark_ubiquitous import getCofactors
+
 from modules.model_utils import clone_node
 from modules.resize import r_size, ub_sp_size, sp_size, ub_e_size, e_size
+
 
 __author__ = 'anna'
 
 arrowShape = 50
-
-
-def process_generalized_entities(chebi, input_model, sbml_file):
-	r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps, species_id2chebi_id = {}, {}, {}, set(), {}
-	groups_sbml = None
-	try:
-		r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
-		cofactors = getCofactors(chebi)
-		species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, chebi)
-	except GrPlError:
-		pass
-	if not r_id2g_id and not ub_sps:
-		dot = sbml_file.find(".sbml")
-		if dot == -1:
-			dot = sbml_file.find(".xml")
-		groups_sbml = "{0}_with_groups.xml".format(sbml_file[0:dot] if dot != -1 else sbml_file)
-		out_sbml = "{0}_generalized.xml".format(sbml_file[0:dot] if dot != -1 else sbml_file)
-		r_id2g_id, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, out_sbml,
-		                                                                                  sbml_file, chebi,
-		                                                                                  cofactors=None,
-		                                                                                  sh_chains=False,
-		                                                                                  verbose=True)
-
-	return r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml
 
 
 def species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_id, ub_sps):
@@ -87,7 +65,8 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 			stoich = 1
 		graph["stoichiometry"][e] = stoich
 		graph["name"][e] = input_model.getSpecies(s_id).getName()
-		graph["viewSize"][e] = tlp.Size(ub_e_size, ub_e_size) if graph['ubiquitous'][species_node] else tlp.Size(e_size, e_size)
+		graph["viewSize"][e] = tlp.Size(ub_e_size, ub_e_size) if graph['ubiquitous'][species_node] else tlp.Size(e_size,
+		                                                                                                         e_size)
 
 	for r in input_model.getListOfReactions():
 		name = r.getName()
@@ -117,12 +96,13 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph["compartment"][n] = get_r_comp(all_comps)
 
 
-def import_sbml(graph, input_model, sbml_file):
+def import_sbml(graph, input_model, sbml_file, verbose):
 	chebi = parse(get_chebi())
 
-	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = process_generalized_entities(chebi,
-	                                                                                                           input_model,
-	                                                                                                           sbml_file)
+	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = generalize_entities(chebi,
+	                                                                                                  input_model,
+	                                                                                                  sbml_file,
+	                                                                                                  verbose)
 	check_names(input_model)
 	check_compartments(input_model)
 

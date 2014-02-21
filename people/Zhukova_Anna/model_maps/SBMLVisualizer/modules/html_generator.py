@@ -87,7 +87,7 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(default_organelle, org2scripts, page):
+def add_js(default_organelle, org2scripts, page, tile):
 	page.script('var comp2geojson = {0}; var compartment = "{1}";'.format(org2scripts, normalize(default_organelle)) + '''
 		var comp = gup('name');
 		if (comp) {
@@ -105,7 +105,7 @@ def add_js(default_organelle, org2scripts, page):
 			getGeoJson(map, comp2geojson[compartment], name2popup);
 
 
-			L.tileLayer('../white512.jpg', {
+			L.tileLayer("''' + tile + '''", {
 				continuousWorld: true,
 				noWrap: true,
 				tileSize: 512,
@@ -119,11 +119,10 @@ def add_js(default_organelle, org2scripts, page):
 	)
 
 
-def generate_html(model, html_file, organelles, groups_sbml):
+def generate_html(model, html_file, organelles, groups_sbml, scripts, css, fav, tile):
 	page = markup.page()
-	scripts = ['../lib/leaflet/leaflet.js', '../lib/leaflet_label/leaflet.label.js',
-	           'http://code.jquery.com/jquery-2.0.3.min.js', 'http://code.jquery.com/ui/1.10.4/jquery-ui.js',
-	           '../maptools.js']
+	if not scripts:
+		scripts = []
 	default_organelle = normalize(organelles[0]) if organelles else ''
 	org2scripts = '{'
 	for organelle in organelles:
@@ -132,14 +131,16 @@ def generate_html(model, html_file, organelles, groups_sbml):
 		org2scripts += "'{0}': [gjsn__{0}, gjsn__{0}_full],".format(organelle)
 	org2scripts += '}'
 
+	if not css:
+		css = ['http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css']
+	else:
+		css.append('http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css')
+
 	model_id = model.getId()
 	model_name = model.getName()
 	if not model_name:
 		model_name = model_id
-	page.init(title=model_name, css=['../modelmap.css',
-	                                 '../lib/leaflet/leaflet.css', '../lib/leaflet_label/leaflet.label.css',
-	                                 'http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css'],
-	          script=scripts, fav='../fav.ico')
+	page.init(title=model_name, css=css, script=scripts, fav=fav)
 
 	add_header(model_id, model_name, page)
 
@@ -158,7 +159,27 @@ def generate_html(model, html_file, organelles, groups_sbml):
 
 	page.div.close()
 
-	add_js(default_organelle, org2scripts, page)
+	add_js(default_organelle, org2scripts, page, tile)
+
+	with open(html_file, 'w+') as f:
+		f.write(str(page))
+
+
+def generate_simple_html(model, html_file, groups_sbml, scripts, css, fav):
+	page = markup.page()
+	model_id = model.getId()
+	model_name = model.getName()
+	if not model_name:
+		model_name = model_id
+	page.init(title=model_name, css=css if css else [], script=scripts if scripts else [], fav=fav)
+
+	add_header(model_id, model_name, page)
+
+	add_download_link(groups_sbml, page)
+
+	add_model_description(model, page)
+
+	page.div.close()
 
 	with open(html_file, 'w+') as f:
 		f.write(str(page))

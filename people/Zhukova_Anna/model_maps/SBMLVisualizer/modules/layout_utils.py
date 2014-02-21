@@ -1,6 +1,6 @@
-import tulipgui
 from tulip import *
 from math import radians, atan2, cos, sin, degrees, sqrt
+
 from modules.color import white
 from modules.model_utils import clone_node
 from modules.resize import ub_sp_size
