@@ -219,7 +219,6 @@ def no_conflicts(elements, reactions, c_id, s_id2clu, onto):
 				cmmn_pts = {(c_id, tt) for tt in onto.commonPts({term, it}, 2)} - clus
 				if cmmn_pts:
 					term = cmmn_pts.pop()[1]
-					print term
 				else:
 					return None
 			else:

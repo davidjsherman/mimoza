@@ -38,22 +38,6 @@ def get_go_term(annotation, qualifier, onto):
             return term
     return None
 
-
-def main(argv=None):
-    sbml = "/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000.xml"
-    doc = SBMLReader().readSBML(sbml)
-    model = doc.getModel()
-    onto = parse(get_go())
-    comp_go = get_comp2go(model, onto)
-
-    org2parts, cyto, others = sort_comps(onto, comp_go)
-    for part, org in org2parts.iteritems():
-        print model.getCompartment(org).getName(), model.getCompartment(part).getName()
-    print [model.getCompartment(it).getName() for it in cyto]
-    print [model.getCompartment(it).getName() for it in others]
-    print [model.getCompartment(it).getName() for it in set(comp_go.iterkeys()) - (cyto | others | set(org2parts.iterkeys()))]
-
-
 def get_comp2go(model, onto):
     comp2go = {}
     for comp in model.getListOfCompartments():
@@ -386,6 +370,3 @@ def get_outer_most(onto, matches):
             return it
     return None
 
-
-if __name__ == "__main__":
-    sys.exit(main())

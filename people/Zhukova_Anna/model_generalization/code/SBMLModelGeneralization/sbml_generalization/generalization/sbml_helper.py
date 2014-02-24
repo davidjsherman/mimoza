@@ -1,4 +1,5 @@
 from collections import defaultdict
+import logging
 from libsbml import *
 from sbml_generalization.utils.annotate_with_chebi import get_term
 from sbml_generalization.utils.logger import log
@@ -181,7 +182,7 @@ def create_species(model, compartment_id, type_id=None, name=None, id_=None, sbo
 	new_species = model.createSpecies()
 	id_ = generate_unique_id(model, id_ if id_ else "s_new")
 	if LIBSBML_OPERATION_SUCCESS != new_species.setId(id_):
-		print "species  ", id_, " creation error"
+		logging.error("species  %s creation error" % id_)
 	if not name:
 		if type_id:
 			s_type = model.getSpeciesType(type_id)

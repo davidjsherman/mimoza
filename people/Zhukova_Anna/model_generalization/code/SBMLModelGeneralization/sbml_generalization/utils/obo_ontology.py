@@ -601,13 +601,9 @@ class Ontology:
 		terms = set(terms)
 		first = terms.pop()
 		common = self.getAnyParents(first, False, set(), None, depth) | self.getEquivalentTerms(first) | {first}
-		# print " draft ", [t.getName() for t in common]
 		for t in terms:
-			# print "  and ", [t.getName() for t in self.getAnyParents(t, False) | self.getEqualTerms(t) | {t}]
 			common &= self.getAnyParents(t, False, set(), None, depth) | self.getEquivalentTerms(t) | {t}
-			# print "  draft ", [t.getName() for t in common]
 		result = set(common)
-		# print " common ", [t.getName() for t in common]
 		return [it for it in common if not self.getAnyChildren(it, False, set()) & result]
 
 	def removeRelationships(self, relationships, brutally=False):

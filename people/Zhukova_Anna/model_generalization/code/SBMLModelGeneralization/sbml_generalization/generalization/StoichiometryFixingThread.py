@@ -93,7 +93,6 @@ class StoichiometryFixingThread(threading.Thread):
 			return True
 
 		# sets defined by the least common ancestors
-		# print "ANCESTORS: ", [t.getName() for t in common_ancestor_terms]
 		processed = set()
 		for T in common_ancestor_terms:
 			T_covered_term_ids = self.get_covered_term_ids(T, self.term_ids)
@@ -147,7 +146,6 @@ class StoichiometryFixingThread(threading.Thread):
 		conflicts = self.get_conflicts()
 		if not conflicts:
 			return
-		#print [[onto.getTerm(it).getName() for it in trms] for trms in conflicts]
 		self.term_ids = {t_id for (t_id, _) in self.term_ids}
 		psi, set2score = self.get_psi_set(conflicts)
 		i = 0
