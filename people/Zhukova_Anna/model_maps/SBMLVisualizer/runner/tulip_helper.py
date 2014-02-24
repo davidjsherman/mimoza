@@ -1,5 +1,6 @@
+import tulipgui
 from tulip import tlp
-from libsbml import SBMLReader
+from libsbml import SBMLReader, os
 from modules.color import simple_color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm
 from modules.geojson_helper import tulip2geojson
@@ -7,17 +8,21 @@ from modules.html_generator import generate_html
 from modules.layout_utils import layout_generalization_based, layout, layout_cytoplasm
 from modules.resize import get_comp_size
 from modules.sbml2tlp import import_sbml
-from runner.runner import prepare_dir
+from runner.os_helper import copy_sbml_file
 
 __author__ = 'anna'
 
 
-def visualize_model(directory, sbml, scripts, css, fav, tile, verbose):
+def visualize_model(directory, main_url, url_end, sbml, scripts, css, fav, tile, verbose):
 	reader = SBMLReader()
 	input_document = reader.readSBML(sbml)
 	input_model = input_document.getModel()
 	model_id = input_model.getId()
-	m_dir, new_sbml_file = prepare_dir(directory, sbml, model_id)
+	if not model_id:
+		model_id = 'unknown'
+	directory = '%s/%s/' % (directory, model_id)
+	url = '%s/%s/%s' % (main_url, model_id, url_end)
+	new_sbml_file = copy_sbml_file(directory, sbml, model_id)
 	# sbml -> tulip graph
 	graph = tlp.newGraph()
 	graph, groups_sbml, onto = import_sbml(graph, input_model, new_sbml_file, verbose)
@@ -26,16 +31,19 @@ def visualize_model(directory, sbml, scripts, css, fav, tile, verbose):
 	# compartments -> metanodes
 	compartment2meta_node = factor_comps(meta_graph)
 	for organelle, meta_node in compartment2meta_node.iteritems():
-		process(graph, m_dir, meta_node, organelle, lambda gr: layout(gr, onto))
+		process(graph, directory, meta_node, organelle, lambda gr: layout(gr, onto))
 
 	# cytoplasm
 	cytoplasm, meta_node = factor_cytoplasm(meta_graph)
-	process(graph, m_dir, meta_node, cytoplasm, layout_cytoplasm, [set(compartment2meta_node.values()), True])
-	generate_html(input_model, '{0}/comp.html'.format(m_dir), [cytoplasm] + sorted(compartment2meta_node.keys()),
-	              groups_sbml, scripts, css, fav, tile)
+	process(graph, directory, meta_node, cytoplasm, layout_cytoplasm, [set(compartment2meta_node.values()), True])
+	groups_sbml_url = "%s/%s/%s" % (main_url, model_id, os.path.basename(groups_sbml))
+	generate_html(input_model, directory, url, [cytoplasm] + sorted(compartment2meta_node.keys()), groups_sbml_url,
+	              scripts, css, fav, tile)
 
 	# TODO: why doesn't it work??
 	# tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')
+
+	return url
 
 
 def process(graph, m_dir, meta_node, compartment, layout_algorithm=layout, args=None):
@@ -52,9 +60,9 @@ def process(graph, m_dir, meta_node, compartment, layout_algorithm=layout, args=
 	root['viewSize'][meta_node] = get_comp_size(graph, meta_node)
 	# export to geojson
 	compartment = compartment.lower().replace(' ', '_')
-	full_json = '{0}/{1}_f.json'.format(m_dir, compartment)
+	full_json = '%s/%s_f.json' % (m_dir, compartment)
 	tulip2geojson(comp_graph_full, full_json)
-	generalized_json = '{0}/{1}.json'.format(m_dir, compartment)
+	generalized_json = '%s/%s.json' % (m_dir, compartment)
 	tulip2geojson(comp_graph, generalized_json)
 
 

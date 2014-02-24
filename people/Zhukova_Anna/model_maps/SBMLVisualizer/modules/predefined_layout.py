@@ -1,3 +1,4 @@
+import tulipgui
 from tulip import tlp
 from color_keys import key2coord
 

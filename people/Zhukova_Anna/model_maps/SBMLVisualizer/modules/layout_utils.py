@@ -1,4 +1,5 @@
-from tulip import *
+import tulipgui
+from tulip import tlp
 from math import radians, atan2, cos, sin, degrees, sqrt
 
 from modules.color import white

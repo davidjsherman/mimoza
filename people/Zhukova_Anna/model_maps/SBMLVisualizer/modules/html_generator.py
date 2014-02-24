@@ -21,11 +21,11 @@ def add_header(model_id, model_name, page):
 	page.h1.close()
 
 
-def add_compartment_menu(html_file, organelles, page):
+def add_compartment_menu(url, organelles, page):
 	page.ul(class_='menu margin centre')
 	for organelle in organelles:
 		page.li()
-		page.a(denormalize(organelle), href='{0}?name={1}'.format(html_file, normalize(organelle)))
+		page.a(denormalize(organelle), href='%s?name=%s' % (url, normalize(organelle)))
 		page.li.close()
 	page.ul.close()
 
@@ -35,7 +35,7 @@ def add_download_link(groups_sbml, page):
 		page.div(class_='margin', id='download')
 		page.p()
 		page.span('Download the&nbsp;')
-		page.a('generalised model', href=groups_sbml)
+		page.a('generalised model', href=groups_sbml, download=None)
 		page.span('.')
 		page.p.close()
 		page.div.close()
@@ -119,7 +119,7 @@ def add_js(default_organelle, org2scripts, page, tile):
 	)
 
 
-def generate_html(model, html_file, organelles, groups_sbml, scripts, css, fav, tile):
+def generate_html(model, directory, url, organelles, groups_sbml_url, scripts, css, fav, tile):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -145,9 +145,9 @@ def generate_html(model, html_file, organelles, groups_sbml, scripts, css, fav, 
 	add_header(model_id, model_name, page)
 
 	page.div(class_='centre', id='all')
-	add_compartment_menu(html_file, organelles, page)
+	add_compartment_menu(url, organelles, page)
 
-	add_download_link(groups_sbml, page)
+	add_download_link(groups_sbml_url, page)
 
 	add_explanations(page)
 
@@ -161,7 +161,7 @@ def generate_html(model, html_file, organelles, groups_sbml, scripts, css, fav, 
 
 	add_js(default_organelle, org2scripts, page, tile)
 
-	with open(html_file, 'w+') as f:
+	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
 
 

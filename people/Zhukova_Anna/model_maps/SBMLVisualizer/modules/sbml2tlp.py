@@ -1,15 +1,16 @@
-from tulip import *
+from tulip import tlp
+import tulipgui
 
-from sbml_generalization.generalization.sbml_helper import parse_group_sbml, GrPlError, check_names, check_compartments
+from sbml_generalization.generalization.sbml_helper import check_names, check_compartments
+
 from sbml_generalization.utils.compartment_positioner import get_comp2go, sort_comps
 from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Term
-from sbml_generalization.generalization.sbml_generalizer import generalize_model
-from sbml_generalization.generalization.model_generalizer import map2chebi
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
-from sbml_generalization.generalization.mark_ubiquitous import getCofactors
 
 from modules.model_utils import clone_node
+
 from modules.resize import r_size, ub_sp_size, sp_size, ub_e_size, e_size
+from runner.mod_gen_helper import generalize_entities
 
 
 __author__ = 'anna'

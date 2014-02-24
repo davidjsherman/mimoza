@@ -1,4 +1,5 @@
 import colorsys
+import tulipgui
 from tulip import tlp
 
 __author__ = 'anna'

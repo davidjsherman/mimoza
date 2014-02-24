@@ -1,5 +1,5 @@
 import sys
-from runner.runner import process_args, Usage
+from runner.os_helper import process_args, Usage
 from runner.tulip_helper import visualize_model
 
 

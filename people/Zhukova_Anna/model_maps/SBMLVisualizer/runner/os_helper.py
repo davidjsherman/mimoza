@@ -1,30 +1,23 @@
 import getopt
+import os
 from shutil import copyfile
-from libsbml import os
 
 
 __author__ = 'anna'
 
 
-def create_dir(directory, model_id):
-	m_dir = '{0}/{1}'.format(directory, model_id)
-	if not os.path.exists(m_dir):
-		os.makedirs(m_dir)
-	return m_dir
+def create_dir(directory):
+	if not os.path.exists(directory):
+		os.makedirs(directory)
 
 
-def log(msg, verbose=True):
-	if verbose:
-		print msg
-
-
-def prepare_dir(directory, sbml_file, model_id):
-	m_dir = create_dir(directory, model_id)
-	new_sbml_file = '{0}/{1}.xml'.format(m_dir, model_id)
+def copy_sbml_file(directory, sbml_file, model_id):
+	create_dir(directory)
+	new_sbml_file = '%s%s.xml' % (directory, model_id)
 	if sbml_file != new_sbml_file:
 		copyfile(sbml_file, new_sbml_file)
 	os.remove(sbml_file)
-	return m_dir, new_sbml_file
+	return new_sbml_file
 
 
 def process_args(argv, help_message):
