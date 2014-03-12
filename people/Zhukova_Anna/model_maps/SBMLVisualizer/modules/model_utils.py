@@ -1,10 +1,11 @@
+from modules.graph_tools import CLONE
 
 __author__ = 'anna'
 
 
 def clone_node(graph, n):
 	root = graph.getRoot()
-	clone = root.getBooleanProperty("clone")
+	clone = root.getBooleanProperty(CLONE)
 	
 	clone[n] = True
 	graphs_to_update = get_graphs_by_node(n, root)
@@ -75,7 +76,7 @@ def merge_nodes(graph, ns):
 			for gr in graphs_to_update:
 				if gr.isElement(from_m) and gr.isElement(m):
 					if not gr.isElement(n):
-						gr.addNode(n)	
+						gr.addNode(n)
 					gr.addEdge(e)
 		for old_e in root.getOutEdges(m):
 			to_m = root.target(old_e)
@@ -85,6 +86,6 @@ def merge_nodes(graph, ns):
 			for gr in graphs_to_update:
 				if gr.isElement(to_m) and gr.isElement(m):
 					if not gr.isElement(n):
-						gr.addNode(n)	
+						gr.addNode(n)
 					gr.addEdge(e)
 		root.delNode(m, True)

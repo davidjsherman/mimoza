@@ -1,19 +1,29 @@
-import tulipgui
 from tulip import tlp
 from math import radians, atan2, cos, sin, degrees, sqrt
 
 from modules.color import white
 from modules.model_utils import clone_node
 from modules.resize import ub_sp_size
+from modules.graph_tools import *
+
+COMPONENT_PACKING = "Connected Component Packing"
+
+OVERLAP_REMOVAL = "Fast Overlap Removal"
+
+FM3 = "FM^3 (OGDF)"
+
+CIRCULAR = "Circular (OGDF)"
+
+HIERARCHICAL_GRAPH = "Hierarchical Graph"
 
 
 def layout_ub_sps(graph):
 	root = graph.getRoot()
-	view_layout = root.getLayoutProperty('viewLayout')
-	ubiquitous = root.getBooleanProperty("ubiquitous")
-	view_size = root.getSizeProperty("viewSize")
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
+	view_size = root.getSizeProperty(VIEW_SIZE)
 
-	for r in (n for n in graph.getNodes() if 'reaction' == root['type'][n]):
+	for r in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n]):
 		x1, y1 = view_layout[r].getX(), view_layout[r].getY()
 		# c = min(view_size[r].getW() * 1.8, 3.5)  # edge-after-bent length
 		for (get_reactants, get_reaction_edges, get_products, direction) in [
@@ -91,9 +101,9 @@ def layout_ub_sps(graph):
 
 def shorten_edges(graph, margin=5):
 	root = graph.getRoot()
-	v_lo = root.getLayoutProperty("viewLayout")
-	ub = root.getBooleanProperty("ubiquitous")
-	v_s = root.getSizeProperty("viewSize")
+	v_lo = root.getLayoutProperty(VIEW_LAYOUT)
+	ub = root.getBooleanProperty(UBIQUITOUS)
+	v_s = root.getSizeProperty(VIEW_SIZE)
 	diameter = lambda a, b: sqrt(pow(a, 2) + pow(b, 2))
 	for i in xrange(5):
 		processed = set()
@@ -129,46 +139,50 @@ def neighbours(ns, org_ns, graph, processed, limit=500):
 def layout_cytoplasm(graph, margin=5):
 	root = graph.getRoot()
 	for n in graph.getNodes():
-		if 'species' == root['type'][n] and not graph.isMetaNode(n) and graph.deg(n) >= 4:
+		if TYPE_SPECIES == root[TYPE][n] and not graph.isMetaNode(n) and graph.deg(n) >= 4:
 			clone_node(graph, n)
 	sub = graph.inducedSubGraph([n for n in graph.getNodes()])
-	qo = sub.inducedSubGraph([n for n in sub.getNodes() if not root["ubiquitous"][n]])
+	qo = sub.inducedSubGraph([n for n in sub.getNodes() if not root[UBIQUITOUS][n]])
 	layout_force(qo, margin)
 	remove_overlaps(qo, margin)
 	graph.delAllSubGraphs(sub)
 	layout_ub_sps(graph)
 	pack_cc(graph)
-	graph.applyAlgorithm("Edge bundling")
+	# graph.applyAlgorithm("Edge bundling")
 
 
 
 def layout_comp(graph):
 	root = graph.getRoot()
 
-	ssub = graph.inducedSubGraph([n for n in graph.getNodes() if not root["ubiquitous"][n]])
+	ssub = graph.inducedSubGraph([n for n in graph.getNodes() if not root[UBIQUITOUS][n]])
 	sub = ssub.inducedSubGraph([n for n in ssub.getNodes()])
 
-	organelles = root.getAttribute("organelles").split(";")
-	comp_ns = {n for n in sub.getNodes() if root["name"][n] in organelles and sub.isMetaNode(n)}
-	org2n = {root['name'][n]: n for n in comp_ns}
+	organelles = root.getAttribute(ORGANELLES).split(";")
+	comp_ns = {n for n in sub.getNodes() if root[NAME][n] in organelles and sub.isMetaNode(n)}
+	org2n = {root[NAME][n]: n for n in comp_ns}
 
 	processed = set(comp_ns)
 	mns = []
-	for org in sorted(organelles, key=lambda t: -root["viewSize"][org2n[t]].getW()):
+	for org in sorted(organelles, key=lambda t: -root[VIEW_SIZE][org2n[t]].getW()):
 		n = org2n[org]
 		ns = [n]
 		ns.extend(neighbours({n}, comp_ns, sub, set(processed), sub.numberOfNodes() / len(comp_ns)))
 		processed |= set(ns)
+		for it in ns:
+			if not sub.isElement(it):
+				print root[NAME][it], sub.getName(), '!'
+
 		meta_node = sub.createMetaNode(ns, False)
 		processed.add(meta_node)
-		gr = root["viewMetaGraph"][meta_node]
+		gr = root[VIEW_META_GRAPH][meta_node]
 		gr.setName(org)
 		layout(gr, 1)
 		shorten_edges(gr)
 		bb = tlp.computeBoundingBox(gr)
-		root["viewSize"][meta_node] = tlp.Size(bb.width(), bb.height())
-		root["viewLabel"][meta_node] = org
-		root["viewShape"][meta_node] = 9
+		root[VIEW_SIZE][meta_node] = tlp.Size(bb.width(), bb.height())
+		root[VIEW_LABEL][meta_node] = org
+		root[VIEW_SHAPE][meta_node] = 9
 		mns.append(meta_node)
 	layout(sub, 1)
 	shorten_edges(sub)
@@ -182,47 +196,47 @@ def layout_comp(graph):
 
 def layout_hierarchically(qo, margin=5):
 	root = qo.getRoot()
-	ds = tlp.getDefaultPluginParameters("Hierarchical Graph", qo)
+	ds = tlp.getDefaultPluginParameters(HIERARCHICAL_GRAPH, qo)
 	if qo.numberOfNodes() > 1:
-		[s, s1] = sorted((root["viewSize"][n] for n in qo.getNodes()))[-2:]
+		[s, s1] = sorted((root[VIEW_SIZE][n] for n in qo.getNodes()))[-2:]
 		# looks like there is a bug in Tulip and it uses the 'layer spacing' value
 		# instead of the 'node spacing' one and visa versa
 		ds["layer spacing"] = s.getW() / 2 + s1.getW() / 2 + margin
 		ds["node spacing"] = s.getH() / 2 + s1.getH() / 2 + margin
-	qo.computeLayoutProperty("Hierarchical Graph", root['viewLayout'], ds)
+	qo.computeLayoutProperty(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
 
 
 def layout_circle(qo, margin=5):
 	root = qo.getRoot()
-	ds = tlp.getDefaultPluginParameters("Circular (OGDF)", qo)
+	ds = tlp.getDefaultPluginParameters(CIRCULAR, qo)
 	if qo.numberOfNodes() > 1:
-		[s, s1] = sorted((root["viewSize"][n] for n in qo.getNodes()))[-2:]
+		[s, s1] = sorted((root[VIEW_SIZE][n] for n in qo.getNodes()))[-2:]
 		ds["minDistCircle"] = s.getW() / 2 + s1.getW() / 2
 		ds["minDistLevel"] = margin
 		ds["minDistCC"] = 1
 		ds["minDistSibling"] = 0
-	qo.computeLayoutProperty("Circular (OGDF)", root['viewLayout'], ds)
+	qo.computeLayoutProperty(CIRCULAR, root[VIEW_LAYOUT], ds)
 
 
 def layout_force(qo, margin=5):
 	root = qo.getRoot()
-	ds = tlp.getDefaultPluginParameters("FM^3 (OGDF)", qo)
+	ds = tlp.getDefaultPluginParameters(FM3, qo)
 	ds["Unit edge length"] = margin
-	qo.computeLayoutProperty("FM^3 (OGDF)", root['viewLayout'], ds)
+	qo.computeLayoutProperty(FM3, root[VIEW_LAYOUT], ds)
 
 
 def remove_overlaps(graph, margin=5):
 	root = graph.getRoot()
-	ds = tlp.getDefaultPluginParameters("Fast Overlap Removal", graph)
+	ds = tlp.getDefaultPluginParameters(OVERLAP_REMOVAL, graph)
 	ds["x border"] = margin
 	ds["y border"] = margin
-	graph.computeLayoutProperty("Fast Overlap Removal", root['viewLayout'], ds)
+	graph.computeLayoutProperty(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
 def pack_cc(graph):
 	root = graph.getRoot()
-	ds = tlp.getDefaultPluginParameters("Connected Component Packing", graph)
-	graph.computeLayoutProperty("Connected Component Packing", root['viewLayout'], ds)
+	ds = tlp.getDefaultPluginParameters(COMPONENT_PACKING, graph)
+	graph.computeLayoutProperty(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
 
 
 def layout(graph, onto, margin=5):
@@ -236,7 +250,7 @@ def layout(graph, onto, margin=5):
 
 	side = None
 	for gr in simples:
-		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root["ubiquitous"][n]])
+		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root[UBIQUITOUS][n]])
 		if qo.numberOfEdges() == 0:
 			continue
 		d = max((qo.deg(n) for n in qo.getNodes()))
@@ -248,13 +262,13 @@ def layout(graph, onto, margin=5):
 			lo_a_line(qo, side)
 
 	for gr in cycles:
-		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root["ubiquitous"][n]])
+		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root[UBIQUITOUS][n]])
 		layout_circle(qo, margin)
 		layout_ub_sps(gr)
 #		remove_overlaps(gr, margin)
 
 	for gr in mess:
-		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root["ubiquitous"][n]])
+		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root[UBIQUITOUS][n]])
 		layout_force(qo, margin)
 		remove_overlaps(qo, margin)
 		layout_ub_sps(gr)
@@ -309,7 +323,7 @@ def get_side(graph):
 	root = graph.getRoot()
 	l = 0
 	for n in graph.getNodes():
-		s = root["viewSize"][n]
+		s = root[VIEW_SIZE][n]
 		l += s.getW() * s.getH() * 16
 	return sqrt(l)
 
@@ -317,7 +331,7 @@ def get_side(graph):
 # expects to be called on a subgraph that has no ubiquitous nodes.
 def lo_a_line(graph, side=None):
 	root = graph.getRoot()
-	view_layout = root.getLayoutProperty('viewLayout')
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
 	view_layout.setAllEdgeValue([])
 
 	starts = (n for n in graph.getNodes() if 1 == graph.deg(n))
@@ -339,7 +353,7 @@ def lo_a_line(graph, side=None):
 				max_h = s.getH()
 			return x, y, max_h
 		processed.add(n)
-		s = root["viewSize"][n]
+		s = root[VIEW_SIZE][n]
 		max_h = max(max_h, s.getH())
 		x, y, max_h = get_coord(s, x, y, max_h)
 		view_layout[n] = tlp.Coord(x, y)
@@ -382,40 +396,25 @@ def get_alpha(lo, o_lo):
 		return -45
 
 
-def show_reversibility(graph):
-	root = graph.getRoot()
-	reversible = root.getBooleanProperty("reversible")
-	view_tgt_anchor_shape = root.getIntegerProperty("viewTgtAnchorShape")
-	view_src_anchor_shape = root.getIntegerProperty("viewSrcAnchorShape")
-
-	for n in (n for n in graph.getNodes() if 'reaction' == root['type'][n] and reversible[n]):
-			for e in graph.getInEdges(n):
-				view_tgt_anchor_shape[e] = -1
-				view_src_anchor_shape[e] = 50
-			for e in graph.getOutEdges(n):
-				view_tgt_anchor_shape[e] = 50
-				view_src_anchor_shape[e] = -1
-
-
 def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 	root = graph.getRoot()
-	view_layout = root.getLayoutProperty("viewLayout")
-	view_meta_graph = root.getGraphProperty("viewMetaGraph")
-	view_size = root.getSizeProperty("viewSize")
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	view_meta_graph = root.getGraphProperty(VIEW_META_GRAPH)
+	view_size = root.getSizeProperty(VIEW_SIZE)
 
 	nds = []
 	mn2color = {}
 	for n in graph.getNodes():
 		if graph.isMetaNode(n):
-			mn2color[n] = root["viewColor"][n]
+			mn2color[n] = root[VIEW_COLOR][n]
 			mg = view_meta_graph[n]
 			ns = list(mg.getNodes())
 			nds.extend(ns)
 		else:
 			nds.append(n)
 	for n in nds:
-		root["viewBorderWidth"][n] = 0.1 * view_size[n].width()
-		root["viewBorderColor"][n] = white
+		root[VIEW_BORDER_WIDTH][n] = 0.1 * view_size[n].width()
+		root[VIEW_BORDER_COLOR][n] = white
 	clone = graph.getSuperGraph().inducedSubGraph(nds)
 	clone.setName(graph.getName() + "_full")
 
@@ -431,7 +430,7 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 	vl = {}
 
 	meta_ns = {n for n in graph.getNodes() if graph.isMetaNode(n) and (not do_not_open or not n in do_not_open)}
-	meta_sps = {n for n in meta_ns if 'species' == root["type"][n]}
+	meta_sps = {n for n in meta_ns if TYPE_SPECIES == root[TYPE][n]}
 	meta_rs = meta_ns - meta_sps
 
 	depends_on = {}
@@ -455,7 +454,7 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 			for r in rs:
 				sps |= set(clone.getInOutNodes(r)) & our_sps
 			sps -= {s}
-			n2k[s] = (root["id"][n], clone.deg(s), root["id"][s])
+			n2k[s] = (root[ID][n], clone.deg(s), root[ID][s])
 			for ss in sps:
 				if ss in n2k:
 					n2k[s] = n2k[ss]
@@ -471,14 +470,11 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 
 		# add a fake node to keep a common background for similar nodes
 		nn = clone.addNode()
-		root["viewSize"][nn] = root["viewSize"][n]
-		root["viewShape"][nn] = root["viewShape"][n]
-		root["viewBorderWidth"][nn] = 0
-		root["viewBorderColor"][nn] = root["viewBorderColor"][n]
-		co = root["viewLayout"][n]
-		root["viewLayout"][nn] = tlp.Coord(co.getX(), co.getY(), 0)
-		root["viewColor"][nn] = mn2color[n]
-		root["type"][nn] = 'background'
+		for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_BORDER_COLOR, VIEW_LAYOUT]:
+			root[prop][nn] = root[prop][n]
+		root[VIEW_BORDER_WIDTH][nn] = 0
+		root[VIEW_COLOR][nn] = mn2color[n]
+		root[TYPE][nn] = TYPE_BG
 
 		meta_neighbours = lambda nodes: sorted([t for t in nodes if graph.isMetaNode(t)], key=lambda t: -view_size[t].getW())
 		o_n_1 = meta_neighbours(graph.getInNodes(n))
@@ -496,26 +492,25 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 
 		ns = sorted(mg.getNodes(), key=lambda it: n2k[it])
 		s_m = tlp.Size(s / len(ns), s / len(ns))
-		if 'reaction' == root["type"][n] and (alpha == 45 or alpha == 135 or alpha == -45 or alpha == -135):
+		if TYPE_REACTION == root[TYPE][n] and (alpha == 45 or alpha == 135 or alpha == -45 or alpha == -135):
 			s *= sqrt(2)
 		dy = s / len(ns)
 		x0, y0 = lo.getX(), lo.getY() - s / 2 + dy / 2
 		x, y = x0, y0
 		for m in ns:
-			root["viewSize"][m] = s_m
-			root["viewLayout"][m] = tlp.Coord(x, y)
-			root["viewLayout"][m] = tlp.Coord(x, y)
-			root["viewSize"][m] = s_m
+			root[VIEW_SIZE][m] = s_m
+			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
+			root[VIEW_SIZE][m] = s_m
 			y += dy
 
-		for o_n in filter(lambda t: root["ubiquitous"][t], graph.getInOutNodes(n)):
+		for o_n in filter(lambda t: root[UBIQUITOUS][t], graph.getInOutNodes(n)):
 			lo_n = view_layout[o_n]
 			alpha = atan2(lo_n.getY()-lo.getY(), lo_n.getX()-lo.getX())
 			x0, y0 = lo.getX() + s * 0.7 * cos(alpha), lo.getY() + s * 0.7 * sin(alpha)
 			for m in ns:
 				for e in clone.getInOutEdges(m):
 					if o_n == clone.target(e) or o_n == clone.source(e):
-						root["viewLayout"][e] = [tlp.Coord(x0, y0)]
+						root[VIEW_LAYOUT][e] = [tlp.Coord(x0, y0)]
 
 	for mg, (x0, y0, alpha) in vl.iteritems():
 		view_layout.translate(tlp.Coord(-x0, -y0), mg)
@@ -528,17 +523,11 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 		for n in do_not_open:
 			# add a fake node to keep a common background for similar nodes
 			nn = clone.addNode()
-			root["viewSize"][nn] = root["viewSize"][n]
-			root["viewShape"][nn] = root["viewShape"][n]
-			root["viewBorderWidth"][nn] = 0
-			root["viewBorderColor"][nn] = root["viewBorderColor"][n]
-			co = root["viewLayout"][n]
-			root["viewLayout"][nn] = tlp.Coord(co.getX(), co.getY(), 0)
-			root["viewColor"][nn] = mn2color[n]
-			root["type"][nn] = 'background'
-
-	show_reversibility(clone)
-	show_reversibility(graph)
+			for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_BORDER_COLOR, VIEW_LAYOUT]:
+				root[prop][nn] = root[prop][n]
+			root[VIEW_BORDER_WIDTH][nn] = 0
+			root[VIEW_COLOR][nn] = mn2color[n]
+			root[TYPE][nn] = TYPE_BG
 
 	# if bundle_edges:
 	# 	try:

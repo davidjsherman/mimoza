@@ -1,11 +1,12 @@
 from model_utils import merge_nodes
+from modules.graph_tools import COMPARTMENT, UBIQUITOUS, ID
 
 
 def mic(graph):
 	root = graph.getRoot()
-	compartment = root.getStringProperty("compartment")
-	ubiquitous = root.getBooleanProperty("ubiquitous")
-	id_ = root.getStringProperty("id")
+	compartment = root.getStringProperty(COMPARTMENT)
+	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
+	id_ = root.getStringProperty(ID)
 
 	id2cool = {}
 	id2danger = {}

@@ -4,6 +4,7 @@ from sbml_generalization.generalization.mark_ubiquitous import getCofactors
 from sbml_generalization.generalization.model_generalizer import map2chebi
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.generalization.sbml_helper import parse_group_sbml, GrPlError
+from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.utils.obo_ontology import get_chebi, parse
 from modules.html_generator import generate_simple_html
 from runner.os_helper import copy_sbml_file
@@ -16,8 +17,9 @@ def generalize_entities(chebi, input_model, sbml_file, verbose=True):
 	groups_sbml = None
 	try:
 		r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
-		cofactors = getCofactors(chebi)
-		species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, chebi)
+		if r_id2g_id or ub_sps:
+			groups_sbml = sbml_file
+			species_id2chebi_id = get_species_to_chebi(input_model, chebi)
 	except GrPlError:
 		pass
 	if not r_id2g_id and not ub_sps:

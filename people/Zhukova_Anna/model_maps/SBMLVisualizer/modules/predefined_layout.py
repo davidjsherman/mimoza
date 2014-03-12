@@ -1,6 +1,6 @@
-import tulipgui
 from tulip import tlp
 from color_keys import key2coord
+from modules.graph_tools import *
 
 
 
@@ -25,8 +25,8 @@ from color_keys import key2coord
 
 def apply_layout(graph, onto):
 	root = graph.getRoot()
-	view_layout = root.getLayoutProperty("viewLayout")
-	ubiquitous = root.getBooleanProperty("ubiquitous")
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 
 	# before = len(key2coord)
 	for n in graph.getNodes():
@@ -55,12 +55,12 @@ def apply_layout(graph, onto):
 
 def get_keys(n, graph, onto, primary=False):
 	root = graph.getRoot()
-	ancestor_chebi_id = root.getStringProperty("ancestor_chebi_id")
-	chebi_id = root.getStringProperty("chebi_id")
-	name = root.getStringProperty("name")
-	ubiquitous = root.getBooleanProperty("ubiquitous")
+	ancestor_chebi_id = root.getStringProperty(ANCESTOR_TERM_ID)
+	chebi_id = root.getStringProperty(TERM_ID)
+	name = root.getStringProperty(NAME)
+	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 
-	if 'reaction' == graph["type"][n]:
+	if TYPE_REACTION == graph[TYPE][n]:
 		transform = lambda nds: "r_" + "_".join(sorted([get_keys(it, graph, onto, primary)[0] for it in nds]))
 		return [transform(graph.getInOutNodes(n)), transform(filter(lambda nd: not ubiquitous[nd], graph.getInOutNodes(n)))]
 	else:

@@ -16,7 +16,7 @@ def copy_sbml_file(directory, sbml_file, model_id):
 	new_sbml_file = '%s%s.xml' % (directory, model_id)
 	if sbml_file != new_sbml_file:
 		copyfile(sbml_file, new_sbml_file)
-	os.remove(sbml_file)
+		os.remove(sbml_file)
 	return new_sbml_file
 
 

@@ -1,14 +1,17 @@
+from modules.graph_tools import *
+
+
 def get_short_name(graph, n, onto):
 	graph = graph.getRoot()
-	short_name = graph["name"][n]
+	short_name = graph[NAME][n]
 	
 	# remove compartment from the name,
 	# e.g. H2O [peroxisome] --> H2O
-	short_name.replace("[{0}]".format(graph["real_compartment"][n].split(',')[0]), '').replace("[{0}]".format(graph["compartment"][n]), '').strip()
+	short_name.replace("[{0}]".format(graph[REAL_COMPARTMENT][n].split(',')[0]), '').replace("[{0}]".format(graph[COMPARTMENT][n]), '').strip()
 		
 	# replace with a chebi name 
 	# if it is shorter 
-	ch_id = graph["chebi_id"][n]
+	ch_id = graph[TERM_ID][n]
 	if ch_id:
 		term = onto.getTerm(ch_id)
 		if term:
@@ -23,11 +26,11 @@ def get_short_name(graph, n, onto):
 	# number of factored entities
 	# if this one is a generalized one
 	num = ''
-	if graph.isMetaNode(n) and 'compartment' != graph['type'][n]:
-		num = " ({0})".format(graph["viewMetaGraph"][n].numberOfNodes())
+	if graph.isMetaNode(n) and TYPE_COMPARTMENT != graph[TYPE][n]:
+		num = " ({0})".format(graph[VIEW_META_GRAPH][n].numberOfNodes())
 		short_name = short_name.replace(num, '').replace('generalized ', '').strip()
 		
-	if 'reaction' == graph['type'][n] and short_name.find('(') > 0:
+	if TYPE_REACTION == graph[TYPE][n] and short_name.find('(') > 0:
 		short_name = short_name[:short_name.find('(')]
 		
 	short_name += num
