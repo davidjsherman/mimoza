@@ -2,7 +2,7 @@ import os
 from tulip import tlp
 from libsbml import SBMLReader
 from modules.color import simple_color
-from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm, comp_to_meta_node, nodes_to_meta_node
+from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm, nodes_to_meta_node
 from modules.geojson_helper import tulip2geojson
 from modules.html_generator import generate_html
 from modules.layout_utils import layout_generalization_based, layout, layout_cytoplasm
@@ -43,7 +43,7 @@ def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, 
 		comp_names = [cytoplasm] + comp_names
 	if not comp_names:
 		# extracellular
-		meta_node = nodes_to_meta_node(CELL, meta_graph, (CELL, CELL_GO_ID), [n for n in meta_graph.getNodes()], '')
+		meta_node = nodes_to_meta_node(CELL, meta_graph, [n for n in meta_graph.getNodes()], (CELL, CELL_GO_ID), '')
 		resize_edges(meta_graph)
 		process(graph, directory, meta_node, CELL, lambda gr: layout(gr, onto))
 		comp_names = [CELL]

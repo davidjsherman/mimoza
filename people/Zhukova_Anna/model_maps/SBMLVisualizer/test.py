@@ -20,7 +20,7 @@ TILE = '%s/lib/modelmap/white512.jpg' % MIMOZA_URL
 
 FAV_ICON = '%s/lib/modelmap/fav.ico' % MIMOZA_URL
 
-PROGRESS_ICON = '%s/lib/modelmap/mimoza.gif' % MIMOZA_URL
+PROGRESS_ICON = '%s/lib/modelmap/ajax-loader.gif' % MIMOZA_URL
 
 JS_SCRIPTS = [('%s/lib/leaflet/leaflet.js' % MIMOZA_URL), ('%s/lib/leaflet_label/leaflet.label.js' % MIMOZA_URL), 'http://code.jquery.com/jquery-2.0.3.min.js', 'http://code.jquery.com/ui/1.10.4/jquery-ui.js', ('%s/lib/modelmap/maptools.js' % MIMOZA_URL)]
 
@@ -164,21 +164,33 @@ elif ALREADY_EXISTS == result:
 	print '<div class="indent" id="all">'
 
 	print '<p>Thank you for uploading your model <span class="pant">%s</span>!</p>' % model_id
-	print '<p>There is already <a href="%s" target="_blank">a processed model</a> with this identifier at <span class="pant">Mimoza</span>, <a href="%s" target="_blank">check it out</a>!</p>' % (existing_m_url, existing_m_url)
-	print '<p>If you prefer to carry on with your model instead, press the button below.</p>'
-	print '<p>After the visualisation is done, it will become available at <a href="%s">%s</a>.</p>' % (url, url)
-	print '<p>The visualisation might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :)</p>'
+	print '<p>There is already <a href="%s" target="_blank">a processed model</a> with this identifier, check it out!</p>' % existing_m_url
+	print '<p><span id="expl">If you prefer to carry on with your model instead, press the button below.</span> <br>After the visualisation is done, it will become available at <a href="%s">%s</a>. <br>It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :)</p>' % (url, url)
 
 
 	print '<div class="centre margin" id="visualize_div">'
 	print '<form action="/cgi-bin/visualise.py" method="POST" name="input_form" enctype="multipart/form-data">'
 	print '<input type="hidden" name="sbml" value="%s" />' % sbml
 	print '<input type="hidden" name="dir" value="%s" />' % m_dir_id
-	print '<input class="ui-button" type="submit" id="bb" value="Visualise" />'
+	print '<input class="ui-button" type="submit" id="bb" value="Visualise" onclick="progress()"/>'
 	print '</form>'
 	print '</div>'
 
+	print '<div class="centre margin" id="visualize_div">'
+	print '<img src="%s" style="visibility:hidden" id="img" />' % PROGRESS_ICON
 	print '</div>'
+
+	print '</div>'
+	print '''<script>function progress() {
+		document.getElementById("img").style.visibility="visible";
+		document.getElementById("visualize_div").style.visibility="hidden";
+		var span = document.getElementById('expl');
+		while (span.firstChild) {
+			span.removeChild(span.firstChild);
+		}
+		span.appendChild(document.createTextNode("We are currently visualising your model..."));
+	}</script>'''
+
 
 	print '  </body>'
 	print '</html>'

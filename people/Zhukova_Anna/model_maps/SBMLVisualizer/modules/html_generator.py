@@ -219,9 +219,8 @@ def generate_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id,
 	url = '%s/%s/%s' % (url, m_dir_id, url_end)
 	page.p(
 		'Thank you for uploading your model <span class="pant">%s</span>!' % m_name)
-	page.p('Now let\'s visualise it. It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :)')
-	page.p('When the visualisation is done, it will become available at <a href="%s">%s</a>.' % (url, url))
-	page.p('To start the visualisation press the button below.')
+	page.p('<span id="expl">Now let\'s visualise it.</span><br>It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :) <br>When the visualisation is done, it will become available at <a href="%s">%s</a>.' % (url, url))
+	page.p('<span id="start">To start the visualisation press the button below.</span>')
 
 	sbml = '%s/%s.xml' % (directory, m_id)
 
@@ -233,17 +232,27 @@ def generate_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id,
 	page.form.close()
 	page.div.close()
 
-	# page.div(class_='centre margin', id='visualize_div')
-	# page.img(id="img", src=fav, style="visibility:hidden")
-	# page.div.close()
+	page.div(class_='centre margin', id='visualize_div')
+	page.img(id="img", src=img, style="visibility:hidden")
+	page.div.close()
 
 
 
 	page.div.close()
 
-	# page.script('''function progress() {
-	# 	document.getElementById("img").style.visibility="visible";
-	# }''')
+	page.script('''function progress() {
+		document.getElementById("img").style.visibility="visible";
+		document.getElementById("visualize_div").style.visibility="hidden";
+		var span = document.getElementById('expl');
+		while (span.firstChild) {
+			span.removeChild(span.firstChild);
+		}
+		span.appendChild(document.createTextNode("We are currently visualising it..."));
+		span = document.getElementById('start');
+		while (span.firstChild) {
+			span.removeChild(span.firstChild);
+		}
+	}''')
 
 	with open('%s/index.html' % directory, 'w+') as f:
 		f.write(str(page))

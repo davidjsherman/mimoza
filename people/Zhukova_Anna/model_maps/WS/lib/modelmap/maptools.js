@@ -66,9 +66,17 @@ function formatChebi(ch) {
 }
 
 
+function formatGo(term) {
+    if (term) {
+        return "<a href=\'http://www.ebi.ac.uk/QuickGO/GTerm?id=" + term.toUpperCase() + "\' target=\'_blank\'>" + term.toUpperCase() + "</a>";
+    }
+    return "";
+}
+
+
 function formatLink(comp) {
     if (comp) {
-        return "<a href=\'./comp.html?name=" + comp.replace(' ', '_') + "\'>Go inside</a>";
+        return "<a href=\'./comp.html?name=" + comp.toLowerCase().replace(' ', '_') + "\'>Go inside</a>";
     }
     return "";
 }
@@ -102,7 +110,7 @@ function initializeMap(max_zoom) {
         maxZoom: max_zoom,
         minZoom: 0,
 	    attributionControl: false,
-	    padding: [156, 156],
+	    padding: [156, 156]
     });
     var southWest = map.unproject([0 - margin, 512 + margin], 1);
     var northEast = map.unproject([512 + margin, 0 - margin], 1);
@@ -218,12 +226,13 @@ function addPopups(map, name2popup, feature, layer) {
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p><p class="popup centre">'+ ga_res + "</p>";
 	label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p>';
     } else if ('species' == feature.properties.type) {
-        var ch = formatChebi(feature.properties.chebi);
+        var ch = formatChebi(feature.properties.term);
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + ch + "</p>";
 label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p>";
     } else if ('compartment' == feature.properties.type) {
         var link = formatLink(feature.properties.name);
-        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'>" + link + "</p>";
+	var go_term = formatGo(feature.properties.term);
+        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + go_term + "</p><p class='popup centre'>" + link + "</p>";
 label = '<h2>' + feature.properties.name + "</h2>";
     }
     if ('edge' == feature.properties.type) {
@@ -393,11 +402,6 @@ function search(map, name2popup) {
     if (srch && name2popup[srch]){
         name2popup[srch].openOn(map);
     }
-}
-
-
-function submit() {
-    console.log(document.input_form.file_input.value);
 }
 
 function gup (name) {

@@ -116,7 +116,8 @@ def factor_comps(meta_graph, c_name2id_go):
 	cytoplasm = root.getAttribute(CYTOPLASM)
 	organelle2meta_node = {}
 	for organelle in root.getAttribute(ORGANELLES).split(";"):
-		meta_node = comp_to_meta_node(meta_graph, organelle, c_name2id_go[organelle], cytoplasm)
+		(c_id, go) = c_name2id_go[organelle] if organelle in c_name2id_go else ('', '')
+		meta_node = comp_to_meta_node(meta_graph, organelle, (c_id, go), cytoplasm)
 		if meta_node:
 			organelle2meta_node[organelle] = meta_node
 	resize_edges(meta_graph)
@@ -126,6 +127,7 @@ def factor_comps(meta_graph, c_name2id_go):
 def factor_cytoplasm(meta_graph, c_name2id_go):
 	root = meta_graph.getRoot()
 	cytoplasm = root.getAttribute(CYTOPLASM)
-	meta_node = comp_to_meta_node(meta_graph, cytoplasm, c_name2id_go[cytoplasm], EXTRACELLULAR)
+	(c_id, go) = c_name2id_go[cytoplasm] if cytoplasm in c_name2id_go else ('', '')
+	meta_node = comp_to_meta_node(meta_graph, cytoplasm, (c_id, go), EXTRACELLULAR)
 	resize_edges(meta_graph)
 	return cytoplasm, meta_node
