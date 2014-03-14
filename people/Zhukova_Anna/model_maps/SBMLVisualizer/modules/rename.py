@@ -11,7 +11,7 @@ def get_short_name(graph, n, onto):
 		
 	# replace with a chebi name 
 	# if it is shorter 
-	ch_id = graph[TERM_ID][n]
+	ch_id = graph[ANNOTATION][n]
 	if ch_id:
 		term = onto.getTerm(ch_id)
 		if term:

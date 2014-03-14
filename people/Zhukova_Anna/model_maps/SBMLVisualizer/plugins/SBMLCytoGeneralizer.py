@@ -9,20 +9,19 @@ class SBMLCytoGeneralizer(tlp.Algorithm):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return (True, "")
+		return True, ""
 
 	def run(self):
 		root = self.graph.getRoot()
 		meta_graph = find_subgraph_by_name(root, "meta graph")
 		cytoplasm = root.getAttribute("cytoplasm")
-		extracellular = 'extracellular'
-		for n in meta_graph.getNodes():
-			if cytoplasm != root["compartment"][n]:
-				extracellular = root["compartment"][n]
-			break
-		comp_to_meta_node(meta_graph, cytoplasm, extracellular)
+		extracellular = next(
+			(root["compartment"][n] for n in meta_graph.getNodes() if cytoplasm != root["compartment"][n]),
+			'extracellular')
+		comp_to_meta_node(meta_graph, cytoplasm, ('', ''), extracellular)
 		return True
 
 # The line below does the magic to register the plugin to the plugin database
 # and updates the GUI to make it accessible through the menus.
-tulipplugins.registerPluginOfGroup("SBMLCytoGeneralizer", "SBMLCytoGeneralizer", "anna", "09/12/2013", "", "1.0", "Metabolic")
+tulipplugins.registerPluginOfGroup("SBMLCytoGeneralizer", "SBMLCytoGeneralizer", "anna", "09/12/2013", "", "1.0",
+                                   "Metabolic")

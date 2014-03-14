@@ -21,18 +21,21 @@ def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, 
 	reader = SBMLReader()
 	input_document = reader.readSBML(sbml)
 	input_model = input_document.getModel()
+
 	directory = '%s/%s/' % (directory, m_dir_id)
 	url = '%s/%s/%s' % (main_url, m_dir_id, url_end)
+
 	# sbml -> tulip graph
 	graph = tlp.newGraph()
 	graph, groups_sbml, onto, name2id_go = import_sbml(graph, input_model, sbml, verbose)
+
 	# generalized species/reactions -> metanodes
 	meta_graph = process_generalized_entities(graph)
 
 	# compartments -> metanodes
 	compartment2meta_node = factor_comps(meta_graph, name2id_go)
 	for organelle, meta_node in compartment2meta_node.iteritems():
-		process(graph, directory, meta_node, organelle, lambda gr: layout(gr, onto))
+		process(graph, directory, meta_node, organelle)
 
 	comp_names = sorted(compartment2meta_node.keys())
 
@@ -45,8 +48,9 @@ def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, 
 		# extracellular
 		meta_node = nodes_to_meta_node(CELL, meta_graph, [n for n in meta_graph.getNodes()], (CELL, CELL_GO_ID), '')
 		resize_edges(meta_graph)
-		process(graph, directory, meta_node, CELL, lambda gr: layout(gr, onto))
+		process(graph, directory, meta_node, CELL)
 		comp_names = [CELL]
+
 	groups_sbml_url = "%s/%s/%s" % (main_url, m_dir_id, os.path.basename(groups_sbml))
 	generate_html(input_model, directory, url, comp_names, groups_sbml_url,
 	              scripts, css, fav, tile)

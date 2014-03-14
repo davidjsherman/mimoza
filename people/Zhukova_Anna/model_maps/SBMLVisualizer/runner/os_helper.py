@@ -22,7 +22,8 @@ def copy_sbml_file(directory, sbml_file, model_id):
 
 def process_args(argv, help_message):
 	try:
-		opts, args = getopt.getopt(argv[1:], "m:d:h:s:c:f:t:v", ["help", "dir=", "model=", "scripts=", "css=", "fav=", "tile=", "verbose"])
+		opts, args = getopt.getopt(argv[1:], "m:d:h:s:c:f:t:v",
+		                           ["help", "dir=", "model=", "scripts=", "css=", "fav=", "tile=", "verbose"])
 	except getopt.error, msg:
 		raise Usage(msg)
 	sbml, directory, scripts, css, fav, tile, verbose = None, None, [], [], None, None, False

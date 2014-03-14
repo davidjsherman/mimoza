@@ -13,7 +13,7 @@ class SBMLCompGeneralizer(tlp.Algorithm):
 
 	def run(self):
 		meta_graph = find_subgraph_by_name(self.graph.getRoot(), "meta graph")
-		factor_comps(meta_graph)
+		factor_comps(meta_graph, {})
 		return True
 
 # The line below does the magic to register the plugin to the plugin database

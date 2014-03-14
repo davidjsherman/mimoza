@@ -2,6 +2,7 @@ from tulip import *
 import tulipplugins
 from modules.resize import get_n_size, get_e_size
 
+
 class SBMLResizer(tlp.Algorithm):
 	def __init__(self, context):
 		tlp.Algorithm.__init__(self, context)

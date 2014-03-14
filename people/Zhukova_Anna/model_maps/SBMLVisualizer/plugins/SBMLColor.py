@@ -1,6 +1,7 @@
 from tulip import *
 import tulipplugins
 import colorsys
+from modules.graph_tools import *
 
 grey = tlp.Color(200, 200, 200)
 transparent_grey = tlp.Color(200, 200, 200, 80)
@@ -19,22 +20,17 @@ class SBMLColor(tlp.Algorithm):
 
 	def run(self):
 		root = self.graph.getRoot()	
-		organelles = root.getAttribute("organelles").split(";")
-		cytoplasm = root.getAttribute("cytoplasm")
+		organelles = root.getAttribute(ORGANELLES).split(";")
+		cytoplasm = root.getAttribute(CYTOPLASM)
 		
-		ubiquitous = root.getBooleanProperty("ubiquitous")
-		view_color = root.getColorProperty("viewColor")
-		compartment = root.getStringProperty("compartment")
-		view_border_color = root.getColorProperty("viewBorderColor")
-		view_border_width = root.getDoubleProperty("viewBorderWidth")
-
-		view_color.setAllEdgeValue(grey)
-		view_border_width.setAllNodeValue(2)
+		ubiquitous = root.getBooleanProperty(UBIQUITOUS)
+		view_color = root.getColorProperty(VIEW_COLOR)
+		compartment = root.getStringProperty(COMPARTMENT)
 		
 		compartments = organelles + [cytoplasm]
 		i = len(organelles) + 2
 		colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in range(i)]
-		colors = [tlp.Color(int(255 * r), int(255 *g), int(255 *b), 255) for (r,g,b) in colors]	
+		colors = [tlp.Color(int(255 * r), int(255 * g), int(255 * b), 255) for (r, g, b) in colors]
 		i2color = dict(zip(organelles, colors[2:]))
 		c_color = colors[1]
 		i2color[cytoplasm] = c_color
@@ -44,20 +40,16 @@ class SBMLColor(tlp.Algorithm):
 		for n in self.graph.getNodes():			
 			comp = compartment[n]
 			c = get_col(comp)
-			type_ = self.graph['type'][n]
-			if 'compartment' == type_:
+			type_ = self.graph[TYPE][n]
+			if TYPE_COMPARTMENT == type_:
 				view_color[n] = transparent_grey
-				view_border_color[n] = grey
 				continue
-			if not type_ in ['reaction', 'species']:
-				view_border_color[n] = transparent
+			if not type_ in [TYPE_SPECIES, TYPE_REACTION]:
 				continue
 			if self.graph.isMetaNode(n):
 				view_color[n] = tlp.Color(c.getR(), c.getG(), c.getB(), 80)
 			else:
 				view_color[n] = c if not ubiquitous[n] else grey
-			cs = {get_col(compartment[m]) for m in self.graph.getInOutNodes(n)} - {c}
-			view_border_color[n] = cs.pop() if cs else view_color[n]
 			
 			for e in self.graph.getInOutEdges(n):
 				if not ubiquitous[self.graph.source(e)] and not ubiquitous[self.graph.target(e)]:

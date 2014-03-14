@@ -99,7 +99,7 @@ def layout_ub_sps(graph):
 				# 	s -= ds
 
 
-def shorten_edges(graph, margin=5):
+def shorten_edges(graph):
 	root = graph.getRoot()
 	v_lo = root.getLayoutProperty(VIEW_LAYOUT)
 	ub = root.getBooleanProperty(UBIQUITOUS)
@@ -169,9 +169,6 @@ def layout_comp(graph):
 		ns = [n]
 		ns.extend(neighbours({n}, comp_ns, sub, set(processed), sub.numberOfNodes() / len(comp_ns)))
 		processed |= set(ns)
-		for it in ns:
-			if not sub.isElement(it):
-				print root[NAME][it], sub.getName(), '!'
 
 		meta_node = sub.createMetaNode(ns, False)
 		processed.add(meta_node)
@@ -181,7 +178,7 @@ def layout_comp(graph):
 		shorten_edges(gr)
 		bb = tlp.computeBoundingBox(gr)
 		root[VIEW_SIZE][meta_node] = tlp.Size(bb.width(), bb.height())
-		root[VIEW_LABEL][meta_node] = org
+		root[NAME][meta_node] = org
 		root[VIEW_SHAPE][meta_node] = 9
 		mns.append(meta_node)
 	layout(sub, 1)
@@ -239,7 +236,7 @@ def pack_cc(graph):
 	graph.computeLayoutProperty(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
 
 
-def layout(graph, onto, margin=5):
+def layout(graph, margin=5):
 	root = graph.getRoot()
 	if graph == root:
 		graph = tlp.newCloneSubGraph(graph)
@@ -288,7 +285,7 @@ def detect_components(graph):
 	for ns in comp_list:
 		gr = graph.inducedSubGraph(ns)
 		visited = set()
-		cycles_num = DFS(list(ns)[0], gr, visited, None, threshold)
+		cycles_num = dfs(list(ns)[0], gr, visited, None, threshold)
 		if cycles_num == 0:
 			gr.setName("acyclic")
 			simples.append(gr)
@@ -304,7 +301,7 @@ def detect_components(graph):
 # deep-first search
 # every cycle will be counted twice
 # as every node of a cycle can be approached from two sides
-def DFS(n, graph, visited, prev, limit=3, indent=''):
+def dfs(n, graph, visited, prev, limit=3, indent=''):
 	if n in visited:
 		return 1
 	num = 0
@@ -313,7 +310,7 @@ def DFS(n, graph, visited, prev, limit=3, indent=''):
 		if m == prev:
 			continue
 		else:
-			num += DFS(m, graph, visited, n, limit, indent + ' ')
+			num += dfs(m, graph, visited, n, limit, indent + ' ')
 			if num > limit:
 				return num
 	return num
@@ -366,10 +363,9 @@ def lo_a_line(graph, side=None):
 		x = side
 		x, y, max_h = process_n(n, x, y, max_h)
 		while True:
-			ns = [m for m in graph.getInOutNodes(n) if not (m in processed)]
-			if not ns:
+			n = next((m for m in graph.getInOutNodes(n) if not (m in processed)), None)
+			if not n:
 				break
-			n = ns[0]
 			x, y, max_h = process_n(n, x, y, max_h)
 	return graph
 
@@ -412,9 +408,6 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 			nds.extend(ns)
 		else:
 			nds.append(n)
-	for n in nds:
-		root[VIEW_BORDER_WIDTH][n] = 0.1 * view_size[n].width()
-		root[VIEW_BORDER_COLOR][n] = white
 	clone = graph.getSuperGraph().inducedSubGraph(nds)
 	clone.setName(graph.getName() + "_full")
 
@@ -470,9 +463,8 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 
 		# add a fake node to keep a common background for similar nodes
 		nn = clone.addNode()
-		for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_BORDER_COLOR, VIEW_LAYOUT]:
+		for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT]:
 			root[prop][nn] = root[prop][n]
-		root[VIEW_BORDER_WIDTH][nn] = 0
 		root[VIEW_COLOR][nn] = mn2color[n]
 		root[TYPE][nn] = TYPE_BG
 
@@ -523,9 +515,8 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 		for n in do_not_open:
 			# add a fake node to keep a common background for similar nodes
 			nn = clone.addNode()
-			for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_BORDER_COLOR, VIEW_LAYOUT]:
+			for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT]:
 				root[prop][nn] = root[prop][n]
-			root[VIEW_BORDER_WIDTH][nn] = 0
 			root[VIEW_COLOR][nn] = mn2color[n]
 			root[TYPE][nn] = TYPE_BG
 

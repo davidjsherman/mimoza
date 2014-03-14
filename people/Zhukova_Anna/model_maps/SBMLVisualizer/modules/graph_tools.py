@@ -1,65 +1,40 @@
+ID = 'id'
+ANNOTATION = 'annotation'
+NAME = 'name'
 
-TERM_ID = 'term_id'
+ANCESTOR_ID = 'ancestor_id'
+ANCESTOR_ANNOTATION = 'ancestor_annotation'
+ANCESTOR_NAME = "ancestor_name"
 
-VIEW_BORDER_COLOR = "viewBorderColor"
+COMPARTMENT = "compartment"
+REAL_COMPARTMENT = "real_compartment"
 
 VIEW_COLOR = "viewColor"
 
+VIEW_SHAPE = "viewShape"
+VIEW_LAYOUT = "viewLayout"
+VIEW_SIZE = "viewSize"
+
 UBIQUITOUS = 'ubiquitous'
 
-NAME = 'name'
+STOICHIOMETRY = 'stoichiometry'
+REVERSIBLE = "reversible"
+TRANSPORT = "transport"
 
 VIEW_META_GRAPH = 'viewMetaGraph'
 
-TYPE_COMPARTMENT = 'compartment'
-
 CYTOPLASM = "cytoplasm"
-
 ORGANELLES = "organelles"
-
-TYPE_SPECIES = 'species'
-
-TYPE_REACTION = 'reaction'
-
-TYPE_BG = 'background'
-
-TYPE = 'type'
-
-ID = 'id'
-
-ANCESTOR_TERM_ID = 'ancestor_term_id'
-
-ANCESTOR_ID = 'ancestor_id'
-
-COMPARTMENT = "compartment"
-
 EXTRACELLULAR = 'extracellular'
 
+TYPE = 'type'
+TYPE_SPECIES = 1
+TYPE_REACTION = 2
+TYPE_COMPARTMENT = 3
+TYPE_BG = 4
+TYPE_EDGE = 0
+
 SQUARE_SHAPE = 18
-
-STOICHIOMETRY = 'stoichiometry'
-
-VIEW_LABEL = "viewLabel"
-
-GENE_ASSOCIATION = "geneAssociation"
-
-VIEW_SIZE = "viewSize"
-
-ANCESTOR_NAME = "ancestor_name"
-
-CLONE = "clone"
-
-VIEW_SHAPE = "viewShape"
-
-VIEW_SELECTION = "viewSelection"
-
-VIEW_LAYOUT = "viewLayout"
-
-VIEW_BORDER_WIDTH = "viewBorderWidth"
-
-REVERSIBLE = "reversible"
-
-REAL_COMPARTMENT = "real_compartment"
 
 
 def find_subgraph_by_name(root, name):

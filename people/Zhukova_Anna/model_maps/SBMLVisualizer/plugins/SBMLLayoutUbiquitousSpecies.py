@@ -16,4 +16,5 @@ class SBMLLayoutUbiquitousSpecies(tlp.Algorithm):
 
 # The line below does the magic to register the plugin to the plugin database
 # and updates the GUI to make it accessible through the menus.
-tulipplugins.registerPluginOfGroup("SBMLLayoutUbiquitousSpecies", "SBMLLayoutUbiquitousSpecies", "anna", "19/12/2013", "", "1.0", "Metabolic")
+tulipplugins.registerPluginOfGroup("SBMLLayoutUbiquitousSpecies", "SBMLLayoutUbiquitousSpecies", "anna", "19/12/2013",
+                                   "", "1.0", "Metabolic")

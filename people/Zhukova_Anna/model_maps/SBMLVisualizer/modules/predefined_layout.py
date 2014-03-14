@@ -1,7 +1,5 @@
-from tulip import tlp
 from color_keys import key2coord
 from modules.graph_tools import *
-
 
 
 # def getKey2Layout(graph):
@@ -40,14 +38,10 @@ def apply_layout(graph, onto):
 			keys = get_keys(n, graph, onto, True)
 		if not keys:
 			continue
-		found = False
-		for key in keys:
-			if key in key2coord:
-				coord = key2coord[key]
-				view_layout[n] = tlp.Coord(coord[0], coord[1])
-				found = True
-				break
-		if not found:
+		coord = next((key2coord[key] for key in keys if key in key2coord), None)
+		if coord:
+			view_layout[n] = coord
+		else:
 			for key in keys:
 				key2coord[key] = view_layout[n]
 	#if before < len(key2coord) : print key2coord
@@ -55,8 +49,8 @@ def apply_layout(graph, onto):
 
 def get_keys(n, graph, onto, primary=False):
 	root = graph.getRoot()
-	ancestor_chebi_id = root.getStringProperty(ANCESTOR_TERM_ID)
-	chebi_id = root.getStringProperty(TERM_ID)
+	ancestor_chebi_id = root.getStringProperty(ANCESTOR_ANNOTATION)
+	chebi_id = root.getStringProperty(ANNOTATION)
 	name = root.getStringProperty(NAME)
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 

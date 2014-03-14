@@ -24,7 +24,7 @@ def species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_i
 		n = graph.addNode()
 		comp = input_model.getCompartment(s.getCompartment())
 		graph[REAL_COMPARTMENT][n] = '{0}, {1}, {2}'.format(comp.getName(), comp.getId(),
-		                                                      comp2go_term[comp.getId()])
+		                                                    comp2go_term[comp.getId()])
 		graph[COMPARTMENT][n] = get_comp(comp.getId())
 
 		_id = s.getId()
@@ -37,15 +37,10 @@ def species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_i
 		ub = _id in ub_sps
 		graph[UBIQUITOUS][n] = ub
 		if _id in species_id2chebi_id:
-			graph[TERM_ID][n] = species_id2chebi_id[_id]
+			graph[ANNOTATION][n] = species_id2chebi_id[_id]
 
 		graph[VIEW_SHAPE][n] = 14
 		graph[VIEW_SIZE][n] = tlp.Size(ub_sp_size, ub_sp_size) if ub else tlp.Size(sp_size, sp_size)
-
-		indx = name.find("[{0}]".format(comp.getName()))
-		if indx != -1:
-			name = name[:indx]
-		graph[VIEW_LABEL][n] = name
 	return id2n
 
 
@@ -67,18 +62,18 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[STOICHIOMETRY][e] = stoich
 		graph[NAME][e] = input_model.getSpecies(s_id).getName()
 		graph[VIEW_SIZE][e] = tlp.Size(ub_e_size, ub_e_size) if graph[UBIQUITOUS][species_node] else tlp.Size(e_size,
-		                                                                                                         e_size)
+		                                                                                                      e_size)
 
 	for r in input_model.getListOfReactions():
 		name = r.getName()
 		# do not add fake isa reactions
-		if name.find("isa ") != -1 and 1 == r.getNumReactants() == r.getNumProducts() \
-				and get_sp_comp(r.getListOfReactants().get(0).getSpecies()) == get_sp_comp(
-						r.getListOfProducts().get(0).getSpecies()):
+		if name.find("isa ") != -1 and 1 == r.getNumReactants() == r.getNumProducts() and get_sp_comp(
+				r.getListOfReactants().get(0).getSpecies()) == get_sp_comp(
+				r.getListOfProducts().get(0).getSpecies()):
 			continue
 
 		n = graph.addNode()
-		graph[GENE_ASSOCIATION][n] = getGeneAssociation(r)
+		graph[ANNOTATION][n] = getGeneAssociation(r)
 		graph[ID][n] = r.getId()
 		graph[NAME][n] = name
 		graph[TYPE][n] = TYPE_REACTION
@@ -86,7 +81,6 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 
 		graph[VIEW_SHAPE][n] = 7
 		graph[VIEW_SIZE][n] = tlp.Size(r_size, r_size)
-		graph[VIEW_LABEL][n] = name
 
 		all_comps = set()
 		for sp_ref in r.getListOfReactants():
@@ -94,10 +88,11 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		for sp_ref in r.getListOfProducts():
 			link_reaction_to_species(n, sp_ref, all_comps, is_reactant=False)
 
+		graph[TRANSPORT][n] = len(all_comps) > 1
 		graph[COMPARTMENT][n] = get_r_comp(all_comps)
 
 
-def import_sbml(graph, input_model, sbml_file, verbose):
+def import_sbml(graph, input_model, sbml_file, verbose=False):
 	chebi = parse(get_chebi())
 
 	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = generalize_entities(chebi,
@@ -171,13 +166,11 @@ def import_sbml(graph, input_model, sbml_file, verbose):
 
 
 def create_props(graph):
-	graph.getStringProperty(ANCESTOR_TERM_ID)
+	graph.getStringProperty(ANCESTOR_ANNOTATION)
 	graph.getStringProperty(ANCESTOR_ID)
 	graph.getStringProperty(ANCESTOR_NAME)
 
-	graph.getStringProperty(TERM_ID)
-	graph.getStringProperty(GENE_ASSOCIATION)
-
+	graph.getStringProperty(ANNOTATION)
 
 	graph.getStringProperty(COMPARTMENT)
 	graph.getStringProperty(REAL_COMPARTMENT)
@@ -185,20 +178,16 @@ def create_props(graph):
 	graph.getStringProperty(ID)
 	graph.getStringProperty(NAME)
 
-	graph.getStringProperty(TYPE)
+	graph.getIntegerProperty(TYPE)
 
 	graph.getBooleanProperty(REVERSIBLE)
 	graph.getDoubleProperty(STOICHIOMETRY)
+	graph.getBooleanProperty(TRANSPORT)
 
 	graph.getBooleanProperty(UBIQUITOUS)
-	graph.getBooleanProperty(CLONE)
 
 	graph.getLayoutProperty(VIEW_LAYOUT)
-	graph.getColorProperty(VIEW_BORDER_COLOR)
-	graph.getDoubleProperty(VIEW_BORDER_WIDTH)
 	graph.getColorProperty(VIEW_COLOR)
-	graph.getStringProperty(VIEW_LABEL)
-	graph.getBooleanProperty(VIEW_SELECTION)
 	graph.getIntegerProperty(VIEW_SHAPE)
 	graph.getSizeProperty(VIEW_SIZE)
 
@@ -219,8 +208,8 @@ def mark_ancestors(graph, r_eq2clu, s2clu):
 	id_ = root.getStringProperty(ID)
 	anc_id = root.getStringProperty(ANCESTOR_ID)
 	anc_name = root.getStringProperty(ANCESTOR_NAME)
-	anc_ch_id = root.getStringProperty(ANCESTOR_TERM_ID)
-	type_ = root.getStringProperty(TYPE)
+	anc_ch_id = root.getStringProperty(ANCESTOR_ANNOTATION)
+	type_ = root.getIntegerProperty(TYPE)
 	for n in graph.getNodes():
 		gr_id, gr_name, term = None, None, None
 		if TYPE_REACTION == type_[n]:

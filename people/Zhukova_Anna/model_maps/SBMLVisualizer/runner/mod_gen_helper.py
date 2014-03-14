@@ -1,7 +1,5 @@
 from os.path import abspath, dirname, basename, splitext
 from libsbml import SBMLReader
-from sbml_generalization.generalization.mark_ubiquitous import getCofactors
-from sbml_generalization.generalization.model_generalizer import map2chebi
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.generalization.sbml_helper import parse_group_sbml, GrPlError
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
@@ -43,6 +41,7 @@ def html_model(directory, sbml, scripts, css, fav, verbose):
 	model_id = input_model.getId()
 	m_dir, sbml = copy_sbml_file(directory, sbml, model_id)
 	chebi = parse(get_chebi())
-	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = generalize_entities(chebi, input_model,
-	                                                                                                           sbml, verbose)
+	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = generalize_entities(chebi,
+	                                                                                                  input_model,
+	                                                                                                  sbml, verbose)
 	generate_simple_html(input_model, '{0}/index.html'.format(m_dir), groups_sbml, scripts, css, fav)

@@ -1,7 +1,6 @@
 import colorsys
 from tulip import tlp
-from modules.graph_tools import TERM_ID, TYPE_REACTION, TYPE, ANCESTOR_ID, TYPE_SPECIES, ID, ANCESTOR_TERM_ID, \
-	VIEW_COLOR, VIEW_BORDER_COLOR, ORGANELLES, CYTOPLASM, TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, UBIQUITOUS
+from modules.graph_tools import *
 
 __author__ = 'anna'
 
@@ -31,13 +30,13 @@ def get_key(n, graph):
 			return an_id
 		return root[ID][n]
 	if TYPE_SPECIES == type_:
-		an_ch = root[ANCESTOR_TERM_ID][n]
+		an_ch = root[ANCESTOR_ANNOTATION][n]
 		if an_ch:
 			return an_ch
 		an_id = root[ANCESTOR_ID][n]
 		if an_id:
 			return an_id
-		ch = root[TERM_ID][n]
+		ch = root[ANNOTATION][n]
 		if ch:
 			return ch
 		return root[ID][n]
@@ -47,7 +46,6 @@ def get_key(n, graph):
 def color(graph):
 	root = graph.getRoot()
 	view_color = root.getColorProperty(VIEW_COLOR)
-	view_border_color = root.getColorProperty(VIEW_BORDER_COLOR)
 
 	keys = {get_key(n, graph) for n in graph.getNodes() if root[TYPE][n] == TYPE_REACTION}
 	i = len(keys)
@@ -70,30 +68,14 @@ def color(graph):
 	i = len(organelles) + 2
 	colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
 	colors = [tlp.Color(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
-	key2border_color = dict(zip(organelles + [cyto], colors[1:]))
+	key2comp_color = dict(zip(organelles + [cyto], colors[1:]))
 
-	view_border_color.setAllNodeValue(white)
 
 	for n in graph.getNodes():
 		type_ = root[TYPE][n]
-		comp = root[TYPE_COMPARTMENT][n]
-		ns = root[VIEW_META_GRAPH][n].getNodes() if root.isMetaNode(n) else [n]
-		for nn in ns:
-			found = False
-			for m in root.getInOutNodes(nn):
-				comp_m = root[TYPE_COMPARTMENT][m]
-				if comp != comp_m:
-					if comp_m in key2border_color:
-						view_border_color[n] = key2border_color[comp_m]
-					else:
-						view_border_color[n] = colors[0]
-					found = True
-					break
-			if found:
-				break
 
 		if TYPE_COMPARTMENT == type_:
-			view_color[n] = key2border_color[root[NAME][n]] if root[NAME][n] in key2border_color else transparent_grey
+			view_color[n] = key2comp_color[root[NAME][n]] if root[NAME][n] in key2comp_color else transparent_grey
 			continue
 		a = 255
 		if TYPE_REACTION == type_:
@@ -119,15 +101,13 @@ def color(graph):
 def simple_color(graph):
 	root = graph.getRoot()
 	view_color = root.getColorProperty(VIEW_COLOR)
-	view_border_color = root.getColorProperty(VIEW_BORDER_COLOR)
-	view_border_color.setAllNodeValue(white)
 
 	for n in root.getNodes():
 		type_ = root[TYPE][n]
 		if TYPE_COMPARTMENT == type_:
 			view_color[n] = yellow
 		elif TYPE_REACTION == type_:
-			is_transport = len({root[TYPE_COMPARTMENT][m] for m in root.getInOutNodes(n)}) > 1
+			is_transport = root[TRANSPORT][n]
 			if root.isMetaNode(n):
 				view_color[n] = turquoise if is_transport else violet
 			else:
@@ -143,16 +123,5 @@ def simple_color(graph):
 			else:
 				if root.isMetaNode(n):
 					view_color[n] = orange
-					comp = root[TYPE_COMPARTMENT][n]
-					found = False
-					for nn in root[VIEW_META_GRAPH][n].getNodes():
-						for m in root.getInOutNodes(nn):
-							comp_m = root[TYPE_COMPARTMENT][m]
-							if comp != comp_m:
-								view_border_color[n] = violet
-								found = True
-								break
-						if found:
-							break
 				else:
 					view_color[n] = red

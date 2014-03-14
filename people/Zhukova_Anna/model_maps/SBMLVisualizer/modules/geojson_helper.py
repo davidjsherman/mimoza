@@ -16,14 +16,13 @@ MARGIN = 3.8
 
 def tulip2geojson(graph, geojson_file):
 	root = graph.getRoot()
-	ga = root.getStringProperty(GENE_ASSOCIATION)
-	type_ = root.getStringProperty(TYPE)
+	type_ = root.getIntegerProperty(TYPE)
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
 	size = root.getSizeProperty(VIEW_SIZE)
 	shape = root[VIEW_SHAPE]
 	color = root.getColorProperty(VIEW_COLOR)
-	b_color = root.getColorProperty(VIEW_BORDER_COLOR)
-	term_id = root.getStringProperty(TERM_ID)
+	transport = root.getBooleanProperty(TRANSPORT)
+	annotation = root.getStringProperty(ANNOTATION)
 
 	(m_x, m_y), (M_x, M_y) = get_min_max(graph)
 	x_scale = DIMENSION / (M_x - m_x)
@@ -43,7 +42,7 @@ def tulip2geojson(graph, geojson_file):
 		s, t = graph.source(e), graph.target(e)
 		geom = geojson.MultiPoint([get_coords(s)] + [scale(it[0], it[1]) for it in layout[e]] + [get_coords(t)])
 		props = {"color": triplet(color[e]), "width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
-		         "type": 'edge', "stoichiometry": graph[STOICHIOMETRY][e]}
+		         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e]}
 		f = geojson.Feature(geometry=geom, properties=props)
 		features.append(f)
 
@@ -57,22 +56,25 @@ def tulip2geojson(graph, geojson_file):
 	for n in (n for n in graph.getNodes() if type_[n] in [TYPE_REACTION, TYPE_SPECIES, TYPE_COMPARTMENT]):
 		geom = geojson.Point(get_coords(n))
 		props = {"id": root[ID][n], "name": root[NAME][n], "label": get_short_name(graph, n, onto),
-		         "color": triplet(color[n]), "border": triplet(b_color[n]),
-		         "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-		         "type": type_[n], 'term': term_id[n]}
-		if 'reaction' == type_[n]:
+		         "color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		         "type": type_[n]}
+		if TYPE_REACTION == type_[n]:
 			ins, outs = get_formula(graph, n)
-			props.update({"gene_association": get_gene_association_list(ga[n]), "reversible": graph[REVERSIBLE][n],
-			              'reactants': ins, 'products': outs})
+			props.update(
+				{"gene_association": get_gene_association_list(annotation[n]), "reversible": graph[REVERSIBLE][n],
+				 'reactants': ins, 'products': outs, "transport": transport[n]})
+		elif TYPE_COMPARTMENT == type_[n]:
+			props['term'] = annotation[n]
+		elif TYPE_SPECIES == type_[n]:
+			n_id = root[ID][n]
+			transported = False
+			for rs in (root.getInOutNodes(m) for m in root.getNodes() if n_id == root[ID][m]):
+				transported = next((r for r in rs if graph[TRANSPORT][r]), False)
+				if transported:
+					break
+			props.update({"term": annotation[n], "transport": transported})
 		f = geojson.Feature(geometry=geom, properties=props)
 		features.append(f)
-		# if graph.isMetaNode(n):
-		# 	for n in graph['viewMetaGraph'][n].getNodes():
-		# 		geom = geojson.Point(get_coords(n))
-		# 		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-		# 		         "type": 'background', 'shape': shape[n]}
-		# 		f = geojson.Feature(geometry=geom, properties=props)
-		# 		features.append(f)
 
 	fc = geojson.FeatureCollection(features, geometry=geojson.Polygon(
 		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]]))
@@ -82,13 +84,13 @@ def tulip2geojson(graph, geojson_file):
 
 
 def get_gene_association_list(ga):
-	gann = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
-	if not gann:
+	gene_association = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
+	if not gene_association:
 		return ''
 	try:
-		res = to_cnf(gann, False)
-		gann = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
-		return gann
+		res = to_cnf(gene_association, False)
+		gene_association = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
+		return gene_association
 	except:
 		return ''
 
@@ -96,7 +98,7 @@ def get_gene_association_list(ga):
 def get_formula(graph, n):
 	root = graph.getRoot()
 	ins, outs = [], []
-	stoich_formatter = lambda e, nd: "{0} * {1}".format(int(root[STOICHIOMETRY][e]), root[NAME][nd])
+	stoich_formatter = lambda edge, node: "{0} * {1}".format(int(root[STOICHIOMETRY][edge]), root[NAME][node])
 	for edge in graph.getInOutEdges(n):
 		es = [edge]
 		if TYPE_COMPARTMENT == root[TYPE][graph.source(edge)] or TYPE_COMPARTMENT == root[TYPE][graph.target(edge)]:
@@ -111,8 +113,8 @@ def get_formula(graph, n):
 	return '&'.join(ins), '&'.join(outs)
 
 
-def rgb(triplet):
-	return (_HEXDEC[triplet[0:2]], _HEXDEC[triplet[2:4]], _HEXDEC[triplet[4:6]])
+def rgb(rrggbb):
+	return _HEXDEC[rrggbb[0:2]], _HEXDEC[rrggbb[2:4]], _HEXDEC[rrggbb[4:6]]
 
 
 def triplet(c, lettercase=LOWERCASE):

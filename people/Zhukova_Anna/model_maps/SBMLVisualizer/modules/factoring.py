@@ -15,7 +15,7 @@ def merge_ubs_for_similar_reactions(graph):
 	for node in graph.getNodes():
 		ancestor = root[ANCESTOR_ID][node]
 		if ancestor and TYPE_REACTION == root[TYPE][node]:
-			ancestor = ancestor, root[TYPE_COMPARTMENT][node]
+			ancestor = ancestor, root[COMPARTMENT][node]
 			ancestor2nodes[ancestor].append(node)
 
 	is_ubiquitous = root[UBIQUITOUS]
@@ -52,8 +52,7 @@ def factor_nodes(graph):
 		mg = graph[VIEW_META_GRAPH][meta_node]
 		n = nodes[0]
 
-		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_BORDER_COLOR, VIEW_BORDER_WIDTH,
-		             VIEW_COLOR, VIEW_LAYOUT, VIEW_SELECTION, VIEW_SHAPE, CLONE]:
+		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_COLOR, VIEW_LAYOUT, VIEW_SHAPE]:
 			root[prop][meta_node] = root[prop][n]
 		root[ID][meta_node] = root[ANCESTOR_ID][n]
 		root[NAME][meta_node] = root[ANCESTOR_NAME][n]
@@ -62,17 +61,18 @@ def factor_nodes(graph):
 		if TYPE_REACTION == type_:
 			mg.setName("generalized {0} ({1})".format(root[NAME][n], len(nodes)))
 			root[REVERSIBLE][meta_node] = True
+			root[TRANSPORT][meta_node] = False
 			for n in nodes:
 				if not root[REVERSIBLE][n]:
 					root[REVERSIBLE][meta_node] = False
-					break
-			root[GENE_ASSOCIATION][meta_node] = "\nor\n".join({root[GENE_ASSOCIATION][it] for it in nodes})
+				if root[TRANSPORT][n]:
+					root[TRANSPORT][meta_node] = True
+			root[ANNOTATION][meta_node] = "\nor\n".join({root[ANNOTATION][it] for it in nodes})
 		else:
 			mg.setName("{0} ({1})".format(root[ANCESTOR_NAME][n], len(nodes)))
-			root[TERM_ID][meta_node] = root[ANCESTOR_TERM_ID][n]
+			root[ANNOTATION][meta_node] = root[ANCESTOR_ANNOTATION][n]
 
-		root[VIEW_LABEL][meta_node] = mg.getName()
-		root[NAME][meta_node] = root[VIEW_LABEL][meta_node]
+		root[NAME][meta_node] = mg.getName()
 
 	root.delSubGraph(clone)
 	for n in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n] and graph.isMetaNode(n)):
@@ -93,14 +93,12 @@ def nodes_to_meta_node(comp, meta_graph, ns, (c_id, go_id), out_comp):
 	comp_graph.setName("_" + comp)
 	root[VIEW_SIZE][meta_node] = tlp.Size(w, h)
 	root[VIEW_LAYOUT][meta_node] = bb.center()
-	root[VIEW_LABEL][meta_node] = comp
 	root[NAME][meta_node] = comp
 	root[COMPARTMENT][meta_node] = out_comp
 	root[TYPE][meta_node] = TYPE_COMPARTMENT
 	root[VIEW_SHAPE][meta_node] = SQUARE_SHAPE
 	root[ID][meta_node] = c_id
-	root[TERM_ID][meta_node] = go_id
-	root[VIEW_COLOR][meta_node] = tlp.Color(200, 200, 200, 80)
+	root[ANNOTATION][meta_node] = go_id
 	return meta_node
 
 

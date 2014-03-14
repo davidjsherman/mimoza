@@ -2,7 +2,7 @@
 import cgi
 import cgitb
 import os
-from libsbml import SBMLReader, writeSBMLToFile
+from libsbml import SBMLReader
 from runner.tulip_helper import visualize_model
 
 MIMOZA_URL = 'http://mimoza.bordeaux.inria.fr'
@@ -89,7 +89,7 @@ except Exception as e:
 	print '</html>'
 except:
 	print 'Content-Type: text/html'
-	print # HTTP says you have to have a blank line between headers and content
+	print  # HTTP says you have to have a blank line between headers and content
 	print '<html lang="en">'
 
 	print '  <head>'

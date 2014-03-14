@@ -1,13 +1,9 @@
-from modules.graph_tools import CLONE
-
 __author__ = 'anna'
 
 
 def clone_node(graph, n):
 	root = graph.getRoot()
-	clone = root.getBooleanProperty(CLONE)
-	
-	clone[n] = True
+
 	graphs_to_update = get_graphs_by_node(n, root)
 		
 	e_to_delete = set(graph.getInOutEdges(n))
