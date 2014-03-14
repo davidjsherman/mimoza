@@ -160,7 +160,7 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 	if not term_id2clu:
 		return {}
 	term_id2clu = update(term_id2clu, onto)
-	# log_clusters(term_id2clu, onto, verbose)
+	log_clusters(term_id2clu, onto, verbose)
 	s_id2clu = {}
 	t_c_id2species = defaultdict(set)
 	for (s_id, t) in species_id2chebi_id.iteritems():

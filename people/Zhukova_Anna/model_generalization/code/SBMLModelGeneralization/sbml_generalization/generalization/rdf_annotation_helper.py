@@ -27,7 +27,6 @@ def getQualifierValue(annotation, qualifierType):
 def getAllQualifierValues(annotation, qualifierType):
     if not annotation:
         return
-        yield
     cvTerms = CVTermList()
     RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
     for i in xrange(cvTerms.getSize()):
