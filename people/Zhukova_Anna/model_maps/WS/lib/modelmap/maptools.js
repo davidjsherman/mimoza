@@ -244,7 +244,7 @@ function addPopups(map, name2popup, feature, layer) {
         var link = formatLink(feature.properties.name);
         var go_term = formatGo(feature.properties.term);
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + go_term + "</p><p class='popup centre'>" + link + "</p>";
-        label = '<h2>' + feature.properties.name + "</h2>p class='popup centre'><i>id: </i>" + feature.properties.id + "</p>";
+        label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p>";
     }
     if (EDGE == feature.properties.type) {
         return

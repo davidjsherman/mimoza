@@ -38,19 +38,22 @@ def tulip2geojson(graph, geojson_file):
 
 	onto = parse(get_chebi())
 
+	i = 0
 	for e in graph.getEdges():
 		s, t = graph.source(e), graph.target(e)
 		geom = geojson.MultiPoint([get_coords(s)] + [scale(it[0], it[1]) for it in layout[e]] + [get_coords(t)])
 		props = {"color": triplet(color[e]), "width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
 		         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e]}
-		f = geojson.Feature(geometry=geom, properties=props)
+		f = geojson.Feature(geometry=geom, properties=props, id=i)
+		i += 1
 		features.append(f)
 
 	for n in (n for n in graph.getNodes() if TYPE_BG == type_[n]):
 		geom = geojson.Point(get_coords(n))
 		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
 		         "type": type_[n], 'shape': shape[n]}
-		f = geojson.Feature(geometry=geom, properties=props)
+		f = geojson.Feature(geometry=geom, properties=props, id=i)
+		i += 1
 		features.append(f)
 
 	for n in (n for n in graph.getNodes() if type_[n] in [TYPE_REACTION, TYPE_SPECIES, TYPE_COMPARTMENT]):
@@ -69,11 +72,12 @@ def tulip2geojson(graph, geojson_file):
 			n_id = root[ID][n]
 			transported = False
 			for rs in (root.getInOutNodes(m) for m in root.getNodes() if n_id == root[ID][m]):
-				transported = next((r for r in rs if graph[TRANSPORT][r]), False)
+				transported = next((r for r in rs if graph[TRANSPORT][r]), False) is not False
 				if transported:
 					break
 			props.update({"term": annotation[n], "transport": transported})
-		f = geojson.Feature(geometry=geom, properties=props)
+		f = geojson.Feature(geometry=geom, properties=props, id=i)
+		i += 1
 		features.append(f)
 
 	fc = geojson.FeatureCollection(features, geometry=geojson.Polygon(

@@ -1,14 +1,17 @@
+import logging
 import os
 from tulip import tlp
 from libsbml import SBMLReader
 from modules.color import simple_color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm, nodes_to_meta_node
 from modules.geojson_helper import tulip2geojson
-from modules.html_generator import generate_html
+from modules.html_generator import create_html
 from modules.layout_utils import layout_generalization_based, layout, layout_cytoplasm
 from modules.resize import get_comp_size, resize_edges
 from modules.sbml2tlp import import_sbml
 from modules.graph_tools import *
+from sbml_generalization.utils.logger import log
+
 
 CELL_GO_ID = 'go:0005623'
 
@@ -17,7 +20,7 @@ CELL = 'cell'
 __author__ = 'anna'
 
 
-def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, fav, tile, verbose):
+def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, fav, tile, verbose, log_file):
 	reader = SBMLReader()
 	input_document = reader.readSBML(sbml)
 	input_model = input_document.getModel()
@@ -25,14 +28,20 @@ def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, 
 	directory = '%s/%s/' % (directory, m_dir_id)
 	url = '%s/%s/%s' % (main_url, m_dir_id, url_end)
 
+	if verbose:
+		logging.basicConfig(level=logging.INFO, filename=log_file)
+
 	# sbml -> tulip graph
+	log(verbose, 'sbml -> tlp')
 	graph = tlp.newGraph()
-	graph, groups_sbml, onto, name2id_go = import_sbml(graph, input_model, sbml, verbose)
+	graph, groups_sbml, onto, name2id_go = import_sbml(graph, input_model, sbml, verbose, log_file)
 
 	# generalized species/reactions -> metanodes
+	log(verbose, 'generalized species/reactions -> metanodes')
 	meta_graph = process_generalized_entities(graph)
 
 	# compartments -> metanodes
+	log(verbose, 'compartments -> metanodes')
 	compartment2meta_node = factor_comps(meta_graph, name2id_go)
 	for organelle, meta_node in compartment2meta_node.iteritems():
 		process(graph, directory, meta_node, organelle)
@@ -40,24 +49,28 @@ def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, 
 	comp_names = sorted(compartment2meta_node.keys())
 
 	# cytoplasm
+	log(verbose, 'cytoplasm')
 	cytoplasm, meta_node = factor_cytoplasm(meta_graph, name2id_go)
 	if meta_node:
 		process(graph, directory, meta_node, cytoplasm, layout_cytoplasm, [set(compartment2meta_node.values()), True])
 		comp_names = [cytoplasm] + comp_names
 	if not comp_names:
 		# extracellular
+		log(verbose, 'extracellular')
 		meta_node = nodes_to_meta_node(CELL, meta_graph, [n for n in meta_graph.getNodes()], (CELL, CELL_GO_ID), '')
 		resize_edges(meta_graph)
 		process(graph, directory, meta_node, CELL)
 		comp_names = [CELL]
 
+	log(verbose, 'create html')
 	groups_sbml_url = "%s/%s/%s" % (main_url, m_dir_id, os.path.basename(groups_sbml))
-	generate_html(input_model, directory, url, comp_names, groups_sbml_url,
+	create_html(input_model, directory, url, comp_names, groups_sbml_url,
 	              scripts, css, fav, tile)
 
 	# TODO: why doesn't it work??
 	# tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')
 
+	log(verbose, 'returning url: %s' % url)
 	return url
 
 

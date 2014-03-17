@@ -115,7 +115,7 @@ def add_js(default_organelle, org2scripts, page, tile):
 	)
 
 
-def generate_html(model, directory, url, organelles, groups_sbml_url, scripts, css, fav, tile):
+def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css, fav, tile):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -159,100 +159,147 @@ def generate_html(model, directory, url, organelles, groups_sbml_url, scripts, c
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
-	generate_redirecting_index(url, directory)
-
-
-def generate_redirecting_index(url, directory):
-	page = '''Content-Type: text/html
-	Location: %s
-
-	<html lang="en">
-	<head>
-	<link media="all" href="http://mimoza.bordeaux.inria.fr/lib/modelmap/modelmap.css" type="text/css" rel="stylesheet" />
-	<link href="http://mimoza.bordeaux.inria.fr/lib/modelmap/fav.ico" type="image/x-icon" rel="shortcut icon" />
-	<meta http-equiv="refresh" content="0;url=%s" />
-	<title>You are going to be redirected</title>
-	</head>
-	<body>
-	Redirecting... <a href="%s">Click here if you are not redirected</a>
-	</body>
-	</html>''' % (url, url, url)
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(page)
+		f.write(generate_redirecting_html(url, css[0] if css else '', fav))
 
 
-def generate_simple_html(model, html_file, groups_sbml, scripts, css, fav):
-	page = markup.page()
-	model_id = model.getId()
-	model_name = model.getName()
-	if not model_name:
-		model_name = model_id
-	page.init(title=model_name, css=css if css else [], script=scripts if scripts else [], fav=fav)
-
-	add_header(model_id, model_name, page)
-
-	add_download_link(groups_sbml, page)
-
-	add_model_description(model, page)
-
-	page.div.close()
-
-	with open(html_file, 'w+') as f:
-		f.write(str(page))
+def generate_redirecting_html(url, css, ico):
+	return '''Content-Type: text/html;charset=utf-8
 
 
-def generate_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, fav, img):
+		Location: %s
+
+		<html lang="en">
+
+	        <head>
+				<link media="all" href="%s" type="text/css" rel="stylesheet" />
+				<link href="%s" type="image/x-icon" rel="shortcut icon" />
+	            <meta http-equiv="refresh" content="0;url=%s" />
+	            <title>Redirecting...</title>
+	        </head>
+
+	        <body>
+	            <div class="indent" id="all">
+	                <p>Redirecting to <a href="%s">%s</a></p>
+		        </div>
+	        </body>
+
+		</html>''' % (url, css, ico, url, url, url)
+
+
+def generate_generalization_error_html(url, css, ico, msg, contact):
+	return generate_error_html(css, ico, 'Processing Error', 'Oops, something went wrong...',
+	                           '''We tried hard, but did not manage to visualize your model. Sorry!
+	                           <br>%s''' % ('The reason is: %s' % msg) if msg else '',
+	                           '''May be, try to <a href="%s">visualize another one</a>?
+	                           <br>Or contact %s to complain about this problem.''' % (url, generate_contact(contact)))
+
+
+def generate_contact(contact):
+	return '<a href="mailto:%s">%s</a>' % (contact, contact)
+
+
+def generate_error_html(css, ico, title, h1, short_explanation, further_explanation):
+	return '''Content-Type: text/html;charset=utf-8
+
+
+		<html lang="en">
+
+		  <head>
+		    <link media="all" href="%s" type="text/css" rel="stylesheet" />
+			<link href="%s" type="image/x-icon" rel="shortcut icon" />
+		    <title>%s</title>
+		  </head>
+
+		  <body>
+		    <h1 class="capitalize">%s</h1>
+		    <div class="indent" id="all">
+		      <p>%s</p>
+		      <p>%s</p>
+		    </div>
+		  </body>
+
+		</html>''' % (css, ico, title, h1, short_explanation, further_explanation)
+
+
+def a_blank(href, text):
+	return '<a href="%s" target="_blank">%s</a>' % (href, text)
+
+
+def generate_exists_html(css, ico, model_id, existing_m_url, url, sbml, m_dir_id, progress_icon):
+	return generate_model_html("%s Exists" % model_id, "Already at Mimoza",
+	                           'There is already %s with this identifier, check it out!' % a_blank(existing_m_url, 'a processed model'),
+	                           'If you prefer to carry on with your model instead, press the button below.',
+	                           css, ico, model_id, url, sbml, m_dir_id, progress_icon)
+
+
+def generate_uploaded_html(css, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
+	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualise!", '',
+	                           'Now let\'s visualise it: To start the visualisation press the button below.',
+	                           css, ico, m_name, url, sbml, m_dir_id, progress_icon, False)
+
+
+def generate_model_html(title, h1, text, expl, css, ico, model_id, url, sbml, m_dir_id, progress_icon, header=True):
+	h = '''Content-Type: text/html;charset=utf-8
+
+
+	''' if header else "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>"
+	return '''%s
+	<html lang="en">
+		<head>
+		    <link media="all" href="%s" type="text/css" rel="stylesheet" />
+			<link href="%s" type="image/x-icon" rel="shortcut icon" />
+		    <title>%s</title>
+		</head>
+		<body>
+	        <h1 class="capitalize">%s</h1>
+	        <div class="indent" id="all">
+	            <p>Thank you for uploading your model <span class="pant">%s</span>!</p>
+	            <p>%s</p>
+	            <p>
+		            <span id="expl">%s</span>
+		            <br>When the visualisation is done, it will become available at <a href="%s">%s</a>.
+		            <br>It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :)
+		        </p>
+
+				%s
+			</div>
+		</body>
+	</html>''' % (h, css, ico, title, h1, model_id, text, expl, url, url, generate_visualisation_button(sbml, m_dir_id, progress_icon))
+
+
+def generate_visualisation_button(sbml, m_dir_id, progress_icon):
+	return '''
+		<div class="centre margin" id="visualize_div">
+			<form action="/cgi-bin/visualise.py" method="POST" name="input_form" enctype="multipart/form-data">
+				<input type="hidden" name="sbml" value="%s" />
+				<input type="hidden" name="dir" value="%s" />
+				<input class="ui-button" type="submit" id="bb" value="Visualise" onclick="progress()"/>
+			</form>
+		</div>
+
+		<div class="centre margin" id="visualize_div">
+			<img src="%s" style="visibility:hidden" id="img" />
+		</div>
+
+		<script>
+			function progress() {
+				document.getElementById("img").style.visibility="visible";
+				document.getElementById("visualize_div").style.visibility="hidden";
+				var span = document.getElementById('expl');
+				while (span.firstChild) {
+					span.removeChild(span.firstChild);
+				}
+				span.appendChild(document.createTextNode("We are currently visualising your model..."));
+			}
+		</script>''' % (sbml, m_dir_id, progress_icon)
+
+
+
+def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, fav, img):
 	directory = '%s/%s' % (directory_prefix, m_dir_id)
-	page = markup.page()
-	if not m_name:
-		m_name = m_id
-	if not css:
-		css = ['http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css']
-	else:
-		css.append('http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css')
-
-	page.init(title='%s uploaded' % m_name, css=css, fav=fav)
-
-	page.h1("Uploaded, time to visualise!", class_='capitalize')
-
-	page.div(class_='indent', id='all')
 	url = '%s/%s/%s' % (url, m_dir_id, url_end)
-	page.p(
-		'Thank you for uploading your model <span class="pant">%s</span>!' % m_name)
-	page.p('<span id="expl">Now let\'s visualise it.</span><br>It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :) <br>When the visualisation is done, it will become available at <a href="%s">%s</a>.' % (url, url))
-	page.p('<span id="start">To start the visualisation press the button below.</span>')
-
 	sbml = '%s/%s.xml' % (directory, m_id)
 
-	page.div(class_='centre margin', id='visualize_div')
-	page.form(name="input_form", enctype="multipart/form-data", action="/cgi-bin/visualise.py", method="POST")
-	page.input(type="hidden", name="sbml", value=sbml)
-	page.input(type="hidden", name="dir", value=m_dir_id)
-	page.input(class_="ui-button", id="bb", type="submit", value="Visualise", onclick="progress()")
-	page.form.close()
-	page.div.close()
-
-	page.div(class_='centre margin', id='visualize_div')
-	page.img(id="img", src=img, style="visibility:hidden")
-	page.div.close()
-
-
-
-	page.div.close()
-
-	page.script('''function progress() {
-		document.getElementById("img").style.visibility="visible";
-		document.getElementById("visualize_div").style.visibility="hidden";
-		var span = document.getElementById('expl');
-		while (span.firstChild) {
-			span.removeChild(span.firstChild);
-		}
-		span.appendChild(document.createTextNode("We are currently visualising it..."));
-		span = document.getElementById('start');
-		while (span.firstChild) {
-			span.removeChild(span.firstChild);
-		}
-	}''')
-
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(str(page))
+		f.write(generate_uploaded_html(css, fav, m_name, m_id, url, sbml, m_dir_id, img))

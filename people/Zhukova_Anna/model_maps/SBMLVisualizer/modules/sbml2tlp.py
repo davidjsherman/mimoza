@@ -1,4 +1,5 @@
 from tulip import tlp
+from sbml_generalization.utils.logger import log
 from modules.graph_tools import *
 
 from sbml_generalization.generalization.sbml_helper import check_names, check_compartments
@@ -92,16 +93,19 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[COMPARTMENT][n] = get_r_comp(all_comps)
 
 
-def import_sbml(graph, input_model, sbml_file, verbose=False):
+def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
 	chebi = parse(get_chebi())
 
+	log(verbose, 'calling model_generalisation library')
 	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = generalize_entities(chebi,
 	                                                                                                  input_model,
 	                                                                                                  sbml_file,
-	                                                                                                  verbose)
+	                                                                                                  verbose, log_file)
+	log(verbose, 'fixing labels and compartments')
 	check_names(input_model)
 	check_compartments(input_model)
 
+	log(verbose, 'annotating with GO')
 	onto = parse(get_go())
 	comp2go_term = get_comp2go(input_model, onto)
 	part2org, cyto, others = sort_comps(onto, comp2go_term)
@@ -149,18 +153,25 @@ def import_sbml(graph, input_model, sbml_file, verbose=False):
 			return extracellular
 		return cytoplasm
 
+	log(verbose, 'initialising the graph')
 	graph.setName(input_model.getId())
 	create_props(graph)
+
+	log(verbose, 'adding species nodes')
 	id2n = species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_id, ub_sps)
 
+	log(verbose, 'adding reaction nodes')
 	reactions2nodes(get_r_comp, graph, id2n, input_model)
 
+	log(verbose, 'setting organelles attributes')
 	graph.setAttribute(ORGANELLES, ";".join(organelles))
 	graph.setAttribute(CYTOPLASM, cytoplasm)
 
+	log(verbose, 'duplicating nodes')
 	duplicate_nodes(graph)
 	clean(graph)
 
+	log(verbose, 'marking species/reaction groups')
 	mark_ancestors(graph, r_id2g_id, s_id2gr_id)
 	return graph, groups_sbml, chebi, name2id_go
 
