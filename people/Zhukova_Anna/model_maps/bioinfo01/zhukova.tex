@@ -40,30 +40,23 @@ Metabolic network reconstruction process becomes more and more advanced. There e
 Starting from a model for a similar organism or a collection of pathways and genomic data, they produce a draft model for the target organism. The existing metabolic models can be found on several online resources, including Biomodels Database\cite{Li10}, BIGGs\cite{Schellenberger2010}, JWS online\cite{Snoep2003}. KEGG\cite{Kanehisa12} provides an extensive collection of pathways. 
 
 %% Representation
-Modelsare stored and shared using established formats, such as SBML\cite{Hucka2003}, SBGN\cite{Moodie2011}, CEllML\cite{Lloyd2004}. The model representation in this formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI\cite{deMatos10}, Uniprot\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable such standardisation efforts as Identifiers.org\cite{Juty2012} emerge.
-
-
-
-There are tools  for editing models, such as Cell Designer, VANTED, etc. The tools for visualising genome-scale models are not that developed though. 
+Models are stored and shared using established formats, such as SBML\cite{Hucka2003}, SBGN\cite{Moodie2011}, CEllML\cite{Lloyd2004}. The model representation in this formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI\cite{deMatos10}, Uniprot\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable such standardisation efforts as Identifiers.org\cite{Juty2012} emerge.
 
 
 % Why do we need humans?
-Means of splitting these models into smaller units that can be checked and analysed by human experts in the field are needed. It requires good visualisation tools and ways of sharing the results. are distracted by these details and cannot easily identify the reactions that require their intervention. An appropriate level of abstraction needs to be found to allow experts to explore and compare whole genome networks. 
+Although the model inference tools are becoming more and more advanced, curation by a human expert in organism's metabolism remains crucial. Hence means of splitting genome-scale models into smaller units that can be checked and analysed by human experts in the field are needed. An appropriate level of abstraction needs to be found to allow experts to explore and compare whole genome networks. Good model visualisation tools are also required.
 
+There exist various modelling tools for metabolic networks that also support visualisation. Desktop ones include CellDesigner\cite{Funahashi2008}, VANTED\cite{Rohn2012}, Cytoscape\cite{Smoot2011}. They produce reasonably good visualisations of small networks (up to hundreds of reactions), but have too many edge and node intersections for genome-scale ones, making the visualisation unreadable. For example,  the winner of the Best SBGN map competition (\href{http://www.sbgn.org/Competition/Competition_2011/}{sbgn.org/Competition}) was a ER Stress response\cite{Groenendyk2010} map manually created in CellDesinger.
 
-% Visualization for humans
+Web-based tools allowing for model visualisation are also emerging.  JWS online, for example, provides a mechanism for model visualisation using a weight-bla algorithm. It has the same problem metioned above: not capable of providing a reasonable representation of huge models.
 
+For huge models not just a better graph layout algorithm, but a different approach is needed. First of all, they need to be decomposed into several meaningful modules (such as compartments, pathways). But even after such a decomposition a model might stay too complicated (e.g. a mitochondrion compartment of a yeast model\cite{Heavner12} contains N reactions). Thus a way of finding an appropriate level of abstraction, allowing to hide the inessential details, is desirable.For this purpose zoomable (e.g. cartographic) approaches seem to be suitable. 
 
+There are several existing online tools proposing a zoomable solution. NaviCell\cite{Kuperstein2013} that represent zommable maps of biological processes (mostly signalling): but the maps are not produced automatically, the user has to visualise the network with CeLLDesigner, export it as an image and then manually edit it in the graphical designer to produce more general views. Which still poses a problem of laying out huge networks. 
 
+There is Cellular Overview\cite{Latendresse2011} for metabolic maps but it is pathway-oriented, and zoom only makes things bigger. The only organisms for which it's available are those from BioCyc database\cite{Caspi2012}. No compartment information is taken into account.
 
-
-We are going towards web representation. Zoomable approach is good and popular, e.g. NaviCell that represent zommable maps of biological processes (mostly signalling): but the maps are not produced automatically, the user has to visualise the network with CeLLDesigner, export it as an image and then manually edit it in the graphical designer to produce more general views. Which still poses a problem of laying out huge networks. 
-There is Cellular Overview for metabolic maps but it is pathway-oriented, and zoom only makes things bigger. The only organisms for which it's available are those from BioCyc. No compartment information is taken into account.
-
-Metabolic network visualisation is a tough problem, there are several approaches (e.g. Vanted, etc.) but the issue is not solved (e.g. SBGN winner that is manual). Obviously, the small a network is the better it can be visualised, layed out, analysed. So we propose a zoomable approach.
-
-3-levels....
-
+Combining meaningful decomposition into modules with automatic abstraction remains unsolved. In this paper we address this problem and propose our solution.
 
 \section{Approach}
 
@@ -197,36 +190,36 @@ Text Text Text Text Text Text  Text Text.
 %
 %\bibliography{Document}
 
-
-\begin{thebibliography}{}
-\bibitem[Bofelli {\it et~al}., 2000]{Boffelli03} Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
-
-\bibitem[Bag {\it et~al}., 2001]{Bag01} Bag,M., Name2, Name3 (2001) Article title, {\it Journal Name}, {\bf 99}, 33-54.
-
-\bibitem[Yoo \textit{et~al}., 2003]{Yoo03}
-Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
-in nigral dopaminergic neurnol cell: correlation with the known
-pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
-Res.}, \textbf{110}(Suppl. 1), 76--84.
-
-\bibitem[Lehmann, 1986]{Leh86}
-Lehmann,E.L. (1986) Chapter title. \textit{Book Title}. Vol.~1, 2nd edn. Springer-Verlag, New York.
-
-\bibitem[Crenshaw and Jones, 2003]{Cre03}
-Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
-cancer management: one tumor, one chip. \textit{Bioinformatics},
-doi:10.1093/bioinformatics/btn000.
-
-\bibitem[Auhtor \textit{et~al}. (2000)]{Aut00}
-Auhtor,A.B. \textit{et~al}. (2000) Chapter title. In Smith, A.C.
-(ed.), \textit{Book Title}, 2nd edn. Publisher, Location, Vol. 1, pp.
-???--???.
-
-\bibitem[Bardet, 1920]{Bar20}
-Bardet, G. (1920) Sur un syndrome d'obesite infantile avec
-polydactylie et retinite pigmentaire (contribution a l'etude des
-formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
-institution, Paris, France.
-
-\end{thebibliography}
+\bibliographystyle{natbib}\bibliography{db}
+%\begin{thebibliography}{}
+%\bibitem[Bofelli {\it et~al}., 2000]{Boffelli03} Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
+%
+%\bibitem[Bag {\it et~al}., 2001]{Bag01} Bag,M., Name2, Name3 (2001) Article title, {\it Journal Name}, {\bf 99}, 33-54.
+%
+%\bibitem[Yoo \textit{et~al}., 2003]{Yoo03}
+%Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
+%in nigral dopaminergic neurnol cell: correlation with the known
+%pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
+%Res.}, \textbf{110}(Suppl. 1), 76--84.
+%
+%\bibitem[Lehmann, 1986]{Leh86}
+%Lehmann,E.L. (1986) Chapter title. \textit{Book Title}. Vol.~1, 2nd edn. Springer-Verlag, New York.
+%
+%\bibitem[Crenshaw and Jones, 2003]{Cre03}
+%Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
+%cancer management: one tumor, one chip. \textit{Bioinformatics},
+%doi:10.1093/bioinformatics/btn000.
+%
+%\bibitem[Auhtor \textit{et~al}. (2000)]{Aut00}
+%Auhtor,A.B. \textit{et~al}. (2000) Chapter title. In Smith, A.C.
+%(ed.), \textit{Book Title}, 2nd edn. Publisher, Location, Vol. 1, pp.
+%???--???.
+%
+%\bibitem[Bardet, 1920]{Bar20}
+%Bardet, G. (1920) Sur un syndrome d'obesite infantile avec
+%polydactylie et retinite pigmentaire (contribution a l'etude des
+%formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
+%institution, Paris, France.
+%
+%\end{thebibliography}
 \end{document}
