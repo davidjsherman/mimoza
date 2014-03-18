@@ -226,20 +226,21 @@ def a_blank(href, text):
 	return '<a href="%s" target="_blank">%s</a>' % (href, text)
 
 
-def generate_exists_html(css, ico, model_id, existing_m_url, url, sbml, m_dir_id, progress_icon):
+def generate_exists_html(css, js, ico, model_id, existing_m_url, url, sbml, m_dir_id, progress_icon, log_file):
 	return generate_model_html("%s Exists" % model_id, "Already at Mimoza",
 	                           'There is already %s with this identifier, check it out!' % a_blank(existing_m_url, 'a processed model'),
 	                           'If you prefer to carry on with your model instead, press the button below.',
-	                           css, ico, model_id, url, sbml, m_dir_id, progress_icon)
+	                           css, js, ico, model_id, url, sbml, m_dir_id, progress_icon, log_file)
 
 
-def generate_uploaded_html(css, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
+def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon, log_file):
 	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualise!", '',
 	                           'Now let\'s visualise it: To start the visualisation press the button below.',
-	                           css, ico, m_name, url, sbml, m_dir_id, progress_icon, False)
+	                           css, js, ico, m_name, url, sbml, m_dir_id, progress_icon, log_file, False)
 
 
-def generate_model_html(title, h1, text, expl, css, ico, model_id, url, sbml, m_dir_id, progress_icon, header=True):
+def generate_model_html(title, h1, text, expl, css, js, ico, model_id, url, sbml, m_dir_id, progress_icon, log_file, header=True):
+	scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in js])
 	h = '''Content-Type: text/html;charset=utf-8
 
 
@@ -249,6 +250,7 @@ def generate_model_html(title, h1, text, expl, css, ico, model_id, url, sbml, m_
 		<head>
 		    <link media="all" href="%s" type="text/css" rel="stylesheet" />
 			<link href="%s" type="image/x-icon" rel="shortcut icon" />
+			%s
 		    <title>%s</title>
 		</head>
 		<body>
@@ -261,14 +263,13 @@ def generate_model_html(title, h1, text, expl, css, ico, model_id, url, sbml, m_
 		            <br>When the visualisation is done, it will become available at <a href="%s">%s</a>.
 		            <br>It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :)
 		        </p>
-
 				%s
 			</div>
 		</body>
-	</html>''' % (h, css, ico, title, h1, model_id, text, expl, url, url, generate_visualisation_button(sbml, m_dir_id, progress_icon))
+	</html>''' % (h, css, ico, scripts, title, h1, model_id, text, expl, url, url, generate_visualisation_button(sbml, m_dir_id, progress_icon, log_file))
 
 
-def generate_visualisation_button(sbml, m_dir_id, progress_icon):
+def generate_visualisation_button(sbml, m_dir_id, progress_icon, log_file):
 	return '''
 		<div class="centre margin" id="visualize_div">
 			<form action="/cgi-bin/visualise.py" method="POST" name="input_form" enctype="multipart/form-data">
@@ -282,7 +283,40 @@ def generate_visualisation_button(sbml, m_dir_id, progress_icon):
 			<img src="%s" style="visibility:hidden" id="img" />
 		</div>
 
+		<div id="log">
+		</div>
+
 		<script>
+			//function onInitFs(fs) {
+			//  fs.root.getFile('%s', {}, function(fileEntry) {
+
+			    // Get a File object representing the file,
+			    // then use FileReader to read its contents.
+			 //   fileEntry.file(function(file) {
+			 //      var reader = new FileReader();
+
+			 //      reader.onload = function(event) {
+			//		    var contents = event.target.result;
+			//		    console.log("File contents: " + contents);
+			//		    var log = document.getElementById('log');
+			//		    while (log.firstChild) {
+			//		        log.removeChild(log.firstChild);
+			//	        }
+			//		    log.appendChild(document.createTextNode(contents));
+			//		};
+
+			//		reader.onerror = function(event) {
+	        //          console.error("File could not be read! Code " + event.target.error.code);
+			//		};
+
+			//     reader.readAsText(file);
+			//   });
+
+			//  });
+
+			//}
+
+
 			function progress() {
 				document.getElementById("img").style.visibility="visible";
 				document.getElementById("visualize_div").style.visibility="hidden";
@@ -291,15 +325,22 @@ def generate_visualisation_button(sbml, m_dir_id, progress_icon):
 					span.removeChild(span.firstChild);
 				}
 				span.appendChild(document.createTextNode("We are currently visualising your model..."));
+
+
+				//setInterval(function() {
+				//	window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs);
+				//}, 1000);
 			}
-		</script>''' % (sbml, m_dir_id, progress_icon)
+
+		</script>''' % (sbml, m_dir_id, progress_icon, log_file)
 
 
 
-def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, fav, img):
+def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, js, fav, img):
 	directory = '%s/%s' % (directory_prefix, m_dir_id)
-	url = '%s/%s/%s' % (url, m_dir_id, url_end)
+	m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
 	sbml = '%s/%s.xml' % (directory, m_id)
+	log_file = '%s/log.log' % directory
 
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_uploaded_html(css, fav, m_name, m_id, url, sbml, m_dir_id, img))
+		f.write(generate_uploaded_html(css, js, fav, m_name, m_id, m_url, sbml, m_dir_id, img, log_file))

@@ -20,85 +20,92 @@ CELL = 'cell'
 __author__ = 'anna'
 
 
-def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, fav, tile, verbose, log_file):
-	reader = SBMLReader()
-	input_document = reader.readSBML(sbml)
-	input_model = input_document.getModel()
+def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, fav, tile, verbose):
+    reader = SBMLReader()
+    input_document = reader.readSBML(sbml)
+    input_model = input_document.getModel()
 
-	directory = '%s/%s/' % (directory, m_dir_id)
-	url = '%s/%s/%s' % (main_url, m_dir_id, url_end)
+    directory = '%s/%s/' % (directory, m_dir_id)
+    url = '%s/%s/%s' % (main_url, m_dir_id, url_end)
 
-	if verbose:
-		logging.basicConfig(level=logging.INFO, filename=log_file)
+    log_file = None
+    if verbose:
+        try:
+            log_file = '%s/log.log' % directory
+            with open(log_file, "w+"):
+                pass
+        except:
+            pass
+        logging.basicConfig(level=logging.INFO, filename=log_file)
 
-	# sbml -> tulip graph
-	log(verbose, 'sbml -> tlp')
-	graph = tlp.newGraph()
-	graph, groups_sbml, onto, name2id_go = import_sbml(graph, input_model, sbml, verbose, log_file)
+    # sbml -> tulip graph
+    log(verbose, 'sbml -> tlp')
+    graph = tlp.newGraph()
+    graph, groups_sbml, onto, name2id_go = import_sbml(graph, input_model, sbml, verbose, log_file)
 
-	# generalized species/reactions -> metanodes
-	log(verbose, 'generalized species/reactions -> metanodes')
-	meta_graph = process_generalized_entities(graph)
+    # generalized species/reactions -> metanodes
+    log(verbose, 'generalized species/reactions -> metanodes')
+    meta_graph = process_generalized_entities(graph)
 
-	# compartments -> metanodes
-	log(verbose, 'compartments -> metanodes')
-	compartment2meta_node = factor_comps(meta_graph, name2id_go)
-	for organelle, meta_node in compartment2meta_node.iteritems():
-		process(graph, directory, meta_node, organelle)
+    # compartments -> metanodes
+    log(verbose, 'compartments -> metanodes')
+    compartment2meta_node = factor_comps(meta_graph, name2id_go)
+    for organelle, meta_node in compartment2meta_node.iteritems():
+        process(graph, directory, meta_node, organelle)
 
-	comp_names = sorted(compartment2meta_node.keys())
+    comp_names = sorted(compartment2meta_node.keys())
 
-	# cytoplasm
-	log(verbose, 'cytoplasm')
-	cytoplasm, meta_node = factor_cytoplasm(meta_graph, name2id_go)
-	if meta_node:
-		process(graph, directory, meta_node, cytoplasm, layout_cytoplasm, [set(compartment2meta_node.values()), True])
-		comp_names = [cytoplasm] + comp_names
-	if not comp_names:
-		# extracellular
-		log(verbose, 'extracellular')
-		meta_node = nodes_to_meta_node(CELL, meta_graph, [n for n in meta_graph.getNodes()], (CELL, CELL_GO_ID), '')
-		resize_edges(meta_graph)
-		process(graph, directory, meta_node, CELL)
-		comp_names = [CELL]
+    # cytoplasm
+    log(verbose, 'cytoplasm')
+    cytoplasm, meta_node = factor_cytoplasm(meta_graph, name2id_go)
+    if meta_node:
+        process(graph, directory, meta_node, cytoplasm, layout_cytoplasm, [set(compartment2meta_node.values()), True])
+        comp_names = [cytoplasm] + comp_names
+    if not comp_names:
+        # extracellular
+        log(verbose, 'extracellular')
+        meta_node = nodes_to_meta_node(CELL, meta_graph, [n for n in meta_graph.getNodes()], (CELL, CELL_GO_ID), '')
+        resize_edges(meta_graph)
+        process(graph, directory, meta_node, CELL)
+        comp_names = [CELL]
 
-	log(verbose, 'create html')
-	groups_sbml_url = "%s/%s/%s" % (main_url, m_dir_id, os.path.basename(groups_sbml))
-	create_html(input_model, directory, url, comp_names, groups_sbml_url,
-	              scripts, css, fav, tile)
+    log(verbose, 'create html')
+    groups_sbml_url = "%s/%s/%s" % (main_url, m_dir_id, os.path.basename(groups_sbml))
+    create_html(input_model, directory, url, comp_names, groups_sbml_url,
+                  scripts, css, fav, tile)
 
-	# TODO: why doesn't it work??
-	# tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')
+    # TODO: why doesn't it work??
+    # tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')
 
-	log(verbose, 'returning url: %s' % url)
-	return url
+    log(verbose, 'returning url: %s' % url)
+    return url
 
 
 def process(graph, m_dir, meta_node, compartment, layout_algorithm=layout, args=None):
-	if not args:
-		args = []
-	root = graph.getRoot()
-	comp_graph = root[VIEW_META_GRAPH][meta_node]
-	# layout
-	layout_algorithm(comp_graph)
-	# color
-	simple_color(graph)
-	# generalization-based layout for the full graph
-	comp_graph_full = layout_generalization_based(comp_graph, *args)
-	root[VIEW_SIZE][meta_node] = get_comp_size(graph, meta_node)
-	# export to geojson
-	compartment = compartment.lower().replace(' ', '_')
-	full_json = '%s/%s_f.json' % (m_dir, compartment)
-	tulip2geojson(comp_graph_full, full_json)
-	generalized_json = '%s/%s.json' % (m_dir, compartment)
-	tulip2geojson(comp_graph, generalized_json)
+    if not args:
+        args = []
+    root = graph.getRoot()
+    comp_graph = root[VIEW_META_GRAPH][meta_node]
+    # layout
+    layout_algorithm(comp_graph)
+    # color
+    simple_color(graph)
+    # generalization-based layout for the full graph
+    comp_graph_full = layout_generalization_based(comp_graph, *args)
+    root[VIEW_SIZE][meta_node] = get_comp_size(graph, meta_node)
+    # export to geojson
+    compartment = compartment.lower().replace(' ', '_')
+    full_json = '%s/%s_f.json' % (m_dir, compartment)
+    tulip2geojson(comp_graph_full, full_json)
+    generalized_json = '%s/%s.json' % (m_dir, compartment)
+    tulip2geojson(comp_graph, generalized_json)
 
 
 def process_generalized_entities(graph):
-	ns = list(graph.getNodes())
-	meta_graph = graph.inducedSubGraph(ns)
-	meta_graph.setName("meta graph")
-	original_graph = graph.inducedSubGraph(ns)
-	original_graph.setName("full graph")
-	factor_nodes(meta_graph)
-	return meta_graph
+    ns = list(graph.getNodes())
+    meta_graph = graph.inducedSubGraph(ns)
+    meta_graph.setName("meta graph")
+    original_graph = graph.inducedSubGraph(ns)
+    original_graph.setName("full graph")
+    factor_nodes(meta_graph)
+    return meta_graph

@@ -30,7 +30,7 @@ try:
 	model_id = model.getId()
 	url = '%s/%s/comp.html' % (MIMOZA_URL, m_dir_id)
 	if not os.path.exists('../html/%s/comp.html' % m_dir_id):
-		visualize_model('../html/', m_dir_id, MIMOZA_URL, 'comp.html', sbml, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, TILE, True, '../uploads/log.log')
+		url = visualize_model('../html/', m_dir_id, MIMOZA_URL, 'comp.html', sbml, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, TILE, True)
 	print generate_redirecting_html(url, MIMOZA_CSS, MIMOZA_FAVICON)
 except Exception as e:
 	print generate_generalization_error_html(MIMOZA_URL, MIMOZA_CSS, MIMOZA_FAVICON, e.message, CONTACT_EMAIL)

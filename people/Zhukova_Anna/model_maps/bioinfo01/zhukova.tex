@@ -1,0 +1,232 @@
+\documentclass{bioinfo}
+\copyrightyear{2005}
+\pubyear{2005}
+
+\begin{document}
+\firstpage{1}
+
+\title[Mimoza]{Mimoza: online zoomable representation of metabolic models}
+\author[Zhukova \textit{et~al}]{Anna Zhukova\,$^{1}$\footnote{to whom correspondence should be addressed}\, and David James Sherman\,$^{1}$}
+\address{$^{1}$Inria/Universit\'e Bordeaux/CNRS joint project-team MAGNOME, 351, cours de la Lib\'{e}ration, F-33405 Talence, France.}
+
+\history{Received on XXXXX; revised on XXXXX; accepted on XXXXX}
+
+\editor{Associate Editor: XXXXXXX}
+
+\maketitle
+
+\begin{abstract}
+
+\section{Motivation:}
+Genome-scale metabolic models include thousands of reactions thought to participate in organism's metabolism. They are intended for computer simulation, but are too detailed for a human. 
+
+\section{Results:}
+In order to allow a human expert to explore metabolic models, we developed an on-line tool Mimoza that represents them in a semantically zoomable manner: The most general view represents the compartments of the model; the next view shows the generalized versions of reactions and metabolites in each compartment; and the most detailed view represents the initial model with the generalization-based layout (where similar metabolites and reactions are placed next to each other). It allows a human expert in organism's metabolism to grasp the general model structure and analyse it in a top-down manner, going from higher-level general questions to more detailed and specific ones.
+
+\section{Availability:}
+Mimoza is freely available at http://mimoza.bordeaux.inria.fr.
+
+\section{Contact:} \href{Anna Zhukova}{anna.zhukova@inria.fr}
+\end{abstract}
+
+\section{Introduction}
+
+There is a conflict between the level of demineralization of metabolic models needed for computer simulation and the one that can be easily analysed by a human curator: Genome-scale metabolic models include thousands of reactions thought to participate in organism's metabolism, while a human can understand best networks that have hundreds of reaction.
+
+%% Reconstruction
+Metabolic network reconstruction process becomes more and more advanced. There exist various tools for semi-automatic model inference, e.g. PathwayTools\cite{Karp2002}, CoReCo\cite{Pitkanen2014}, SuBliMinaL\cite{Swainston2011} (see \cite{Hamilton2014} for a review).
+
+%% Storage
+Starting from a model for a similar organism or a collection of pathways and genomic data, they produce a draft model for the target organism. The existing metabolic models can be found on several online resources, including Biomodels Database\cite{Li10}, BIGGs\cite{Schellenberger2010}, JWS online\cite{Snoep2003}. KEGG\cite{Kanehisa12} provides an extensive collection of pathways. 
+
+%% Representation
+Modelsare stored and shared using established formats, such as SBML\cite{Hucka2003}, SBGN\cite{Moodie2011}, CEllML\cite{Lloyd2004}. The model representation in this formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI\cite{deMatos10}, Uniprot\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable such standardisation efforts as Identifiers.org\cite{Juty2012} emerge.
+
+
+
+There are tools  for editing models, such as Cell Designer, VANTED, etc. The tools for visualising genome-scale models are not that developed though. 
+
+
+% Why do we need humans?
+Means of splitting these models into smaller units that can be checked and analysed by human experts in the field are needed. It requires good visualisation tools and ways of sharing the results. are distracted by these details and cannot easily identify the reactions that require their intervention. An appropriate level of abstraction needs to be found to allow experts to explore and compare whole genome networks. 
+
+
+% Visualization for humans
+
+
+
+
+
+We are going towards web representation. Zoomable approach is good and popular, e.g. NaviCell that represent zommable maps of biological processes (mostly signalling): but the maps are not produced automatically, the user has to visualise the network with CeLLDesigner, export it as an image and then manually edit it in the graphical designer to produce more general views. Which still poses a problem of laying out huge networks. 
+There is Cellular Overview for metabolic maps but it is pathway-oriented, and zoom only makes things bigger. The only organisms for which it's available are those from BioCyc. No compartment information is taken into account.
+
+Metabolic network visualisation is a tough problem, there are several approaches (e.g. Vanted, etc.) but the issue is not solved (e.g. SBGN winner that is manual). Obviously, the small a network is the better it can be visualised, layed out, analysed. So we propose a zoomable approach.
+
+3-levels....
+
+
+\section{Approach}
+
+\subsection*{Three-level model representation}
+To aid human understanding of genome-scale models, while keeping the details needed for a computer simulation, we propose a 3-level zoomable approach:
+\begin{enumerate}
+\item The most abstract level represents compartmentalization of the model, and focusses on such questions as: Are all the compartments present? Are they well connected by transport reactions?
+
+This level shows the compartments of the model, their annotations with the Gene Ontology terms, the transport reactions between the compartments, and other reactions happening inside cytoplasm.
+
+\item The second level shows the modules inside of each of the compartments. The questions to be addressed on this level include: Are all the essential processes present? Is the structure of each process correct? Is there any organism-specific adaptation of the structure?
+
+Different approaches can be used to identify the modules inside the compartments. There are two general classes of approaches: series and parallel. A series approach operates on chains of reactions, and generalizes them as a series, consequently hiding the structure of the network. An example of a series approach is representing the network as a set of metabolic pathways (KEGG (Kanehisa et al., 2012), MetaCyC (Caspi et al., 2012)), that can be further divided, for example, into reaction modules (conserved sequences of reactions along the metabolic pathways) (Muto et al., 2013). 
+
+The other type of approach operates on reactions that are parallel, keeping the steps and preserving the general view of the network. An example of this approach is grouping reactions based on EC (Enzyme Commission) numbers (Tohsato et al., 2000). The drawback of this approach is that it is not applicable to networks with no EC number assigned or reactions with no catalysing enzymes identified. 
+
+In our tool we use a parallel-reaction approach to keep its essential structure of the model at all the levels. We use method for knowledge-based generalization of metabolic models, which does not depend on enzyme information. It detects similar metabolites and reactions and clusters them together, representing as generalized metabolites/reactions with the same structure (number of consumed/produced metabolites).
+
+\item The most detailed level is intended for computer simulation and represents the inner structure of each of the modules with all the species, reactions and their kinetics, stoichiometry and constraints.
+
+Our method places similar metabolites/reactions (detected on the level 2) next to each other, thus simplifying the analysis of their presence.
+
+\end{enumerate}
+
+\subsection*{Pipeline}
+The general pipeline contains of 7 steps.
+\begin{enumerate}
+\item The user submits a model in SBML format via a web-form.
+\item If the model contains no group annotations, it is generalised using model generalization method. It produces an SBML file with the group annotations representing similar species and reactions. This file is made available to the user.
+\item The SBML file with the groups annotation is converted into the tlp format to be represented as a Tulip graph: species nodes are connected by edges to the nodes of the reactions they participate in. The generalised species and reactions form quotient nodes.
+\item The Tulip graph is split into sub-graphs corresponding to compartments.
+\item Layout algorithms are applied to the organelle sub-graphs.
+\item The organelle sub-graphs are converted to GeoJson format.
+\item HTML+Leaflet pages are created for the model using the GeoJson files. The result is represented to the user.
+\end{enumerate}
+
+\begin{methods}
+\section{Methods}
+
+The zoomable web representation of a model is achieved using Leaflet library while the backend is handled by python libraries, including Tulip graph visualization tool used for layout. The clustering of reactions and metabolites inside the compartments is done using metabolic model generalization method.
+
+\subsection*{HTML and Leaflet}
+
+bla-bla
+
+
+\subsection*{Model generalisation method}
+The generalization method\cite{Zhukova2013} operates on models in \textit{SBML}\cite{Hucka08} format.
+
+% Factoring species into appropriate eq. classes
+\label{restrictions}
+The method first groups the species present in the network into semantically equivalent classes. The appropriate level of abstraction for those classes is defined by the network itself as the most general one that satisfies two restrictions: 
+\begin{itemize}
+ \item species that participate in the same reaction cannot be grouped together (to preserve the stoichiometry of the reactions in the network),
+ \item species that do not participate in any pair of similar reactions are not grouped together (as there is no evidence of their similarity in the network).
+\end{itemize}
+ % technical details, e.g. ChEBI
+To make species grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical species is used. Each species group is generalized up to the least common ancestor of its elements in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for biochemical species annotation in metabolic networks. %Possible groups for the species are chosen based on hierarchical relationships in the \textit{ChEBI} ontology. 
+For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-CoA} and \textit{(S)-3-hydroxytetradecanoyl-CoA} have a common ancestor \textit{hydroxy fatty acyl-CoA} in \textit{ChEBI}. If there exist similar reactions operating with them in the network, e.g. \textit{3-hydroxyacyl-CoA dehydratase}, and no reaction whose stoichiometry would be broken by such a generalization, then they can be grouped and generalized into \textit{hydroxy fatty acyl-CoA}.
+
+% Once species are factored, we can generalise the reactions
+Reactions that share the same generalized reactants and the same generalized products, are considered equivalent and are factored together into a generalized reaction. 
+
+% Ubiquitous species are duplicated (to improve readability)
+We do not generalize ubiquitous (frequently occurring) species, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping species increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these species are usually duplicated\cite{Rohn2012} to improve readability.
+
+% Limitations
+As the generalization of species depends on the ChEBI hierarchy, the method tries to find ChEBI terms for the species that lack ChEBI annotations in the model. The search is done by comparing species names to ChEBI terms' names and synonyms. The method does not generalize those species for which no ChEBI mapping can be found. 
+% Another characteristic of the method is that, in order to preserve stoichiometry, it cannot factor chains of consecutive similar reactions, i.e. reactions whose reactants could belong to the same equivalence class as products. Our method factors only \textit{parallel} reactions, whose reactants and products belong to distinct equivalence classes.
+
+% Implementation
+The generalization method is implemented as a Python library and is available for download from http://metamogen.gforge.inria.fr. The generalized network is produced in SBML format with groups annotations.
+
+\subsection*{Tulip}
+\subsubsection*{Layout}
+We use two different layout algorithms, depending on the zoom level.
+\paragraph*{Generalised model layout}
+% General idea
+In order to layout the sub-models corresponding to each of the organelles after the generalisation, we use a combination of standard layout algorithms provided by Tulip. We divide the organelle graph into connected components and then apply an appropriate layout algorithm on each of them. The results are combined together using the 'Connected Component Packing' algorithm, which places the components close to each other while removing the overlaps between them.
+
+% Laying out a connected component
+Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms:
+\begin{itemize}
+\item \emph{Hierarchical Layout} for the components that contain no cycles,
+\item \emph{Circular Layout} for the components with less than 100 nodes and less than 3 cycles,
+\item \emph{Force-Directed Layout} for all the other components.
+\end{itemize}
+
+% Ubiquitous species hadling
+To avoid cluttering we duplicate all the ubiquitous species before applying the layout algorithms, so that there is a copy of an ubiquitous species for each reaction it participates in. We then extract a subgraph, containing all but the ubiquitous species, apply the combined layout on it, and then place the ubiquitous species next to the reactions in which they participate.
+
+\paragraph*{Generalization-based full model layout}
+The layout for the full model is based on the corresponding generalised model's layout. To allow for zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous species, and species and reactions that are not generalised, and place similar species/reactions next to each other inside the space used by the corresponding generalized species/reactions in the generalized model. This also allows for grasping similar processed at the same time. 
+ 
+\subsubsection*{Export to GeoJson}
+
+bla-bla
+
+
+
+\end{methods}
+
+\begin{figure}[!tpb]%figure1
+%\centerline{\includegraphics{fig01.eps}}
+\caption{Caption, caption.}\label{fig:01}
+\end{figure}
+
+\section{Discussion}
+
+Text Text Text Text Text Text  Text 
+
+
+
+\section{Conclusion}
+Text Text Text Text Text Text  Text Text.
+
+
+
+\section*{Acknowledgement}
+Text Text Text Text Text Text  Text Text.
+
+\paragraph{Funding\textcolon} AZ was supported by a CORDI-S doctoral fellowship from Inria.
+
+%\bibliographystyle{natbib}
+%\bibliographystyle{achemnat}
+%\bibliographystyle{plainnat}
+%\bibliographystyle{abbrv}
+%\bibliographystyle{bioinformatics}
+%
+%\bibliographystyle{plain}
+%
+%\bibliography{Document}
+
+
+\begin{thebibliography}{}
+\bibitem[Bofelli {\it et~al}., 2000]{Boffelli03} Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
+
+\bibitem[Bag {\it et~al}., 2001]{Bag01} Bag,M., Name2, Name3 (2001) Article title, {\it Journal Name}, {\bf 99}, 33-54.
+
+\bibitem[Yoo \textit{et~al}., 2003]{Yoo03}
+Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
+in nigral dopaminergic neurnol cell: correlation with the known
+pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
+Res.}, \textbf{110}(Suppl. 1), 76--84.
+
+\bibitem[Lehmann, 1986]{Leh86}
+Lehmann,E.L. (1986) Chapter title. \textit{Book Title}. Vol.~1, 2nd edn. Springer-Verlag, New York.
+
+\bibitem[Crenshaw and Jones, 2003]{Cre03}
+Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
+cancer management: one tumor, one chip. \textit{Bioinformatics},
+doi:10.1093/bioinformatics/btn000.
+
+\bibitem[Auhtor \textit{et~al}. (2000)]{Aut00}
+Auhtor,A.B. \textit{et~al}. (2000) Chapter title. In Smith, A.C.
+(ed.), \textit{Book Title}, 2nd edn. Publisher, Location, Vol. 1, pp.
+???--???.
+
+\bibitem[Bardet, 1920]{Bar20}
+Bardet, G. (1920) Sur un syndrome d'obesite infantile avec
+polydactylie et retinite pigmentaire (contribution a l'etude des
+formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
+institution, Paris, France.
+
+\end{thebibliography}
+\end{document}

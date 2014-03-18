@@ -98,7 +98,7 @@ def process_file(sbml_file):
 result, args = upload_file()
 if OK == result:
 	(m_id, m_name, m_dir_id) = args
-	create_thanks_for_uploading_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS,
+	create_thanks_for_uploading_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
 	                                   MIMOZA_FAVICON, PROGRESS_ICON)
 	existing_m_url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 	print generate_redirecting_html(existing_m_url, MIMOZA_CSS, MIMOZA_FAVICON)
@@ -113,6 +113,7 @@ elif ALREADY_EXISTS == result:
 	existing_m_url = '%s/%s/comp.html' % (MIMOZA_URL, existing_m_dir_id)
 	url = '%s/%s/comp.html' % (MIMOZA_URL, m_dir_id)
 	sbml = '../html/%s/%s.xml' % (m_dir_id, model_id)
-	print generate_exists_html(MIMOZA_CSS, MIMOZA_FAVICON, model_id, existing_m_url, url, sbml, m_dir_id, PROGRESS_ICON)
+	log_file = '../html/%s/log.log' % m_dir_id
+	print generate_exists_html(MIMOZA_CSS, JS_SCRIPTS, MIMOZA_FAVICON, model_id, existing_m_url, url, sbml, m_dir_id, PROGRESS_ICON, log_file)
 
 
