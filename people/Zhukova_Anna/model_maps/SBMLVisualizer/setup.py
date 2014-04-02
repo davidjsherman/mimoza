@@ -33,5 +33,5 @@ setup(name='SBMLVisualizer',
           'Operating System :: POSIX',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
-      ], requires=['daemon', 'tulip', 'sympy', 'geojson']
+      ], requires=['daemon', 'tulip', 'sympy', 'geojson', 'instant']
 )

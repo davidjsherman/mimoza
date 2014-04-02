@@ -5,20 +5,20 @@ from modules.graph_tools import *
 __author__ = 'anna'
 
 
-grey = tlp.Color(180, 180, 180)
+grey = tlp.Color(180, 180, 180) # B4B4B4
 transparent_grey = tlp.Color(200, 200, 200, 80)
 light_red = tlp.Color(255, 100, 100)
 light_blue = tlp.Color(100, 100, 255)
 white = tlp.Color(255, 255, 255)
 transparent = tlp.Color(0, 0, 0, 0)
 
-orange = tlp.Color(253, 180, 98)
-yellow = tlp.Color(255, 255, 179)
-red = tlp.Color(251, 128, 114)
-blue = tlp.Color(128, 177, 211)
-green = tlp.Color(179, 222, 105)
-violet = tlp.Color(190, 186, 218)
-turquoise = tlp.Color(141, 211, 199)
+orange = tlp.Color(253, 180, 98) # FDB462
+yellow = tlp.Color(255, 255, 179) # FFFFB3
+red = tlp.Color(251, 128, 114) # FB8072
+blue = tlp.Color(128, 177, 211) # 80B1D3
+green = tlp.Color(179, 222, 105) # B3DE69
+violet = tlp.Color(190, 186, 218) # BEBADA
+turquoise = tlp.Color(141, 211, 199) # 8DD3C7
 
 
 def get_key(n, graph):

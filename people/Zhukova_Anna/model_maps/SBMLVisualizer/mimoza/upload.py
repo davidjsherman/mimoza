@@ -2,11 +2,14 @@
 # -*- coding: UTF-8 -*-
 
 import cgi
+import hashlib
 import os
 import cgitb
+from instant import check_and_set_swig_binary, inline
 from libsbml import SBMLReader, writeSBMLToFile
+import sys
 from modules.html_generator import create_thanks_for_uploading_html, generate_redirecting_html, generate_error_html, \
-	generate_contact, generate_exists_html
+    generate_contact, generate_exists_html, create_exists_html
 import base64
 from mimoza.mimoza import *
 
@@ -18,102 +21,152 @@ cgitb.enable()
 
 # Windows needs stdio set for binary mode.
 try:
-	import msvcrt
+    import msvcrt
 
-	msvcrt.setmode(0, os.O_BINARY)  # stdin  = 0
-	msvcrt.setmode(1, os.O_BINARY)  # stdout = 1
+    msvcrt.setmode(0, os.O_BINARY)  # stdin  = 0
+    msvcrt.setmode(1, os.O_BINARY)  # stdout = 1
 except ImportError:
-	pass
+    pass
 
 
 # Generator to buffer file chunks
 def file_buffer(f, chunk_size=10000):
-	while True:
-		chunk = f.read(chunk_size)
-		if not chunk:
-			break
-		yield chunk
+    while True:
+        chunk = f.read(chunk_size)
+        if not chunk:
+            break
+        yield chunk
 
 
 def upload_file():
-	form = cgi.FieldStorage()
-	# A nested FieldStorage instance holds the file
-	file_item = form['file_input']
-	# Test if the file was uploaded
-	if file_item.filename:
-		# strip leading path from file name to avoid directory traversal attacks
-		file_name = os.path.basename(file_item.filename)
-		safe_fn = base64.urlsafe_b64encode(file_name)
-		sfn = "%s" % safe_fn
-		i = 0
-		while os.path.exists("../uploads/%s" % sfn):
-			sfn = '%s_%d' % (safe_fn, i)
-			i += 1
-		f_path = '../uploads/%s' % sfn
-		f = open(f_path, 'wb', 10000)
-		# Read the file in chunks
-		for chunk in file_buffer(file_item.file):
-			f.write(chunk)
-		f.close()
-		return process_file(f_path)
-	else:
-		return NOT_MODEL, None
+    form = cgi.FieldStorage()
+    # A nested FieldStorage instance holds the file
+    file_item = form['file_input']
+    # Test if the file was uploaded
+    if file_item.filename:
+        # strip leading path from file name to avoid directory traversal attacks
+        file_name = os.path.basename(file_item.filename)
+        safe_fn = base64.urlsafe_b64encode(file_name)
+        sfn = "%s" % safe_fn
+        i = 0
+        while os.path.exists("../uploads/%s" % sfn):
+            sfn = '%s_%d' % (safe_fn, i)
+            i += 1
+        f_path = '../uploads/%s' % sfn
+        f = open(f_path, 'wb', 10000)
+        # Read the file in chunks
+        for chunk in file_buffer(file_item.file):
+            f.write(chunk)
+        f.close()
+        return process_file(f_path)
+    else:
+        return NOT_MODEL, None
 
+
+def check_md5(file_name):
+    with open(file_name) as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()
+        # pipe contents of the file through
+        return hashlib.md5(data).hexdigest()
 
 def process_file(sbml_file):
-	reader = SBMLReader()
-	doc = reader.readSBML(sbml_file)
-	model = doc.getModel()
-	if not model:
-		return NOT_MODEL, None
-	model_id = model.getId()
-	if not model_id:
-		sbml_name = os.path.splitext(os.path.basename(sbml_file))[0]
-		model.setId(sbml_name)
-		model_id = sbml_name
+    reader = SBMLReader()
+    doc = reader.readSBML(sbml_file)
+    model = doc.getModel()
+    if not model:
+        return NOT_MODEL, None
+    model_id = model.getId()
+    if not model_id:
+        sbml_name = os.path.splitext(os.path.basename(sbml_file))[0]
+        model.setId(sbml_name)
+        model_id = sbml_name
 
-	m_id = "%s" % model_id
-	i = 0
-	existing_model = None
-	while os.path.exists('../html/%s/' % m_id):
-		if os.path.exists('../html/%s/comp.html' % m_id):
-			existing_model = m_id
-		# return ALREADY_EXISTS, (model_id, sbml_file)
-		m_id = '%s_%d' % (model_id, i)
-		i += 1
-	directory = '../html/%s/' % m_id
-	os.makedirs(directory)
+    m_id = check_md5(sbml_file) #"%s" % model_id
+    if os.path.exists('../html/%s/' % m_id):
+        if os.path.exists('../html/%s/index.html' % m_id):
+            return (ALREADY_EXISTS, (model_id, m_id))
 
-	new_sbml_file = '%s%s.xml' % (directory, model_id)
-	if sbml_file != new_sbml_file:
-		if not writeSBMLToFile(doc, new_sbml_file):
-			return NOT_MODEL, None
-		# copyfile(sbml_file, new_sbml_file)
-		os.remove(sbml_file)
+    # i = 0
+    # existing_model = None
+    # while os.path.exists('../html/%s/' % m_id):
+    #     if os.path.exists('../html/%s/comp.html' % m_id):
+    #         existing_model = m_id
+    #     # return ALREADY_EXISTS, (model_id, sbml_file)
+    #     m_id = '%s_%d' % (model_id, i)
+    #     i += 1
+    directory = '../html/%s/' % m_id
+    os.makedirs(directory)
 
-	return (ALREADY_EXISTS, (model_id, m_id, existing_model)) if existing_model else (
-		OK, (model_id, model.getName(), m_id))
+    new_sbml_file = '%s%s.xml' % (directory, model_id)
+    if sbml_file != new_sbml_file:
+        if not writeSBMLToFile(doc, new_sbml_file):
+            return NOT_MODEL, None
+        # copyfile(sbml_file, new_sbml_file)
+        os.remove(sbml_file)
+
+    return OK, (model_id, model.getName(), m_id)
+    # return (ALREADY_EXISTS, (model_id, m_id, existing_model)) if existing_model else (
+    #     OK, (model_id, model.getName(), m_id))
 
 
 result, args = upload_file()
+
+scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
+print '''Content-Type: text/html;charset=utf-8
+
+
+        <html lang="en">
+
+          <head>
+            <link media="all" href="%s" type="text/css" rel="stylesheet" />
+            <link href="%s" type="image/x-icon" rel="shortcut icon" />
+            %s
+            <title>Checking...</title>
+          </head>
+
+          <body>
+          <p class="centre indent">Please, be patient while we are checking your model...</p>
+          <div class="centre margin" id="visualize_div">
+            <img class="centre" src="%s" id="img" />
+          </div>
+          <div id="hidden" style="visibility:hidden;height:0px;">''' % (MIMOZA_CSS, MIMOZA_FAVICON, scripts, LOADER_ICON)
+
+url = MIMOZA_UPLOAD_ERROR_URL
 if OK == result:
-	(m_id, m_name, m_dir_id) = args
-	create_thanks_for_uploading_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
-	                                   MIMOZA_FAVICON, PROGRESS_ICON)
-	existing_m_url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
-	print generate_redirecting_html(existing_m_url, MIMOZA_CSS, MIMOZA_FAVICON)
-elif NOT_MODEL == result:
-	print generate_error_html(MIMOZA_CSS, MIMOZA_FAVICON, 'Upload Error', 'Is it really in SBML?',
-	                    'Your file does not seem to contain a model in <a href="%s" target="_blank">SBML</a> format.</p>' % SBML_ORG,
-	                    '''Please, check you file and <a href="%s">try again</a>.
-	                           <br>Or contact %s to complain about this problem.''' % (MIMOZA_URL, generate_contact(CONTACT_EMAIL)))
+    (m_id, m_name, m_dir_id) = args
+    create_thanks_for_uploading_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
+                                       MIMOZA_FAVICON, PROGRESS_ICON)
+    # existing_m_url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
+    url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
+    # print generate_redirecting_html(existing_m_url, MIMOZA_CSS, MIMOZA_FAVICON)
+# elif NOT_MODEL == result:
+# 	pass
+    # print generate_error_html(MIMOZA_CSS, MIMOZA_FAVICON, 'Upload Error', 'Is it really in SBML?',
+    #                     'Your file does not seem to contain a model in <a href="%s" target="_blank">SBML</a> format.</p>' % SBML_ORG,
+    #                     '''Please, check you file and <a href="%s">try again</a>.
+    #                            <br>Or contact %s to complain about this problem.''' % (MIMOZA_URL, generate_contact(CONTACT_EMAIL)))
 elif ALREADY_EXISTS == result:
-	model_id, m_dir_id, existing_m_dir_id = args
+    # model_id, m_dir_id, existing_m_dir_id = args
+    #
+    # # existing_m_url = '%s/%s/comp.html' % (MIMOZA_URL, existing_m_dir_id)
+    # # url = '%s/%s/comp.html' % (MIMOZA_URL, m_dir_id)
+    # # sbml = '../html/%s/%s.xml' % (m_dir_id, model_id)
+    #
+    # create_exists_html(model_id, existing_m_dir_id, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
+    #                                    MIMOZA_FAVICON, PROGRESS_ICON)
+    # url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
+    # # print generate_exists_html(MIMOZA_CSS, JS_SCRIPTS, MIMOZA_FAVICON, model_id, existing_m_url, url, sbml, m_dir_id, PROGRESS_ICON)
 
-	existing_m_url = '%s/%s/comp.html' % (MIMOZA_URL, existing_m_dir_id)
-	url = '%s/%s/comp.html' % (MIMOZA_URL, m_dir_id)
-	sbml = '../html/%s/%s.xml' % (m_dir_id, model_id)
-	log_file = '../html/%s/log.log' % m_dir_id
-	print generate_exists_html(MIMOZA_CSS, JS_SCRIPTS, MIMOZA_FAVICON, model_id, existing_m_url, url, sbml, m_dir_id, PROGRESS_ICON, log_file)
+    model_id, m_dir_id = args
+    url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 
+
+print '''</div>
+          </body>
+          <script type="text/javascript">
+                window.location = "%s"
+          </script>
+        </html>''' % url
+sys.stdout.flush()
 

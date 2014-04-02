@@ -54,6 +54,15 @@ def add_search(page):
 	page.div.close()
 
 
+def add_ubiquitous_checkbox(page):
+	page.div(class_='margin', id='ub_check_box_div')
+	page.p()
+	page.input(type="checkbox", id="showUbs", checked=True)
+	page.span("Show ubiquitous species")
+	page.p.close()
+	page.div.close()
+
+
 def add_explanations(page):
 	""" <div id="explanations" class="margin"><p>
 			<span class="pant">Zoom in</span> to see the more detailed model.
@@ -69,7 +78,31 @@ def add_explanations(page):
 	page.span('Click', class_='pant')
 	page.span(' on elements to see their annotations. ')
 	page.p.close()
+
+	page.p(
+		'''%s - compartments; %s/%s/%s - generalised/specific/ubiquitous species; %s/%s/%s/%s - generalised transport/transport/generalised/other reactions.''' % (
+			format_color("yellow", 255, 255, 179),
+			format_color('orange', 253, 180, 98), format_color('red', 251, 128, 114), format_color('gray', 180, 180, 180),
+			format_color('turquoise', 141, 211, 199), format_color('violet', 190, 186, 218),
+			format_color('green', 179, 222, 105), format_color('blue', 128, 177, 211)))
+	# page.span('Compartments', class_='pant')
+	# page.span(''' are coloured %s.''' % format_color("yellow", 255, 255, 179))
+	# page.br()
+	# page.span('Species', class_='pant')
+	# page.span(''' are %s (generalised), %s (ubiquitous), and %s.''' % (
+	# 	format_color('orange', 253, 180, 98), format_color('gray', 180, 180, 180), format_color('red', 251, 128, 114)))
+	# page.br()
+	# page.span('Reactions', class_='pant')
+	# page.span(''' are %s (generalised transport), %s (transport), %s (generalised),	and %s.''' % (
+	# 	format_color('turquoise', 141, 211, 199), format_color('violet', 190, 186, 218),
+	# 	format_color('green', 179, 222, 105), format_color('blue', 128, 177, 211)))
+	# page.p.close()
+
 	page.div.close()
+
+
+def format_color(color_name, r, g, b, a=0.8):
+	return '<span style="background-color:rgba(%d, %d, %d, %.2f)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' % (r, g, b, a)
 
 
 def add_map(page):
@@ -98,7 +131,12 @@ def add_js(default_organelle, org2scripts, page, tile):
 
 			map = initializeMap(5);
 			var name2popup = {};
-			getGeoJson(map, comp2geojson[compartment], name2popup);
+			var ub_sps = getGeoJson(map, comp2geojson[compartment], name2popup);
+
+			var checkbox = document.getElementById('showUbs');
+		    checkbox.onchange = function() {
+		        visualizeUbiquitous(map, ub_sps);
+		    }
 
 
 			L.tileLayer("''' + tile + '''", {
@@ -136,7 +174,7 @@ def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css
 	model_name = model.getName()
 	if not model_name:
 		model_name = model_id
-	page.init(title=model_name, css=css, script=scripts, fav=fav)
+	page.init(title=model_name, css=css, script=scripts, fav=fav, metainfo={"refresh": "5"})
 
 	add_header(model_id, model_name, page)
 
@@ -148,6 +186,8 @@ def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css
 	add_explanations(page)
 
 	add_search(page)
+
+	add_ubiquitous_checkbox(page)
 
 	add_map(page)
 
@@ -165,9 +205,8 @@ def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css
 
 def generate_redirecting_html(url, css, ico):
 	return '''Content-Type: text/html;charset=utf-8
-
-
 		Location: %s
+
 
 		<html lang="en">
 
@@ -211,41 +250,45 @@ def generate_error_html(css, ico, title, h1, short_explanation, further_explanat
 		    <title>%s</title>
 		  </head>
 
-		  <body>
+		  %s
+
+		</html>''' % (css, ico, title, generate_error_html_body(h1, short_explanation, further_explanation))
+
+
+def generate_error_html_body(h1, short_explanation, further_explanation):
+	return '''<body>
 		    <h1 class="capitalize">%s</h1>
 		    <div class="indent" id="all">
 		      <p>%s</p>
 		      <p>%s</p>
 		    </div>
-		  </body>
-
-		</html>''' % (css, ico, title, h1, short_explanation, further_explanation)
+		  </body>''' % (h1, short_explanation, further_explanation)
 
 
 def a_blank(href, text):
 	return '<a href="%s" target="_blank">%s</a>' % (href, text)
 
 
-def generate_exists_html(css, js, ico, model_id, existing_m_url, url, sbml, m_dir_id, progress_icon, log_file):
+def generate_exists_html(css, js, ico, model_id, existing_m_url, url, sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Exists" % model_id, "Already at Mimoza",
-	                           'There is already %s with this identifier, check it out!' % a_blank(existing_m_url, 'a processed model'),
+	                           'There is already %s with this identifier, check it out!' % a_blank(existing_m_url,
+	                                                                                               'a processed model'),
 	                           'If you prefer to carry on with your model instead, press the button below.',
-	                           css, js, ico, model_id, url, sbml, m_dir_id, progress_icon, log_file)
+	                           css, js, ico, model_id, url, sbml, m_dir_id, progress_icon, False)
 
 
-def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon, log_file):
+def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualise!", '',
 	                           'Now let\'s visualise it: To start the visualisation press the button below.',
-	                           css, js, ico, m_name, url, sbml, m_dir_id, progress_icon, log_file, False)
+	                           css, js, ico, m_name, url, sbml, m_dir_id, progress_icon, False)
 
 
-def generate_model_html(title, h1, text, expl, css, js, ico, model_id, url, sbml, m_dir_id, progress_icon, log_file, header=True):
+def generate_model_html(title, h1, text, expl, css, js, ico, model_id, url, sbml, m_dir_id, progress_icon, header=True):
 	scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in js])
-	h = '''Content-Type: text/html;charset=utf-8
-
-
-	''' if header else "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>"
+	h = "Content-Type: text/html;charset=utf-8" if header else "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>"
 	return '''%s
+
+
 	<html lang="en">
 		<head>
 		    <link media="all" href="%s" type="text/css" rel="stylesheet" />
@@ -266,10 +309,11 @@ def generate_model_html(title, h1, text, expl, css, js, ico, model_id, url, sbml
 				%s
 			</div>
 		</body>
-	</html>''' % (h, css, ico, scripts, title, h1, model_id, text, expl, url, url, generate_visualisation_button(sbml, m_dir_id, progress_icon, log_file))
+	</html>''' % (h, css, ico, scripts, title, h1, model_id, text, expl, url, url,
+	              generate_visualisation_button(sbml, m_dir_id, progress_icon))
 
 
-def generate_visualisation_button(sbml, m_dir_id, progress_icon, log_file):
+def generate_visualisation_button(sbml, m_dir_id, progress_icon):
 	return '''
 		<div class="centre margin" id="visualize_div">
 			<form action="/cgi-bin/visualise.py" method="POST" name="input_form" enctype="multipart/form-data">
@@ -283,40 +327,7 @@ def generate_visualisation_button(sbml, m_dir_id, progress_icon, log_file):
 			<img src="%s" style="visibility:hidden" id="img" />
 		</div>
 
-		<div id="log">
-		</div>
-
 		<script>
-			//function onInitFs(fs) {
-			//  fs.root.getFile('%s', {}, function(fileEntry) {
-
-			    // Get a File object representing the file,
-			    // then use FileReader to read its contents.
-			 //   fileEntry.file(function(file) {
-			 //      var reader = new FileReader();
-
-			 //      reader.onload = function(event) {
-			//		    var contents = event.target.result;
-			//		    console.log("File contents: " + contents);
-			//		    var log = document.getElementById('log');
-			//		    while (log.firstChild) {
-			//		        log.removeChild(log.firstChild);
-			//	        }
-			//		    log.appendChild(document.createTextNode(contents));
-			//		};
-
-			//		reader.onerror = function(event) {
-	        //          console.error("File could not be read! Code " + event.target.error.code);
-			//		};
-
-			//     reader.readAsText(file);
-			//   });
-
-			//  });
-
-			//}
-
-
 			function progress() {
 				document.getElementById("img").style.visibility="visible";
 				document.getElementById("visualize_div").style.visibility="hidden";
@@ -325,22 +336,25 @@ def generate_visualisation_button(sbml, m_dir_id, progress_icon, log_file):
 					span.removeChild(span.firstChild);
 				}
 				span.appendChild(document.createTextNode("We are currently visualising your model..."));
-
-
-				//setInterval(function() {
-				//	window.requestFileSystem(window.TEMPORARY, 1024*1024, onInitFs);
-				//}, 1000);
 			}
 
-		</script>''' % (sbml, m_dir_id, progress_icon, log_file)
-
+		</script>''' % (sbml, m_dir_id, progress_icon)
 
 
 def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, js, fav, img):
 	directory = '%s/%s' % (directory_prefix, m_dir_id)
 	m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
 	sbml = '%s/%s.xml' % (directory, m_id)
-	log_file = '%s/log.log' % directory
 
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_uploaded_html(css, js, fav, m_name, m_id, m_url, sbml, m_dir_id, img, log_file))
+		f.write(generate_uploaded_html(css, js, fav, m_name, m_id, m_url, sbml, m_dir_id, img))
+
+
+def create_exists_html(m_id, existing_m_dir_id, directory_prefix, m_dir_id, url, url_end, css, js, fav, img):
+	directory = '%s/%s' % (directory_prefix, m_dir_id)
+	m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
+	sbml = '%s/%s.xml' % (directory, m_id)
+	existing_m_url = '%s/%s/%s' % (url, existing_m_dir_id, url_end)
+
+	with open('%s/index.html' % directory, 'w+') as f:
+		f.write(generate_exists_html(css, js, fav, m_id, existing_m_url, m_url, sbml, m_dir_id, img))

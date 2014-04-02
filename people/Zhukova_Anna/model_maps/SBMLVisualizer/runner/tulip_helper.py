@@ -1,7 +1,9 @@
 import logging
 import os
+import threading
 from tulip import tlp
 from libsbml import SBMLReader
+from mimoza.mimoza import MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, TILE
 from modules.color import simple_color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm, nodes_to_meta_node
 from modules.geojson_helper import tulip2geojson
@@ -109,3 +111,13 @@ def process_generalized_entities(graph):
     original_graph.setName("full graph")
     factor_nodes(meta_graph)
     return meta_graph
+
+
+class VisualisationThread(threading.Thread):
+    def __init__(self, m_dir_id, sbml):
+        threading.Thread.__init__(self)
+        self.sbml = sbml
+        self.m_dir_id = m_dir_id
+
+    def run(self):
+        visualize_model('../html/', self.m_dir_id, MIMOZA_URL, 'comp.html', self.sbml, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, TILE, True)

@@ -42,8 +42,9 @@ def tulip2geojson(graph, geojson_file):
 	for e in graph.getEdges():
 		s, t = graph.source(e), graph.target(e)
 		geom = geojson.MultiPoint([get_coords(s)] + [scale(it[0], it[1]) for it in layout[e]] + [get_coords(t)])
+		ubiquitous = graph[UBIQUITOUS][s] or graph[UBIQUITOUS][t]
 		props = {"color": triplet(color[e]), "width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
-		         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e]}
+		         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous}
 		f = geojson.Feature(geometry=geom, properties=props, id=i)
 		i += 1
 		features.append(f)
@@ -75,7 +76,7 @@ def tulip2geojson(graph, geojson_file):
 				transported = next((r for r in rs if graph[TRANSPORT][r]), False) is not False
 				if transported:
 					break
-			props.update({"term": annotation[n], "transport": transported})
+			props.update({"term": annotation[n], "transport": transported, "ubiquitous": root[UBIQUITOUS][n]})
 		f = geojson.Feature(geometry=geom, properties=props, id=i)
 		i += 1
 		features.append(f)

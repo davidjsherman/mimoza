@@ -153,12 +153,12 @@ var REACTION = 2;
 var BG = 4;
 
 
-function pnt2layer(map, feature, edges) {
+function pnt2layer(map, feature, edges, ub_sps) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
     if (EDGE == feature.properties.type) {
-        edges.addLayer(L.polyline(e.map(function (coord) {
+        var edge = L.polyline(e.map(function (coord) {
             return map.unproject(coord, 1)
         }), {
             color: feature.properties.color,
@@ -168,7 +168,11 @@ function pnt2layer(map, feature, edges) {
             lineJoin: 'round',
             clickable: false,
             fill: false
-        }));
+        });
+        if (feature.properties.ubiquitous) {
+            ub_sps.addLayer(edge);
+        }
+        edges.addLayer(edge);
         return edges;
     }
     var x = e[0], y = e[1];
@@ -187,7 +191,7 @@ function pnt2layer(map, feature, edges) {
         opacity: 1,
         lineCap: 'round',
         lineJoin: 'round',
-        weight: BG == feature.properties.type ? 0 : w / 10 * Math.pow(2, map.getZoom() - 1),
+        weight: BG == feature.properties.type ? 0 : Math.min(2, w / 10 * Math.pow(2, map.getZoom() - 1)),
         fill: true,
         clickable: BG != feature.properties.type
     };
@@ -221,7 +225,16 @@ function pnt2layer(map, feature, edges) {
                 })
             }
         );
-        return L.featureGroup([node, label]);
+        var fg = L.featureGroup([node, label]);
+        if (feature.properties.ubiquitous) {
+            ub_sps.addLayer(fg);
+            // return ub_sps;
+        }
+        return fg;
+    }
+    if (feature.properties.ubiquitous) {
+        ub_sps.addLayer(node);
+        // return ub_sps;
     }
     return node;
 }
@@ -230,7 +243,7 @@ function addPopups(map, name2popup, feature, layer) {
     var content = '';
     var label = '';
     if (REACTION == feature.properties.type) {
-        var transport = feature.properties.transport ? "<p class='popup centre'>Is a transport reaction.</p>" : ""
+        var transport = feature.properties.transport ? "<p class='popup centre'>Is a transport reaction.</p>" : "";
         var ga_res = formatGA(feature.properties.gene_association);
         var formula = formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products);
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p><p class="popup centre">' + ga_res + "</p>" + transport;
@@ -274,40 +287,42 @@ function addPopups(map, name2popup, feature, layer) {
 }
 
 
+
 function getGeoJson(map, json, name2popup) {
     var edges = L.layerGroup([]);
+    var ub_sps = L.layerGroup([]);
     if (json == null || json.length == 0) {
         // pass
     } else if (json.length == 1) {
-        getSimpleJson(map, json[0], name2popup, edges);
+        getSimpleJson(map, json[0], name2popup, edges, ub_sps);
     } else {
-        getComplexJson(map, json[0], json[1], name2popup, edges);
+        getComplexJson(map, json[0], json[1], name2popup, edges, ub_sps);
     }
     fitSimpleLabels();
     setAutocomplete(map, name2popup);
+    return ub_sps;
 }
 
-
-function getComplexJson(map, json_zo, json_zi, name2popup, edges) {
-    var geojsonLayer = getSimpleJson(map, json_zo, name2popup, edges);
+function getComplexJson(map, json_zo, json_zi, name2popup, edges, ub_sps) {
+    var geojsonLayer = getSimpleJson(map, json_zo, name2popup, edges, ub_sps);
     var zo = map.getZoom();
     map.on('zoomend', function (e) {
         var zn = map.getZoom();
         if (zn >= 3 && zo < 3) {
-            geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer, edges);
+            geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer, edges, ub_sps);
             fitSimpleLabels();
             setAutocomplete(map, name2popup);
         } else if (zn < 3 && zo >= 3) {
-            geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer, edges);
+            geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer, edges, ub_sps);
             fitSimpleLabels();
             setAutocomplete(map, name2popup);
         } else {
             fitLabels(zn, zo);
             var layers = edges.getLayers();
-            for (i in layers) {
+            for (var i in layers) {
                 var e = layers[i];
                 edges.removeLayer(e);
-                e = L.polyline(e._latlngs, {
+                var new_e = L.polyline(e._latlngs, {
                     color: e.options['color'],
                     opacity: 1,
                     weight: e.options['weight'] * Math.pow(2, zn - zo),
@@ -315,9 +330,16 @@ function getComplexJson(map, json_zo, json_zi, name2popup, edges) {
                     lineJoin: 'round',
                     clickable: false,
                     fill: false
-                })
-                edges.addLayer(e);
-                e.bringToBack();
+                });
+                edges.addLayer(new_e);
+                new_e.bringToBack();
+                if (-1 != ub_sps.getLayers().indexOf(e)) {
+                    ub_sps.removeLayer(e);
+                    ub_sps.addLayer(new_e);
+                    if (!document.getElementById('showUbs').checked) {
+                        map.removeLayer(new_e);
+                    }
+                }
             }
         }
         zo = map.getZoom();
@@ -325,7 +347,7 @@ function getComplexJson(map, json_zo, json_zi, name2popup, edges) {
 }
 
 function fitSimpleLabels() {
-    console.log('fitting labels into nodes');
+    // console.log('fitting labels into nodes');
     $('.count-icon', '#map').each(function (i, obj) {
         var width = $(this).width();
         var size = width < 8 ? 0 : Math.max(width / 5, 8);
@@ -385,32 +407,48 @@ function fitLabels(zn, zo) {
 //    $('.wrap').children().unwrap();
 }
 
-function getSimpleJson(map, jsn, name2popup, edges) {
-    return L.geoJson(jsn, {
+function getSimpleJson(map, jsn, name2popup, edges, ub_sps) {
+    var result = L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, edges);
+            return pnt2layer(map, feature, edges, ub_sps);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, feature, layer);
         }
     }).addTo(map);
+    visualizeUbiquitous(map, ub_sps);
+    return result;
 }
 
-function getJson(map, jsn, name2popup, geojsonLayer, edges) {
+function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_sps) {
     for (var prop in name2popup) {
         if (name2popup.hasOwnProperty(prop)) {
             delete name2popup[prop];
         }
     }
     edges.clearLayers();
+    ub_sps.clearLayers();
     map.removeLayer(geojsonLayer);
-    return getSimpleJson(map, jsn, name2popup, edges);
+    return getSimpleJson(map, jsn, name2popup, edges, ub_sps);
 }
 
 function search(map, name2popup) {
     var srch = document.search_form.search_input.value;
     if (srch && name2popup[srch]) {
         name2popup[srch].openOn(map);
+    }
+}
+
+function visualizeUbiquitous(map, ub_sps) {
+    if (document.getElementById('showUbs').checked) {
+        map.addLayer(ub_sps);
+    } else {
+        map.removeLayer(ub_sps);
+        var layers = ub_sps.getLayers();
+        for (var i in layers) {
+            var e = layers[i];
+            map.removeLayer(e);
+        }
     }
 }
 

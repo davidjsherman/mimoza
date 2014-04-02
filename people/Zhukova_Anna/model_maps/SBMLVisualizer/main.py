@@ -1,3 +1,4 @@
+import os
 import logging
 import sys
 from runner.tulip_helper import visualize_model
@@ -24,6 +25,10 @@ CSS_SCRIPTS = [('%s/lib/modelmap/modelmap.css' % MIMOZA_URL),
                ('%s/lib/leaflet_label/leaflet.label.css' % MIMOZA_URL),
                'http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css']
 
+import sys
+import os
+from instant import inline, check_and_set_swig_binary
+
 
 def main(argv=None):
 	# if argv is None:
@@ -34,16 +39,36 @@ def main(argv=None):
 	# 	print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
 	# 	print >> sys.stderr, "\t for help use --help"
 	# 	return 2
-
-	sbml = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated.xml'
+	sbml = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
 	# sbml = '/Users/anna/Downloads/yeast_7.11/yeast_7.11_recon_with_groups.xml'
 	# sbml = '/Users/anna/Downloads/BMID000000095830.xml'
-	visualize_model('/Users/anna/Documents/PhD/magnome/', 'mm', 'http://mimoza.bordeaux.inria.fr', 'comp.html', sbml,
-	                JS_SCRIPTS, CSS_SCRIPTS, FAVIICON, TILE, True, "/Users/anna/log.log")
+	# this is a hack to prevent Tulip from printing stuff and producing 500
+	# stdout = os.fdopen(os.dup(sys.stdout.fileno()), 'w')
+	# stderr = os.fdopen(os.dup(sys.stderr.fileno()), 'w')
+	# check_and_set_swig_binary(binary="swig", path="/opt/local/bin/")
+	# args = {'modulename': 'inline', 'cache_dir': '/Users/anna/.ins/cache/', 'generate_setup': False}
+	# redirect = inline("""
+	# void redirect(void) {
+     #    freopen("/Users/anna/log.log", "w", stdout);
+     #    freopen("/Users/anna/log.log", "w", stderr);
+	# }
+	# """, **(args))
+	# redirect()
+	os.system("at now <<< '/Users/anna/Documents/PhD/magnome/model_maps/SBMLVisualizer/test.py'")
 
-# visualize_model(directory, sbml, scripts, css, fav, tile, verbose)
+	# visualize_model('/Users/anna/Documents/PhD/magnome/', 'mm', 'http://mimoza.bordeaux.inria.fr', 'comp.html', sbml,
+	#                 JS_SCRIPTS, CSS_SCRIPTS, FAVIICON, TILE,
+	#                 False)  # visualize_model(directory, sbml, scripts, css, fav, tile, verbose)
+	#
+	# redirect_back = inline("""
+	# void redirect(void) {
+     #    fclose(stdout);
+     #    fclose(stderr);
+	# }
+	# """, **(args))
+	# redirect_back()
 
-
+	print "Hello world!"
 
 if __name__ == "__main__":
 	sys.exit(main())
