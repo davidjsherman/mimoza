@@ -4,7 +4,7 @@ import threading
 from tulip import tlp
 from libsbml import SBMLReader
 from mimoza.mimoza import MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, TILE
-from modules.color import simple_color
+# from modules.color import simple_color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm, nodes_to_meta_node
 from modules.geojson_helper import tulip2geojson
 from modules.html_generator import create_html
@@ -91,7 +91,7 @@ def process(graph, m_dir, meta_node, compartment, layout_algorithm=layout, args=
     # layout
     layout_algorithm(comp_graph)
     # color
-    simple_color(graph)
+    # simple_color(graph)
     # generalization-based layout for the full graph
     comp_graph_full = layout_generalization_based(comp_graph, *args)
     root[VIEW_SIZE][meta_node] = get_comp_size(graph, meta_node)

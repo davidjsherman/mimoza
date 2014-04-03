@@ -40,7 +40,7 @@ def species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_i
 		if _id in species_id2chebi_id:
 			graph[ANNOTATION][n] = species_id2chebi_id[_id]
 
-		graph[VIEW_SHAPE][n] = 14
+		graph[VIEW_SHAPE][n] = ROUND_SHAPE
 		graph[VIEW_SIZE][n] = tlp.Size(ub_sp_size, ub_sp_size) if ub else tlp.Size(sp_size, sp_size)
 	return id2n
 
@@ -80,7 +80,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[TYPE][n] = TYPE_REACTION
 		graph[REVERSIBLE][n] = r.getReversible()
 
-		graph[VIEW_SHAPE][n] = 7
+		graph[VIEW_SHAPE][n] = SQUARE_SHAPE
 		graph[VIEW_SIZE][n] = tlp.Size(r_size, r_size)
 
 		all_comps = set()

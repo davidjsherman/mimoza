@@ -19,8 +19,6 @@ def tulip2geojson(graph, geojson_file):
 	type_ = root.getIntegerProperty(TYPE)
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
 	size = root.getSizeProperty(VIEW_SIZE)
-	shape = root[VIEW_SHAPE]
-	color = root.getColorProperty(VIEW_COLOR)
 	transport = root.getBooleanProperty(TRANSPORT)
 	annotation = root.getStringProperty(ANNOTATION)
 
@@ -43,25 +41,29 @@ def tulip2geojson(graph, geojson_file):
 		s, t = graph.source(e), graph.target(e)
 		geom = geojson.MultiPoint([get_coords(s)] + [scale(it[0], it[1]) for it in layout[e]] + [get_coords(t)])
 		ubiquitous = graph[UBIQUITOUS][s] or graph[UBIQUITOUS][t]
-		props = {"color": triplet(color[e]), "width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
-		         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous}
+		generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
+		is_transport = transport[s] or transport[t]
+		props = {"width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
+		         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous,
+		         "generalized": generalized, "transport": is_transport}
 		f = geojson.Feature(geometry=geom, properties=props, id=i)
 		i += 1
 		features.append(f)
 
-	for n in (n for n in graph.getNodes() if TYPE_BG == type_[n]):
+	for n in (n for n in graph.getNodes() if type_[n] in TYPE_BG):
 		geom = geojson.Point(get_coords(n))
-		props = {"color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-		         "type": type_[n], 'shape': shape[n]}
+		props = {"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		         "type": type_[n], "transport": transport[n]}
 		f = geojson.Feature(geometry=geom, properties=props, id=i)
 		i += 1
 		features.append(f)
 
-	for n in (n for n in graph.getNodes() if type_[n] in [TYPE_REACTION, TYPE_SPECIES, TYPE_COMPARTMENT]):
+	for n in (n for n in graph.getNodes() if type_[n] in TYPE_ENTITY):
 		geom = geojson.Point(get_coords(n))
+		generalized = graph.isMetaNode(n)
 		props = {"id": root[ID][n], "name": root[NAME][n], "label": get_short_name(graph, n, onto),
-		         "color": triplet(color[n]), "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-		         "type": type_[n]}
+		         "width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+		         "type": type_[n], "generalized": generalized}
 		if TYPE_REACTION == type_[n]:
 			ins, outs = get_formula(graph, n)
 			props.update(

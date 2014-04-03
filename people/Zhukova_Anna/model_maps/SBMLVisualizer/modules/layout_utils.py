@@ -179,7 +179,7 @@ def layout_comp(graph):
 		bb = tlp.computeBoundingBox(gr)
 		root[VIEW_SIZE][meta_node] = tlp.Size(bb.width(), bb.height())
 		root[NAME][meta_node] = org
-		root[VIEW_SHAPE][meta_node] = 9
+		root[VIEW_SHAPE][meta_node] = SQUARE_SHAPE
 		mns.append(meta_node)
 	layout(sub, 1)
 	shorten_edges(sub)
@@ -463,10 +463,16 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 
 		# add a fake node to keep a common background for similar nodes
 		nn = clone.addNode()
-		for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT]:
+		for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT, TRANSPORT]:
 			root[prop][nn] = root[prop][n]
 		root[VIEW_COLOR][nn] = mn2color[n]
-		root[TYPE][nn] = TYPE_BG
+		n_type = root[TYPE][n]
+		if TYPE_COMPARTMENT == n_type:
+			root[TYPE][nn] = TYPE_BG_COMPARTMENT
+		elif TYPE_REACTION == n_type:
+			root[TYPE][nn] = TYPE_BG_REACTION
+		else:
+			root[TYPE][nn] = TYPE_BG_SPECIES
 
 		meta_neighbours = lambda nodes: sorted([t for t in nodes if graph.isMetaNode(t)], key=lambda t: -view_size[t].getW())
 		o_n_1 = meta_neighbours(graph.getInNodes(n))
@@ -484,7 +490,7 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 
 		ns = sorted(mg.getNodes(), key=lambda it: n2k[it])
 		s_m = tlp.Size(s / len(ns), s / len(ns))
-		if TYPE_REACTION == root[TYPE][n] and (alpha == 45 or alpha == 135 or alpha == -45 or alpha == -135):
+		if TYPE_REACTION == n_type and (alpha == 45 or alpha == 135 or alpha == -45 or alpha == -135):
 			s *= sqrt(2)
 		dy = s / len(ns)
 		x0, y0 = lo.getX(), lo.getY() - s / 2 + dy / 2
@@ -515,10 +521,16 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 		for n in do_not_open:
 			# add a fake node to keep a common background for similar nodes
 			nn = clone.addNode()
-			for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT]:
+			for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT, TRANSPORT]:
 				root[prop][nn] = root[prop][n]
 			root[VIEW_COLOR][nn] = mn2color[n]
-			root[TYPE][nn] = TYPE_BG
+			n_type = root[TYPE][n]
+			if TYPE_COMPARTMENT == n_type:
+				root[TYPE][nn] = TYPE_BG_COMPARTMENT
+			elif TYPE_REACTION == n_type:
+				root[TYPE][nn] = TYPE_BG_REACTION
+			else:
+				root[TYPE][nn] = TYPE_BG_SPECIES
 
 	# if bundle_edges:
 	# 	try:
