@@ -1,0 +1,495 @@
+%% BioMed_Central_Tex_Template_v1.06
+%%                                      %
+%  bmc_article.tex            ver: 1.06 %
+%                                       %
+
+%%IMPORTANT: do not delete the first line of this template
+%%It must be present to enable the BMC Submission system to
+%%recognise this template!!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                     %%
+%%  LaTeX template for BioMed Central  %%
+%%     journal article submissions     %%
+%%                                     %%
+%%          <8 June 2012>              %%
+%%                                     %%
+%%                                     %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                                                 %%
+%% For instructions on how to fill out this Tex template           %%
+%% document please refer to Readme.html and the instructions for   %%
+%% authors page on the biomed central website                      %%
+%% http://www.biomedcentral.com/info/authors/                      %%
+%%                                                                 %%
+%% Please do not use \input{...} to include other tex files.       %%
+%% Submit your LaTeX manuscript as one .tex document.              %%
+%%                                                                 %%
+%% All additional figures and files should be attached             %%
+%% separately and not embedded in the \TeX\ document itself.       %%
+%%                                                                 %%
+%% BioMed Central currently use the MikTex distribution of         %%
+%% TeX for Windows) of TeX and LaTeX.  This is available from      %%
+%% http://www.miktex.org                                           %%
+%%                                                                 %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% additional documentclass options:
+%  [doublespacing]
+%  [linenumbers]   - put the line numbers on margins
+
+%%% loading packages, author definitions
+
+%\documentclass[twocolumn]{bmcart}% uncomment this for twocolumn layout and comment line below
+\documentclass{bmcart}
+
+%%% Load packages
+%\usepackage{amsthm,amsmath}
+%\RequirePackage{natbib}
+\RequirePackage{hyperref}
+\usepackage[utf8]{inputenc} %unicode support
+%\usepackage[applemac]{inputenc} %applemac support if unicode package fails
+%\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                             %%
+%%  If you wish to display your graphics for   %%
+%%  your own use using includegraphic or       %%
+%%  includegraphics, then comment out the      %%
+%%  following two lines of code.               %%
+%%  NB: These line *must* be included when     %%
+%%  submitting to BMC.                         %%
+%%  All figure files must be submitted as      %%
+%%  separate graphics through the BMC          %%
+%%  submission process, not included in the    %%
+%%  submitted article.                         %%
+%%                                             %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%\def\includegraphic{}
+%\def\includegraphics{}
+
+
+
+%%% Put your definitions there:
+\startlocaldefs
+\endlocaldefs
+
+
+%%% Begin ...
+\begin{document}
+
+%%% Start of article front matter
+\begin{frontmatter}
+
+\begin{fmbox}
+\dochead{Research}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the title of your article here     %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Mimoza: Web-Based Semantic Zooming and Navigation in Metabolic Networks}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the authors here                   %%
+%%                                          %%
+%% Specify information, if available,       %%
+%% in the form:                             %%
+%%   <key>={<id1>,<id2>}                    %%
+%%   <key>=                                 %%
+%% Comment or delete the keys which are     %%
+%% not used. Repeat \author command as much %%
+%% as required.                             %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\author[
+   addressref={aff1},                   % id's of addresses, e.g. {aff1,aff2}
+   corref={aff1},                       % id of corresponding address, if any
+   %noteref={n1},                        % id's of article notes, if any
+   email={anna.zhukova@inria.fr}   % email address
+]{\inits{AZ}\fnm{Anna} \snm{Zhukova}}
+\author[
+   addressref={aff1},
+   email={david.sherman@inria.fr}
+]{\inits{DJS}\fnm{David J} \snm{Sherman}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the authors' addresses here        %%
+%%                                          %%
+%% Repeat \address commands as much as      %%
+%% required.                                %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\address[id=aff1]{%                           % unique id
+  \orgname{Inria/Universit\'e Bordeaux/CNRS joint project-team MAGNOME}, % university, etc
+  \street{351, cours de la Lib\'{e}ration},                     %
+  \postcode{F-33405}                                % post or zip code
+  \city{Talence},                              % city
+  \cny{France}                                    % country
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter short notes here                   %%
+%%                                          %%
+%% Short notes will be after addresses      %%
+%% on first page.                           %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{artnotes}
+%\note{Sample of title note}     % note to the article
+\note[id=n1]{Equal contributor} % note, connected to author
+\end{artnotes}
+
+\end{fmbox}% comment this for two column layout
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% The Abstract begins here                 %%
+%%                                          %%
+%% Please refer to the Instructions for     %%
+%% authors on http://www.biomedcentral.com  %%
+%% and include the section headings         %%
+%% accordingly for your article type.       %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{abstractbox}
+
+\begin{abstract} % abstract
+
+\parttitle{Motivation}
+Navigation in large metabolic networks is difficult as they include thousands of reactions thought to participate in organism's metabolism. They are intended for computer simulation, but are too detailed for a human. 
+
+\parttitle{Results}
+A web-based navigation system Mimoza allows a human expert to explore metabolic models in a semantically zoomable manner: The most general view represents the compartments of the model; the next view shows the generalized versions of reactions and metabolites in each compartment; and the most detailed view represents the initial model with the generalization-based layout (where similar metabolites and reactions are placed next to each other). It allows a human expert in organism's metabolism to grasp the general model structure and analyse it in a top-down manner, going from higher-level general questions to more detailed and specific ones.
+
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% The keywords begin here                  %%
+%%                                          %%
+%% Put each keyword in separate \kwd{}.     %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{keyword}
+\kwd{metabolic modelling}
+\kwd{visualisation}
+\kwd{model generalisation}
+\end{keyword}
+
+% MSC classifications codes, if any
+%\begin{keyword}[class=AMS]
+%\kwd[Primary ]{}
+%\kwd{}
+%\kwd[; secondary ]{}
+%\end{keyword}
+
+\end{abstractbox}
+%
+%\end{fmbox}% uncomment this for twcolumn layout
+
+\end{frontmatter}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% The Main Body begins here                %%
+%%                                          %%
+%% Please refer to the instructions for     %%
+%% authors on:                              %%
+%% http://www.biomedcentral.com/info/authors%%
+%% and include the section headings         %%
+%% accordingly for your article type.       %%
+%%                                          %%
+%% See the Results and Discussion section   %%
+%% for details on how to create sub-sections%%
+%%                                          %%
+%% use \cite{...} to cite references        %%
+%%  \cite{koon} and                         %%
+%%  \cite{oreg,khar,zvai,xjon,schn,pond}    %%
+%%  \nocite{smith,marg,hunn,advi,koha,mouse}%%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%% start of article main body
+% <put your article body there>
+
+%%%%%%%%%%%%%%%%
+%% Background %%
+%%
+\section*{Background}
+%The Background section should be written in a way that is accessible to researchers without specialist knowledge in that area and must clearly state - and, if helpful, illustrate - the background to the research and its aims. It should clearly described the relevant context and the specific issue which the software described is intended to address.
+
+\subsection*{The main point}
+Semantic generalization of metabolic models\cite{Zhukova2014} has proven to be a useful theoretical method to aid user understanding of complex networks. 
+We need to go from this theoretical method to a practical tool.
+
+Map-based visualisation paradigm has proven to be a powerful tool for representation data at different scales.
+
+Challenge is how to use map-based visualization for semantic generalization.
+
+\subsection*{History}
+There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analysed by a human curator: Genome-scale metabolic models include thousands of reactions thought to participate in organism's metabolism, while a human can understand best networks that have hundreds of reaction.
+
+%% Reconstruction
+Metabolic network reconstruction process becomes more and more advanced. There exist various tools for semi-automatic model inference, e.g. PathwayTools\cite{Karp2002}, CoReCo\cite{Pitkanen2014}, SuBliMinaL\cite{Swainston2011} (see \cite{Hamilton2014} for a review).
+
+%% Storage
+Starting from a model for a similar organism or a collection of pathways and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database\cite{Li10}, BIGGs\cite{Schellenberger2010}, JWS online\cite{Snoep2003}. KEGG\cite{Kanehisa12} provides an extensive collection of pathways. 
+
+%% Representation
+Models are stored and shared using established formats, such as SBML\cite{Hucka2003}, SBGN\cite{Moodie2011}, CEllML\cite{Lloyd2004}. The model representation in this formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI\cite{deMatos10}, Uniprot\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable such standardisation efforts as Identifiers.org\cite{Juty2012} emerge.
+
+
+% Why do we need humans?
+Although the model inference tools are becoming more and more advanced, curation by a human expert in organism's metabolism remains crucial. Hence means of splitting genome-scale models into smaller units that can be checked and analysed by human experts in the field are needed. An appropriate level of abstraction needs to be found to allow experts to explore and compare whole genome networks. Good model visualisation tools are also required.
+
+\subsection*{Existing approaches}
+There exist various modelling tools for metabolic networks that also support visualisation. Desktop ones include CellDesigner\cite{Funahashi2008}, VANTED\cite{Rohn2012}, Cytoscape\cite{Smoot2011}. They produce reasonably good visualisations of small networks (up to hundreds of reactions), but have too many edge and node intersections (clutter) for genome-scale ones, making the visualisation unreadable. For example,  the winner of the Best SBGN map competition (http://www.sbgn.org/Competition/Competition\_2011) was a ER Stress response\cite{Groenendyk2010} map manually created in CellDesinger.
+
+Web-based tools allowing for model visualisation are also emerging.  JWS online, for example, provides a mechanism for model visualisation using a weight-bla algorithm. It has the same problem metioned above: not capable of providing a reasonable representation of huge models.
+
+For huge models not just a better graph layout algorithm, but a different approach is needed. First of all, they need to be decomposed into several meaningful modules (such as compartments, pathways). But even after such a decomposition a model might stay too complicated (e.g. a mitochondrion compartment of a yeast model\cite{Heavner12} contains N reactions). Thus a way of finding an appropriate level of abstraction, allowing to hide the inessential details, is desirable.For this purpose zoomable (e.g. cartographic) approaches seem to be suitable. 
+
+There are several existing online tools proposing a zoomable solution. NaviCell\cite{Kuperstein2013} that represent zommable maps of biological processes (mostly signalling): but the maps are not produced automatically, the user has to visualise the network with CeLLDesigner, export it as an image and then manually edit it in the graphical designer to produce more general views. Which still poses a problem of laying out huge networks. 
+
+There is Cellular Overview\cite{Latendresse2011} for metabolic maps but it is pathway-oriented, and zoom only makes things bigger. The only organisms for which it's available are those from BioCyc database\cite{Caspi2012}. No compartment information is taken into account.
+
+Combining meaningful decomposition into modules with automatic abstraction remains unsolved. In this paper we address this problem and propose our solution.
+
+\section*{Implementation}
+% This should include a description of the overall architecture of the software implementation, along with details of any critical issues and how they were addressed.
+
+\subsection*{Choosing zoom levels}
+Genome-scale metabolic networks are complex, so to adopt a multi-level representation. Generalization + semantic zooming => the most appropriate is to adopt 3 levels.
+\subsection*{Three-level model representation}
+To aid human understanding of genome-scale models, while keeping the details needed for a computer simulation, we propose a 3-level zoomable approach:
+\begin{enumerate}
+\item The most abstract level represents compartmentalization of the model, and focusses on such questions as: Are all the compartments present? Are they well connected by transport reactions?
+
+This level shows the compartments of the model, their annotations with the Gene Ontology terms, the transport reactions between the compartments, and other reactions happening inside cytoplasm.
+
+\item The second level shows the modules inside of each of the compartments. The questions to be addressed on this level include: Are all the essential processes present? Is the structure of each process correct? Is there any organism-specific adaptation of the structure?
+
+Different approaches can be used to identify the modules inside the compartments. There are two general classes of approaches: series and parallel. A series approach operates on chains of reactions, and generalizes them as a series, consequently hiding the structure of the network. An example of a series approach is representing the network as a set of metabolic pathways (KEGG\cite{Kanehisa12}, MetaCyC\cite{Caspi2012}), that can be further divided, for example, into reaction modules (conserved sequences of reactions along the metabolic pathways)\cite{Muto2013}. 
+
+The other type of approach operates on reactions that are parallel, keeping the steps and preserving the general view of the network. An example of this approach is grouping reactions based on EC (Enzyme Commission) numbers\cite{Tohsato2000}. The drawback of this approach is that it is not applicable to networks with no EC number assigned or reactions with no catalysing enzymes identified. 
+
+In our tool we use a parallel-reaction approach to keep its essential structure of the model at all the levels. We use method for knowledge-based generalization of metabolic models, which does not depend on enzyme information. It detects similar metabolites and reactions and clusters them together, representing as generalized metabolites/reactions with the same structure (number of consumed/produced metabolites).
+
+\item The most detailed level is intended for computer simulation and represents the inner structure of each of the modules with all the species, reactions and their kinetics, stoichiometry and constraints.
+
+Our method places similar metabolites/reactions (detected on the level 2) next to each other, thus simplifying the analysis of their presence.
+
+\end{enumerate}
+
+\subsection*{Model generalisation}
+The metabolic model generalization method\cite{Zhukova2014}, which we recall here, operates on models in \textit{SBML}\cite{Hucka08} format.
+
+% Factoring species into appropriate eq. classes
+
+The method first groups the species present in the network into semantically equivalent classes. The appropriate level of abstraction for those classes is defined by the network itself as the most general one that satisfies two restrictions: 
+\begin{itemize}
+ \item species that participate in the same reaction cannot be grouped together (to preserve the stoichiometry of the reactions in the network),
+ \item species that do not participate in any pair of similar reactions are not grouped together (as there is no evidence of their similarity in the network).
+\end{itemize}
+ % technical details, e.g. ChEBI
+To make species grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical species is used. Each species group is generalized up to the least common ancestor of its elements in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for biochemical species annotation in metabolic networks. %Possible groups for the species are chosen based on hierarchical relationships in the \textit{ChEBI} ontology. 
+For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-CoA} and \textit{(S)-3-hydroxytetradecanoyl-CoA} have a common ancestor \textit{hydroxy fatty acyl-CoA} in \textit{ChEBI}. If there exist similar reactions operating with them in the network, e.g. \textit{3-hydroxyacyl-CoA dehydratase}, and no reaction whose stoichiometry would be broken by such a generalization, then they can be grouped and generalized into \textit{hydroxy fatty acyl-CoA}.
+
+% Once species are factored, we can generalise the reactions
+Reactions that share the same generalized reactants and the same generalized products, are considered equivalent and are factored together into a generalized reaction. 
+
+% Ubiquitous species are duplicated (to improve readability)
+We do not generalize ubiquitous (frequently occurring) species, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping species increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these species are usually duplicated\cite{Rohn2012} to improve readability.
+
+% Limitations
+As the generalization of species depends on the ChEBI hierarchy, the method tries to find ChEBI terms for the species that lack ChEBI annotations in the model. The search is done by comparing species names to ChEBI terms' names and synonyms. The method does not generalize those species for which no ChEBI mapping can be found. 
+% Another characteristic of the method is that, in order to preserve stoichiometry, it cannot factor chains of consecutive similar reactions, i.e. reactions whose reactants could belong to the same equivalence class as products. Our method factors only \textit{parallel} reactions, whose reactants and products belong to distinct equivalence classes.
+
+% Implementation
+The generalization method is implemented as a Python library and is available for download from http://metamogen.gforge.inria.fr. The generalized network is produced in SBML format with groups annotations\cite{Hucka2012}.
+
+\subsection*{Layers Layout}
+While laying out large graphs is widely studies\cite{smth}, making the correspondence between the layouts of different zoom levels is hard.
+
+To compute the layout we use Tulip graph visualization software\cite{Auber04} and two different approaches, depending on the zoom level.
+\subsubsection*{Generalised model layout}
+% General idea
+In order to layout the sub-models corresponding to each of the organelles after the generalisation, we use a combination of standard layout algorithms provided by Tulip. We divide the organelle graph into connected components and then apply an appropriate layout algorithm on each of them. The results are combined together using the 'Connected Component Packing' algorithm, which places the components close to each other while removing the overlaps between them.
+
+% Laying out a connected component
+Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms:
+\begin{itemize}
+\item \emph{Hierarchical Layout} for the components that contain no cycles,
+\item \emph{Circular Layout} for the components with less than 100 nodes and less than 3 cycles,
+\item \emph{Force-Directed Layout} for all the other components.
+\end{itemize}
+
+% Ubiquitous species hadling
+To avoid cluttering we duplicate all the ubiquitous species before applying the layout algorithms, so that there is a copy of an ubiquitous species for each reaction it participates in. We then extract a subgraph, containing all but the ubiquitous species, apply the combined layout on it, and then place the ubiquitous species next to the reactions in which they participate.
+
+\subsubsection*{Generalization-based full model layout}
+The layout for the full model is based on the corresponding generalised model's layout. To allow for zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous species, and species and reactions that are not generalised, and place similar species/reactions next to each other inside the space used by the corresponding generalized species/reactions in the generalized model. This also allows for grasping similar processed at the same time. 
+ 
+\subsection*{Zoomable cartographic representation}
+
+The zoomable web representation of a model is achieved using Leaflet library.
+GeoJson, Leaflet. Pop-ups with additional information.
+ 
+\subsection*{Pipeline}
+SBML -> GeoJson + Leaflet -> either download or use directly on the web cite.
+The general pipeline contains of 7 steps.
+\begin{enumerate}
+\item The user submits a model in SBML format via a web-form.
+\item If the model contains no group annotations, it is generalised using model generalization method. It produces an SBML file with the group annotations representing similar species and reactions. This file is made available to the user.
+\item The SBML file with the groups annotation is converted into the tlp format to be represented as a Tulip graph: species nodes are connected by edges to the nodes of the reactions they participate in. The generalised species and reactions form quotient nodes.
+\item The Tulip graph is split into sub-graphs corresponding to compartments.
+\item Layout algorithms are applied to the organelle sub-graphs.
+\item The organelle sub-graphs are converted to GeoJson format.
+\item HTML+Leaflet pages are created for the model using the GeoJson files. The result is represented to the user.
+\end{enumerate}
+
+\subsection*{Embedding}
+iForm to embed in your web-page.
+
+ 
+\section*{Results and Discussion}
+%The Results and Discussion may be combined into a single section or presented separately. They may also be broken into subsections with short, informative headings. In any case what should be described is the functionality of the software together with data on how its performance and functionality compare with and improve on functionally similar existing software. There should then be a discussion of the intended use of the software, and the benefits that are envisioned together, if possible, with an outline for the planned future development of new features.
+
+Future work: use more sophisticated layout of the generalized level (e.g. anchored).
+Add opportunity to change layout / annotations, etc.
+
+Combine several models as an input.
+
+\section*{Conclusions}
+%This should state clearly the main conclusions of the article and give a clear explanation of the importance and relevance of the software.
+
+Mimoza is an amazing tool that everyone was waiting for and can finally use and become happy!
+
+\section*{Availability and requirements}
+\textbf{Project name:} Mimoza\\
+\textbf{Project home page:} http://mimoza.bordeaux.inria.fr\\
+\textbf{Operating system(s):} Platform independent\\
+\textbf{Programming language:} Python, JavaScript\\
+\textbf{License:} CeCILL (GPL compatible)\\
+\textbf{Any restrictions to use by non-academics:} no restrictions
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Backmatter begins here                   %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{backmatter}
+
+\section*{Competing interests}
+  The authors declare that they have no competing interests.
+
+\section*{Author's contributions}
+    Text for this section \ldots
+
+\section*{Acknowledgements}
+  Text for this section \ldots
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                  The Bibliography                       %%
+%%                                                         %%
+%%  Bmc_mathpys.bst  will be used to                       %%
+%%  create a .BBL file for submission.                     %%
+%%  After submission of the .TEX file,                     %%
+%%  you will be prompted to submit your .BBL file.         %%
+%%                                                         %%
+%%                                                         %%
+%%  Note that the displayed Bibliography will not          %%
+%%  necessarily be rendered by Latex exactly as specified  %%
+%%  in the online Instructions for Authors.                %%
+%%                                                         %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% if your bibliography is in bibtex format, use those commands:
+\bibliographystyle{bmc-mathphys} % Style BST file
+\bibliography{db}      % Bibliography file (usually '*.bib' )
+
+% or include bibliography directly:
+% \begin{thebibliography}
+% \bibitem{b1}
+% \end{thebibliography}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Figures                       %%
+%%                               %%
+%% NB: this is for captions and  %%
+%% Titles. All graphics must be  %%
+%% submitted separately and NOT  %%
+%% included in the Tex document  %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%
+%% Do not use \listoffigures as most will included as separate files
+
+\section*{Figures}
+  \begin{figure}[h!]
+  \caption{\csentence{3 zoom levels. (1 page)}
+      Compartments, generalized peroxisome, zoomed in reaction.}
+      \end{figure}
+
+\begin{figure}[h!]
+  \caption{\csentence{Pop-ups with annotations. (1/2 page)}
+      Show a reaction pop-up (mb a species one as well). Show where links redirect.}
+      \end{figure}
+      
+\begin{figure}[h!]
+  \caption{\csentence{GeoJson representation. (1/2 page)}
+      Show how geometry and pop-up content are encoded.}
+      \end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Tables                        %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Use of \listoftables is discouraged.
+%%
+%\section*{Tables}
+%\begin{table}[h!]
+%\caption{Sample table title. This is where the description of the table should go.}
+%      \begin{tabular}{cccc}
+%        \hline
+%           & B1  &B2   & B3\\ \hline
+%        A1 & 0.1 & 0.2 & 0.3\\
+%        A2 & ... & ..  & .\\
+%        A3 & ..  & .   & .\\ \hline
+%      \end{tabular}
+%\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Additional Files              %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{Additional Files}
+  \subsection*{Additional file 1 --- A movie about navigation.}
+   For the same model as used in the figures and that is available on the main Mimoza page, so the reviewers can follow the steps.
+
+
+\end{backmatter}
+\end{document}
