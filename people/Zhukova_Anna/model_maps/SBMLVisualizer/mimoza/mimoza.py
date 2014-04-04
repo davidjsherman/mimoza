@@ -8,6 +8,7 @@ MIMOZA_ERROR_URL = '%s/error.html' % MIMOZA_URL
 MIMOZA_UPLOAD_ERROR_URL = '%s/upload_error.html' % MIMOZA_URL
 
 MIMOZA_JS = '%s/lib/modelmap/maptools.js' % MIMOZA_URL
+MIMOZA_POPUP_JS = '%s/lib/modelmap/popup_formatter.js' % MIMOZA_URL
 MIMOZA_CSS = '%s/lib/modelmap/modelmap.css' % MIMOZA_URL
 MIMOZA_FAVICON = '%s/lib/modelmap/fav.ico' % MIMOZA_URL
 
@@ -27,5 +28,5 @@ LOADER_ICON = '%s/lib/modelmap/loader.gif' % MIMOZA_URL
 
 SBML_ORG = "http://sbml.org"
 
-JS_SCRIPTS = [LEAFLET_JS, LEAFLET_LABEL_JS, JQUERY_JS, JQUERY_UI_JS, MIMOZA_JS]
+JS_SCRIPTS = [LEAFLET_JS, LEAFLET_LABEL_JS, JQUERY_JS, JQUERY_UI_JS, MIMOZA_JS, MIMOZA_POPUP_JS]
 CSS_SCRIPTS = [MIMOZA_CSS, LEAFLET_CSS, LEAFLET_LABEL_CSS, JQUERY_UI_CSS]

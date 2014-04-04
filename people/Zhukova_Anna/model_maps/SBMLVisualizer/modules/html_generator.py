@@ -25,7 +25,8 @@ def add_compartment_menu(url, organelles, page):
 	page.ul(class_='menu margin centre')
 	for organelle in organelles:
 		page.li()
-		page.a(denormalize(organelle), href='%s?name=%s' % (url, normalize(organelle)))
+		# page.a(denormalize(organelle), href='%s?name=%s' % (url, normalize(organelle)))
+		page.a(denormalize(organelle), href='?name=%s' % (normalize(organelle)))
 		page.li.close()
 	page.ul.close()
 
