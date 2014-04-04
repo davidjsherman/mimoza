@@ -87,7 +87,7 @@ var GREEN = "#B3DE69";
 var VIOLET = "#BEBADA";
 var TURQUOISE = "#8DD3C7";
 
-function pnt2layer(map, feature, edges, ub_sps) {
+function pnt2layer(map, feature, edges, ub_edges, ub_sps) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
@@ -105,10 +105,12 @@ function pnt2layer(map, feature, edges, ub_sps) {
             fill: false
         });
         if (feature.properties.ubiquitous) {
-            ub_sps.addLayer(edge);
+            ub_edges.addLayer(edge);
+//            return ub_edges;
+        } else {
+            edges.addLayer(edge);
         }
-        edges.addLayer(edge);
-        return edges;
+        return edge;
     }
     var x = e[0], y = e[1];
     if ((SPECIES == feature.properties.type) || (BG_SPECIES == feature.properties.type)) {
@@ -175,33 +177,49 @@ function pnt2layer(map, feature, edges, ub_sps) {
         var fg = L.featureGroup([node, label]);
         if (feature.properties.ubiquitous) {
             ub_sps.addLayer(fg);
-            // return ub_sps;
         }
         return fg;
     }
     if (feature.properties.ubiquitous) {
         ub_sps.addLayer(node);
-        // return ub_sps;
     }
     return node;
 }
 
 function getGeoJson(map, json, name2popup) {
     var edges = L.layerGroup([]);
+    var ub_edges = L.layerGroup([]);
     var ub_sps = L.layerGroup([]);
-    if (json == null || json.length == 0) {
-        // pass
-    } else if (json.length == 1) {
-        getSimpleJson(map, json[0], name2popup, edges, ub_sps);
-    } else {
-        getComplexJson(map, json[0], json[1], name2popup, edges, ub_sps);
+    if (json != null && json.length >= 2) {
+        var zoom_in = json[1];
+        var zoom_out = json[0];
+        var geojsonLayer = getSimpleJson(map, zoom_out, name2popup, edges, ub_edges, ub_sps);
+        var zo = map.getZoom();
+        map.on('zoomend', function (e) {
+            var zn = map.getZoom();
+            if (zn >= 3 && zo < 3) {
+                geojsonLayer = getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ub_sps);
+            } else if (zn < 3 && zo >= 3) {
+                geojsonLayer = getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ub_sps);
+            } else {
+                fitLabels(zn, zo);
+                resizeEdges(edges, ub_edges, Math.pow(2, zn - zo), map);
+            }
+            zo = map.getZoom();
+        });
     }
     fitSimpleLabels();
     setAutocomplete(map, name2popup);
-    return ub_sps;
+
+    var checkbox = document.getElementById('showUbs');
+    if (checkbox) {
+        checkbox.onchange = function () {
+            visualizeUbiquitous(map, edges, ub_edges, ub_sps);
+        }
+    }
 }
 
-function resizeEdges(edges, resize_factor, ub_sps, map) {
+function resizeEdges(edges, ub_edges, resize_factor, map) {
     if (1 == resize_factor) {
         return
     }
@@ -212,43 +230,34 @@ function resizeEdges(edges, resize_factor, ub_sps, map) {
         clickable: false,
         fill: false
     };
-    var layers = edges.getLayers();
-    for (var i in layers) {
-        var e = layers[i];
-        edges.removeLayer(e);
-        props['color'] = e.options['color'];
-        props['weight'] = e.options['weight'] * resize_factor;
-        var new_e = L.polyline(e._latlngs, props);
-        edges.addLayer(new_e);
-        new_e.bringToBack();
-        if (-1 != ub_sps.getLayers().indexOf(e)) {
-            ub_sps.removeLayer(e);
-            ub_sps.addLayer(new_e);
-            if (!document.getElementById('showUbs').checked) {
-                map.removeLayer(new_e);
-            }
-        }
+    var show_ubs = document.getElementById('showUbs').checked;
+
+    function resize(edgs) {
+        var new_layers = [];
+        edgs.eachLayer(function (e) {
+            props['color'] = e.options['color'];
+            props['weight'] = e.options['weight'] * resize_factor;
+            var new_e = L.polyline(e._latlngs, props);
+            new_layers.push(new_e);
+            map.removeLayer(e);
+        });
+        edgs.clearLayers();
+        new_layers.forEach(function (newLayer, i, array) {
+            edgs.addLayer(newLayer);
+            map.addLayer(newLayer);
+            newLayer.bringToBack();
+        });
+    }
+    resize(ub_edges);
+    resize(edges);
+    if (!show_ubs) {
+        removeLayer(map, ub_edges);
     }
 }
 
-function getComplexJson(map, json_zo, json_zi, name2popup, edges, ub_sps) {
-    var geojsonLayer = getSimpleJson(map, json_zo, name2popup, edges, ub_sps);
-    var zo = map.getZoom();
-    map.on('zoomend', function (e) {
-        var zn = map.getZoom();
-        if (zn >= 3 && zo < 3) {
-            geojsonLayer = getJson(map, json_zi, name2popup, geojsonLayer, edges, ub_sps);
-            fitSimpleLabels();
-            setAutocomplete(map, name2popup);
-        } else if (zn < 3 && zo >= 3) {
-            geojsonLayer = getJson(map, json_zo, name2popup, geojsonLayer, edges, ub_sps);
-            fitSimpleLabels();
-            setAutocomplete(map, name2popup);
-        } else {
-            fitLabels(zn, zo);
-            resizeEdges(edges, Math.pow(2, zn - zo), ub_sps, map);
-        }
-        zo = map.getZoom();
+function bringToBack(layerGroup) {
+    layerGroup.eachLayer(function (layer) {
+        layer.bringToBack();
     });
 }
 
@@ -313,20 +322,20 @@ function fitLabels(zn, zo) {
 ////    $('.wrap').children().unwrap();
 }
 
-function getSimpleJson(map, jsn, name2popup, edges, ub_sps) {
+function getSimpleJson(map, jsn, name2popup, edges, ub_edges, ub_sps) {
     var result = L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, edges, ub_sps);
+            return pnt2layer(map, feature, edges, ub_edges, ub_sps);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, feature, layer);
         }
     }).addTo(map);
-    visualizeUbiquitous(map, ub_sps);
+    visualizeUbiquitous(map, edges, ub_edges, ub_sps);
     return result;
 }
 
-function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_sps) {
+function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_edges, ub_sps) {
     for (var prop in name2popup) {
         if (name2popup.hasOwnProperty(prop)) {
             delete name2popup[prop];
@@ -334,8 +343,12 @@ function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_sps) {
     }
     edges.clearLayers();
     ub_sps.clearLayers();
+    ub_edges.clearLayers();
     map.removeLayer(geojsonLayer);
-    return getSimpleJson(map, jsn, name2popup, edges, ub_sps);
+    var result = getSimpleJson(map, jsn, name2popup, edges, ub_edges, ub_sps);
+    fitSimpleLabels();
+    setAutocomplete(map, name2popup);
+    return result;
 }
 
 function search(map, name2popup) {
@@ -345,16 +358,32 @@ function search(map, name2popup) {
     }
 }
 
-function visualizeUbiquitous(map, ub_sps) {
-    if (document.getElementById('showUbs').checked) {
-        map.addLayer(ub_sps);
+function removeLayer(map, layer) {
+//    map.removeLayer(layer);
+    layer.eachLayer(function (e) {
+        map.removeLayer(e);
+    });
+}
+
+function addLayer(map, layer) {
+//    map.removeLayer(layer);
+    layer.eachLayer(function (e) {
+        map.addLayer(e);
+    });
+}
+
+function visualizeUbiquitous(map, edges, ub_edges, ub_sps) {
+    var checkBox = document.getElementById('showUbs');
+    if (checkBox != null && checkBox.checked) {
+        addLayer(map, ub_sps);
+        addLayer(map, ub_edges);
+        bringToBack(ub_edges);
+        bringToBack(edges);
     } else {
-        map.removeLayer(ub_sps);
-        var layers = ub_sps.getLayers();
-        for (var i in layers) {
-            var e = layers[i];
-            map.removeLayer(e);
-        }
+        removeLayer(map, ub_sps);
+//        map.removeLayer(ub_sps);
+//        map.removeLayer(ub_edges);
+        removeLayer(map, ub_edges);
     }
 }
 

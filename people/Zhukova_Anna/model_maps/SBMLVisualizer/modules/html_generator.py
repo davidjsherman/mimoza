@@ -132,13 +132,7 @@ def add_js(default_organelle, org2scripts, page, tile):
 
 			map = initializeMap(5);
 			var name2popup = {};
-			var ub_sps = getGeoJson(map, comp2geojson[compartment], name2popup);
-
-			var checkbox = document.getElementById('showUbs');
-		    checkbox.onchange = function() {
-		        visualizeUbiquitous(map, ub_sps);
-		    }
-
+			getGeoJson(map, comp2geojson[compartment], name2popup);
 
 			L.tileLayer("''' + tile + '''", {
 				continuousWorld: true,
