@@ -60,13 +60,6 @@ function initializeMap(max_zoom) {
     return map;
 }
 
-
-function uproject(map, x, y, w, h) {
-    var r_x = map.unproject([x - w / 2, y], 1).distanceTo(map.unproject([x + w / 2, y], 1)),
-        r_y = map.unproject([x, y + h / 2], 1).distanceTo(map.unproject([x, y - h / 2], 1));
-    return (r_x + r_y) / 2;
-}
-
 var EDGE = 0;
 
 var SPECIES = 1;
@@ -96,7 +89,7 @@ function pnt2layer(map, feature, edges, ub_edges, ub_sps) {
         var edge = L.polyline(e.map(function (coord) {
             return map.unproject(coord, 1)
         }), {
-            color: color,//feature.properties.color,
+            color: color,
             opacity: 1,
             weight: w * Math.pow(2, map.getZoom() - 1),
             lineCap: 'round',
@@ -106,11 +99,11 @@ function pnt2layer(map, feature, edges, ub_edges, ub_sps) {
         });
         if (feature.properties.ubiquitous) {
             ub_edges.addLayer(edge);
-//            return ub_edges;
+            return ub_edges;
         } else {
             edges.addLayer(edge);
+            return edges;
         }
-        return edge;
     }
     var x = e[0], y = e[1];
     if ((SPECIES == feature.properties.type) || (BG_SPECIES == feature.properties.type)) {
@@ -137,7 +130,6 @@ function pnt2layer(map, feature, edges, ub_edges, ub_sps) {
         northEast = map.unproject([x + w, y - h], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
     var d = southWest.distanceTo(northEast);
-//    var centre = map.unproject(e, 1);
     var centre = bounds.getCenter();
     if (BG_SPECIES == feature.properties.type) {
         props["fillColor"] = ORANGE;
@@ -169,7 +161,7 @@ function pnt2layer(map, feature, edges, ub_edges, ub_sps) {
             {
                 icon: L.divIcon({
                     className: 'count-icon',
-                    html: feature.properties.label,//formatLabel(feature, w * map.getZoom() * 2, h * map.getZoom() * 2),
+                    html: feature.properties.label,
                     iconSize: [  (w * Math.pow(2, map.getZoom() - 1) * 1.8), h * Math.pow(2, map.getZoom() - 1) * 1.8]
                 })
             }
@@ -203,7 +195,7 @@ function getGeoJson(map, json, name2popup) {
                 geojsonLayer = getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ub_sps);
             } else {
                 fitLabels(zn, zo);
-                resizeEdges(edges, ub_edges, Math.pow(2, zn - zo), map);
+                resizeEdges(edges, ub_edges, Math.pow(2, zn - zo));
             }
             zo = map.getZoom();
         });
@@ -219,7 +211,7 @@ function getGeoJson(map, json, name2popup) {
     }
 }
 
-function resizeEdges(edges, ub_edges, resize_factor, map) {
+function resizeEdges(edges, ub_edges, resize_factor) {
     if (1 == resize_factor) {
         return
     }
@@ -232,27 +224,24 @@ function resizeEdges(edges, ub_edges, resize_factor, map) {
     };
     var show_ubs = document.getElementById('showUbs').checked;
 
-    function resize(edgs) {
+    function resize(edgs, show) {
         var new_layers = [];
         edgs.eachLayer(function (e) {
             props['color'] = e.options['color'];
             props['weight'] = e.options['weight'] * resize_factor;
             var new_e = L.polyline(e._latlngs, props);
             new_layers.push(new_e);
-            map.removeLayer(e);
         });
         edgs.clearLayers();
         new_layers.forEach(function (newLayer, i, array) {
             edgs.addLayer(newLayer);
-            map.addLayer(newLayer);
-            newLayer.bringToBack();
+            if (show) {
+                newLayer.bringToBack();
+            }
         });
     }
-    resize(ub_edges);
-    resize(edges);
-    if (!show_ubs) {
-        removeLayer(map, ub_edges);
-    }
+    resize(ub_edges, show_ubs);
+    resize(edges, true);
 }
 
 function bringToBack(layerGroup) {
@@ -359,14 +348,12 @@ function search(map, name2popup) {
 }
 
 function removeLayer(map, layer) {
-//    map.removeLayer(layer);
     layer.eachLayer(function (e) {
         map.removeLayer(e);
     });
 }
 
 function addLayer(map, layer) {
-//    map.removeLayer(layer);
     layer.eachLayer(function (e) {
         map.addLayer(e);
     });
@@ -376,14 +363,12 @@ function visualizeUbiquitous(map, edges, ub_edges, ub_sps) {
     var checkBox = document.getElementById('showUbs');
     if (checkBox != null && checkBox.checked) {
         addLayer(map, ub_sps);
-        addLayer(map, ub_edges);
+        map.addLayer(ub_edges);
         bringToBack(ub_edges);
         bringToBack(edges);
     } else {
         removeLayer(map, ub_sps);
-//        map.removeLayer(ub_sps);
-//        map.removeLayer(ub_edges);
-        removeLayer(map, ub_edges);
+        map.removeLayer(ub_edges);
     }
 }
 
