@@ -68,8 +68,8 @@ function getBaseMap(layers) {
     return map;
 }
 
-function getTiles() {
-    return L.tileLayer("/lib/modelmap/white512.jpg", {
+function getTiles(img) {
+    return L.tileLayer(img, {
         continuousWorld: true,
         noWrap: true,
         tileSize: 512,
@@ -82,11 +82,9 @@ function getTiles() {
 }
 
 function initializeMap(zoom_out, zoom_in) {
-    var ubLayer = L.layerGroup();
-    var tiles = getTiles();
-    var map = getBaseMap([tiles, ubLayer]);
+    var labels = L.layerGroup();
 
-    var name2popup = {};
+    var ubLayer = L.layerGroup();
 
     var edges = L.layerGroup();
     var ub_edges = L.layerGroup();
@@ -96,20 +94,30 @@ function initializeMap(zoom_out, zoom_in) {
     ubiquitous.addTo(ubLayer);
     ub_edges.addTo(ubLayer);
 
+    var tiles = getTiles("/lib/modelmap/white512.jpg");
+    var gray_tiles =  getTiles("/lib/modelmap/gray512.jpg");
+    var map = getBaseMap([tiles, edges, ubLayer, specific, labels]);
+
+    var name2popup = {};
+
     if (zoom_in != null && zoom_out != null) {
-        var geojsonLayer = getSimpleJson(map, zoom_out, name2popup, edges, ub_edges, ubiquitous, specific);
+        var geojsonLayer = getSimpleJson(map, zoom_out, name2popup, edges, ub_edges, ubiquitous, specific, labels);
         var zo = map.getZoom();
         map.on('zoomend', function (e) {
             var zn = map.getZoom();
             if (zn >= 3 && zo < 3) {
-                getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific);
+                getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific, labels);
 //                geojsonLayer = getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ubiquitous);
             } else if (zn < 3 && zo >= 3) {
 //                geojsonLayer = getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ubiquitous);
-                getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific);
+                getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific, labels);
             } else {
                 fitLabels(zn, zo);
                 resizeEdges(edges, ub_edges, Math.pow(2, zn - zo), map);
+//                if (map.hasLayer(ubiquitous)) {
+//                    ubiquitous.bringToFront();
+//                }
+//                specific.bringToFront();
             }
             zo = map.getZoom();
         });
@@ -118,11 +126,13 @@ function initializeMap(zoom_out, zoom_in) {
     setAutocomplete(map, name2popup);
 
     var baseLayers = {
-        "Tiles": tiles
+        "White background": tiles,
+        "Gray background": gray_tiles
     };
 
     var overlays = {
-        "Ubiquitous species": ubLayer
+        "Ubiquitous species": ubLayer,
+        "Labels": labels
     };
 
     L.control.layers(baseLayers, overlays).addTo(map);
@@ -153,7 +163,7 @@ const WHITE = 'white';
 
 const ROUND = 'round';
 
-function pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific) {
+function pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific, labels) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
@@ -222,8 +232,10 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific) {
     } else if (SPECIES == feature.properties.type) {
         props["fillColor"] = feature.properties.ubiquitous ? GREY : (feature.properties.generalized ? ORANGE : RED);
         node = L.circle(centre, d / 2, props);
+    } else {
+        return null;
     }
-    if (node && w * Math.pow(2, (map.getZoom() >= 3 ? map.getMaxZoom() : 3) - 1) >= 25) {
+    if (!feature.properties.ubiquitous && w * Math.pow(2, (map.getZoom() >= 3 ? map.getMaxZoom() : 3) - 1) >= 25) {
         var label = L.marker(centre,
             {
                 icon: L.divIcon({
@@ -233,8 +245,9 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific) {
                 })
             }
         );
-        var fg = L.featureGroup([node, label]);
-        return feature.properties.ubiquitous ? ubiquitous.addLayer(fg) : specific.addLayer(fg);
+        labels.addLayer(label);
+//        var fg = L.featureGroup([node, label]);
+//        return feature.properties.ubiquitous ? ubiquitous.addLayer(fg) : specific.addLayer(fg);
         //return fg;
     }
     return feature.properties.ubiquitous ? ubiquitous.addLayer(node) : specific.addLayer(node);
@@ -264,20 +277,17 @@ function resizeEdges(edges, ub_edges, resize_factor, map) {
         edgs.clearLayers();
         new_layers.forEach(function (newLayer) {
             edgs.addLayer(newLayer);
-            if (map.hasLayer(ub_edges)) {
-                newLayer.bringToBack();
-            }
         });
     }
     resize(ub_edges);
     resize(edges, true);
 }
 
-function bringToBack(layerGroup) {
-    layerGroup.eachLayer(function (layer) {
-        layer.bringToBack();
-    });
-}
+//function bringToBack(layerGroup) {
+//    layerGroup.eachLayer(function (layer) {
+//        layer.bringToBack();
+//    });
+//}
 
 function fitSimpleLabels() {
     // console.log('fitting labels into nodes');
@@ -345,10 +355,10 @@ function fitLabels(zn, zo) {
 ////    $('.wrap').children().unwrap();
 }
 
-function getSimpleJson(map, jsn, name2popup, edges, ub_edges, ubiquitous, specific) {
+function getSimpleJson(map, jsn, name2popup, edges, ub_edges, ubiquitous, specific, labels) {
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific);
+            return pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific, labels);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, feature, layer);
@@ -364,13 +374,14 @@ function clear(dict) {
     }
 }
 
-function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific) {
+function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific, labels) {
     clear(name2popup);
     var showUbiquitous = map.hasLayer(ubiquitous);
     edges.clearLayers();
     ubiquitous.clearLayers();
     ub_edges.clearLayers();
     specific.clearLayers();
+    labels.clearLayers();
 //    geojsonLayer.clearLayers();
     //map.removeLayer(geojsonLayer);
     geojsonLayer.addData(jsn);
