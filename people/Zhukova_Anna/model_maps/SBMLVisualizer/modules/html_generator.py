@@ -108,7 +108,7 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(default_organelle, org2scripts, page, tile):
+def add_js(default_organelle, org2scripts, page):
 	page.script('var comp2geojson = %s; var compartment = "%s";' % (org2scripts, normalize(default_organelle)) + '''
 		var comp = gup('name');
 		if (comp) {
@@ -121,27 +121,12 @@ def add_js(default_organelle, org2scripts, page, tile):
 			}
 			span.appendChild(document.createTextNode(compartment.replace('_', ' ')));
 
-			// map = initializeMap(5);
-			// var name2popup = {};
-			// getGeoJson(map, comp2geojson[compartment], name2popup);
-			//
-			// L.tileLayer("''' + tile + '''", {
-			// 	continuousWorld: true,
-			// 	noWrap: true,
-			// 	tileSize: 512,
-			// 	maxZoom: 5,
-			// 	minZoom: 0,
-			// 	tms: true,
-			// 	updateWhenIdle: true,
-			// 	reuseTiles: true
-			// }).addTo(map);
-
-			initializeMap(comp2geojson[compartment][0], comp2geojson[compartment][1]);
+			initializeMap(comp2geojson[compartment]);
 		} '''
 	)
 
 
-def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css, fav, tile):
+def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css, fav):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -149,8 +134,11 @@ def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css
 	org2scripts = '{'
 	for organelle in organelles:
 		organelle = normalize(organelle)
-		scripts += ['./{0}_f.json'.format(organelle), './{0}.json'.format(organelle)]
-		org2scripts += "'{0}': [gjsn__{0}, gjsn__{0}_full],".format(organelle)
+		# scripts += ['./{0}_f.json'.format(organelle), './{0}.json'.format(organelle)]
+		# org2scripts += "'{0}': [gjsn__{0}, gjsn__{0}_full],".format(organelle)
+
+		scripts.append('./%s.json' % organelle)
+		org2scripts += "'{0}': gjsn__{0},".format(organelle)
 	org2scripts += '}'
 
 	if not css:
@@ -181,7 +169,7 @@ def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css
 
 	page.div.close()
 
-	add_js(default_organelle, org2scripts, page, tile)
+	add_js(default_organelle, org2scripts, page)
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))

@@ -57,8 +57,7 @@ def main(argv=None):
 	# os.system("at now <<< '/Users/anna/Documents/PhD/magnome/model_maps/SBMLVisualizer/test.py'")
 
 	visualize_model('/Users/anna/Documents/PhD/magnome/', 'mm', 'http://mimoza.bordeaux.inria.fr', 'comp.html', sbml,
-	                JS_SCRIPTS, CSS_SCRIPTS, FAVIICON, TILE,
-	                False)  # visualize_model(directory, sbml, scripts, css, fav, tile, verbose)
+	                JS_SCRIPTS, CSS_SCRIPTS, FAVIICON, False)  # visualize_model(directory, sbml, scripts, css, fav, tile, verbose)
 	#
 	# redirect_back = inline("""
 	# void redirect(void) {

@@ -70,7 +70,7 @@ try:
     url = '%s/%s/comp.html' % (MIMOZA_URL, m_dir_id)
 
     if not os.path.exists('../html/%s/comp.html' % m_dir_id):
-        url = visualize_model('../html/', m_dir_id, MIMOZA_URL, 'comp.html', sbml, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, TILE, True)
+        url = visualize_model('../html/', m_dir_id, MIMOZA_URL, 'comp.html', sbml, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)
 
     # redirect_back = inline("""
     # void redirect(void) {

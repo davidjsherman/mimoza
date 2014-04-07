@@ -22,7 +22,7 @@ CELL = 'cell'
 __author__ = 'anna'
 
 
-def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, fav, tile, verbose):
+def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, fav, verbose):
     reader = SBMLReader()
     input_document = reader.readSBML(sbml)
     input_model = input_document.getModel()
@@ -74,7 +74,7 @@ def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, 
     log(verbose, 'create html')
     groups_sbml_url = "%s/%s/%s" % (main_url, m_dir_id, os.path.basename(groups_sbml))
     create_html(input_model, directory, url, comp_names, groups_sbml_url,
-                  scripts, css, fav, tile)
+                  scripts, css, fav)
 
     # TODO: why doesn't it work??
     # tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')
@@ -97,10 +97,13 @@ def process(graph, m_dir, meta_node, compartment, layout_algorithm=layout, args=
     root[VIEW_SIZE][meta_node] = get_comp_size(graph, meta_node)
     # export to geojson
     compartment = compartment.lower().replace(' ', '_')
-    full_json = '%s/%s_f.json' % (m_dir, compartment)
-    tulip2geojson(comp_graph_full, full_json)
-    generalized_json = '%s/%s.json' % (m_dir, compartment)
-    tulip2geojson(comp_graph, generalized_json)
+    # full_json = '%s/%s_f.json' % (m_dir, compartment)
+    # tulip2geojson(comp_graph_full, full_json)
+    # generalized_json = '%s/%s.json' % (m_dir, compartment)
+    # tulip2geojson(comp_graph, generalized_json)
+
+    json = '%s/%s.json' % (m_dir, compartment)
+    tulip2geojson(comp_graph_full, comp_graph, json)
 
 
 def process_generalized_entities(graph):
@@ -120,4 +123,4 @@ class VisualisationThread(threading.Thread):
         self.m_dir_id = m_dir_id
 
     def run(self):
-        visualize_model('../html/', self.m_dir_id, MIMOZA_URL, 'comp.html', self.sbml, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, TILE, True)
+        visualize_model('../html/', self.m_dir_id, MIMOZA_URL, 'comp.html', self.sbml, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)

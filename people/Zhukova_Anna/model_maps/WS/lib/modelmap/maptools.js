@@ -31,6 +31,10 @@ const MARGIN = 156;
 const MAX_ZOOM = 5;
 const MAP_DIMENSION_SIZE = 512;
 
+const ZOOM_IN = 2;
+const ZOOM_OUT = 1;
+const ZOOM_ANY = 3;
+
 function getBaseMap(layers) {
     adjustMapSize();
 
@@ -81,37 +85,71 @@ function getTiles(img) {
     });
 }
 
-function initializeMap(zoom_out, zoom_in) {
+function initializeMap(json_data) {
     var labels = L.layerGroup();
 
     var ubLayer = L.layerGroup();
-
-    var edges = L.layerGroup();
-    var ub_edges = L.layerGroup();
-
-    var ubiquitous = L.featureGroup();
-    var specific = L.featureGroup();
-    ubiquitous.addTo(ubLayer);
-    ub_edges.addTo(ubLayer);
-
     var tiles = getTiles("/lib/modelmap/white512.jpg");
     var gray_tiles =  getTiles("/lib/modelmap/gray512.jpg");
-    var map = getBaseMap([tiles, edges, ubLayer, specific, labels]);
+    var map = getBaseMap([tiles, ubLayer, labels]);
 
     var name2popup = {};
 
-    if (zoom_in != null && zoom_out != null) {
-        var geojsonLayer = getSimpleJson(map, zoom_out, name2popup, edges, ub_edges, ubiquitous, specific, labels);
+    if (json_data != null) {
+        var any_ubiquitous = L.featureGroup();
+        var any_ub_edges = L.layerGroup();
+        any_ubiquitous.addTo(ubLayer);
+        any_ub_edges.addTo(ubLayer);
+        var any_edges = L.layerGroup();
+        getSimpleJson(map, json_data, name2popup, any_edges, any_ub_edges, any_ubiquitous, labels, ZOOM_ANY).addTo(map);
+
+        var zi_ubiquitous = L.featureGroup();
+        var zi_ub_edges = L.layerGroup();
+        var zi_edges = L.layerGroup();
+        var zoom_in = getSimpleJson(map, json_data, name2popup, zi_edges, zi_ub_edges, zi_ubiquitous, labels, ZOOM_IN);
+
+        var zo_ubiquitous = L.featureGroup();
+        var zo_ub_edges = L.layerGroup();
+        var zo_edges = L.layerGroup();
+        zo_ub_edges.addTo(ubLayer);
+        zo_ubiquitous.addTo(ubLayer);
+        var zoom_out = getSimpleJson(map, json_data, name2popup, zo_edges, zo_ub_edges, zo_ubiquitous, labels, ZOOM_OUT);
+        zoom_out.addTo(map);
+
         var zo = map.getZoom();
         map.on('zoomend', function (e) {
             var zn = map.getZoom();
             if (zn >= 3 && zo < 3) {
-                getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific, labels);
+                ubLayer.removeLayer(zo_ub_edges);
+                ubLayer.removeLayer(zo_ubiquitous);
+                map.removeLayer(zoom_out);
+
+                zi_ub_edges.addTo(ubLayer);
+                zi_ubiquitous.addTo(ubLayer);
+                map.addLayer(zoom_in);
+
+                if (!map.hasLayer(ubLayer)) {
+                    map.removeLayer(zi_ub_edges);
+                    map.removeLayer(zi_ubiquitous);
+                }
+//                getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, labels);
             } else if (zn < 3 && zo >= 3) {
-                getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific, labels);
-            } else {
-                fitLabels(zn, zo);
-                resizeEdges(edges, ub_edges, Math.pow(2, zn - zo), map);
+                ubLayer.removeLayer(zi_ub_edges);
+                ubLayer.removeLayer(zi_ubiquitous);
+                map.removeLayer(zoom_in);
+
+                zo_ub_edges.addTo(ubLayer);
+                zo_ubiquitous.addTo(ubLayer);
+                map.addLayer(zoom_out);
+
+                if (!map.hasLayer(ubLayer)) {
+                    map.removeLayer(zo_ub_edges);
+                    map.removeLayer(zo_ubiquitous);
+                }
+//                getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, labels);
+//            } else {
+//                fitLabels(zn, zo);
+//                resizeEdges(edges, ub_edges, Math.pow(2, zn - zo), map);
             }
             zo = map.getZoom();
         });
@@ -157,7 +195,7 @@ const WHITE = 'white';
 
 const ROUND = 'round';
 
-function pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific, labels) {
+function pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
@@ -203,18 +241,15 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific, labels) 
     var centre = bounds.getCenter();
     if (BG_SPECIES == feature.properties.type) {
         props["fillColor"] = ORANGE;
-        specific.addLayer(L.circle(centre, d / 1.8, props));
-        return  specific;
+        return L.circle(centre, d / 1.8, props);
     }
     if (BG_REACTION == feature.properties.type) {
         props["fillColor"] = feature.properties.transport ? TURQUOISE : GREEN;
-        specific.addLayer(L.rectangle(bounds, props));
-        return specific;
+        return L.rectangle(bounds, props);
     }
     if (BG_COMPARTMENT == feature.properties.type) {
         props["fillColor"] = YELLOW;
-        specific.addLayer(L.rectangle(bounds, props));
-        return specific;
+        return L.rectangle(bounds, props);
     }
     var node = null;
     if (REACTION == feature.properties.type) {
@@ -240,12 +275,8 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific, labels) 
             }
         );
         labels.addLayer(label);
-//        var fg = L.featureGroup([node, label]);
-//        return feature.properties.ubiquitous ? ubiquitous.addLayer(fg) : specific.addLayer(fg);
-        //return fg;
     }
-    return feature.properties.ubiquitous ? ubiquitous.addLayer(node) : specific.addLayer(node);
-    //return node;
+    return feature.properties.ubiquitous ? ubiquitous.addLayer(node) : node;
 }
 
 function resizeEdges(edges, ub_edges, resize_factor, map) {
@@ -343,15 +374,19 @@ function fitLabels(zn, zo) {
 ////    $('.wrap').children().unwrap();
 }
 
-function getSimpleJson(map, jsn, name2popup, edges, ub_edges, ubiquitous, specific, labels) {
+function getSimpleJson(map, jsn, name2popup, edges, ub_edges, ubiquitous, labels, level) {
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, edges, ub_edges, ubiquitous, specific, labels);
+            return pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, feature, layer);
+        },
+        filter: function (feature, layer) {
+            var zoom = feature.properties.zoom;
+            return level == zoom;
         }
-    }).addTo(map);
+    })
 }
 
 function clear(dict) {
@@ -362,13 +397,12 @@ function clear(dict) {
     }
 }
 
-function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific, labels) {
+function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, labels) {
     clear(name2popup);
     var showUbiquitous = map.hasLayer(ubiquitous);
     edges.clearLayers();
     ubiquitous.clearLayers();
     ub_edges.clearLayers();
-    specific.clearLayers();
     labels.clearLayers();
     geojsonLayer.addData(jsn);
     if (!showUbiquitous) {
@@ -377,18 +411,6 @@ function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_edges, ubiquitous
     }
     fitSimpleLabels();
     setAutocomplete(map, name2popup);
-}
-
-function removeLayer(map, layer) {
-    layer.eachLayer(function (e) {
-        map.removeLayer(e);
-    });
-}
-
-function addLayer(map, layer) {
-    layer.eachLayer(function (e) {
-        map.addLayer(e);
-    });
 }
 
 function gup(name) {
