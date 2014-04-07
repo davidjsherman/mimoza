@@ -46,21 +46,12 @@ def add_search(page):
 			</form>
 		</div> """
 	page.div(class_='margin', id='search')
-	page.form(name="search_form", onclick="search(map, name2popup);")
+	page.form(name="search_form", id="search_form")
 	page.label('  ')
 	page.input(id="tags", type="text", name="search_input")
 	page.label.close()
 	page.input(type="button", value="Search")
 	page.form.close()
-	page.div.close()
-
-
-def add_ubiquitous_checkbox(page):
-	page.div(class_='margin', id='ub_check_box_div')
-	page.p()
-	page.input(type="checkbox", id="showUbs", checked=True)
-	page.span("Show ubiquitous species")
-	page.p.close()
 	page.div.close()
 
 
@@ -130,20 +121,22 @@ def add_js(default_organelle, org2scripts, page, tile):
 			}
 			span.appendChild(document.createTextNode(compartment.replace('_', ' ')));
 
-			map = initializeMap(5);
-			var name2popup = {};
-			getGeoJson(map, comp2geojson[compartment], name2popup);
+			// map = initializeMap(5);
+			// var name2popup = {};
+			// getGeoJson(map, comp2geojson[compartment], name2popup);
+			//
+			// L.tileLayer("''' + tile + '''", {
+			// 	continuousWorld: true,
+			// 	noWrap: true,
+			// 	tileSize: 512,
+			// 	maxZoom: 5,
+			// 	minZoom: 0,
+			// 	tms: true,
+			// 	updateWhenIdle: true,
+			// 	reuseTiles: true
+			// }).addTo(map);
 
-			L.tileLayer("''' + tile + '''", {
-				continuousWorld: true,
-				noWrap: true,
-				tileSize: 512,
-				maxZoom: 5,
-				minZoom: 0,
-				tms: true,
-				updateWhenIdle: true,
-				reuseTiles: true
-			}).addTo(map);
+			initializeMap(comp2geojson[compartment][0], comp2geojson[compartment][1]);
 		} '''
 	)
 
@@ -181,8 +174,6 @@ def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css
 	add_explanations(page)
 
 	add_search(page)
-
-	add_ubiquitous_checkbox(page)
 
 	add_map(page)
 

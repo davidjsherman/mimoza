@@ -109,17 +109,46 @@ function addPopups(map, name2popup, feature, layer) {
         bounds = new L.LatLngBounds(southWest, northEast);
     var size = $('#map').height();
     var popup = L.popup({autoPan: true, keepInView: true, maxWidth: size - 2, maxHeight: size - 2, autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
-    layer.bindPopup(popup).bindLabel(label); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
-    if (feature.properties.name) {
-        name2popup[feature.properties.name] = popup;
+   [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function(key) {
+        if (key) {
+            name2popup[key] = popup;
+        }
+    });
+    layer.bindPopup(popup).bindLabel(label); // .bindPopup(popup); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
+//    [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function(key) {
+//        if (key) {
+//            add(name2popup, key, popup);
+//        }
+//    });
+//    if (feature.properties.name) {
+//        name2popup[feature.properties.name] = popup;
+//    }
+//    if (feature.properties.label) {
+//        name2popup[feature.properties.label] = popup;
+//    }
+//    if (feature.properties.id) {
+//        name2popup[feature.properties.id] = popup;
+//    }
+//    if (feature.properties.chebi) {
+//        name2popup[feature.properties.chebi] = popup;
+//    }
+}
+
+function search(map, name2popup) {
+    var srch = document.search_form.search_input.value;
+    if (srch && name2popup.hasOwnProperty(srch)) {
+        //map.addLayer(name2popup[srch]);
+        name2popup[srch].openOn(map);
+//        name2popup[srch].forEach(function(popup) {
+//            popup.openOn(map);
+//        });
     }
-    if (feature.properties.label) {
-        name2popup[feature.properties.label] = popup;
-    }
-    if (feature.properties.id) {
-        name2popup[feature.properties.id] = popup;
-    }
-    if (feature.properties.chebi) {
-        name2popup[feature.properties.chebi] = popup;
+}
+
+function add(map, key, value) {
+    if (map.hasOwnProperty(key)) {
+        map[key].push(value);
+    } else {
+        map[key] = [value];
     }
 }
