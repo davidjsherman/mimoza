@@ -4,8 +4,8 @@
 
 function adjustMapSize() {
 //    var dimention = Math.min($(window).height(), $(window).width());//screen.height, screen.width);
-    var width = Math.max(256, Math.pow(2, Math.floor(Math.log($(window).width()) / Math.log(2))));
-    var height = Math.max(256, Math.pow(2, Math.floor(Math.log($(window).height()) / Math.log(2))));
+    var width = Math.max(256, $(window).width() - 50); //Math.pow(2, Math.floor(Math.log($(window).width()) / Math.log(2))));
+    var height = Math.max(256, $(window).height() - 50); //Math.pow(2, Math.floor(Math.log($(window).height()) / Math.log(2))));
 //    var size = Math.max(256, Math.pow(2, Math.floor(Math.log(dimention) / Math.log(2))));
     var $map_div = $("#map");
     var old_height = $map_div.height();
