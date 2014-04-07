@@ -3,22 +3,32 @@
  */
 
 function adjustMapSize() {
-    var dimention = Math.min($(window).height(), $(window).width());//screen.height, screen.width);
-    var size = Math.max(256, Math.pow(2, Math.floor(Math.log(dimention) / Math.log(2))));
+//    var dimention = Math.min($(window).height(), $(window).width());//screen.height, screen.width);
+    var width = Math.max(256, Math.pow(2, Math.floor(Math.log($(window).width()) / Math.log(2))));
+    var height = Math.max(256, Math.pow(2, Math.floor(Math.log($(window).height()) / Math.log(2))));
+//    var size = Math.max(256, Math.pow(2, Math.floor(Math.log(dimention) / Math.log(2))));
     var $map_div = $("#map");
-    var old_width = $map_div.height();
-    if (old_width != size) {
+    var old_height = $map_div.height();
+    var old_width = $map_div.width();
+//    if (old_width != size) {
+    if (old_width != width || old_height != height) {
         $map_div.css({
-            'height': size,
-            'width': size
+//            'height': size,
+//            'width': size
+            'height': height,
+            'width': width
         });
         $(".leaflet-popup").css({
-            "maxWidth": size,
-            'maxHeight': size
+//            "maxWidth": size,
+//            'maxHeight': size
+            'maxHeight': height,
+            'maxWidth': width
         });
         $(".leaflet-popup-content").css({
-            "maxWidth": size - 10,
-            'maxHeight': size - 10
+//            "maxWidth": size - 10,
+//            'maxHeight': size - 10
+            'maxHeight': height - 10,
+            'maxWidth': width -10
         });
     }
 }
