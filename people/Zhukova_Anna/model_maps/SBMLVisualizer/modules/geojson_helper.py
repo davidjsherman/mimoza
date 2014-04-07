@@ -14,6 +14,15 @@ DIMENSION = 512
 MARGIN = 3.8
 
 
+def get_border_coord(xy_center, other_xy, r):
+	(x_center, y_center) = xy_center
+	(other_x, other_y) = other_xy
+	diag = pow(pow(x_center - other_x, 2) + pow(y_center - other_y, 2), 0.5)
+	transformation = lambda z, other_z: r * (other_z - z) / diag + z
+	return transformation(x_center, other_x), transformation(y_center, other_y)
+
+
+
 def tulip2geojson(graph, geojson_file):
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
@@ -39,7 +48,11 @@ def tulip2geojson(graph, geojson_file):
 	i = 0
 	for e in graph.getEdges():
 		s, t = graph.source(e), graph.target(e)
-		geom = geojson.MultiPoint([get_coords(s)] + [scale(it[0], it[1]) for it in layout[e]] + [get_coords(t)])
+		xy = lambda n: (layout[n].getX(), layout[n].getY())
+		s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), size[s].getW() / 2)
+		t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), size[t].getW() / 2)
+		geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
+		# geom = geojson.MultiPoint([get_coords(s)] + [scale(it[0], it[1]) for it in layout[e]] + [get_coords(t)])
 		ubiquitous = graph[UBIQUITOUS][s] or graph[UBIQUITOUS][t]
 		generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 		is_transport = transport[s] or transport[t]

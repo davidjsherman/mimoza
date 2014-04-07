@@ -107,17 +107,11 @@ function initializeMap(zoom_out, zoom_in) {
             var zn = map.getZoom();
             if (zn >= 3 && zo < 3) {
                 getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific, labels);
-//                geojsonLayer = getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ubiquitous);
             } else if (zn < 3 && zo >= 3) {
-//                geojsonLayer = getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ubiquitous);
                 getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, specific, labels);
             } else {
                 fitLabels(zn, zo);
                 resizeEdges(edges, ub_edges, Math.pow(2, zn - zo), map);
-//                if (map.hasLayer(ubiquitous)) {
-//                    ubiquitous.bringToFront();
-//                }
-//                specific.bringToFront();
             }
             zo = map.getZoom();
         });
@@ -283,12 +277,6 @@ function resizeEdges(edges, ub_edges, resize_factor, map) {
     resize(edges, true);
 }
 
-//function bringToBack(layerGroup) {
-//    layerGroup.eachLayer(function (layer) {
-//        layer.bringToBack();
-//    });
-//}
-
 function fitSimpleLabels() {
     // console.log('fitting labels into nodes');
     $('.count-icon', '#map').each(function (i, obj) {
@@ -382,17 +370,13 @@ function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_edges, ubiquitous
     ub_edges.clearLayers();
     specific.clearLayers();
     labels.clearLayers();
-//    geojsonLayer.clearLayers();
-    //map.removeLayer(geojsonLayer);
     geojsonLayer.addData(jsn);
     if (!showUbiquitous) {
         map.removeLayer(ubiquitous);
         map.removeLayer(ub_edges);
     }
-    //var result = getSimpleJson(map, jsn, name2popup, edges, ub_edges, ub_sps);
     fitSimpleLabels();
     setAutocomplete(map, name2popup);
-//    return result;
 }
 
 function removeLayer(map, layer) {

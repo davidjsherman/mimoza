@@ -39,7 +39,7 @@ def main(argv=None):
 	# 	print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
 	# 	print >> sys.stderr, "\t for help use --help"
 	# 	return 2
-	sbml = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_annotated_with_groups.xml'
+	sbml = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_golgi.xml'
 	# sbml = '/Users/anna/Downloads/yeast_7.11/yeast_7.11_recon_with_groups.xml'
 	# sbml = '/Users/anna/Downloads/BMID000000095830.xml'
 	# this is a hack to prevent Tulip from printing stuff and producing 500
@@ -54,11 +54,11 @@ def main(argv=None):
 	# }
 	# """, **(args))
 	# redirect()
-	os.system("at now <<< '/Users/anna/Documents/PhD/magnome/model_maps/SBMLVisualizer/test.py'")
+	# os.system("at now <<< '/Users/anna/Documents/PhD/magnome/model_maps/SBMLVisualizer/test.py'")
 
-	# visualize_model('/Users/anna/Documents/PhD/magnome/', 'mm', 'http://mimoza.bordeaux.inria.fr', 'comp.html', sbml,
-	#                 JS_SCRIPTS, CSS_SCRIPTS, FAVIICON, TILE,
-	#                 False)  # visualize_model(directory, sbml, scripts, css, fav, tile, verbose)
+	visualize_model('/Users/anna/Documents/PhD/magnome/', 'mm', 'http://mimoza.bordeaux.inria.fr', 'comp.html', sbml,
+	                JS_SCRIPTS, CSS_SCRIPTS, FAVIICON, TILE,
+	                False)  # visualize_model(directory, sbml, scripts, css, fav, tile, verbose)
 	#
 	# redirect_back = inline("""
 	# void redirect(void) {
