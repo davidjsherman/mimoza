@@ -3,47 +3,42 @@
  */
 
 function adjustMapSize() {
-//    var dimention = Math.min($(window).height(), $(window).width());//screen.height, screen.width);
-    var width = Math.max(256, $(window).width() - 50); //Math.pow(2, Math.floor(Math.log($(window).width()) / Math.log(2))));
-    var height = Math.max(256, $(window).height() - 50); //Math.pow(2, Math.floor(Math.log($(window).height()) / Math.log(2))));
-//    var size = Math.max(256, Math.pow(2, Math.floor(Math.log(dimention) / Math.log(2))));
+    const VIEWPORT_MARGIN = 50;
+    const MIN_DIMENTION_SIZE = 256;
+    var width = Math.max(MIN_DIMENTION_SIZE, $(window).width() - VIEWPORT_MARGIN);
+    var height = Math.max(MIN_DIMENTION_SIZE, $(window).height() - VIEWPORT_MARGIN);
     var $map_div = $("#map");
     var old_height = $map_div.height();
     var old_width = $map_div.width();
-//    if (old_width != size) {
     if (old_width != width || old_height != height) {
         $map_div.css({
-//            'height': size,
-//            'width': size
             'height': height,
             'width': width
         });
         $(".leaflet-popup").css({
-//            "maxWidth": size,
-//            'maxHeight': size
             'maxHeight': height,
             'maxWidth': width
         });
+        const LEAFLET_POPUP_MARGIN = 10;
         $(".leaflet-popup-content").css({
-//            "maxWidth": size - 10,
-//            'maxHeight': size - 10
-            'maxHeight': height - 10,
-            'maxWidth': width -10
+            'maxHeight': height - LEAFLET_POPUP_MARGIN,
+            'maxWidth': width -LEAFLET_POPUP_MARGIN
         });
     }
 }
 
 function initializeMap(max_zoom) {
     adjustMapSize();
-    var margin = 156;
+    const MARGIN = 156;
     var map = L.map('map', {
         maxZoom: max_zoom,
         minZoom: 0,
         attributionControl: false,
-        padding: [156, 156]
+        padding: [MARGIN, MARGIN]
     });
-    var southWest = map.unproject([0 - margin, 512 + margin], 1);
-    var northEast = map.unproject([512 + margin, 0 - margin], 1);
+    const MAP_DIMENTION_SIZE = 512;
+    var southWest = map.unproject([0 - MARGIN, MAP_DIMENTION_SIZE + MARGIN], 1);
+    var northEast = map.unproject([MAP_DIMENTION_SIZE + MARGIN, 0 - MARGIN], 1);
     var bounds = new L.LatLngBounds(southWest, northEast);
     map.setView(bounds.getCenter(), 1);
     map.setMaxBounds(bounds);
@@ -70,25 +65,28 @@ function initializeMap(max_zoom) {
     return map;
 }
 
-var EDGE = 0;
+const EDGE = 0;
 
-var SPECIES = 1;
-var COMPARTMENT = 3;
-var REACTION = 2;
+const SPECIES = 1;
+const COMPARTMENT = 3;
+const REACTION = 2;
 
-var BG_SPECIES = 4;
-var BG_REACTION = 5;
-var BG_COMPARTMENT = 6;
-var BG = [BG_SPECIES, BG_REACTION, BG_COMPARTMENT];
+const BG_SPECIES = 4;
+const BG_REACTION = 5;
+const BG_COMPARTMENT = 6;
+const BG = [BG_SPECIES, BG_REACTION, BG_COMPARTMENT];
 
-var GREY = "#B4B4B4";
-var ORANGE = "#FDB462";
-var YELLOW = "#FFFFB3";
-var RED = "#FB8072";
-var BLUE = "#80B1D3";
-var GREEN = "#B3DE69";
-var VIOLET = "#BEBADA";
-var TURQUOISE = "#8DD3C7";
+const GREY = "#B4B4B4";
+const ORANGE = "#FDB462";
+const YELLOW = "#FFFFB3";
+const RED = "#FB8072";
+const BLUE = "#80B1D3";
+const GREEN = "#B3DE69";
+const VIOLET = "#BEBADA";
+const TURQUOISE = "#8DD3C7";
+const WHITE = 'white';
+
+const ROUND = 'round';
 
 function pnt2layer(map, feature, edges, ub_edges, ub_sps) {
     var e = feature.geometry.coordinates;
@@ -102,8 +100,8 @@ function pnt2layer(map, feature, edges, ub_edges, ub_sps) {
             color: color,
             opacity: 1,
             weight: w * Math.pow(2, map.getZoom() - 1),
-            lineCap: 'round',
-            lineJoin: 'round',
+            lineCap: ROUND,
+            lineJoin: ROUND,
             clickable: false,
             fill: false
         });
@@ -126,12 +124,12 @@ function pnt2layer(map, feature, edges, ub_edges, ub_sps) {
         title: feature.properties.name,
         alt: feature.properties.name,
         id: feature.properties.id,
-        color: 'white', //feature.properties.border,
+        color: WHITE, //feature.properties.border,
         //fillColor: feature.properties.color,
         fillOpacity: is_bg ? 0.3 : 1,
         opacity: 1,
-        lineCap: 'round',
-        lineJoin: 'round',
+        lineCap: ROUND,
+        lineJoin: ROUND,
         weight: is_bg ? 0 : Math.min(2, w / 10 * Math.pow(2, map.getZoom() - 1)),
         fill: true,
         clickable: !is_bg
@@ -227,8 +225,8 @@ function resizeEdges(edges, ub_edges, resize_factor) {
     }
     var props = {
         opacity: 1,
-        lineCap: 'round',
-        lineJoin: 'round',
+        lineCap: ROUND,
+        lineJoin: ROUND,
         clickable: false,
         fill: false
     };
