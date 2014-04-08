@@ -83,9 +83,12 @@ def process_file(sbml_file):
         model_id = sbml_name
 
     m_id = check_md5(sbml_file) #"%s" % model_id
-    if os.path.exists('../html/%s/' % m_id):
-        if os.path.exists('../html/%s/index.html' % m_id):
+    directory = '../html/%s/' % m_id
+    if os.path.exists(directory):
+        if os.path.exists('%sindex.html' % directory):
             return (ALREADY_EXISTS, (model_id, m_id))
+    else:
+        os.makedirs(directory)
 
     # i = 0
     # existing_model = None
@@ -95,8 +98,6 @@ def process_file(sbml_file):
     #     # return ALREADY_EXISTS, (model_id, sbml_file)
     #     m_id = '%s_%d' % (model_id, i)
     #     i += 1
-    directory = '../html/%s/' % m_id
-    os.makedirs(directory)
 
     new_sbml_file = '%s%s.xml' % (directory, model_id)
     if sbml_file != new_sbml_file:

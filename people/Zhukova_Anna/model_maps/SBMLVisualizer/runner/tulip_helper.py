@@ -73,7 +73,9 @@ def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, 
 
     log(verbose, 'create html')
     groups_sbml_url = "%s/%s/%s" % (main_url, m_dir_id, os.path.basename(groups_sbml))
-    create_html(input_model, directory, url, comp_names, groups_sbml_url, scripts, css, fav)
+
+    embed_url = '%s/%s/comp_min.html' % (main_url, m_dir_id)
+    create_html(input_model, directory, url, embed_url, comp_names, groups_sbml_url, scripts, css, fav)
     create_embedded_html(input_model, directory, comp_names, scripts, css, fav)
 
     # TODO: why doesn't it work??

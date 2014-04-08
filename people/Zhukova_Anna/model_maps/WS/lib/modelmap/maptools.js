@@ -424,3 +424,56 @@ function gup(name) {
 function centerMap() {
     map.setView([0, 0], map.getZoom());
 }
+
+function overlay() {
+    el = document.getElementById("overlay");
+    el.style.visibility = (el.style.visibility == "visible") ? "hidden" : "visible";
+
+    const $embed_w = $("#embed-size-width");
+    const $embed_h = $("#embed-size-height");
+    console.log($embed_w, $embed_h);
+    $embed_w.focusout(function() {
+        console.log($embed_w.val(), $embed_h.val());
+        var w = 800;
+        if ($embed_w.val()) {
+            var w_ = parseInt($embed_w.val());
+            if (!isNaN(w_) && w_ > 0) {
+                w = w_;
+            } else {
+                $embed_w.val(w);
+            }
+        } else {
+            $embed_w.val(w);
+        }
+        update_embed_value(w, $embed_h.val());
+    });
+    $embed_h.focus(function() {
+        $embed_h.select();
+    });
+    $embed_w.focus(function() {
+        $embed_w.select();
+    });
+    $embed_h.focusout(function() {
+        console.log($embed_w.val(), $embed_h.val());
+        var h = 800;
+        if ($embed_h.val()) {
+            var h_ = parseInt($embed_h.val());
+            if (!isNaN(h_) && h_ > 0) {
+                h = h_;
+            } else {
+                $embed_h.val(h);
+            }
+        } else {
+            $embed_h.val(h);
+        }
+        update_embed_value($embed_w.val(), h);
+    });
+    $("#embed-html-snippet").focus(function() {
+        $(this).select();
+    });
+}
+
+function update_embed_value(w, h) {
+    $("#embed-html-snippet").val("<iframe src=\"" + $("#embed-url").val()
+        + "\" width=\"" + w + "\" height=\"" + h + "\" frameborder=\"0\" style=\"border:0\"></iframe>");
+}
