@@ -320,21 +320,24 @@ function fitSimpleLabels() {
 }
 
 function setAutocomplete(map, name2popup) {
-    var availableTags = Object.keys(name2popup);
-    $("#tags").autocomplete({
-        source: availableTags
-    });
-    $('#tags').keypress(function (e) {
-        console.log(e.keyCode);
-        var code = (e.keyCode ? e.keyCode : e.which);
-        if (code == $.ui.keyCode.ENTER) {
+    const searchForm = document.getElementById('search_form');
+    if (searchForm != null) {
+        var availableTags = Object.keys(name2popup);
+        $("#tags").autocomplete({
+            source: availableTags
+        });
+        $('#tags').keypress(function (e) {
+            console.log(e.keyCode);
+            var code = (e.keyCode ? e.keyCode : e.which);
+            if (code == $.ui.keyCode.ENTER) {
+                search(map, name2popup);
+                e.preventDefault();
+            }
+        });
+        searchForm.onclick = function () {
             search(map, name2popup);
-            e.preventDefault();
-        }
-    });
-    document.getElementById('search_form').onclick = function() {
-        search(map, name2popup);
-    };
+        };
+    }
 }
 
 function fitLabels(zn, zo) {

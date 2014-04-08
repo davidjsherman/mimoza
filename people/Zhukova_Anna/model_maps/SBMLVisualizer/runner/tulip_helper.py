@@ -7,7 +7,7 @@ from mimoza.mimoza import MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, T
 # from modules.color import simple_color
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm, nodes_to_meta_node
 from modules.geojson_helper import tulip2geojson
-from modules.html_generator import create_html
+from modules.html_generator import create_html, create_embedded_html
 from modules.layout_utils import layout_generalization_based, layout, layout_cytoplasm
 from modules.resize import get_comp_size, resize_edges
 from modules.sbml2tlp import import_sbml
@@ -73,8 +73,8 @@ def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, 
 
     log(verbose, 'create html')
     groups_sbml_url = "%s/%s/%s" % (main_url, m_dir_id, os.path.basename(groups_sbml))
-    create_html(input_model, directory, url, comp_names, groups_sbml_url,
-                  scripts, css, fav)
+    create_html(input_model, directory, url, comp_names, groups_sbml_url, scripts, css, fav)
+    create_embedded_html(input_model, directory, comp_names, scripts, css, fav)
 
     # TODO: why doesn't it work??
     # tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')

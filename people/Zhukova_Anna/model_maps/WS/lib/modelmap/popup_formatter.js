@@ -72,7 +72,7 @@ function formatGo(term) {
 
 function formatLink(comp) {
     if (comp) {
-        return "<a href=\'./comp.html?name=" + comp.toLowerCase().replace(' ', '_') + "\'>Go inside</a>";
+        return "<a href=\'?name=" + comp.toLowerCase().replace(' ', '_') + "\'>Go inside</a>";
     }
     return "";
 }

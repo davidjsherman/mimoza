@@ -126,6 +126,18 @@ def add_js(default_organelle, org2scripts, page):
 	)
 
 
+def add_min_js(default_organelle, org2scripts, page):
+	page.script('var comp2geojson = %s; var compartment = "%s";' % (org2scripts, normalize(default_organelle)) + '''
+		var comp = gup('name');
+		if (comp) {
+			compartment = comp;
+		}
+		if (compartment) {
+			initializeMap(comp2geojson[compartment]);
+		} '''
+	)
+
+
 def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css, fav):
 	page = markup.page()
 	if not scripts:
@@ -150,7 +162,7 @@ def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css
 	model_name = model.getName()
 	if not model_name:
 		model_name = model_id
-	page.init(title=model_name, css=css, script=scripts, fav=fav, metainfo={"refresh": "5"})
+	page.init(title=model_name, css=css, script=scripts, fav=fav)
 
 	add_header(model_id, model_name, page)
 
@@ -175,6 +187,37 @@ def create_html(model, directory, url, organelles, groups_sbml_url, scripts, css
 		f.write(str(page))
 	with open('%s/index.html' % directory, 'w+') as f:
 		f.write(generate_redirecting_html(url, css[0] if css else '', fav))
+
+
+def create_embedded_html(model, directory, organelles, scripts, css, fav):
+	page = markup.page()
+	if not scripts:
+		scripts = []
+	default_organelle = normalize(organelles[0]) if organelles else ''
+	org2scripts = '{'
+	for organelle in organelles:
+		organelle = normalize(organelle)
+		# scripts += ['./{0}_f.json'.format(organelle), './{0}.json'.format(organelle)]
+		# org2scripts += "'{0}': [gjsn__{0}, gjsn__{0}_full],".format(organelle)
+
+		scripts.append('./%s.json' % organelle)
+		org2scripts += "'{0}': gjsn__{0},".format(organelle)
+	org2scripts += '}'
+
+	if not css:
+		css = ['http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css']
+	else:
+		css.append('http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css')
+
+	model_id = model.getId()
+	page.init(title=model_id, css=css, script=scripts, fav=fav)
+
+	add_map(page)
+
+	add_min_js(default_organelle, org2scripts, page)
+
+	with open('%s/comp_min.html' % directory, 'w+') as f:
+		f.write(str(page))
 
 
 def generate_redirecting_html(url, css, ico):
