@@ -77,7 +77,24 @@ function formatLink(comp) {
     return "";
 }
 
-function addPopups(map, name2popup, feature, layer) {
+function getBounds(feature, map) {
+    var e = feature.geometry.coordinates;
+    var w = feature.properties.width / 2;
+    var h = feature.properties.height / 2;
+    var x = e[0], y = e[1];
+    var southWest = map.unproject([x - w, y + h], 1),
+        northEast = map.unproject([x + w, y - h], 1),
+        bounds = new L.LatLngBounds(southWest, northEast);
+    return bounds;
+}
+
+function closePopups(openPopups, map) {
+    openPopups.eachLayer(function (lr) {
+        map.removeLayer(lr);
+    });
+    openPopups.clearLayers();
+}
+function addPopups(map, name2popup, feature, layer, openPopups, ubiquitous) {
     var content = '';
     var label = '';
     if (REACTION == feature.properties.type) {
@@ -98,47 +115,73 @@ function addPopups(map, name2popup, feature, layer) {
         label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p>";
     }
     if (EDGE == feature.properties.type) {
-        return
+        return;
     }
-    var e = feature.geometry.coordinates;
-    var w = feature.properties.width / 2;
-    var h = feature.properties.height / 2;
-    var x = e[0], y = e[1];
-    var southWest = map.unproject([x - w, y + h], 1),
-        northEast = map.unproject([x + w, y - h], 1),
-        bounds = new L.LatLngBounds(southWest, northEast);
-    var size = $('#map').height();
-    var popup = L.popup({autoPan: true, keepInView: true, maxWidth: size - 2, maxHeight: size - 2, autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
+    if (name2popup.hasOwnProperty(feature.properties.id)) {
+        popup = name2popup[feature.properties.id];
+        if (feature.properties.ubiquitous) {
+            var highlight = highlightCircle(feature, map);
+            popup.addLayer(highlight);
+        }
+    } else {
+        var bounds = getBounds(feature, map);
+        var size = $('#map').height();
+        var popup = L.popup({autoPan: true, keepInView: true, maxWidth: size - 2, maxHeight: size - 2, autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
+        if (feature.properties.ubiquitous) {
+            var highlight = highlightCircle(feature, map);
+            popup = L.featureGroup([popup, highlight]);
+        }
+    }
    [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function(key) {
         if (key) {
             name2popup[key] = popup;
         }
     });
-    layer.bindPopup(popup).bindLabel(label); // .bindPopup(popup); //.bindLabel('<i>' + feature.properties.name + '</i>', {noHide: true});
-//    [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function(key) {
-//        if (key) {
-//            add(name2popup, key, popup);
-//        }
-//    });
-//    if (feature.properties.name) {
-//        name2popup[feature.properties.name] = popup;
-//    }
-//    if (feature.properties.label) {
-//        name2popup[feature.properties.label] = popup;
-//    }
-//    if (feature.properties.id) {
-//        name2popup[feature.properties.id] = popup;
-//    }
-//    if (feature.properties.chebi) {
-//        name2popup[feature.properties.chebi] = popup;
-//    }
+    layer.bindLabel(label); //bindPopup(popup)\
+    layer.on('click', function(e) {
+        closePopups(openPopups, map);
+        map.addLayer(popup);
+        openPopups.addLayer(popup);
+    });
 }
 
-function search(map, name2popup) {
+function highlightCircle(feature, map) {
+    var props = {
+        name: feature.properties.name,
+        title: feature.properties.name,
+        alt: feature.properties.name,
+        id: feature.properties.id,
+        color: "#ac3131",
+        fillColor: "#ac3131",
+        fillOpacity: 0.7,
+        opacity: 1,
+        lineCap: ROUND,
+        lineJoin: ROUND,
+        weight: 2,
+        fill: true,
+        clickable: false,
+    };
+    var e = feature.geometry.coordinates;
+    var x = e[0], y = e[1];
+    var w = feature.properties.width / 2;
+    var h = feature.properties.height / 2;
+    var southWest = map.unproject([x - w, y + h], 1),
+        northEast = map.unproject([x + w, y - h], 1),
+        bounds = new L.LatLngBounds(southWest, northEast);
+    var d = southWest.distanceTo(northEast);
+    var centre = bounds.getCenter();
+    return L.circle(centre, d / 2, props);
+}
+
+function search(map, name2popup, openPopups) {
+    closePopups(openPopups, map);
     var srch = document.search_form.search_input.value;
     if (srch && name2popup.hasOwnProperty(srch)) {
+        var popup = name2popup[srch];
+        map.addLayer(popup);
+        openPopups.addLayer(popup);
         //map.addLayer(name2popup[srch]);
-        name2popup[srch].openOn(map);
+        //name2popup[srch].openOn(map);
 //        name2popup[srch].forEach(function(popup) {
 //            popup.openOn(map);
 //        });
