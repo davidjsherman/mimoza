@@ -182,17 +182,18 @@ ul.menu li
     position:absolute;
 }
 
-.count-icon {
+.label {
     padding: 0;
     margin: 0;
-    position: absolute;
+    position: relative;
     border:0px solid red;
-    overflow:hidden;
-    font-size:14px;
-    line-height: auto;
-    text-overflow: ellipsis;
     text-align: center;
     vertical-align: middle;
+    display: table-cell;
+    overflow:hidden;
+    font-size:14px;
+    line-height: 18px;
+    text-overflow: ellipsis;
 }
 
 #overlay {

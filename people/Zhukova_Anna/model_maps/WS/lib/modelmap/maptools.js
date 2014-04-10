@@ -34,6 +34,7 @@ const MAP_DIMENSION_SIZE = 512;
 const ZOOM_IN = 2;
 const ZOOM_OUT = 1;
 const ZOOM_ANY = 3;
+const ZOOM_CHANGING = 3;
 
 function getBaseMap(layers) {
     adjustMapSize();
@@ -43,7 +44,7 @@ function getBaseMap(layers) {
         minZoom: 0,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
-        layers: layers
+        layers: layers,
     });
 
     var southWest = map.unproject([0 - MARGIN, MAP_DIMENSION_SIZE + MARGIN], 1);
@@ -85,13 +86,22 @@ function getTiles(img) {
     });
 }
 
+function clearLabels(map, labels) {
+    for (var z = map.getMinZoom(); z <= map.getMaxZoom(); z++) {
+        if (map.getZoom() != z && labels.hasOwnProperty(z)) {
+            labels[z].eachLayer(function(layer) {
+                map.removeLayer(layer);
+            });
+        }
+    }
+}
 function initializeMap(json_data) {
-    var labels = L.layerGroup();
+    var labels = {};
 
     var ubLayer = L.layerGroup();
     var tiles = getTiles("/lib/modelmap/white512.jpg");
     var gray_tiles =  getTiles("/lib/modelmap/gray512.jpg");
-    var map = getBaseMap([tiles, ubLayer, labels]);
+    var map = getBaseMap([tiles, ubLayer]);
 
     var name2popup = {};
     var openPopups = L.layerGroup();
@@ -102,25 +112,35 @@ function initializeMap(json_data) {
         any_ubiquitous.addTo(ubLayer);
         any_ub_edges.addTo(ubLayer);
         var any_edges = L.layerGroup();
-        getSimpleJson(map, json_data, name2popup, any_edges, any_ub_edges, any_ubiquitous, labels, ZOOM_ANY, openPopups).addTo(map);
+        getSimpleJson(map, json_data, name2popup, any_edges, any_ub_edges, any_ubiquitous, labels, ZOOM_ANY, openPopups, map.getMinZoom(), map.getMaxZoom()).addTo(map);
 
         var zi_ubiquitous = L.featureGroup();
         var zi_ub_edges = L.layerGroup();
         var zi_edges = L.layerGroup();
-        var zoom_in = getSimpleJson(map, json_data, name2popup, zi_edges, zi_ub_edges, zi_ubiquitous, labels, ZOOM_IN, openPopups);
+        var zoom_in = getSimpleJson(map, json_data, name2popup, zi_edges, zi_ub_edges, zi_ubiquitous, labels, ZOOM_IN, openPopups, ZOOM_CHANGING, map.getMaxZoom());
 
         var zo_ubiquitous = L.featureGroup();
         var zo_ub_edges = L.layerGroup();
         var zo_edges = L.layerGroup();
         zo_ub_edges.addTo(ubLayer);
         zo_ubiquitous.addTo(ubLayer);
-        var zoom_out = getSimpleJson(map, json_data, name2popup, zo_edges, zo_ub_edges, zo_ubiquitous, labels, ZOOM_OUT, openPopups);
+        var zoom_out = getSimpleJson(map, json_data, name2popup, zo_edges, zo_ub_edges, zo_ubiquitous, labels, ZOOM_OUT, openPopups, map.getMinZoom(), ZOOM_CHANGING - 1);
         zoom_out.addTo(map);
 
         var zo = map.getZoom();
+        if (labels.hasOwnProperty(zo)) {
+            map.addLayer(labels[zo]);
+        }
+//        clearLabels(map, labels);
+        map.on('zoomstart', function (e) {
+            if (labels.hasOwnProperty(zo)) {
+                map.removeLayer(labels[zo]);
+            }
+        });
         map.on('zoomend', function (e) {
             var zn = map.getZoom();
-            if (zn >= 3 && zo < 3) {
+            if (zn >= ZOOM_CHANGING && zo < ZOOM_CHANGING) {
+                closePopups(openPopups, map);
                 ubLayer.removeLayer(zo_ub_edges);
                 ubLayer.removeLayer(zo_ubiquitous);
                 map.removeLayer(zoom_out);
@@ -133,9 +153,8 @@ function initializeMap(json_data) {
                     map.removeLayer(zi_ub_edges);
                     map.removeLayer(zi_ubiquitous);
                 }
+            } else if (zn < ZOOM_CHANGING && zo >= ZOOM_CHANGING) {
                 closePopups(openPopups, map);
-//                getJson(map, zoom_in, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, labels);
-            } else if (zn < 3 && zo >= 3) {
                 ubLayer.removeLayer(zi_ub_edges);
                 ubLayer.removeLayer(zi_ubiquitous);
                 map.removeLayer(zoom_in);
@@ -148,13 +167,11 @@ function initializeMap(json_data) {
                     map.removeLayer(zo_ub_edges);
                     map.removeLayer(zo_ubiquitous);
                 }
-                closePopups(openPopups, map);
-//                getJson(map, zoom_out, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, labels);
-//            } else {
-//                fitLabels(zn, zo);
-//                resizeEdges(edges, ub_edges, Math.pow(2, zn - zo), map);
             }
-            zo = map.getZoom();
+            if (labels.hasOwnProperty(zn)) {
+                map.addLayer(labels[zn]);
+            }
+            zo = zn;
         });
 
         map.on('click', function(e) {
@@ -167,7 +184,6 @@ function initializeMap(json_data) {
             }
         });
     }
-    fitSimpleLabels();
     setAutocomplete(map, name2popup, openPopups);
 
     var baseLayers = {
@@ -177,7 +193,7 @@ function initializeMap(json_data) {
 
     var overlays = {
         "Ubiquitous species": ubLayer,
-        "Labels": labels
+//        "Labels": labels
     };
 
     L.control.layers(baseLayers, overlays).addTo(map);
@@ -208,7 +224,7 @@ const WHITE = 'white';
 
 const ROUND = 'round';
 
-function pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels) {
+function pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels, z_min, z_max) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.width / 2;
     var h = feature.properties.height / 2;
@@ -223,7 +239,9 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels) {
             lineCap: ROUND,
             lineJoin: ROUND,
             clickable: false,
-            fill: false
+            fill: false,
+            zIndexOffset: -2000,
+            riseOnHover: false
         });
         return feature.properties.ubiquitous ? ub_edges.addLayer(edge) : edges.addLayer(edge);
     }
@@ -245,13 +263,15 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels) {
         lineJoin: ROUND,
         weight: is_bg ? 0 : Math.min(2, w / 10 * Math.pow(2, map.getZoom() - 1)),
         fill: true,
-        clickable: !is_bg
+        clickable: !is_bg,
+        zIndexOffset: is_bg ? -2000 : 1000,
+        riseOnHover: !is_bg
     };
     var southWest = map.unproject([x - w, y + h], 1),
         northEast = map.unproject([x + w, y - h], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
     var d = southWest.distanceTo(northEast);
-    var centre = bounds.getCenter();
+    var centre = map.unproject([x, y], 1);//bounds.getCenter();
     if (BG_SPECIES == feature.properties.type) {
         props["fillColor"] = ORANGE;
         return L.circle(centre, d / 1.8, props);
@@ -277,23 +297,41 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels) {
     } else {
         return null;
     }
-    if (!feature.properties.ubiquitous && w * Math.pow(2, (map.getZoom() >= 3 ? map.getMaxZoom() : 3) - 1) >= 25) {
-        var label = L.marker(centre,
-            {
-                icon: L.divIcon({
-                    className: 'count-icon',
-                    html: feature.properties.label,
-                    iconSize: [  (w * Math.pow(2, map.getZoom() - 1) * 1.8), h * Math.pow(2, map.getZoom() - 1) * 1.8]
-                })
-            }
-        );
-        labels.addLayer(label);
+//        node = L.featureGroup([node]);
+    for (var z = z_min; z <= z_max; z++) {
+        var scaleFactor = Math.pow(2, z);
+        if (h * scaleFactor >= 10) {
+            var size = Math.max(h * scaleFactor / 4, 8);
+            var label = L.marker(centre,
+                {
+                    icon: L.divIcon({
+                        className: 'label',
+                        html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label + "</span>",
+                        iconSize: [w * scaleFactor, h * scaleFactor],
+                        zIndexOffset: -1000,
+                        riseOnHover: false
+                    })
+                }
+            );
+            addLayer(labels, z, label);
+        }
+//            node.addLayer(label);
+
     }
     if (feature.properties.ubiquitous) {
         ubiquitous.addLayer(node);
     }
     return node;
 }
+
+function addLayer(map, key, value) {
+    if (map.hasOwnProperty(key)) {
+        map[key].addLayer(value);
+    } else {
+        map[key] = L.featureGroup([value]);
+    }
+}
+
 
 function resizeEdges(edges, ub_edges, resize_factor, map) {
     if (1 == resize_factor) {
@@ -321,18 +359,7 @@ function resizeEdges(edges, ub_edges, resize_factor, map) {
         });
     }
     resize(ub_edges);
-    resize(edges, true);
-}
-
-function fitSimpleLabels() {
-    // console.log('fitting labels into nodes');
-    $('.count-icon', '#map').each(function (i, obj) {
-        var width = $(this).width();
-        var size = width < 8 ? 0 : Math.max(width / 5, 8);
-        $(this).css({
-            'font-size': size
-        });
-    });
+    resize(edges);
 }
 
 function setAutocomplete(map, name2popup, openPopups) {
@@ -356,47 +383,10 @@ function setAutocomplete(map, name2popup, openPopups) {
     }
 }
 
-function fitLabels(zn, zo) {
-//    console.log('fitting labels into nodes');
-//    var pow = Math.pow(2, zn - zo);
-//    var width2css = {};
-//    $('.count-icon', '#map').each(function (i, obj) {
-//        var old_width = $(this).width();
-//        if (old_width in width2css) {
-//            $(this).css(width2css[old_width]);
-//        } else {
-//            var width = old_width * pow;
-//            var old_height = $(this).height();
-//            var height = old_height * pow;
-//            var size = width < 10 ? 0 : Math.max(width / 5, 8);
-//            var css = {
-//                'height': height,
-//                'width': width,
-//                'font-size': size
-//                //'top': $(this).offset().top + (old_height - height) / 2
-//            };
-//            $(this).css(css);
-//            width2css[old_width] = css;
-//        }
-//        var offset = $(this).offset();
-//        var shift = old_width * (1 - pow) / 2;
-//        $(this).offset({ top: offset.top + shift, left: offset.left + shift});//{ top: offset.top + (old_height - height) / 2, left: offset.left + (old_width - width) / 2});
-////        if (width >= 12 && size > 6) {
-////            $(this).wrapInner("<div class='wrap'></div>");
-////            var $i = $(this).children('.wrap')[0];
-////            while($i.scrollHeight > height && size > 6) {
-////                size--;
-////                $(this).css("font-size", size);
-////            }
-////        }
-//    });
-////    $('.wrap').children().unwrap();
-}
-
-function getSimpleJson(map, jsn, name2popup, edges, ub_edges, ubiquitous, labels, level, openPopups) {
+function getSimpleJson(map, jsn, name2popup, edges, ub_edges, ubiquitous, labels, level, openPopups, z_min, z_max) {
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels);
+            return pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels, z_min, z_max);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, feature, layer, openPopups, ubiquitous);
@@ -414,22 +404,6 @@ function clear(dict) {
             delete dict[prop];
         }
     }
-}
-
-function getJson(map, jsn, name2popup, geojsonLayer, edges, ub_edges, ubiquitous, labels) {
-    clear(name2popup);
-    var showUbiquitous = map.hasLayer(ubiquitous);
-    edges.clearLayers();
-    ubiquitous.clearLayers();
-    ub_edges.clearLayers();
-    labels.clearLayers();
-    geojsonLayer.addData(jsn);
-    if (!showUbiquitous) {
-        map.removeLayer(ubiquitous);
-        map.removeLayer(ub_edges);
-    }
-    fitSimpleLabels();
-    setAutocomplete(map, name2popup);
 }
 
 function gup(name) {
