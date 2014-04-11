@@ -83,9 +83,8 @@ function getBounds(feature, map) {
     var h = feature.properties.height / 2;
     var x = e[0], y = e[1];
     var southWest = map.unproject([x - w, y + h], 1),
-        northEast = map.unproject([x + w, y - h], 1),
-        bounds = new L.LatLngBounds(southWest, northEast);
-    return bounds;
+        northEast = map.unproject([x + w, y - h], 1);
+    return new L.LatLngBounds(southWest, northEast);
 }
 
 function closePopups(openPopups, map) {
@@ -94,7 +93,7 @@ function closePopups(openPopups, map) {
     });
     openPopups.clearLayers();
 }
-function addPopups(map, name2popup, name2selection, feature, layer, openPopups) {
+function addPopups(map, name2popup, name2selection, feature, layer) {
     var content = '';
     var label = '';
     if (REACTION == feature.properties.type) {
@@ -117,32 +116,30 @@ function addPopups(map, name2popup, name2selection, feature, layer, openPopups) 
     if (EDGE == feature.properties.type) {
         return;
     }
-    var selection_layer = null;
     var bounds = getBounds(feature, map);
     var size = $('#map').height();
     var popup = L.popup({autoPan: true, keepInView: true, maxWidth: size - 2, maxHeight: size - 2, autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
-    if (name2selection.hasOwnProperty(feature.properties.id)) {
-        selection_layer = name2selection[feature.properties.id];
-        var highlight = highlightCircle(feature, map);
-        selection_layer.addLayer(highlight);
-    } else if (feature.properties.ubiquitous) {
-        var highlight = highlightCircle(feature, map);
-        selection_layer = L.featureGroup([highlight]);
-    }
-    layer.bindLabel(label).bindPopup(popup);
-    if (selection_layer != null) {
-        layer.on('click', function(e) {
-            closePopups(openPopups, map);
-            map.addLayer(selection_layer);
-            openPopups.addLayer(selection_layer);
+    if (feature.properties.ubiquitous) {
+        if (!name2selection.hasOwnProperty(feature.properties.id)) {
+            name2selection[feature.properties.id] = L.featureGroup();
+        }
+        var selection_layer = name2selection[feature.properties.id];
+        selection_layer.addLayer(highlightCircle(feature, map));
+        map.on('popupopen', function(e) {
+            if (e.popup == popup) {
+                map.addLayer(selection_layer);
+            }
+        });
+        map.on('popupclose', function(e) {
+            if (e.popup == popup) {
+                map.removeLayer(selection_layer);
+            }
         });
     }
+    layer.bindLabel(label).bindPopup(popup);
     [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
-            if (selection_layer) {
-                name2selection[key] = selection_layer;
-            }
         }
     });
 
@@ -162,7 +159,7 @@ function highlightCircle(feature, map) {
         lineJoin: ROUND,
         weight: 2,
         fill: true,
-        clickable: false,
+        clickable: false
     };
     var e = feature.geometry.coordinates;
     var x = e[0], y = e[1];
@@ -176,22 +173,11 @@ function highlightCircle(feature, map) {
     return L.circle(centre, d / 2, props);
 }
 
-function search(map, name2popup, name2selection, openPopups) {
-    closePopups(openPopups, map);
+function search(map, name2popup) {
+//    closePopups(openPopups, map);
     var srch = document.search_form.search_input.value;
     if (srch && name2popup.hasOwnProperty(srch)) {
         name2popup[srch].openOn(map);
-        if (name2selection.hasOwnProperty(srch)) {
-            var selection = name2selection[srch];
-            selection.addTo(map);
-            openPopups.addLayer(selection);
-        }
-
-        //map.addLayer(name2popup[srch]);
-        //name2popup[srch].openOn(map);
-//        name2popup[srch].forEach(function(popup) {
-//            popup.openOn(map);
-//        });
     }
 }
 
