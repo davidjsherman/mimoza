@@ -94,7 +94,7 @@ function closePopups(openPopups, map) {
     });
     openPopups.clearLayers();
 }
-function addPopups(map, name2popup, feature, layer, openPopups, ubiquitous) {
+function addPopups(map, name2popup, name2selection, feature, layer, openPopups) {
     var content = '';
     var label = '';
     if (REACTION == feature.properties.type) {
@@ -117,32 +117,35 @@ function addPopups(map, name2popup, feature, layer, openPopups, ubiquitous) {
     if (EDGE == feature.properties.type) {
         return;
     }
-    if (name2popup.hasOwnProperty(feature.properties.id)) {
-        popup = name2popup[feature.properties.id];
-        if (feature.properties.ubiquitous) {
-            var highlight = highlightCircle(feature, map);
-            popup.addLayer(highlight);
-        }
-    } else {
-        var bounds = getBounds(feature, map);
-        var size = $('#map').height();
-        var popup = L.popup({autoPan: true, keepInView: true, maxWidth: size - 2, maxHeight: size - 2, autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
-        if (feature.properties.ubiquitous) {
-            var highlight = highlightCircle(feature, map);
-            popup = L.featureGroup([popup, highlight]);
-        }
+    var selection_layer = null;
+    var bounds = getBounds(feature, map);
+    var size = $('#map').height();
+    var popup = L.popup({autoPan: true, keepInView: true, maxWidth: size - 2, maxHeight: size - 2, autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
+    if (name2selection.hasOwnProperty(feature.properties.id)) {
+        selection_layer = name2selection[feature.properties.id];
+        var highlight = highlightCircle(feature, map);
+        selection_layer.addLayer(highlight);
+    } else if (feature.properties.ubiquitous) {
+        var highlight = highlightCircle(feature, map);
+        selection_layer = L.featureGroup([highlight]);
     }
-   [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function(key) {
+    layer.bindLabel(label).bindPopup(popup);
+    if (selection_layer != null) {
+        layer.on('click', function(e) {
+            closePopups(openPopups, map);
+            map.addLayer(selection_layer);
+            openPopups.addLayer(selection_layer);
+        });
+    }
+    [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
+            if (selection_layer) {
+                name2selection[key] = selection_layer;
+            }
         }
     });
-    layer.bindLabel(label); //bindPopup(popup)\
-    layer.on('click', function(e) {
-        closePopups(openPopups, map);
-        map.addLayer(popup);
-        openPopups.addLayer(popup);
-    });
+
 }
 
 function highlightCircle(feature, map) {
@@ -173,13 +176,17 @@ function highlightCircle(feature, map) {
     return L.circle(centre, d / 2, props);
 }
 
-function search(map, name2popup, openPopups) {
+function search(map, name2popup, name2selection, openPopups) {
     closePopups(openPopups, map);
     var srch = document.search_form.search_input.value;
     if (srch && name2popup.hasOwnProperty(srch)) {
-        var popup = name2popup[srch];
-        map.addLayer(popup);
-        openPopups.addLayer(popup);
+        name2popup[srch].openOn(map);
+        if (name2selection.hasOwnProperty(srch)) {
+            var selection = name2selection[srch];
+            selection.addTo(map);
+            openPopups.addLayer(selection);
+        }
+
         //map.addLayer(name2popup[srch]);
         //name2popup[srch].openOn(map);
 //        name2popup[srch].forEach(function(popup) {
