@@ -103,98 +103,100 @@ function initializeMap(json_data) {
     var gray_tiles =  getTiles("/lib/modelmap/gray512.jpg");
     var map = getBaseMap([tiles, labelsLayer, ubLayer]);
 
-    var name2popup = {};
+
+    if (json_data == null) {
+        return map;
+    }
     var name2selection = {};
-//    var openPopups = L.layerGroup();
 
-    if (json_data != null) {
-        var any_ubiquitous = L.featureGroup();
-        var any_ub_edges = L.layerGroup();
-        any_ubiquitous.addTo(ubLayer);
-        any_ub_edges.addTo(ubLayer);
-        var any_edges = L.layerGroup();
-        getSimpleJson(map, json_data, name2popup, name2selection, any_edges, any_ub_edges, any_ubiquitous, labels, ZOOM_ANY, map.getMinZoom(), map.getMaxZoom()).addTo(map);
+    var any_ubiquitous = L.featureGroup();
+    var any_ub_edges = L.layerGroup();
+    any_ubiquitous.addTo(ubLayer);
+    any_ub_edges.addTo(ubLayer);
+    var any_edges = L.layerGroup();
+    var any_name2popup = {};
+    var ub_names = {};
+    getSimpleJson(map, json_data, any_name2popup, ub_names, name2selection, any_edges, any_ub_edges, any_ubiquitous, labels, ZOOM_ANY, map.getMinZoom(), map.getMaxZoom()).addTo(map);
 
-        var zi_ubiquitous = L.featureGroup();
-        var zi_ub_edges = L.layerGroup();
-        var zi_edges = L.layerGroup();
-        var zoom_in = getSimpleJson(map, json_data, name2popup, name2selection, zi_edges, zi_ub_edges, zi_ubiquitous, labels, ZOOM_IN, ZOOM_CHANGING, map.getMaxZoom());
+    var zi_ubiquitous = L.featureGroup();
+    var zi_ub_edges = L.layerGroup();
+    var zi_edges = L.layerGroup();
+    var zi_name2popup = jQuery.extend({}, any_name2popup);
+    var zoom_in = getSimpleJson(map, json_data, zi_name2popup, ub_names, name2selection, zi_edges, zi_ub_edges, zi_ubiquitous, labels, ZOOM_IN, ZOOM_CHANGING, map.getMaxZoom());
 
-        var zo_ubiquitous = L.featureGroup();
-        var zo_ub_edges = L.layerGroup();
-        var zo_edges = L.layerGroup();
-        zo_ub_edges.addTo(ubLayer);
-        zo_ubiquitous.addTo(ubLayer);
-        var zoom_out = getSimpleJson(map, json_data, name2popup, name2selection, zo_edges, zo_ub_edges, zo_ubiquitous, labels, ZOOM_OUT, map.getMinZoom(), ZOOM_CHANGING - 1);
-        zoom_out.addTo(map);
+    var zo_ubiquitous = L.featureGroup();
+    var zo_ub_edges = L.layerGroup();
+    var zo_edges = L.layerGroup();
+    zo_ub_edges.addTo(ubLayer);
+    zo_ubiquitous.addTo(ubLayer);
+    var zo_name2popup = any_name2popup;
+    var zoom_out = getSimpleJson(map, json_data, zo_name2popup, ub_names, name2selection, zo_edges, zo_ub_edges, zo_ubiquitous, labels, ZOOM_OUT, map.getMinZoom(), ZOOM_CHANGING - 1);
+    zoom_out.addTo(map);
 
-        var zo = map.getZoom();
+    setAutocomplete(map, zo_name2popup, null);
+
+    var zo = map.getZoom();
+    clearLabels(map, labels);
+    if (labels.hasOwnProperty(zo)) {
+        labelsLayer.addLayer(labels[zo]);
+    }
+    map.on('zoomstart', function (e) {
         clearLabels(map, labels);
         if (labels.hasOwnProperty(zo)) {
-            labelsLayer.addLayer(labels[zo]);
+            labelsLayer.removeLayer(labels[zo]);
         }
-        map.on('zoomstart', function (e) {
+    });
+    map.on('zoomend', function (e) {
+        var zn = map.getZoom();
+        if (zn >= ZOOM_CHANGING && zo < ZOOM_CHANGING) {
+            ubLayer.removeLayer(zo_ub_edges);
+            ubLayer.removeLayer(zo_ubiquitous);
+            map.removeLayer(zoom_out);
+
+            zi_ub_edges.addTo(ubLayer);
+            zi_ubiquitous.addTo(ubLayer);
+            map.addLayer(zoom_in);
             clearLabels(map, labels);
-            if (labels.hasOwnProperty(zo)) {
-                labelsLayer.removeLayer(labels[zo]);
+            setAutocomplete(map, zi_name2popup, map.hasLayer(ubLayer) ? null : ub_names);
+
+            if (!map.hasLayer(ubLayer)) {
+                map.removeLayer(zi_ub_edges);
+                map.removeLayer(zi_ubiquitous);
             }
-        });
-        map.on('zoomend', function (e) {
-            var zn = map.getZoom();
-            if (zn >= ZOOM_CHANGING && zo < ZOOM_CHANGING) {
-//                closePopups(openPopups, map);
-                ubLayer.removeLayer(zo_ub_edges);
-                ubLayer.removeLayer(zo_ubiquitous);
-                map.removeLayer(zoom_out);
+        } else if (zn < ZOOM_CHANGING && zo >= ZOOM_CHANGING) {
+            ubLayer.removeLayer(zi_ub_edges);
+            ubLayer.removeLayer(zi_ubiquitous);
+            map.removeLayer(zoom_in);
 
-                zi_ub_edges.addTo(ubLayer);
-                zi_ubiquitous.addTo(ubLayer);
-                map.addLayer(zoom_in);
-                clearLabels(map, labels);
+            zo_ub_edges.addTo(ubLayer);
+            zo_ubiquitous.addTo(ubLayer);
+            map.addLayer(zoom_out);
+            clearLabels(map, labels);
+            setAutocomplete(map, zo_name2popup, map.hasLayer(ubLayer) ? null : ub_names);
 
-                if (!map.hasLayer(ubLayer)) {
-                    map.removeLayer(zi_ub_edges);
-                    map.removeLayer(zi_ubiquitous);
-                }
-            } else if (zn < ZOOM_CHANGING && zo >= ZOOM_CHANGING) {
-//                closePopups(openPopups, map);
-                ubLayer.removeLayer(zi_ub_edges);
-                ubLayer.removeLayer(zi_ubiquitous);
-                map.removeLayer(zoom_in);
-
-                zo_ub_edges.addTo(ubLayer);
-                zo_ubiquitous.addTo(ubLayer);
-                map.addLayer(zoom_out);
-                clearLabels(map, labels);
-
-                if (!map.hasLayer(ubLayer)) {
-                    map.removeLayer(zo_ub_edges);
-                    map.removeLayer(zo_ubiquitous);
-                }
+            if (!map.hasLayer(ubLayer)) {
+                map.removeLayer(zo_ub_edges);
+                map.removeLayer(zo_ubiquitous);
             }
-            if (labels.hasOwnProperty(zn)) {
-                labelsLayer.addLayer(labels[zn]);
-            }
-            zo = zn;
-        });
+        }
+        if (labels.hasOwnProperty(zn)) {
+            labelsLayer.addLayer(labels[zn]);
+        }
+        zo = zn;
+    });
 
-//        map.on('click', function(e) {
-//            closePopups(openPopups, map);
-//        });
-//
-//        map.on('overlayremove', function(e) {
-//            if (e.layer == ubLayer) {
-//                closePopups(openPopups, map);
-//            }
-//        });
+    map.on('overlayadd', function(e) {
+        if (e.layer == ubLayer) {
+            clearLabels(map, labels);
+            setAutocomplete(map, map.getZoom() < ZOOM_CHANGING ? zo_name2popup : zi_name2popup, null);
+        }
+    });
 
-        map.on('overlayadd', function(e) {
-            if (e.layer == ubLayer) {
-                clearLabels(map, labels);
-            }
-        });
-    }
-    setAutocomplete(map, name2popup);
+    map.on('overlayremove', function(e) {
+        if (e.layer == ubLayer) {
+            setAutocomplete(map, map.getZoom() < ZOOM_CHANGING ? zo_name2popup : zi_name2popup, ub_names);
+        }
+    });
 
     var baseLayers = {
         "White background": tiles,
@@ -202,10 +204,9 @@ function initializeMap(json_data) {
     };
 
     var overlays = {
-        "Ubiquitous species": ubLayer,
+        "Ubiquitous species": ubLayer
 //        "Labels": labelsLayer
     };
-
     L.control.layers(baseLayers, overlays).addTo(map);
 
     return map;
@@ -307,6 +308,7 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels, z_min, z_m
     } else {
         return null;
     }
+
     node = L.featureGroup([node]);
     for (var z = z_min; z <= z_max; z++) {
         var scaleFactor = Math.pow(2, z);
@@ -326,7 +328,6 @@ function pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels, z_min, z_m
             node.addLayer(label);
             addLayer(labels, z, label);
         }
-//            node.addLayer(label);
 
     }
     if (feature.properties.ubiquitous) {
@@ -373,12 +374,18 @@ function resizeEdges(edges, ub_edges, resize_factor, map) {
     resize(edges);
 }
 
-function setAutocomplete(map, name2popup) {
+function setAutocomplete(map, name2popup, banned) {
     const searchForm = document.getElementById('search_form');
     if (searchForm != null) {
         var availableTags = Object.keys(name2popup);
+        if (banned != null) {
+            availableTags = availableTags.filter(function (element) {
+                return !banned.hasOwnProperty(element);
+            });
+        }
         $("#tags").autocomplete({
-            source: availableTags
+            source: availableTags,
+            autoFocus: true
         });
         $('#tags').keypress(function (e) {
             var code = (e.keyCode ? e.keyCode : e.which);
@@ -393,13 +400,13 @@ function setAutocomplete(map, name2popup) {
     }
 }
 
-function getSimpleJson(map, jsn, name2popup, name2selection, edges, ub_edges, ubiquitous, labels, level, z_min, z_max) {
+function getSimpleJson(map, jsn, name2popup, ub_names, name2selection, edges, ub_edges, ubiquitous, labels, level, z_min, z_max) {
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
             return pnt2layer(map, feature, edges, ub_edges, ubiquitous, labels, z_min, z_max);
         },
         onEachFeature: function (feature, layer) {
-            addPopups(map, name2popup, name2selection, feature, layer);
+            addPopups(map, name2popup, ub_names, name2selection, feature, layer);
         },
         filter: function (feature, layer) {
             var zoom = feature.properties.zoom;

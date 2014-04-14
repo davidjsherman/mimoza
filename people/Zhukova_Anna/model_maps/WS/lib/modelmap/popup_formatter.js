@@ -87,13 +87,7 @@ function getBounds(feature, map) {
     return new L.LatLngBounds(southWest, northEast);
 }
 
-function closePopups(openPopups, map) {
-    openPopups.eachLayer(function (lr) {
-        map.removeLayer(lr);
-    });
-    openPopups.clearLayers();
-}
-function addPopups(map, name2popup, name2selection, feature, layer) {
+function addPopups(map, name2popup, ub_names, name2selection, feature, layer) {
     var content = '';
     var label = '';
     if (REACTION == feature.properties.type) {
@@ -140,6 +134,9 @@ function addPopups(map, name2popup, name2selection, feature, layer) {
     [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
+            if (feature.properties.ubiquitous) {
+                ub_names[key] = true;
+            }
         }
     });
 
@@ -174,7 +171,6 @@ function highlightCircle(feature, map) {
 }
 
 function search(map, name2popup) {
-//    closePopups(openPopups, map);
     var srch = document.search_form.search_input.value;
     if (srch && name2popup.hasOwnProperty(srch)) {
         name2popup[srch].openOn(map);

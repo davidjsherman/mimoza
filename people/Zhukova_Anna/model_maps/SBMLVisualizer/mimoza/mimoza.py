@@ -17,8 +17,11 @@ JQUERY_JS = 'http://code.jquery.com/jquery-2.0.3.min.js'
 JQUERY_UI_CSS = 'http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css'
 
 LEAFLET_LABEL_JS = '%s/lib/leaflet_label/leaflet.label.js' % MIMOZA_URL
+LEAFLET_SEARCH_JS = '%s/lib/leaflet_search/leaflet.fusesearch.js' % MIMOZA_URL
+FUSE_JS = '%s/lib/leaflet_search/fuse.js' % MIMOZA_URL
 LEAFLET_JS = '%s/lib/leaflet/leaflet.js' % MIMOZA_URL
 LEAFLET_LABEL_CSS = '%s/lib/leaflet_label/leaflet.label.css' % MIMOZA_URL
+LEAFLET_SEARCH_CSS = '%s/lib/leaflet_search/leaflet.fusesearch.css' % MIMOZA_URL
 LEAFLET_CSS = '%s/lib/leaflet/leaflet.css' % MIMOZA_URL
 
 TILE = '%s/lib/modelmap/white512.jpg' % MIMOZA_URL
@@ -28,5 +31,5 @@ LOADER_ICON = '%s/lib/modelmap/loader.gif' % MIMOZA_URL
 
 SBML_ORG = "http://sbml.org"
 
-JS_SCRIPTS = [LEAFLET_JS, LEAFLET_LABEL_JS, JQUERY_JS, JQUERY_UI_JS, MIMOZA_JS, MIMOZA_POPUP_JS]
-CSS_SCRIPTS = [MIMOZA_CSS, LEAFLET_CSS, LEAFLET_LABEL_CSS, JQUERY_UI_CSS]
+JS_SCRIPTS = [FUSE_JS, LEAFLET_JS, LEAFLET_LABEL_JS, JQUERY_JS, JQUERY_UI_JS, MIMOZA_JS, MIMOZA_POPUP_JS, LEAFLET_SEARCH_JS]
+CSS_SCRIPTS = [MIMOZA_CSS, LEAFLET_CSS, LEAFLET_LABEL_CSS, JQUERY_UI_CSS, LEAFLET_SEARCH_CSS]
