@@ -235,15 +235,12 @@ A web-based navigation system Mimoza allows a human expert to explore metabolic 
 \section*{Background}
 %The Background section should be written in a way that is accessible to researchers without specialist knowledge in that area and must clearly state - and, if helpful, illustrate - the background to the research and its aims. It should clearly described the relevant context and the specific issue which the software described is intended to address.
 
-\subsection*{The main point}
-Semantic generalization of metabolic models\cite{Zhukova2014} has proven to be a useful theoretical method to aid user understanding of complex networks. 
-We need to go from this theoretical method to a practical tool.
+Semantic generalization of metabolic models\cite{Zhukova2014} has proven to be a useful theoretical method to aid user understanding of complex networks. It allows to find and group similar metabolites and similar reactions in the network, and bring different models to the same level of abstraction allowing to compare them. 
+To explore the opportunities of the method we need to implement it as a practical tool.
 
-Map-based visualisation paradigm has proven to be a powerful tool for representation data at different scales.
+Zooming user interface (ZUI)\cite{Bederson1998} paradigm has proven to be a powerful tool for representation data at different scales. It is being adopted for various domains of applications, including cartographic (e.g. Google Maps), general purpose (e.g. http://prezi.com/) and biological data. The challenge is how to use map-based visualization for semantic generalization.
 
-Challenge is how to use map-based visualization for semantic generalization.
-
-\subsection*{History}
+\subsection*{Metabolic network reconstruction and infrastructure}
 There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analysed by a human curator: Genome-scale metabolic models include thousands of reactions thought to participate in organism's metabolism, while a human can understand best networks that have hundreds of reaction.
 
 %% Reconstruction
@@ -255,25 +252,32 @@ Starting from a model for a similar organism or a collection of pathways and gen
 %% Representation
 Models are stored and shared using established formats, such as SBML\cite{Hucka2003}, SBGN\cite{Moodie2011}, CEllML\cite{Lloyd2004}. The model representation in this formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI\cite{deMatos10}, Uniprot\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable such standardisation efforts as Identifiers.org\cite{Juty2012} emerge.
 
-
 % Why do we need humans?
 Although the model inference tools are becoming more and more advanced, curation by a human expert in organism's metabolism remains crucial. Hence means of splitting genome-scale models into smaller units that can be checked and analysed by human experts in the field are needed. An appropriate level of abstraction needs to be found to allow experts to explore and compare whole genome networks. Good model visualisation tools are also required.
 
-\subsection*{Existing approaches}
-There exist various modelling tools for metabolic networks that also support visualisation. Desktop ones include CellDesigner\cite{Funahashi2008}, VANTED\cite{Rohn2012}, Cytoscape\cite{Smoot2011}. They produce reasonably good visualisations of small networks (up to hundreds of reactions), but have too many edge and node intersections (clutter) for genome-scale ones, making the visualisation unreadable. For example,  the winner of the Best SBGN map competition (http://www.sbgn.org/Competition/Competition\_2011) was a ER Stress response\cite{Groenendyk2010} map manually created in CellDesinger.
+\subsection*{Existing visualisation approaches}
+% Desktop
+There exist various modelling tools for metabolic networks that also support visualisation. Desktop ones include CellDesigner\cite{Funahashi2008}, VANTED\cite{Rohn2012}, Cytoscape\cite{Smoot2011}. They produce reasonably good visualisations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualisation unreadable. For example, the winner of the best SBGN map competition (http://www.sbgn.org/Competition/Competition\_2011), the ER Stress response\cite{Groenendyk2010} map,  was created manually in CellDesinger.
 
-Web-based tools allowing for model visualisation are also emerging.  JWS online, for example, provides a mechanism for model visualisation using a weight-bla algorithm. It has the same problem metioned above: not capable of providing a reasonable representation of huge models.
+% Web-based
+Web-based tools allowing for model visualisation are also emerging.  JWS online\cite{Snoep2003}, for example, provides a mechanism for model visualisation using a force-directed algorithm. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
 
-For huge models not just a better graph layout algorithm, but a different approach is needed. First of all, they need to be decomposed into several meaningful modules (such as compartments, pathways). But even after such a decomposition a model might stay too complicated (e.g. a mitochondrion compartment of a yeast model\cite{Heavner12} contains N reactions). Thus a way of finding an appropriate level of abstraction, allowing to hide the inessential details, is desirable.For this purpose zoomable (e.g. cartographic) approaches seem to be suitable. 
+MetDraw\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information in present in the model as a SUBSYSTEM annotation of reactions) and duplication of minor metabolites. The metabolite duplication allows to reduce the clutter but the huge number of reactions in the compartments of some models and missing subsystem annotations, makes the visualisation consume too much space and do not allow a user to grasp the essential structure of the network.
 
-There are several existing online tools proposing a zoomable solution. NaviCell\cite{Kuperstein2013} that represent zommable maps of biological processes (mostly signalling): but the maps are not produced automatically, the user has to visualise the network with CeLLDesigner, export it as an image and then manually edit it in the graphical designer to produce more general views. Which still poses a problem of laying out huge networks. 
+% ZUI
+Due to the huge numbers of reactions and of species participating in multiple reactions, either lots of intersections in an automatic visualization of a genome-scale model or over-duplication of various metabolites making the essential parts of the model disconnected and the visualisation too spacious to grasp, is almost unavoidable. An approach different to a simple graph layout algorithm is needed, and ZUI become pertinent.
 
-There is Cellular Overview\cite{Latendresse2011} for metabolic maps but it is pathway-oriented, and zoom only makes things bigger. The only organisms for which it's available are those from BioCyc database\cite{Caspi2012}. No compartment information is taken into account.
+There are several existing web-based tools providing a zoomable representation of biological data. For instance, NaviCell\cite{Kuperstein2013} is an web environment that allows for exploiting large maps of molecular interactions (mostly signalling), however, without giving a solution to the problem of huge network layout. It does not produce the maps automatically: The user has to create them in CellDesigner, export as an image and manually edit in a graphical designer to produce intermediate views.
 
-Combining meaningful decomposition into modules with automatic abstraction remains unsolved. In this paper we address this problem and propose our solution.
+Another web-based tool, the Cellular Overview\cite{Latendresse2011} creates interactive diagrams for metabolic maps for organisms in the BioCyc database\cite{Caspi2012}. It is pathway-oriented, and does not contain intermediate levels in a sense that zooming in increases, but does not change existing or show new elements on the map. Another drawback is that it does not show the compartmentalization.
+
+As the examples of NaviCell and the Cellular Overview show, not only zoomable interface but also model decomposition are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast model\cite{Heavner12} that contains N reactions, a further decomposition is required. We address this issue by applying the model generalization method.
+
 
 \section*{Implementation}
 % This should include a description of the overall architecture of the software implementation, along with details of any critical issues and how they were addressed.
+
+Combining meaningful decomposition into modules with automatic abstraction remains unsolved. In this paper we address this problem and propose our solution.
 
 \subsection*{Choosing zoom levels}
 Genome-scale metabolic networks are complex, so to adopt a multi-level representation. Generalization + semantic zooming => the most appropriate is to adopt 3 levels.
