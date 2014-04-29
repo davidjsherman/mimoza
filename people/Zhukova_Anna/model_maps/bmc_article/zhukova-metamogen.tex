@@ -151,7 +151,7 @@
 
 \begin{artnotes}
 %\note{Sample of title note}     % note to the article
-\note[id=n1]{Equal contributor} % note, connected to author
+%\note[id=n1]{Equal contributor} % note, connected to author
 \end{artnotes}
 
 \end{fmbox}% comment this for two column layout
@@ -238,7 +238,7 @@ A web-based navigation system Mimoza allows a human expert to explore metabolic 
 Semantic generalization of metabolic models\cite{Zhukova2014} has proven to be a useful theoretical method to aid user understanding of complex networks. It allows to find and group similar metabolites and similar reactions in the network, and bring different models to the same level of abstraction allowing to compare them. 
 To explore the opportunities of the method we need to implement it as a practical tool.
 
-Zooming user interface (ZUI)\cite{Bederson1998} paradigm has proven to be a powerful tool for representation data at different scales. It is being adopted for various domains of applications, including cartographic (e.g. Google Maps), general purpose (e.g. http://prezi.com/) and biological data. The challenge is how to use map-based visualization for semantic generalization.
+Zooming user interface (ZUI)\cite{Bederson1998} paradigm has proven to be a powerful tool for representation data at different scales. It is being adopted for various domains of applications, including cartographic (e.g. Google Maps), general purpose and biological data. The challenge is how to use map-based visualization for semantic generalization.
 
 \subsection*{Metabolic network reconstruction and infrastructure}
 There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analysed by a human curator: Genome-scale metabolic models include thousands of reactions thought to participate in organism's metabolism, while a human can understand best networks that have hundreds of reaction.
@@ -257,7 +257,7 @@ Although the model inference tools are becoming more and more advanced, curation
 
 \subsection*{Existing visualisation approaches}
 % Desktop
-There exist various modelling tools for metabolic networks that also support visualisation. Desktop ones include CellDesigner\cite{Funahashi2008}, VANTED\cite{Rohn2012}, Cytoscape\cite{Smoot2011}. They produce reasonably good visualisations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualisation unreadable. For example, the winner of the best SBGN map competition (http://www.sbgn.org/Competition/Competition\_2011), the ER Stress response\cite{Groenendyk2010} map,  was created manually in CellDesinger.
+There exist various modelling tools for metabolic networks that also support visualisation. Desktop ones include CellDesigner\cite{Funahashi2008}, VANTED\cite{Rohn2012}, Cytoscape\cite{Smoot2011}. They produce reasonably good visualisations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualisation unreadable. For example, the winner of the best SBGN map competition\cite{SBGN}, the ER Stress response\cite{Groenendyk2010} map,  was created manually in CellDesinger.
 
 % Web-based
 Web-based tools allowing for model visualisation are also emerging.  JWS online\cite{Snoep2003}, for example, provides a mechanism for model visualisation using a force-directed algorithm. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
@@ -277,24 +277,17 @@ As the examples of NaviCell and the Cellular Overview show, not only zoomable in
 \section*{Implementation}
 % This should include a description of the overall architecture of the software implementation, along with details of any critical issues and how they were addressed.
 
-Combining meaningful decomposition into modules with automatic abstraction remains unsolved. In this paper we address this problem and propose our solution.
-
 \subsection*{Choosing zoom levels}
-Genome-scale metabolic networks are complex, so to adopt a multi-level representation. Generalization + semantic zooming => the most appropriate is to adopt 3 levels.
-\subsection*{Three-level model representation}
-To aid human understanding of genome-scale models, while keeping the details needed for a computer simulation, we propose a 3-level zoomable approach:
+We address the problem of large-scale metabolic model visualisation by combining meaningful decomposition into modules with automatic multi-level abstraction. Decomposition is performed by splitting the model into compartments and after with the metabolic model generalisation method, so the most appropriate is to adopt 3 levels of semantic zooming:
+
 \begin{enumerate}
 \item The most abstract level represents compartmentalization of the model, and focusses on such questions as: Are all the compartments present? Are they well connected by transport reactions?
 
-This level shows the compartments of the model, their annotations with the Gene Ontology terms, the transport reactions between the compartments, and other reactions happening inside cytoplasm.
+This level shows the compartments of the model, the transport reactions between them, and other reactions happening inside the cytoplasm.
 
-\item The second level shows the modules inside of each of the compartments. The questions to be addressed on this level include: Are all the essential processes present? Is the structure of each process correct? Is there any organism-specific adaptation of the structure?
+\item The second level shows the modules inside of each of the compartments. The questions to be addressed at this level include: Are all the essential processes present? Is the structure of each process correct? Is there any organism-specific adaptation of the structure?
 
-Different approaches can be used to identify the modules inside the compartments. There are two general classes of approaches: series and parallel. A series approach operates on chains of reactions, and generalizes them as a series, consequently hiding the structure of the network. An example of a series approach is representing the network as a set of metabolic pathways (KEGG\cite{Kanehisa12}, MetaCyC\cite{Caspi2012}), that can be further divided, for example, into reaction modules (conserved sequences of reactions along the metabolic pathways)\cite{Muto2013}. 
-
-The other type of approach operates on reactions that are parallel, keeping the steps and preserving the general view of the network. An example of this approach is grouping reactions based on EC (Enzyme Commission) numbers\cite{Tohsato2000}. The drawback of this approach is that it is not applicable to networks with no EC number assigned or reactions with no catalysing enzymes identified. 
-
-In our tool we use a parallel-reaction approach to keep its essential structure of the model at all the levels. We use method for knowledge-based generalization of metabolic models, which does not depend on enzyme information. It detects similar metabolites and reactions and clusters them together, representing as generalized metabolites/reactions with the same structure (number of consumed/produced metabolites).
+We use knowledge-based generalization method to identify the modules inside the compartments. It detects similar metabolites and reactions and clusters them together, representing as generalized metabolites/reactions with the same structure (number of consumed/produced metabolites), and thus allows to keep the essential structure of the model while hiding the details.
 
 \item The most detailed level is intended for computer simulation and represents the inner structure of each of the modules with all the species, reactions and their kinetics, stoichiometry and constraints.
 
@@ -323,16 +316,14 @@ Reactions that share the same generalized reactants and the same generalized pro
 We do not generalize ubiquitous (frequently occurring) species, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping species increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these species are usually duplicated\cite{Rohn2012} to improve readability.
 
 % Limitations
-As the generalization of species depends on the ChEBI hierarchy, the method tries to find ChEBI terms for the species that lack ChEBI annotations in the model. The search is done by comparing species names to ChEBI terms' names and synonyms. The method does not generalize those species for which no ChEBI mapping can be found. 
+%As the generalization of species depends on the ChEBI hierarchy, the method tries to find ChEBI terms for the species that lack ChEBI annotations in the model. The search is done by comparing species names to ChEBI terms' names and synonyms. The method does not generalize those species for which no ChEBI mapping can be found. 
 % Another characteristic of the method is that, in order to preserve stoichiometry, it cannot factor chains of consecutive similar reactions, i.e. reactions whose reactants could belong to the same equivalence class as products. Our method factors only \textit{parallel} reactions, whose reactants and products belong to distinct equivalence classes.
 
 % Implementation
-The generalization method is implemented as a Python library and is available for download from http://metamogen.gforge.inria.fr. The generalized network is produced in SBML format with groups annotations\cite{Hucka2012}.
+%The generalization method is implemented as a Python library and is available for download from http://metamogen.gforge.inria.fr. The generalized network is produced in SBML format with groups annotations\cite{Hucka2012}.
 
 \subsection*{Layers Layout}
-While laying out large graphs is widely studies\cite{smth}, making the correspondence between the layouts of different zoom levels is hard.
-
-To compute the layout we use Tulip graph visualization software\cite{Auber04} and two different approaches, depending on the zoom level.
+While layout of large graphs is widely studied\cite{Unwin2006}, the correspondence between the layouts of different zoom levels remains a hard task. To compute the layout for different zoom levels we use Tulip graph visualization software\cite{Auber04} and two different approaches.
 \subsubsection*{Generalised model layout}
 % General idea
 In order to layout the sub-models corresponding to each of the organelles after the generalisation, we use a combination of standard layout algorithms provided by Tulip. We divide the organelle graph into connected components and then apply an appropriate layout algorithm on each of them. The results are combined together using the 'Connected Component Packing' algorithm, which places the components close to each other while removing the overlaps between them.
@@ -346,14 +337,14 @@ Depending on the nature of the connected component subgraph, we choose one of th
 \end{itemize}
 
 % Ubiquitous species hadling
-To avoid cluttering we duplicate all the ubiquitous species before applying the layout algorithms, so that there is a copy of an ubiquitous species for each reaction it participates in. We then extract a subgraph, containing all but the ubiquitous species, apply the combined layout on it, and then place the ubiquitous species next to the reactions in which they participate.
+To avoid cluttering we duplicate all the ubiquitous species before applying the layout algorithms, so that there is a copy of an ubiquitous species for each reaction it participates in. We then extract a subgraph, containing all but the ubiquitous species, apply the combined layout on it, and then place the ubiquitous species next to the reactions they participate in.
 
 \subsubsection*{Generalization-based full model layout}
 The layout for the full model is based on the corresponding generalised model's layout. To allow for zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous species, and species and reactions that are not generalised, and place similar species/reactions next to each other inside the space used by the corresponding generalized species/reactions in the generalized model. This also allows for grasping similar processed at the same time. 
  
-\subsection*{Zoomable cartographic representation}
+\subsection*{ZUI}
 
-The zoomable web representation of a model is achieved using Leaflet library.
+The zoomable interactive representation is achieved using the Leaflet library\cite{Agafonkin}.
 GeoJson, Leaflet. Pop-ups with additional information.
  
 \subsection*{Pipeline}
