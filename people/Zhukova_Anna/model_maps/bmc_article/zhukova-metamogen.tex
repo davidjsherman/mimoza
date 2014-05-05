@@ -51,6 +51,8 @@
 %\RequirePackage{natbib}
 \RequirePackage{hyperref}
 \usepackage[utf8]{inputenc} %unicode support
+\usepackage{graphicx}
+\usepackage{setspace}
 %\usepackage[applemac]{inputenc} %applemac support if unicode package fails
 %\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
 
@@ -271,7 +273,7 @@ There are several existing web-based tools providing a zoomable representation o
 
 Another web-based tool, the Cellular Overview\cite{Latendresse2011} creates interactive diagrams for metabolic maps for organisms in the BioCyc database\cite{Caspi2012}. It is pathway-oriented, and does not contain intermediate levels in a sense that zooming in increases, but does not change existing or show new elements on the map. Another drawback is that it does not show the compartmentalization.
 
-As the examples of NaviCell and the Cellular Overview show, not only zoomable interface but also model decomposition are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast model\cite{Heavner12} that contains N reactions, a further decomposition is required. We address this issue by applying the model generalization method.
+As the examples of NaviCell and the Cellular Overview show, not only zoomable interface but also model decomposition are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast consensus model\cite{Heavner12} that contains 230 reactions, a further decomposition is required. We address this issue by applying the model generalization method.
 
 
 \section*{Implementation}
@@ -380,11 +382,20 @@ The overall Mimoza pipeline  contains of 5 steps:
 
 \section*{Results and Discussion}
 %The Results and Discussion may be combined into a single section or presented separately. They may also be broken into subsections with short, informative headings. In any case what should be described is the functionality of the software together with data on how its performance and functionality compare with and improve on functionally similar existing software. There should then be a discussion of the intended use of the software, and the benefits that are envisioned together, if possible, with an outline for the planned future development of new features.
+To illustrate the use of Mimoza compare it with other available ZUI tools we visualized the yeast consensus genome-scale metabolic network (version 5\cite{Heavner12}). The result can be found at http://mimoza.bordeaux.inria.fr/smth. 
+3 zoom levels (compartment view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown on Figure~\ref{zoom_levels}. The most general level shows the organelle compartments, transport reactions between them and the reactions happening inside the cytoplasm; the second level shows the generalised structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids\cite{Metzler01}); the most detailed level represents the complete model, placing semantically similar metabolites and reactions next to each other.
 
-Future work: use more sophisticated layout of the generalized level (e.g. anchored).
-Add opportunity to change layout / annotations, etc.
+We visualized the same model using MetDraw with no manual adjustments. The resulting svg file (http://www.metdraw.com/metdraw/bc7df60221ba314c383b1bf6e7dad4c3056f92bb) has only one zoom level with lots of clutter, not allowing to see the structure of the model.
 
-Combine several models as an input.
+Cellular Overview does not allow to visualize a model provided by a user, but has a map of metabolism of \emph{Saccharomyces cerevisiae} (http://biocyc.org/overviewsWeb/celOv.shtml). It has a clear non-overlapping representation of various pathways present in the model, but does not show the compartmentalisation.It is not automatic and is pathway-oriented, thus is not suitable for models having no pathway metadata. The zoom in shows additional labels but all the species and reactions are present at all the levels, making the elements at the most general level very small and hard to analyse.
+
+Mimoza is more suitable for draft models, allowing to visualise them fully automatically and help to analyse them  in a top-down manner: starting from the general structure and going down to the details. The generalized level makes it different from other tools allowing for both showing the essential model structure and smarter visualisation on the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on the pathway information, automatically infers the relative compartment placement (e.g. places organelles inside the cytoplasm) and requires a model in SBML format with ChEBI annotations for metabolites (it also tries to annotate them automatically if no annotations are present).
+
+In the future, we plan to use an anchored layout of the generalized level, based on a set of common motifs: e.g. always layout the generalised $\beta$-oxidation of fatty acids as a 4-step cycle, with the fixed coordinates of the generalised metabolites common for all the models that incorporate $\beta$-oxidation. In that case the differences between the models will become more prominent.
+ 
+We also plan to make the tool more interactive giving a user an opportunity to change layout and annotations, run FBA, etc. 
+
+Allowing to combine several models as an input, and producing a common generalisation is another interesting direction.
 
 \section*{Conclusions}
 %This should state clearly the main conclusions of the article and give a clear explanation of the importance and relevance of the software.
@@ -455,6 +466,7 @@ Mimoza is an amazing tool that everyone was waiting for and can finally use and 
 
 \section*{Figures}
   \begin{figure}[h!]
+  \includegraphics[scale=0.5]{figure1.png}
   \caption{\csentence{3 zoom levels. (1 page)}
   \label{zoom_levels}
       Compartments, generalized peroxisome, zoomed in reaction.}
