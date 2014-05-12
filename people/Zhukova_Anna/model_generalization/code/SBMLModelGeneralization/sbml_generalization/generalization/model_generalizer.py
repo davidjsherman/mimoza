@@ -139,19 +139,19 @@ def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids
 	interesting_term_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
 	log(verbose, "  computing eq 0...")
 	term_id2clu = compute_eq0(interesting_term_ids, {c.getId() for c in model.getListOfCompartments()}, onto)
-	log_clusters(term_id2clu, onto, verbose, True)
+	# log_clusters(term_id2clu, onto, verbose, True)
 	log(verbose, "  maximizing...")
 	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
 	filter_clu_to_terms(term_id2clu)
-	log_clusters(term_id2clu, onto, verbose, True)
+	# log_clusters(term_id2clu, onto, verbose, True)
 	log(verbose, "  preserving stoichiometry...")
 	term_id2clu = fix_stoichiometry(model, term_id2clu, species_id2chebi_id, onto)
 	filter_clu_to_terms(term_id2clu)
-	log_clusters(term_id2clu, onto, verbose, True)
+	# log_clusters(term_id2clu, onto, verbose, True)
 	log(verbose, "  maximizing...")
 	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
 	filter_clu_to_terms(term_id2clu)
-	log_clusters(term_id2clu, onto, verbose, True)
+	# log_clusters(term_id2clu, onto, verbose, True)
 	return term_id2clu
 
 
@@ -160,7 +160,7 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 	if not term_id2clu:
 		return {}
 	term_id2clu = update(term_id2clu, onto)
-	log_clusters(term_id2clu, onto, verbose)
+	# log_clusters(term_id2clu, onto, verbose)
 	s_id2clu = {}
 	t_c_id2species = defaultdict(set)
 	for (s_id, t) in species_id2chebi_id.iteritems():

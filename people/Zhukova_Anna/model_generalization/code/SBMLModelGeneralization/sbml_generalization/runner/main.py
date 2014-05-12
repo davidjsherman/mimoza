@@ -6,7 +6,6 @@ import logging
 import sys
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
-from sbml_generalization.utils.logger import log
 
 from sbml_generalization.utils.obo_ontology import get_chebi, parse
 from sbml_generalization.utils.usage import Usage
@@ -29,11 +28,10 @@ def main(argv=None):
 	if argv is None:
 		argv = sys.argv
 	try:
-		chebi, in_sbml, out_sbml, groups_sbml, sh_chains, verbose = process_args(argv)
-		logging.basicConfig(level=logging.INFO)
-		log(verbose, "parsing ChEBI...")
+		chebi, in_sbml, out_sbml, groups_sbml, sh_chains, verbose, log_file = process_args(argv)
+		# log(verbose, "parsing ChEBI...")
 		ontology = parse(chebi, EQUIVALENT_TERM_RELATIONSHIPS | {'has_role'})
-		generalize_model(groups_sbml, out_sbml, in_sbml, ontology, None, sh_chains, verbose)
+		generalize_model(groups_sbml, out_sbml, in_sbml, ontology, None, verbose, log_file)
 	except Usage, err:
 		logging.error(sys.argv[0].split("/")[-1] + ": " + str(err.msg))
 		logging.error(sys.stderr, "\t for help use --help")
@@ -56,11 +54,11 @@ def generate_out_sbml_name(in_sbml, out_sbml):
 
 def process_args(argv):
 	try:
-		opts, args = getopt.getopt(argv[1:], "m:c:h:o:v:s",
-		                           ["help", "model=", "chebi=", "outmodel=", "verbose", "shorten"])
+		opts, args = getopt.getopt(argv[1:], "m:c:h:o:v:s:l",
+		                           ["help", "model=", "chebi=", "outmodel=", "verbose", "shorten", "log="])
 	except getopt.error, msg:
 		raise Usage(msg)
-	in_sbml, chebi, out_sbml, shorten, verbose = None, None, None, False, False
+	in_sbml, chebi, out_sbml, shorten, verbose, log_file = None, None, None, False, False, None
 	# option processing
 	for option, value in opts:
 		if option in ("-h", "--help"):
@@ -75,12 +73,14 @@ def process_args(argv):
 			verbose = True
 		if option in ("-s", "--shorten"):
 			shorten = True
+		if option in ("-l", "--log"):
+			log_file = value
 	out_sbml, groups_sbml = generate_out_sbml_name(in_sbml, out_sbml)
 	if not chebi:
 		chebi = get_chebi()
 	if not in_sbml or not chebi:
 		raise Usage(help_message)
-	return chebi, in_sbml, out_sbml, groups_sbml, shorten, verbose
+	return chebi, in_sbml, out_sbml, groups_sbml, shorten, verbose, log_file
 
 
 if __name__ == "__main__":
