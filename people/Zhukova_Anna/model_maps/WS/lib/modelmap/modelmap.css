@@ -1,15 +1,17 @@
 body {
+
     background-color: #ffffff;
     vertical-align: middle;
     height:100%;
-    margin:0;
+    margin-top:20px;
+    margin-bottom: 20px;
     padding:0;
+    font-family: "Helvetica", monospace;/*"Lucida Sans Unicode",monospace;*/
 }
 h1 {
     text-color: #ac3131;
     color: #ac3131;
     text-align: center;
-    font-family: "Lucida Sans Unicode",monospace;
     font-size: 20px;
     line-height: 26px;
     font-weight: 600;
@@ -18,13 +20,11 @@ h2 {
     text-color: #ac3131;
     color: #ac3131;
     text-align: center;
-    font-family: "Lucida Sans Unicode",monospace;
     font-size: 14px;
     line-height: 18px;
     font-weight: 500;
 }
 li {
-    font-family: "Lucida Sans Unicode",monospace;
     font-size: 13px;
     line-height: 17px;
 }
@@ -59,7 +59,6 @@ li {
 }
 
 p {
-    font-family: "Lucida Sans Unicode",monospace;
     font-size: 13px;
     line-height: 17px;
     vertical-align: middle;
@@ -78,8 +77,35 @@ th {
     vertical-align: middle;    
 }
 
+
+a:link { /* unvisited link */
+    text-decoration:none;
+    text-color: #ac3131;
+    color: #ac3131;
+    display:inline-block;
+}
+a:visited { /* visited link */
+    text-decoration:none;
+    text-color: #773131;
+    color: #773131;
+    display:inline-block;
+}
+a:hover { /* mouse over link */
+    text-decoration:underline;
+    display:inline-block;
+    text-color: #773131;
+    color: #773131;
+}
+a:active { /* selected link */
+    text-decoration:underline;
+    display:inline-block;
+    text-color: #773131;
+    color: #773131;
+}
+
 td a, p.popup a {
     font-size: 10px;
+    text-decoration: none;
 }
 p.popup {
     width: auto;
@@ -100,21 +126,6 @@ p.popup table td {
     white-space: nowrap;
 }
 
-h1 a{
-    text-color: #ac3131;
-    color: #ac3131;
-    display:inline-block;
-}
-a {
-    text-color: #ac3131;
-    color: #ac3131;
-    display:inline-block;
-    text-decoration:underline;
-}
-a:visited {
-    text-color: #773131;
-    color: #773131;
-}
 div.margin {
     text-align: justify;
     padding-left: 10px;
@@ -142,10 +153,10 @@ div.map {
 }
 
 span.pant {
-    text-color: #ac3131;
-    color: #ac3131;
-    font-weight: 500;
-    vertical-align: middle;
+    /*text-color: #ac3131;*/
+    /*color: #ac3131;*/
+    font-weight: 600;
+    /*vertical-align: middle;*/
 }
 div.image {
     padding-top: 25px;

@@ -11,7 +11,7 @@ from sbml_generalization.generalization.reaction_filters import getGeneAssociati
 from modules.model_utils import clone_node
 
 from modules.resize import r_size, ub_sp_size, sp_size, ub_e_size, e_size
-from runner.mod_gen_helper import generalize_entities
+from runner.mod_gen_helper import process_generalized_model
 
 
 __author__ = 'anna'
@@ -93,14 +93,20 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[COMPARTMENT][n] = get_r_comp(all_comps)
 
 
+def get_quotient_maps(chebi, input_model, sbml_file, verbose):
+	log(verbose, 'reading generalized model from %s' % sbml_file)
+	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = process_generalized_model(chebi, input_model,
+	                                                                                           sbml_file)
+
+	return r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
+
+
 def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
 	chebi = parse(get_chebi())
 
-	log(verbose, 'calling model_generalisation library')
-	r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps, groups_sbml = generalize_entities(chebi,
-	                                                                                                  input_model,
-	                                                                                                  sbml_file,
-	                                                                                                  verbose, log_file)
+	r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = get_quotient_maps(chebi, input_model, sbml_file, verbose)
+
+
 	log(verbose, 'fixing labels and compartments')
 	check_names(input_model)
 	check_compartments(input_model)
@@ -173,7 +179,7 @@ def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
 
 	log(verbose, 'marking species/reaction groups')
 	mark_ancestors(graph, r_id2g_id, s_id2gr_id)
-	return graph, groups_sbml, chebi, name2id_go
+	return graph, chebi, name2id_go
 
 
 def create_props(graph):

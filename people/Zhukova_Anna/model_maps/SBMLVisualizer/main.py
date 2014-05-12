@@ -1,7 +1,12 @@
-import os
 import logging
-import sys
+from os.path import splitext, basename, dirname, abspath
+from generalization.model_generalizer import get_r_compartments
+from modules.sbml2tlp import import_sbml
 from runner.tulip_helper import visualize_model
+from libsbml import *
+from tulip import tlp
+from sbml_generalization.generalization.sbml_generalizer import generalize_model
+from sbml_generalization.utils.obo_ontology import parse, get_chebi
 
 __author__ = 'anna'
 help_message = '''
@@ -27,7 +32,6 @@ CSS_SCRIPTS = [('%s/lib/modelmap/modelmap.css' % MIMOZA_URL),
 
 import sys
 import os
-from instant import inline, check_and_set_swig_binary
 
 
 def main(argv=None):
@@ -39,35 +43,39 @@ def main(argv=None):
 	# 	print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
 	# 	print >> sys.stderr, "\t for help use --help"
 	# 	return 2
-	sbml = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_golgi.xml'
+	# sbml = '/Users/anna/Documents/PhD/magnome/model_generalization/code/MODEL1111190000_golgi.xml'
 	# sbml = '/Users/anna/Downloads/yeast_7.11/yeast_7.11_recon_with_groups.xml'
-	# sbml = '/Users/anna/Downloads/BMID000000095830.xml'
-	# this is a hack to prevent Tulip from printing stuff and producing 500
-	# stdout = os.fdopen(os.dup(sys.stdout.fileno()), 'w')
-	# stderr = os.fdopen(os.dup(sys.stderr.fileno()), 'w')
-	# check_and_set_swig_binary(binary="swig", path="/opt/local/bin/")
-	# args = {'modulename': 'inline', 'cache_dir': '/Users/anna/.ins/cache/', 'generate_setup': False}
-	# redirect = inline("""
-	# void redirect(void) {
-     #    freopen("/Users/anna/log.log", "w", stdout);
-     #    freopen("/Users/anna/log.log", "w", stderr);
-	# }
-	# """, **(args))
-	# redirect()
-	# os.system("at now <<< '/Users/anna/Documents/PhD/magnome/model_maps/SBMLVisualizer/test.py'")
+	sbml = '/Users/anna/Documents/PhD/yeast_7.00/yeast_7.00_mito.xml'
 
-	visualize_model('/Users/anna/Documents/PhD/magnome/', 'mm', 'http://mimoza.bordeaux.inria.fr', 'comp.html', sbml,
-	                JS_SCRIPTS, CSS_SCRIPTS, FAVIICON, False)  # visualize_model(directory, sbml, scripts, css, fav, tile, verbose)
+	reader = SBMLReader()
+	input_document = reader.readSBML(sbml)
+	input_model = input_document.getModel()
+	i = 0
+	for r in input_model.getListOfReactions():
+		# if len(get_r_compartments(input_model, r)) == 1:
+			i += 1
+	print i
+
+	# logging.basicConfig(level=logging.INFO)
 	#
-	# redirect_back = inline("""
-	# void redirect(void) {
-     #    fclose(stdout);
-     #    fclose(stderr);
-	# }
-	# """, **(args))
-	# redirect_back()
-
-	print "Hello world!"
+	# name, extension = splitext(basename(sbml))
+	# sbml_directory = dirname(abspath(sbml))
+	# groups_sbml = "%s/%s_with_groups%s" % (sbml_directory, name, extension)
+	#
+	# out_sbml = "%s/%s_generalized%s" % (sbml_directory, name, extension)
+	# chebi = parse(get_chebi())
+	# generalize_model(groups_sbml, out_sbml, sbml, chebi, cofactors=None, verbose=True)
+	#
+	# reader = SBMLReader()
+	# input_document = reader.readSBML(groups_sbml)
+	# input_model = input_document.getModel()
+	#
+	# graph = tlp.newGraph()
+	# graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True)
+	# url = '%s/mm/comp.html' % MIMOZA_URL
+	# visualize_model(directory='/Users/anna/Documents/PhD/magnome/', m_dir_id='mm', input_model=input_model, graph=graph,
+	#                 name2id_go=name2id_go, groups_sbml=groups_sbml, url=url, main_url='http://mimoza.bordeaux.inria.fr',
+	#                 scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=FAVIICON, verbose=True)
 
 if __name__ == "__main__":
 	sys.exit(main())

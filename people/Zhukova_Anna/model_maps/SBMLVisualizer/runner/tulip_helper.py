@@ -1,16 +1,11 @@
-import logging
 import os
 import threading
-from tulip import tlp
-from libsbml import SBMLReader
-from mimoza.mimoza import MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, TILE
-# from modules.color import simple_color
+from mimoza.mimoza import MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm, nodes_to_meta_node
 from modules.geojson_helper import tulip2geojson
 from modules.html_generator import create_html, create_embedded_html
 from modules.layout_utils import layout_generalization_based, layout, layout_cytoplasm
 from modules.resize import get_comp_size, resize_edges
-from modules.sbml2tlp import import_sbml
 from modules.graph_tools import *
 from sbml_generalization.utils.logger import log
 
@@ -22,29 +17,7 @@ CELL = 'cell'
 __author__ = 'anna'
 
 
-def visualize_model(directory, m_dir_id, main_url, url_end, sbml, scripts, css, fav, verbose):
-    reader = SBMLReader()
-    input_document = reader.readSBML(sbml)
-    input_model = input_document.getModel()
-
-    directory = '%s/%s/' % (directory, m_dir_id)
-    url = '%s/%s/%s' % (main_url, m_dir_id, url_end)
-
-    log_file = None
-    if verbose:
-        try:
-            log_file = '%s/log.log' % directory
-            with open(log_file, "w+"):
-                pass
-        except:
-            pass
-        logging.basicConfig(level=logging.INFO, filename=log_file)
-
-    # sbml -> tulip graph
-    log(verbose, 'sbml -> tlp')
-    graph = tlp.newGraph()
-    graph, groups_sbml, onto, name2id_go = import_sbml(graph, input_model, sbml, verbose, log_file)
-
+def visualize_model(directory, m_dir_id, input_model, graph, name2id_go, groups_sbml, url, main_url, scripts, css, fav, verbose):
     # generalized species/reactions -> metanodes
     log(verbose, 'generalized species/reactions -> metanodes')
     meta_graph = process_generalized_entities(graph)

@@ -15,7 +15,7 @@ function formatGA(ga) {
                 ga_res += "<tr></tr><td class='centre'><i>(or)</i></td></tr>";
             }
             for (var j = 0, jlen = genes.length; j < jlen; j++) {
-                ga_res += "<tr><td><a href=\'http://genolevures.org/elt/YALI/" + genes[j] + "\' target=\'_blank\'>" + genes[j] + '</a></td></tr>';
+                ga_res += "<tr><td><a href=\'http://www.ncbi.nlm.nih.gov/gene/?term=" + genes[j] + "[sym]\' target=\'_blank\'>" + genes[j] + '</a></td></tr>';
             }
             ga_res += '</table></td>';
             if (i < len - 1) {

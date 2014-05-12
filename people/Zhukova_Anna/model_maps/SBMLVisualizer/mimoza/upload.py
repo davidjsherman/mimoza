@@ -3,19 +3,24 @@
 
 import cgi
 import hashlib
+import logging
 import os
 import cgitb
-from instant import check_and_set_swig_binary, inline
+from tulip import tlp
 from libsbml import SBMLReader, writeSBMLToFile
 import sys
-from modules.html_generator import create_thanks_for_uploading_html, generate_redirecting_html, generate_error_html, \
-    generate_contact, generate_exists_html, create_exists_html
+from modules.html_generator import create_thanks_for_uploading_html, create_thanks_for_uploading_generalized_html
+from sbml_generalization.utils.compartment_positioner import get_comp2go, sort_comps
+from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Term
+from sbml_generalization.generalization.reaction_filters import getGeneAssociation
 import base64
 from mimoza.mimoza import *
+from runner.mod_gen_helper import process_generalized_model
 
 ALREADY_EXISTS = 1
 OK = 0
 NOT_MODEL = 2
+ALREADY_GENERALIZED = 3
 
 cgitb.enable()
 
@@ -70,6 +75,8 @@ def check_md5(file_name):
         # pipe contents of the file through
         return hashlib.md5(data).hexdigest()
 
+verbose = True
+
 def process_file(sbml_file):
     reader = SBMLReader()
     doc = reader.readSBML(sbml_file)
@@ -90,26 +97,36 @@ def process_file(sbml_file):
     else:
         os.makedirs(directory)
 
-    # i = 0
-    # existing_model = None
-    # while os.path.exists('../html/%s/' % m_id):
-    #     if os.path.exists('../html/%s/comp.html' % m_id):
-    #         existing_model = m_id
-    #     # return ALREADY_EXISTS, (model_id, sbml_file)
-    #     m_id = '%s_%d' % (model_id, i)
-    #     i += 1
+
+
+
+    log_file = None
+    try:
+        log_file = '%s/log.log' % directory
+        with open(log_file, "w+"):
+            pass
+    except:
+        pass
+    logging.basicConfig(level=logging.INFO, filename=log_file)
+
+    chebi = parse(get_chebi())
+
+    # groups_sbml = new_sbml_file
+    r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = process_generalized_model(chebi, model, sbml_file)
+    if r_id2g_id or ub_sps:
+        new_sbml_file = '%s%s_with_groups.xml' % (directory, model_id)
+        if sbml_file != new_sbml_file:
+            if not writeSBMLToFile(doc, new_sbml_file):
+                return NOT_MODEL, None
+            os.remove(sbml_file)
+        return ALREADY_GENERALIZED, (model_id, model.getName(), m_id)
 
     new_sbml_file = '%s%s.xml' % (directory, model_id)
     if sbml_file != new_sbml_file:
         if not writeSBMLToFile(doc, new_sbml_file):
             return NOT_MODEL, None
-        # copyfile(sbml_file, new_sbml_file)
         os.remove(sbml_file)
-
     return OK, (model_id, model.getName(), m_id)
-    # return (ALREADY_EXISTS, (model_id, m_id, existing_model)) if existing_model else (
-    #     OK, (model_id, model.getName(), m_id))
-
 
 result, args = upload_file()
 
@@ -160,6 +177,12 @@ elif ALREADY_EXISTS == result:
     # # print generate_exists_html(MIMOZA_CSS, JS_SCRIPTS, MIMOZA_FAVICON, model_id, existing_m_url, url, sbml, m_dir_id, PROGRESS_ICON)
 
     model_id, m_dir_id = args
+    url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
+elif ALREADY_GENERALIZED == result:
+    (m_id, m_name, m_dir_id) = args
+    create_thanks_for_uploading_generalized_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
+                                       MIMOZA_FAVICON, PROGRESS_ICON)
+    # existing_m_url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 
 
