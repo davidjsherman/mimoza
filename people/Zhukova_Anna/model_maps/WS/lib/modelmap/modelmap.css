@@ -77,6 +77,15 @@ th {
     vertical-align: middle;    
 }
 
+#descr {
+    visibility: hidden;
+    display: none;
+    height: 0;
+}
+
+div[class*='bibo\:'] {
+    text-align: justify;
+}
 
 a:link { /* unvisited link */
     text-decoration:none;

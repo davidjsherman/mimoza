@@ -47,35 +47,26 @@ def main(argv=None):
 	# sbml = '/Users/anna/Downloads/yeast_7.11/yeast_7.11_recon_with_groups.xml'
 	sbml = '/Users/anna/Documents/PhD/yeast_7.00/yeast_7.00_mito.xml'
 
-	reader = SBMLReader()
-	input_document = reader.readSBML(sbml)
-	input_model = input_document.getModel()
-	i = 0
-	for r in input_model.getListOfReactions():
-		# if len(get_r_compartments(input_model, r)) == 1:
-			i += 1
-	print i
+	logging.basicConfig(level=logging.INFO)
 
-	# logging.basicConfig(level=logging.INFO)
-	#
-	# name, extension = splitext(basename(sbml))
-	# sbml_directory = dirname(abspath(sbml))
-	# groups_sbml = "%s/%s_with_groups%s" % (sbml_directory, name, extension)
-	#
-	# out_sbml = "%s/%s_generalized%s" % (sbml_directory, name, extension)
-	# chebi = parse(get_chebi())
-	# generalize_model(groups_sbml, out_sbml, sbml, chebi, cofactors=None, verbose=True)
-	#
-	# reader = SBMLReader()
-	# input_document = reader.readSBML(groups_sbml)
-	# input_model = input_document.getModel()
-	#
-	# graph = tlp.newGraph()
-	# graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True)
-	# url = '%s/mm/comp.html' % MIMOZA_URL
-	# visualize_model(directory='/Users/anna/Documents/PhD/magnome/', m_dir_id='mm', input_model=input_model, graph=graph,
-	#                 name2id_go=name2id_go, groups_sbml=groups_sbml, url=url, main_url='http://mimoza.bordeaux.inria.fr',
-	#                 scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=FAVIICON, verbose=True)
+	name, extension = splitext(basename(sbml))
+	sbml_directory = dirname(abspath(sbml))
+	groups_sbml = "%s/%s_with_groups%s" % (sbml_directory, name, extension)
+
+	out_sbml = "%s/%s_generalized%s" % (sbml_directory, name, extension)
+	chebi = parse(get_chebi())
+	generalize_model(groups_sbml, out_sbml, sbml, chebi, cofactors=None, verbose=True)
+
+	reader = SBMLReader()
+	input_document = reader.readSBML(groups_sbml)
+	input_model = input_document.getModel()
+
+	graph = tlp.newGraph()
+	graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True)
+	url = '%s/mm/comp.html' % MIMOZA_URL
+	visualize_model(directory='/Users/anna/Documents/PhD/magnome/', m_dir_id='mm', input_model=input_model, graph=graph,
+	                name2id_go=name2id_go, groups_sbml=groups_sbml, url=url, main_url='http://mimoza.bordeaux.inria.fr',
+	                scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=FAVIICON, verbose=True)
 
 if __name__ == "__main__":
 	sys.exit(main())
