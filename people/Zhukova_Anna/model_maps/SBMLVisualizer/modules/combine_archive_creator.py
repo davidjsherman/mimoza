@@ -1,5 +1,6 @@
 import mimetypes
 import os
+from shutil import copytree
 from zipfile import ZipFile, ZIP_DEFLATED
 import sys
 
@@ -25,7 +26,7 @@ def archive(path, zip_file):
 					relative_file_path = os.path.relpath(file_path, path)
 					zip.write(file_path, relative_file_path, compress_type=ZIP_DEFLATED)
 					location2format[relative_file_path] = format
-					
+
 	manifest_file = os.path.join(path, "manifest.xml")
 	with open(manifest_file, 'w+') as manifest:
 		manifest.write('<?xml version="1.0" encoding="utf-8"?>\n')
@@ -40,7 +41,8 @@ def archive(path, zip_file):
 
 
 def main(argv=None):
-	path = "/Users/anna/Desktop/yeast/"
+	path = "/Users/anna/Desktop/yst/"
+	copytree(path, "/Users/anna/Desktop/yst2")
 	zip = "/Users/anna/Desktop/yst.zip"
 	archive(path, zip)
 

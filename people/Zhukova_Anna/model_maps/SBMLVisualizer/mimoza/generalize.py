@@ -5,8 +5,7 @@ import logging
 import os
 import cgi
 import cgitb
-from os.path import splitext, basename, dirname, abspath
-from tulip import tlp
+from os.path import dirname, abspath
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.logger import log
 
@@ -15,6 +14,7 @@ import sys
 from mimoza.mimoza import *
 from modules.html_generator import create_thanks_for_uploading_generalized_html, generate_generalized_html
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
+
 
 cgitb.enable()
 # Windows needs stdio set for binary mode.
@@ -29,7 +29,7 @@ except ImportError:
 form = cgi.FieldStorage()
 sbml = form['sbml'].value
 m_dir_id = form['dir'].value
-scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
+scripts = '\n'.join(['<script src="../%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
 
 print '''Content-Type: text/html;charset=utf-8
 
@@ -37,17 +37,15 @@ print '''Content-Type: text/html;charset=utf-8
         <html lang="en">
 
           <head>
-            <link media="all" href="%s" type="text/css" rel="stylesheet" />
-            <link href="%s" type="image/x-icon" rel="shortcut icon" />
+            <link media="all" href="../%s" type="text/css" rel="stylesheet" />
+            <link href="../%s" type="image/x-icon" rel="shortcut icon" />
             %s
             <title>Generalizing...</title>
           </head>
 
           <body>
           <p class="centre indent">Please, be patient while we are generalising your model...</p>
-          <div class="centre margin" id="visualize_div">
-            <img class="centre" src="%s" id="img" />
-          </div>
+          <img class="img-centre" src="../%s" id="img" />
           <div id="hidden" style="visibility:hidden;height:0px;">''' % (
 	MIMOZA_CSS, MIMOZA_FAVICON, scripts, PROGRESS_ICON)
 
@@ -71,7 +69,7 @@ try:
 
 	if not os.path.exists(groups_sbml):
 		chebi = parse(get_chebi())
-		out_sbml = "%s/%s_generalized.xml" % (sbml_directory, m_id)
+		out_sbml = None#"%s/%s_generalized.xml" % (sbml_directory, m_id)
 		r_id2g_id, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, out_sbml,
 		                                                                                  sbml, chebi,
 		                                                                                  cofactors=None,

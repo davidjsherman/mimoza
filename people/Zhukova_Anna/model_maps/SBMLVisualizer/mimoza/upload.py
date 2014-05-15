@@ -6,6 +6,7 @@ import hashlib
 import logging
 import os
 import cgitb
+from shutil import copyfile, copytree
 from tulip import tlp
 from libsbml import SBMLReader, writeSBMLToFile
 import sys
@@ -15,12 +16,15 @@ from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Ter
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
 import base64
 from mimoza.mimoza import *
-from runner.mod_gen_helper import process_generalized_model
+from runner.mod_gen_helper import process_generalized_model, check_if_already_generalized
 
 ALREADY_EXISTS = 1
 OK = 0
 NOT_MODEL = 2
 ALREADY_GENERALIZED = 3
+
+
+LIB = '../html/lib'
 
 cgitb.enable()
 
@@ -96,9 +100,7 @@ def process_file(sbml_file):
             return (ALREADY_EXISTS, (model_id, m_id))
     else:
         os.makedirs(directory)
-
-
-
+        copytree(LIB, '%s/lib' % directory)
 
     log_file = None
     try:
@@ -109,11 +111,7 @@ def process_file(sbml_file):
         pass
     logging.basicConfig(level=logging.INFO, filename=log_file)
 
-    chebi = parse(get_chebi())
-
-    # groups_sbml = new_sbml_file
-    r_id2ch_id, r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = process_generalized_model(chebi, model, sbml_file)
-    if r_id2g_id or ub_sps:
+    if check_if_already_generalized(sbml_file):
         new_sbml_file = '%s%s_with_groups.xml' % (directory, model_id)
         if sbml_file != new_sbml_file:
             if not writeSBMLToFile(doc, new_sbml_file):
@@ -128,29 +126,28 @@ def process_file(sbml_file):
         os.remove(sbml_file)
     return OK, (model_id, model.getName(), m_id)
 
-result, args = upload_file()
+scripts = '\n'.join(['<script src="../%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
 
-scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
 print '''Content-Type: text/html;charset=utf-8
 
 
         <html lang="en">
 
           <head>
-            <link media="all" href="%s" type="text/css" rel="stylesheet" />
-            <link href="%s" type="image/x-icon" rel="shortcut icon" />
+            <link media="all" href="../%s" type="text/css" rel="stylesheet" />
+            <link href="../%s" type="image/x-icon" rel="shortcut icon" />
             %s
             <title>Checking...</title>
           </head>
 
           <body>
-          <p class="centre indent">Please, be patient while we are checking your model...</p>
-          <div class="centre margin" id="visualize_div">
-            <img class="centre" src="%s" id="img" />
-          </div>
+          <p class="centre indent">We are checking your model now...</p>
+          <img class="img-centre" src="../%s" id="img" />
           <div id="hidden" style="visibility:hidden;height:0px;">''' % (MIMOZA_CSS, MIMOZA_FAVICON, scripts, LOADER_ICON)
 
+result, args = upload_file()
 url = MIMOZA_UPLOAD_ERROR_URL
+
 if OK == result:
     (m_id, m_name, m_dir_id) = args
     create_thanks_for_uploading_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,

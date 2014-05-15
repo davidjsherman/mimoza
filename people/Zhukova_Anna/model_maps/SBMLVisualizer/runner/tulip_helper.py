@@ -1,6 +1,8 @@
 import os
+from shutil import copyfile
 import threading
 from mimoza.mimoza import MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON
+from modules.combine_archive_creator import archive
 from modules.factoring import factor_nodes, factor_comps, factor_cytoplasm, nodes_to_meta_node
 from modules.geojson_helper import tulip2geojson
 from modules.html_generator import create_html, create_embedded_html
@@ -11,7 +13,6 @@ from sbml_generalization.utils.logger import log
 
 
 CELL_GO_ID = 'go:0005623'
-
 CELL = 'cell'
 
 __author__ = 'anna'
@@ -45,11 +46,20 @@ def visualize_model(directory, m_dir_id, input_model, graph, name2id_go, groups_
         comp_names = [CELL]
 
     log(verbose, 'create html')
-    groups_sbml_url = "%s/%s/%s" % (main_url, m_dir_id, os.path.basename(groups_sbml))
+    groups_sbml_url = os.path.basename(groups_sbml)
 
     embed_url = '%s/%s/comp_min.html' % (main_url, m_dir_id)
-    create_html(input_model, directory, url, embed_url, comp_names, groups_sbml_url, scripts, css, fav)
+    redirect_url = 'comp.html'
+    archive_url = "%s.zip" % m_dir_id
+    create_html(input_model, directory, url, embed_url, redirect_url, comp_names, groups_sbml_url, archive_url, scripts, css, fav)
+
     create_embedded_html(input_model, directory, comp_names, scripts, css, fav)
+
+    archive_path = "%s/../../uploads/%s.zip" % (directory, m_dir_id)
+    archive(directory, archive_path)
+    if os.path.exists(archive_path):
+        copyfile(archive_path, "%s/%s.zip" % (directory, m_dir_id))
+        os.remove(archive_path)
 
     # TODO: why doesn't it work??
     # tlp.saveGraph(graph.getRoot(), m_dir + '/graph.tlpx')

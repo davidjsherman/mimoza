@@ -25,17 +25,19 @@ def add_compartment_menu(url, organelles, page):
 	page.ul(class_='menu margin centre')
 	for organelle in organelles:
 		page.li()
-		# page.a(denormalize(organelle), href='%s?name=%s' % (url, normalize(organelle)))
 		page.a(denormalize(organelle), href='?name=%s' % (normalize(organelle)))
 		page.li.close()
 	page.ul.close()
 
 
-def add_download_link(groups_sbml, page):
+def add_download_link(groups_sbml, archive_url, page):
+	page.ul(class_='menu margin centre')
 	if groups_sbml:
-		page.div(class_='margin', id='download')
-		page.p('Download the <a href=%s download>generalised model</a>.' % groups_sbml)
-		page.div.close()
+		page.li('Download the <a href=%s download>generalised model</a>.' % groups_sbml, id='download')
+	if archive_url:
+		page.li('Download the <a href=%s download>COMBINE archive</a>.' % archive_url)
+	page.li('<a onclick="overlay()" href="#">Embed</a>')
+	page.ul.close()
 
 
 def add_search(page):
@@ -78,18 +80,6 @@ def add_explanations(page):
 			format_color('gray', 180, 180, 180),
 			format_color('turquoise', 141, 211, 199), format_color('violet', 190, 186, 218),
 			format_color('green', 179, 222, 105), format_color('blue', 128, 177, 211)))
-	# page.span('Compartments', class_='pant')
-	# page.span(''' are coloured %s.''' % format_color("yellow", 255, 255, 179))
-	# page.br()
-	# page.span('Species', class_='pant')
-	# page.span(''' are %s (generalised), %s (ubiquitous), and %s.''' % (
-	# 	format_color('orange', 253, 180, 98), format_color('gray', 180, 180, 180), format_color('red', 251, 128, 114)))
-	# page.br()
-	# page.span('Reactions', class_='pant')
-	# page.span(''' are %s (generalised transport), %s (transport), %s (generalised),	and %s.''' % (
-	# 	format_color('turquoise', 141, 211, 199), format_color('violet', 190, 186, 218),
-	# 	format_color('green', 179, 222, 105), format_color('blue', 128, 177, 211)))
-	# page.p.close()
 
 	page.div.close()
 
@@ -163,12 +153,11 @@ def add_embedding_dialog(page, url):
 	           type="text", name="embedHtml")
 	page.p.close()
 	page.input(type="hidden", id="embed-url", name="url", value="%s" % url)
-	# page.p("Click here to [<a href='#' onclick='overlay()'>close</a>]")
 	page.div.close()
 	page.div.close()
 
 
-def create_html(model, directory, url, embed_url, organelles, groups_sbml_url, scripts, css, fav):
+def create_html(model, directory, url, embed_url, redirect_url, organelles, groups_sbml_url, archive_url, scripts, css, fav):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -176,17 +165,13 @@ def create_html(model, directory, url, embed_url, organelles, groups_sbml_url, s
 	org2scripts = '{'
 	for organelle in organelles:
 		organelle = normalize(organelle)
-		# scripts += ['./{0}_f.json'.format(organelle), './{0}.json'.format(organelle)]
-		# org2scripts += "'{0}': [gjsn__{0}, gjsn__{0}_full],".format(organelle)
 
 		scripts.append('./%s.json' % organelle)
 		org2scripts += "'{0}': gjsn__{0},".format(organelle)
 	org2scripts += '}'
 
 	if not css:
-		css = ['http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css']
-	else:
-		css.append('http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css')
+		css = []
 
 	model_id = model.getId()
 	model_name = model.getName()
@@ -199,9 +184,9 @@ def create_html(model, directory, url, embed_url, organelles, groups_sbml_url, s
 	page.div(class_='centre', id='all')
 	add_compartment_menu(url, organelles, page)
 
-	add_download_link(groups_sbml_url, page)
+	add_download_link(groups_sbml_url, archive_url, page)
 
-	add_embed_button(page)
+	# add_embed_button(page)
 
 	add_explanations(page)
 
@@ -220,7 +205,7 @@ def create_html(model, directory, url, embed_url, organelles, groups_sbml_url, s
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_redirecting_html(url, css[0] if css else '', fav))
+		f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
 
 
 def create_embedded_html(model, directory, organelles, scripts, css, fav):
@@ -231,17 +216,13 @@ def create_embedded_html(model, directory, organelles, scripts, css, fav):
 	org2scripts = '{'
 	for organelle in organelles:
 		organelle = normalize(organelle)
-		# scripts += ['./{0}_f.json'.format(organelle), './{0}.json'.format(organelle)]
-		# org2scripts += "'{0}': [gjsn__{0}, gjsn__{0}_full],".format(organelle)
 
 		scripts.append('./%s.json' % organelle)
 		org2scripts += "'{0}': gjsn__{0},".format(organelle)
 	org2scripts += '}'
 
 	if not css:
-		css = ['http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css']
-	else:
-		css.append('http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css')
+		css = []
 
 	model_id = model.getId()
 	page.init(title=model_id, css=css, script=scripts, fav=fav)
@@ -256,25 +237,25 @@ def create_embedded_html(model, directory, organelles, scripts, css, fav):
 
 def generate_redirecting_html(url, css, ico):
 	return '''Content-Type: text/html;charset=utf-8
-        Location: %s
+Location: %s
 
 
-        <html lang="en">
+<html lang="en">
 
-            <head>
-                <link media="all" href="%s" type="text/css" rel="stylesheet" />
-                <link href="%s" type="image/x-icon" rel="shortcut icon" />
-                <meta http-equiv="refresh" content="0;url=%s" />
-                <title>Redirecting...</title>
-            </head>
+    <head>
+        <link media="all" href="%s" type="text/css" rel="stylesheet" />
+        <link href="%s" type="image/x-icon" rel="shortcut icon" />
+        <meta http-equiv="refresh" content="0;url=%s" />
+        <title>Redirecting...</title>
+    </head>
 
-            <body>
-                <div class="indent" id="all">
-                    <p>Redirecting to <a href="%s">%s</a></p>
-                </div>
-            </body>
+    <body>
+        <div class="indent" id="all">
+            <p>Redirecting to <a href="%s">%s</a></p>
+        </div>
+    </body>
 
-        </html>''' % (url, css, ico, url, url, url)
+</html>''' % (url, css, ico, url, url, url)
 
 
 def generate_generalization_error_html(url, css, ico, msg, contact):
@@ -385,13 +366,11 @@ def generate_visualisation_button(sbml, m_dir_id, progress_icon, action):
             <form action="/cgi-bin/%s" method="POST" name="input_form" enctype="multipart/form-data">
                 <input type="hidden" name="sbml" value="%s" />
                 <input type="hidden" name="dir" value="%s" />
-                <input class="ui-button" type="submit" id="bb" value="Go!" onclick="progress()"/>
+                <input class="ui-button img-centre" type="submit" id="bb" value="Go!" onclick="progress()"/>
             </form>
         </div>
 
-        <div class="centre margin" id="visualize_div">
-            <img src="%s" style="visibility:hidden" id="img" />
-        </div>
+        <img class="img-centre" src="%s" style="visibility:hidden" id="img" />
 
         <script>
             function progress() {

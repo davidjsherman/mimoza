@@ -100,8 +100,8 @@ function initializeMap(json_data) {
 
     var ubLayer = L.layerGroup();
     var labelsLayer = L.featureGroup();
-    var tiles = getTiles("/lib/modelmap/white512.jpg");
-    var gray_tiles =  getTiles("/lib/modelmap/gray512.jpg");
+    var tiles = getTiles("lib/modelmap/white512.jpg");
+    var gray_tiles =  getTiles("lib/modelmap/gray512.jpg");
     var map = getBaseMap([tiles, labelsLayer, ubLayer]);
 
 

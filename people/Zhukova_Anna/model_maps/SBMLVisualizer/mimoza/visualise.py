@@ -30,7 +30,7 @@ m_dir_id = form['dir'].value
 directory = '../html/%s/' % m_dir_id
 log_file = '%s/log.log' % directory
 logging.basicConfig(level=logging.INFO, filename=log_file)
-scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
+scripts = '\n'.join(['<script src="../%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
 
 print '''Content-Type: text/html;charset=utf-8
 
@@ -38,40 +38,21 @@ print '''Content-Type: text/html;charset=utf-8
         <html lang="en">
 
           <head>
-            <link media="all" href="%s" type="text/css" rel="stylesheet" />
-            <link href="%s" type="image/x-icon" rel="shortcut icon" />
+            <link media="all" href="../%s" type="text/css" rel="stylesheet" />
+            <link href="../%s" type="image/x-icon" rel="shortcut icon" />
             %s
             <title>Visualizing...</title>
           </head>
 
           <body>
-          <p class="centre indent">Please, be patient while we are visualising your model...</p>
-          <div class="centre margin" id="visualize_div">
-            <img class="centre" src="%s" id="img" />
-          </div>
+          <p class="centre indent">We are visualising your model now...</p>
+          <img class="img-centre" src="../%s" id="img" />
           <div id="hidden" style="visibility:hidden;height:0px;">''' % (MIMOZA_CSS, MIMOZA_FAVICON, scripts, PROGRESS_ICON)
 
 sys.stdout.flush()
 
 temp = os.dup(sys.stdout.fileno())
 try:
-    # this is a hack to prevent Tulip from printing stuff and producing 500
-    # stdout = os.fdopen(os.dup(sys.stdout.fileno()), 'w')
-    # stderr = os.fdopen(os.dup(sys.stderr.fileno()), 'w')
-    # check_and_set_swig_binary(binary="swig", path="/usr/local/bin/")
-    # args = {'signature': 'instant_module_4f54380a7a9b9ae759599376130bf4b4be6f10a6', 'cache_dir': '/var/www/uploads/.instant/cache'}
-    # redirect = inline("""
-    # void redirect(void) {
-    #     freopen("/var/www/uploads/log.log", "w", stdout);
-    #     freopen("/var/www/uploads/log.log", "w", stderr);
-    # }
-    # """, **args)
-    # redirect()
-
-    # reader = SBMLReader()
-    # doc = reader.readSBML(sbml)
-    # model = doc.getModel()
-    # model_id = model.getId()
     url = '%s/%s/comp.html' % (MIMOZA_URL, m_dir_id)
 
     if not os.path.exists('../html/%s/comp.html' % m_dir_id):
@@ -87,21 +68,9 @@ try:
 
         url = visualize_model(directory, m_dir_id, input_model, graph, name2id_go, groups_sbml, url, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)
 
-    # redirect_back = inline("""
-    # void redirect(void) {
-    #     fclose(stdout);
-    #     fclose(stderr);
-    # }
-    # """, **args)
-    # redirect_back()
-
-    # print generate_redirecting_html(url, MIMOZA_CSS, MIMOZA_FAVICON)
-# except Exception as e:
-#     print generate_generalization_error_html(MIMOZA_URL, MIMOZA_CSS, MIMOZA_FAVICON, e.message, CONTACT_EMAIL)
 except Exception as e:
     log(True, e.message)
     url = MIMOZA_ERROR_URL
-    # print generate_generalization_error_html(MIMOZA_URL, MIMOZA_CSS, MIMOZA_FAVICON, '', CONTACT_EMAIL)
 
 sys.stdout.flush()
 os.dup2(temp, 2)
