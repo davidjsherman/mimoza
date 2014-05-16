@@ -395,16 +395,19 @@ Cellular Overview does not allow one to visualize a model provided by a user, bu
 
 Mimoza especially targets draft models during curation, allowing one to visualise them fully automatically and help to analyse them in a top-down manner, starting from the general structure and going down to the details. The generalized level differentiates it from other tools, since it shows both the overall model structure and fine-grain visualisation in the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on pathway information, automatically infers the relative compartment placement (e.g. places organelles inside the cytoplasm) and exploits a model in SBML format with ChEBI annotations for metabolites (it also tries to annotate them automatically if no annotations are present).
 
-In the future, we plan to use an anchored layout of the generalized level, based on a set of common motifs: e.g. always lay out the generalised $\beta$-oxidation of fatty acids as a 4-step cycle, with the fixed coordinates of the generalised metabolites common for all the models that incorporate $\beta$-oxidation. In that case the differences between the models will become more prominent.
- 
-We also plan to make the tool more interactive giving a user an opportunity to change layout and annotations, run FBA, etc. 
+Using generalization to compare models makes most sense if the models have equivalent generalized nodes that can be laid out in the same positions in the correponding maps. Mimoza currently handles this correspondence between zoom levels of the same model, but does not guarantee such correspondence when two models are laid out independently. To meet this challenge, three strategies can be explored. The first is to use anchored layout(cite), to impose the positions of key features in one model on the corresponding features of the second. The second is to build a catalog of standard motifs for generalized maps, e.g. always lay out the generalised $\beta$-oxidation of fatty acids as a 4-step cycle, with the fixed coordinates of the generalised metabolites common for all the models that incorporate $\beta$-oxidation. % In that case the differences between the models will become more prominent.
+The third strategie, which we are in the process of testing, is to learn a common layout by generalizing the union of the two models. The idea is to combine the reactions into one set, run the generalization procedure on the union to fix the positions of the common features, then to build each of the maps using only its own set of nodes. Each map only contains its own nodes, but at common positions in the two maps.
 
-Allowing to combine several models as an input, and producing a common generalisation is another interesting direction.
+% We also plan to make the tool more interactive giving a user an opportunity to change layout and annotations, run FBA, etc. 
 
-\section*{Conclusions}
-%This should state clearly the main conclusions of the article and give a clear explanation of the importance and relevance of the software.
+Finally, the API of the Leaflet framework used for the interactive navigation can be used to integrate the maps with other web-based tools, such as annotation editors or simulation software.
 
-Mimoza is an amazing tool that everyone was waiting for and can finally use and become happy!
+% Allowing to combine several models as an input, and producing a common generalisation is another interesting direction.
+
+% \section*{Conclusions}
+% %This should state clearly the main conclusions of the article and give a clear explanation of the importance and relevance of the software.
+
+% Mimoza is an amazing tool that everyone was waiting for and can finally use and become happy!
 
 \section*{Availability and requirements}
 \textbf{Project name:} Mimoza\\
@@ -423,13 +426,14 @@ Mimoza is an amazing tool that everyone was waiting for and can finally use and 
 \begin{backmatter}
 
 \section*{Competing interests}
-  The authors declare that they have no competing interests.
+The authors declare that they have no competing interests.
 
 \section*{Author's contributions}
-    Text for this section \ldots
+AZ and DJS conceived the study, AZ wrote the software, AZ and DJS wrote the manuscript.
 
 \section*{Acknowledgements}
-  Text for this section \ldots
+We would like to thank Romain Bourqui and Antoine Lambert for helpful discussions about using the Tulip software as a library.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                  The Bibliography                       %%
 %%                                                         %%
