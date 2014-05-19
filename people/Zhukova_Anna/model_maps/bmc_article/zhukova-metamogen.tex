@@ -192,9 +192,9 @@ Mimoza views can be embedded in web pages, or downloaded as COMBINE archives.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{keyword}
-\kwd{metabolic modelling}
-\kwd{visualisation}
-\kwd{model generalisation}
+\kwd{metabolic modeling}
+\kwd{visualization}
+\kwd{model generalization}
 \end{keyword}
 
 % MSC classifications codes, if any
@@ -270,7 +270,7 @@ Web-based tools allowing for model visualisation are also emerging.  JWS online\
 MetDraw\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information in present in the model as a SUBSYSTEM annotation of reactions) and duplication of minor metabolites. Metabolite duplication reduces clutter, but the huge number of reactions in the compartments of some models and missing subsystem annotations, makes the visualisation consume too much space and does not allow a user to grasp the essential structure of the network.
 
 % ZUI
-Due to the huge numbers of reactions and of species participating in multiple reactions, we have an uncomfortable choice between either many edge crossings in an automatic visualization of a genome-scale model, or over-duplication of various metabolites making the essential parts of the model disconnected and the visualisation too large to grasp. An approach different to a simple graph layout algorithm is needed. ZUIs, which can change the nature of the content displayed at different zoom levels, provide a pertinent alternative.
+Due to the huge numbers of reactions and of metabolites participating in multiple reactions, we have an uncomfortable choice between either many edge crossings in an automatic visualization of a genome-scale model, or over-duplication of various metabolites making the essential parts of the model disconnected and the visualisation too large to grasp. An approach different to a simple graph layout algorithm is needed. ZUIs, which can change the nature of the content displayed at different zoom levels, provide a pertinent alternative.
 
 There are several existing web-based tools providing a zoomable representation of biological data. For instance, NaviCell\cite{Kuperstein2013} is a web environment that permits exploiting large maps of molecular interactions (mostly signalling). Unfortunately, it does not provide a solution to the problem of huge network layout, nor does it produce  maps automatically: The user must create them in CellDesigner, export them as an image and manually edit it in a graphical designer to produce intermediate views.
 
@@ -294,7 +294,7 @@ This level shows the compartments of the model, the transport reactions between 
 
 We use our knowledge-based generalization method to identify the modules inside the compartments. It detects similar metabolites and reactions and clusters them together, representing them as generalized metabolites and reactions with the same structure (number of consumed and produced metabolites), and thus keeping the essential structure of the model while hiding the details.
 
-\item The most detailed level is intended for computer simulation and represents the inner structure of each of the modules with all the species, reactions and their kinetics, stoichiometry and constraints.
+\item The most detailed level is intended for computer simulation and represents the inner structure of each of the modules with all the metabolites, reactions and their kinetics, stoichiometry and constraints.
 
 Our method places similar metabolites and reactions (detected at level 2) next to each other, thus simplifying the analysis of their presence.
 
@@ -303,29 +303,22 @@ Our method places similar metabolites and reactions (detected at level 2) next t
 \subsection*{Model generalisation}
 The metabolic model generalization method\cite{Zhukova2014}, which we recall here, operates on models in \textit{SBML}\cite{Hucka08} format.
 
-% Factoring species into appropriate eq. classes
+% Factoring metabolites into appropriate eq. classes
 
-The method first groups the species present in the network into semantically equivalent classes. The appropriate level of abstraction for those classes is defined by the network itself as the most general one that satisfies two restrictions: 
+The method first groups the metabolites present in the network into semantically equivalent classes. The appropriate level of abstraction for those classes is defined by the network itself as the most general one that satisfies two restrictions: 
 \begin{itemize}
- \item species that participate in the same reaction cannot be grouped together (to preserve the stoichiometry of the reactions in the network),
- \item species that do not participate in any pair of similar reactions are not grouped together (as there is no evidence of their similarity in the network).
+ \item metabolites that participate in the same reaction cannot be grouped together (to preserve the stoichiometry of the reactions in the network),
+ \item metabolites that do not participate in any pair of similar reactions are not grouped together (as there is no evidence of their similarity in the network).
 \end{itemize}
  % technical details, e.g. ChEBI
-To make species grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical species is used. Each species group is generalized up to the least common ancestor of its elements in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for biochemical species annotation in metabolic networks. %Possible groups for the species are chosen based on hierarchical relationships in the \textit{ChEBI} ontology. 
+To make metabolite grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical entities is used. Each metabolite group is generalized up to the least common ancestor of its elements in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for metabolite annotation in metabolic networks. %Possible groups for the metabolites are chosen based on hierarchical relationships in the \textit{ChEBI} ontology. 
 For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-CoA} and \textit{(S)-3-hydroxytetradecanoyl-CoA} have a common ancestor \textit{hydroxy fatty acyl-CoA} in \textit{ChEBI}. If there exist similar reactions operating with them in the network, e.g. \textit{3-hydroxyacyl-CoA dehydratase}, and no reaction whose stoichiometry would be broken by such a generalization, then they can be grouped and generalized into \textit{hydroxy fatty acyl-CoA}.
 
-% Once species are factored, we can generalise the reactions
+% Once metabolites are factored, we can generalise the reactions
 Reactions that share the same generalized reactants and the same generalized products, are considered equivalent and are factored together into a generalized reaction. 
 
-% Ubiquitous species are duplicated (to improve readability)
-We do not generalize ubiquitous (frequently occurring) species, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping species increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these species are usually duplicated\cite{Rohn2012} to improve readability.
-
-% Limitations
-%As the generalization of species depends on the ChEBI hierarchy, the method tries to find ChEBI terms for the species that lack ChEBI annotations in the model. The search is done by comparing species names to ChEBI terms' names and synonyms. The method does not generalize those species for which no ChEBI mapping can be found. 
-% Another characteristic of the method is that, in order to preserve stoichiometry, it cannot factor chains of consecutive similar reactions, i.e. reactions whose reactants could belong to the same equivalence class as products. Our method factors only \textit{parallel} reactions, whose reactants and products belong to distinct equivalence classes.
-
-% Implementation
-%The generalization method is implemented as a Python library and is available for download from http://metamogen.gforge.inria.fr. The generalized network is produced in SBML format with groups annotations\cite{Hucka2012}.
+% Ubiquitous metabolites are duplicated (to improve readability)
+We do not generalize ubiquitous (frequently occurring) metabolites, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping metabolites increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these metabolites are usually duplicated\cite{Rohn2012} to improve readability.
 
 \subsection*{Layers Layout}
 While layout of large graphs is widely studied\cite{Unwin2006}, the correspondence between the layouts of different zoom levels remains a hard task. To compute the layout for different zoom levels we combine two different approaches.
@@ -342,20 +335,20 @@ Depending on the nature of the connected component subgraph, we choose one of th
 \item \emph{Force-Directed Layout} for all the other components.
 \end{itemize}
 
-% Ubiquitous species hadling
-To avoid clutter we duplicate all the ubiquitous species before applying the layout algorithms, so that there is a copy of an ubiquitous species for each reaction it participates in. We then extract a subgraph, containing all but the ubiquitous species, apply the combined layout on it, and then place the ubiquitous species next to the reactions they participate in.
+% Ubiquitous metabolites hadling
+To avoid clutter we duplicate all the ubiquitous metabolites before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction it participates in. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions they participate in.
 
 \subsubsection*{Generalization-based full model layout}
-The layout for the full model is based on the corresponding generalized model's layout. To allow for zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous species and the species and reactions that are not generalized, and place similar species or reactions next to each other inside the space used by the corresponding generalized species or reactions in the generalized model.
+The layout for the full model is based on the corresponding generalized model's layout. To allow for zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the metabolites and reactions that are not generalized, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model.
 %This also allows for grasping similar processed at the same time. 
  
 \subsection*{ZUI}
 
 The zoomable interactive representation is achieved using Leaflet\cite{Agafonkin}, a JavaScript library for interactive maps. 
 
-We export elements of the model (compartments, species and reactions) as map features in GeoJSON format\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for species). Figure~\ref{geojson} shows an example of a molecular species represented in GeoJSON format. 
+We export elements of the model (compartments, metabolites and reactions) as map features in GeoJSON format\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{geojson} shows an example of a reaction represented in GeoJSON format. 
 
-The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Species are represented as circles, and reactions as squares, following the SBGN standard\cite{Moodie2011}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{pop_up}) showing its name, identifier and additional information, e.g. gene associations, and formulas for reactions.
+The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Metabolites are represented as circles, and reactions as squares, following the SBGN standard\cite{Moodie2011}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{pop_up}) showing its name, identifier and additional information, e.g. gene associations, and formulas for reactions.
  
 
 \subsection*{Embedding}
@@ -392,7 +385,7 @@ Three zoom levels (compartment view, the generalized peroxisome compartment and 
 
 We visualized the same model using MetDraw with no manual adjustments. The resulting svg file (http://www.metdraw.com/metdraw/bc7df60221ba314c383b1bf6e7dad4c3056f92bb) has only one zoom level with lots of clutter, not allowing to see the structure of the model.
 
-Cellular Overview does not allow one to visualize a model provided by a user, but has a map of metabolism of \emph{Saccharomyces cerevisiae} (http://biocyc.org/overviewsWeb/celOv.shtml). It has a clear non-overlapping representation of various pathways present in the model, but does not show the compartmentalisation. It is not automatic and is pathway-oriented, thus is not suitable for models having no pathway metadata. The zoom-in shows additional labels but all the species and reactions are present at all the levels, making the elements at the most general level very small and hard to analyze.
+Cellular Overview does not allow one to visualize a model provided by a user, but has a map of metabolism of \emph{Saccharomyces cerevisiae} (http://biocyc.org/overviewsWeb/celOv.shtml). It has a clear non-overlapping representation of various pathways present in the model, but does not show the compartmentalisation. It is not automatic and is pathway-oriented, thus is not suitable for models having no pathway metadata. The zoom-in shows additional labels but all the metabolites and reactions are present at all the levels, making the elements at the most general level very small and hard to analyze.
 
 Mimoza especially targets draft models during curation, allowing one to visualize them fully automatically and help to analyze them in a top-down manner, starting from the general structure and going down to the details. The generalized level differentiates it from other tools, since it shows both the overall model structure and fine-grain visualisation in the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on pathway information, automatically infers the relative compartment placement (e.g. places organelles inside the cytoplasm) and exploits a model in SBML format with ChEBI annotations for metabolites (it also tries to annotate them automatically if no annotations are present).
 
@@ -488,7 +481,7 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
 \includegraphics[scale=0.5]{figure2.png}
   \caption{\csentence{GeoJson representation of a reaction}
   \label{geojson}
-      An SBML reaction is stored as a GeoJson Point feature, with its layout coordinates encoded in the geometry section. The identifiers, labels and annotations, as well as the information on the reactant and product species are stored as properties. The "type" property value specifies that this GeoJson feature is a reaction.}
+      An SBML reaction is stored as a GeoJson Point feature, with its layout coordinates encoded in the geometry section. The identifiers, labels and annotations, as well as the information on the reactant and product metabolites are stored as properties. The "type" property value specifies that this GeoJson feature is a reaction.}
       \end{figure}
       
 \begin{figure}[h!]
