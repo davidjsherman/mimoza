@@ -479,21 +479,23 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
 \section*{Figures}
   \begin{figure}[h!]
   \includegraphics[scale=0.5]{figure1.png}
-  \caption{\csentence{3 zoom levels. (1 page)}
+  \caption{\csentence{Three zoom levels}
   \label{zoom_levels}
       Compartments, generalized peroxisome, zoomed in reaction.}
       \end{figure}
-
+      
 \begin{figure}[h!]
-  \caption{\csentence{Pop-ups with annotations. (1/2 page)}
-  \label{pop_up}
-      Show a reaction pop-up (mb a species one as well). Show where links redirect.}
+\includegraphics[scale=0.5]{figure2.png}
+  \caption{\csentence{GeoJson representation of a reaction}
+  \label{geojson}
+      An SBML reaction is stored as a GeoJson Point feature, with its layout coordinates encoded in the geometry section. The identifiers, labels and annotations, as well as the information on the reactant and product species are stored as properties. The "type" property value specifies that this GeoJson feature is a reaction.}
       \end{figure}
       
 \begin{figure}[h!]
-  \caption{\csentence{GeoJson representation. (1/2 page)}
-  \label{geojson}
-      Show how geometry and pop-up content are encoded.}
+\includegraphics[scale=0.54]{figure3.png}
+  \caption{\csentence{A reaction pop-up}
+  \label{pop_up}
+      The right part of the figure shows an example of a pop-up that opens when a user clicks on a reaction: It contains the information on the reaction name, identifier, reactant and product metabolites and their stoichiometries, as well as gene associations. The gene names are hiperlinks redirecting to the NCBI Gene database\cite{NCBI} (left part of the figure).}
       \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
