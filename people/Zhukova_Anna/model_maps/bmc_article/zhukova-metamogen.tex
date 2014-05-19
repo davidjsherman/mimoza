@@ -53,6 +53,7 @@
 \usepackage[utf8]{inputenc} %unicode support
 \usepackage{graphicx}
 \usepackage{setspace}
+\usepackage[T1]{fontenc}
 %\usepackage[applemac]{inputenc} %applemac support if unicode package fails
 %\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
 
@@ -325,7 +326,7 @@ While layout of large graphs is widely studied\cite{Unwin2006}, the corresponden
 
 \subsubsection*{Generalized model layout}
 % General idea
-In order to lay out the sub-models corresponding to each of the compartments after the generalisation, we use a combination of standard layout algorithms provided by Tulip\cite{Auber04}. We divide the compartment graph into connected components and then apply an appropriate layout algorithm on each of them. The results are combined together using the 'Connected Component Packing' algorithm, which places the components close to each other while removing the overlaps between them.
+In order to lay out the sub-models corresponding to each of the compartments after the generalisation, we use a combination of standard layout algorithms provided by Tulip\cite{Auber04}. We divide the compartment graph into connected components and then apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm, which places the components close to each other while removing the overlaps between them.
 
 % Laying out a connected component
 Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms:
