@@ -391,8 +391,8 @@ Mimoza especially targets draft models during curation, allowing one to visualiz
 
 Using generalization to compare two models makes most sense if the models have equivalent generalized nodes that can be placed in corresponding positions in the two layouts. Mimoza currently handles this correspondence between zoom levels of the same model, but does not guarantee such correspondence when two models are laid out independently.
 To meet this challenge, three strategies can be explored.
-The first is to use anchored layout(cite), to impose the positions of key features in one model on the corresponding features of the second model.
-The second is also to use anchored layout, with a catalog of standard positions for common motifs in generalized maps; for example, always lay out the generalized $\beta$-oxidation of fatty acids as a 4-step cycle, with standard positions for the generalized metabolites common for all the models that incorporate $\beta$-oxidation.
+The first is to use constrained layout\cite{Karl-FriedrichBohringer}, to impose the positions of key features in one model on the corresponding features of the second model.
+The second is also to use constrained layout, with a catalog of standard positions for common motifs in generalized maps; for example, always lay out the generalized $\beta$-oxidation of fatty acids as a 4-step cycle, with standard positions for the generalized metabolites common for all the models that incorporate $\beta$-oxidation.
 The third strategy, which we are in the process of testing, is to learn a common layout by generalizing the union of the two models. The idea is to combine the reactions into one set, run the generalization procedure on the union to fix the positions of the common features, then to build each of the layouts using only its own set of nodes. Each model layout only contains its own nodes, but the common nodes of the two models will be in common positions.
 
 % We also plan to make the tool more interactive giving a user an opportunity to change layout and annotations, run FBA, etc. 
