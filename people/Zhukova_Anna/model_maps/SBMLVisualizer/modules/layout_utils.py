@@ -1,9 +1,8 @@
 from tulip import tlp
 from math import radians, atan2, cos, sin, degrees, sqrt
 
-from modules.color import white
 from modules.model_utils import clone_node
-from modules.resize import ub_sp_size
+from modules.resize import ub_sp_size, get_n_size
 from modules.graph_tools import *
 
 COMPONENT_PACKING = "Connected Component Packing"
@@ -112,7 +111,7 @@ def shorten_edges(graph):
 			processed.add(s)
 			s_lo, s_s = v_lo[s], v_s[s]
 			for t in (n for n in graph.getInOutNodes(s) if not ub[n] and not n in processed):
-				t_lo, t_s = v_lo[t],  v_s[t]
+				t_lo, t_s = v_lo[t], v_s[t]
 				dx, dy = t_lo.getX() - s_lo.getX(), t_lo.getY() - s_lo.getY()
 				e_len = diameter(dx, dy)
 				short_len = diameter(s_s.getW(), s_s.getH()) / 2 + diameter(t_s.getW(), t_s.getH()) / 2
@@ -242,7 +241,7 @@ def layout(graph, margin=5):
 		graph = tlp.newCloneSubGraph(graph)
 		graph.setName("original graph")
 
-	sub = graph.inducedSubGraph([n for n in graph.getNodes()])
+	sub = graph.inducedSubGraph([n for n in graph.getNodes() if graph.deg(n)])
 	simples, cycles, mess = detect_components(sub)
 
 	side = None
@@ -270,12 +269,13 @@ def layout(graph, margin=5):
 		remove_overlaps(qo, margin)
 		layout_ub_sps(gr)
 
+	pack_cc(sub)
 	graph.delAllSubGraphs(sub)
 
 	# apply_layout(graph, onto)
 
 	layout_ub_sps(graph)
-	pack_cc(graph)
+	# pack_cc(graph)
 
 
 def detect_components(graph):
@@ -372,6 +372,11 @@ def lo_a_line(graph, side=None):
 
 def get_alpha(lo, o_lo):
 	alpha = degrees(atan2(lo.getY() - o_lo.getY(), o_lo.getX() - lo.getX()))
+	return alpha
+
+
+def normalize_alpha(alpha):
+	alpha %= 180
 	if -22.5 <= alpha < 22.5:
 		return 0
 	elif 22.5 <= alpha < 67.5:
@@ -392,6 +397,43 @@ def get_alpha(lo, o_lo):
 		return -45
 
 
+def layout_generalized_nodes(graph):
+	root = graph.getRoot()
+	view_meta_graph = root.getGraphProperty(VIEW_META_GRAPH)
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	view_size = root.getSizeProperty(VIEW_SIZE)
+
+	for n in (n for n in graph.getNodes() if graph.isMetaNode(n)):
+		lo = view_layout[n]
+		if graph.deg(n) == 0:
+			alpha = 0
+		else:
+			ns = sorted((m for m in graph.getInOutNodes(n)), key=lambda it: -view_meta_graph[it].numberOfNodes() if graph.isMetaNode(it) else -1)
+			alpha = get_alpha(lo, view_layout[ns[0]])
+			if len(ns) > 1:
+				alpha = (alpha + get_alpha(lo, view_layout[ns[1]])) / 2 - 90
+
+		mg = view_meta_graph[n]
+		ns = sorted(mg.getNodes(), key=lambda it: root[ID][it])
+		s = view_size[n].getW()
+		s_m = tlp.Size(s / len(ns), s / len(ns))
+		n_type = root[TYPE][n]
+		if TYPE_REACTION == n_type and (alpha == 45 or alpha == 135 or alpha == -45 or alpha == -135):
+			s *= sqrt(2)
+		dy = s / len(ns)
+		x0, y0 = lo.getX(), lo.getY() - s / 2 + dy / 2
+		x, y = x0, y0
+		for m in ns:
+			root[VIEW_SIZE][m] = s_m
+			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
+			root[VIEW_SIZE][m] = s_m
+			y += dy
+
+		view_layout.translate(tlp.Coord(-x0, -y0), mg)
+		view_layout.rotateZ(-alpha, mg)
+		view_layout.translate(tlp.Coord(x0, y0), mg)
+
+
 def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 	root = graph.getRoot()
 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
@@ -399,10 +441,8 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 	view_size = root.getSizeProperty(VIEW_SIZE)
 
 	nds = []
-	mn2color = {}
 	for n in graph.getNodes():
 		if graph.isMetaNode(n):
-			mn2color[n] = root[VIEW_COLOR][n]
 			mg = view_meta_graph[n]
 			ns = list(mg.getNodes())
 			nds.extend(ns)
@@ -411,20 +451,29 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 	clone = graph.getSuperGraph().inducedSubGraph(nds)
 	clone.setName(graph.getName() + "_full")
 
-	if do_not_open:
-		for n in do_not_open:
-			mg = view_meta_graph[n]
-			mg_lo_min = view_layout.getMin(mg)
-			n_lo, n_sz = view_layout[n], view_size[n]
-			view_layout.translate(tlp.Coord(n_lo.getX() - n_sz.width() / 2 - mg_lo_min.getX() + n_sz.width() * 0.05,
-			                                n_lo.getY() - n_sz.height() / 2 - mg_lo_min.getY() + n_sz.height() * 0.05),
-			                      mg.getNodes(), mg.getEdges())
+	# if do_not_open:
+	# 	for n in do_not_open:
+	# 		mg = view_meta_graph[n]
+	# 		mg_lo_min = view_layout.getMin(mg)
+	# 		n_lo, n_sz = view_layout[n], view_size[n]
+	# 		view_layout.translate(tlp.Coord(n_lo.getX() - n_sz.width() / 2 - mg_lo_min.getX() + n_sz.width() * 0.05,
+	# 		                                n_lo.getY() - n_sz.height() / 2 - mg_lo_min.getY() + n_sz.height() * 0.05),
+	# 		                      mg.getNodes(), mg.getEdges())
 
 	vl = {}
 
 	meta_ns = {n for n in graph.getNodes() if graph.isMetaNode(n) and (not do_not_open or not n in do_not_open)}
 	meta_sps = {n for n in meta_ns if TYPE_SPECIES == root[TYPE][n]}
-	meta_rs = meta_ns - meta_sps
+	meta_rs = {n for n in meta_ns - meta_sps if TYPE_REACTION == root[TYPE][n]}
+	meta_comps = {n for n in meta_ns - meta_sps if TYPE_COMPARTMENT == root[TYPE][n]}
+
+	for n in meta_comps:
+		mg = view_meta_graph[n]
+		mg_lo_min = view_layout.getMin(mg)
+		n_lo, n_sz = view_layout[n], view_size[n]
+		view_layout.translate(tlp.Coord(n_lo.getX() - n_sz.width() / 2 - mg_lo_min.getX() + n_sz.width() * 0.05,
+		                                n_lo.getY() - n_sz.height() / 2 - mg_lo_min.getY() + n_sz.height() * 0.05),
+		                      mg.getNodes(), mg.getEdges())
 
 	depends_on = {}
 	our_sps = set()
@@ -456,7 +505,8 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 		for r in mg.getNodes():
 			n2k[r] = sorted(n2k[it] for it in set(clone.getInOutNodes(r)) & our_sps)
 
-	for n in meta_ns:
+	# for n in meta_ns:
+	for n in meta_sps | meta_rs:
 		lo = view_layout[n]
 		s = view_size[n].getW()
 		mg = view_meta_graph[n]
@@ -465,7 +515,7 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 		nn = clone.addNode()
 		for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT, TRANSPORT]:
 			root[prop][nn] = root[prop][n]
-		root[VIEW_COLOR][nn] = mn2color[n]
+		# root[VIEW_COLOR][nn] = mn2color[n]
 		n_type = root[TYPE][n]
 		if TYPE_COMPARTMENT == n_type:
 			root[TYPE][nn] = TYPE_BG_COMPARTMENT
@@ -514,23 +564,21 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 		view_layout.translate(tlp.Coord(-x0, -y0), mg)
 		view_layout.rotateZ(-alpha, mg)
 		view_layout.translate(tlp.Coord(x0, y0), mg)
-		# for m in mg.getNodes():
-		# 	clone.getRoot()["viewLayout"][m] = mg.getRoot()["viewLayout"][m]
 
-	if do_not_open:
-		for n in do_not_open:
-			# add a fake node to keep a common background for similar nodes
-			nn = clone.addNode()
-			for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT, TRANSPORT]:
-				root[prop][nn] = root[prop][n]
-			root[VIEW_COLOR][nn] = mn2color[n]
-			n_type = root[TYPE][n]
-			if TYPE_COMPARTMENT == n_type:
-				root[TYPE][nn] = TYPE_BG_COMPARTMENT
-			elif TYPE_REACTION == n_type:
-				root[TYPE][nn] = TYPE_BG_REACTION
-			else:
-				root[TYPE][nn] = TYPE_BG_SPECIES
+	# if do_not_open:
+	# 	for n in do_not_open:
+	# 		# add a fake node to keep a common background for similar nodes
+	# 		nn = clone.addNode()
+	# 		for prop in [VIEW_SIZE, VIEW_SHAPE, VIEW_LAYOUT, TRANSPORT]:
+	# 			root[prop][nn] = root[prop][n]
+	# 		# root[VIEW_COLOR][nn] = mn2color[n]
+	# 		n_type = root[TYPE][n]
+	# 		if TYPE_COMPARTMENT == n_type:
+	# 			root[TYPE][nn] = TYPE_BG_COMPARTMENT
+	# 		elif TYPE_REACTION == n_type:
+	# 			root[TYPE][nn] = TYPE_BG_REACTION
+	# 		else:
+	# 			root[TYPE][nn] = TYPE_BG_SPECIES
 
 	# if bundle_edges:
 	# 	try:

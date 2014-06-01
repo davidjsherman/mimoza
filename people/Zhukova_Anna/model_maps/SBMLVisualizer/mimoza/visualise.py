@@ -64,9 +64,11 @@ try:
         # sbml -> tulip graph
         log(True, 'sbml -> tlp')
         graph = tlp.newGraph()
-        graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True, log_file)
+        # graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True, log_file)
+        graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True, log_file)
 
-        url = visualize_model(directory, m_dir_id, input_model, graph, name2id_go, groups_sbml, url, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)
+        # url = visualize_model(directory, m_dir_id, input_model, graph, name2id_go, groups_sbml, url, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)
+        url = visualize_model(directory, m_dir_id, input_model, graph, c_id2info, groups_sbml, url, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)
 
 except Exception as e:
     log(True, e.message)

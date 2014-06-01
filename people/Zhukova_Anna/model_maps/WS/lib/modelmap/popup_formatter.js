@@ -97,7 +97,7 @@ function addPopups(map, name2popup, ub_names, name2selection, feature, layer) {
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p><p class="popup centre">' + ga_res + "</p>" + transport;
         label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p>' + transport;
     } else if (SPECIES == feature.properties.type) {
-        var transport = feature.properties.transport ? "<p class='popup centre'>Participates in a transport reaction.</p>" : ""
+        var transport = feature.properties.transport ? "<p class='popup centre'>Participates in a transport reaction.</p>" : "";
         var ch = formatChebi(feature.properties.term);
         content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + ch + "</p>" + transport;
         label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p>" + transport;

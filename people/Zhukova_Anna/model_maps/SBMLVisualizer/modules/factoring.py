@@ -1,5 +1,6 @@
 from collections import defaultdict
 from tulip import tlp
+from modules.layout_utils import layout
 from modules.merge_inside_comp import mic
 from modules.model_utils import merge_nodes
 from modules.resize import get_n_size, resize_edges
@@ -86,10 +87,14 @@ def nodes_to_meta_node(comp, meta_graph, ns, (c_id, go_id), out_comp):
 	if not ns:
 		return None
 	root = meta_graph.getRoot()
-	comp_graph = meta_graph.getSuperGraph().inducedSubGraph(ns)
+	meta_node = meta_graph.createMetaNode(ns, False)
+	comp_graph = root[VIEW_META_GRAPH][meta_node]
+	# comp_graph = meta_graph.getSuperGraph().inducedSubGraph(ns)
+	layout(comp_graph)
 	bb = tlp.computeBoundingBox(comp_graph)
-	w, h = bb.width(), bb.height()
-	meta_node = meta_graph.createMetaNode(comp_graph, False)
+	dimension = max(bb.width(), bb.height())
+	w, h = dimension, dimension
+	# meta_node = meta_graph.createMetaNode(comp_graph, False)
 	comp_graph.setName("_" + comp)
 	root[VIEW_SIZE][meta_node] = tlp.Size(w, h)
 	root[VIEW_LAYOUT][meta_node] = bb.center()

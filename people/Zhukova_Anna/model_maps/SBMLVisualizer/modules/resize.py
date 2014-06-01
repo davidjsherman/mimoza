@@ -50,7 +50,16 @@ def get_comp_size(graph, n):
 def resize_edges(graph):
 	root = graph.getRoot()
 	view_size = root.getSizeProperty(VIEW_SIZE)
-			
+
 	for e in graph.getEdges():
 		sz = get_e_size(graph, e)
 		view_size[e] = tlp.Size(sz, sz)
+
+
+def resize_nodes(graph):
+	root = graph.getRoot()
+	view_size = root.getSizeProperty(VIEW_SIZE)
+
+	for n in graph.getNodes():
+		view_size[n] = get_n_size(graph, n)
+
