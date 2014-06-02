@@ -1,18 +1,19 @@
 #!/usr/local/bin/python2.7
 # -*- coding: UTF-8 -*-
 import logging
-
 import os
 import cgi
 import cgitb
 from tulip import tlp
-from sbml_generalization.utils.logger import log
+import sys
 
 from libsbml import SBMLReader
-import sys
+
+from runner.serializer import serialize
+from sbml_generalization.utils.logger import log
 from mimoza.mimoza import *
 from modules.sbml2tlp import import_sbml
-from runner.tulip_helper import visualize_model
+from runner.tulip_helper import graph2geojson
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
 
 cgitb.enable()
@@ -67,8 +68,8 @@ try:
         # graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True, log_file)
         graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True, log_file)
 
-        # url = visualize_model(directory, m_dir_id, input_model, graph, name2id_go, groups_sbml, url, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)
-        url = visualize_model(directory, m_dir_id, input_model, graph, c_id2info, groups_sbml, url, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)
+        features, root_compartment = graph2geojson(c_id2info, graph, input_model, True)
+        url = serialize(directory, m_dir_id, input_model, features, root_compartment, groups_sbml, url, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True)
 
 except Exception as e:
     log(True, e.message)

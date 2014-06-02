@@ -115,51 +115,6 @@ def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
 	onto = parse(get_go())
 	comp2go_term = get_comp2go(input_model, onto)
 	c_id2level = comp2level(input_model)
-	# part2org, cyto, others = sort_comps(onto, comp2go_term)
-	#
-	# name2id_go = {}
-	# for comp in input_model.getListOfCompartments():
-	# 	c_id = comp.getId()
-	# 	c_name = comp.getName()
-	# 	if not c_name:
-	# 		c_name = c_id
-	# 	name2id_go[c_name] = (c_id, comp2go_term[c_id] if c_id in comp2go_term else None)
-	#
-	#
-	# real_c_id2comp = {}
-	# if cyto:
-	# 	cytoplasm_comp = input_model.getCompartment(list(cyto)[0])
-	# 	cytoplasm = cytoplasm_comp.getName()
-	# 	if not cytoplasm:
-	# 		cytoplasm = cytoplasm_comp.getId()
-	# else:
-	# 	cytoplasm = CYTOPLASM
-	# extracellular = EXTRACELLULAR
-	# organelles = set()
-	#
-	# def get_comp(c_id):
-	# 	if c_id in real_c_id2comp:
-	# 		return real_c_id2comp[c_id]
-	# 	if c_id in part2org:
-	# 		comp_id = part2org[c_id]
-	# 		compartment = input_model.getCompartment(comp_id)
-	# 		c = compartment.getName()
-	# 		if not c:
-	# 			c = comp_id
-	# 		organelles.add(c)
-	# 	elif c_id in others:
-	# 		c = cytoplasm
-	# 	else:
-	# 		c = extracellular
-	# 	real_c_id2comp[c_id] = c
-	# 	return c
-	#
-	# def get_r_comp(all_comps):
-	# 	if len(all_comps) == 1:
-	# 		return all_comps.pop()
-	# 	if extracellular in all_comps:
-	# 		return extracellular
-	# 	return cytoplasm
 
 	def get_r_comp(all_comp_ids):
 		if len(all_comp_ids) == 1:
@@ -171,15 +126,10 @@ def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
 	create_props(graph)
 
 	log(verbose, 'adding species nodes')
-	# id2n = species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_id, ub_sps)
 	id2n = species2nodes(comp2go_term, graph, input_model, species_id2chebi_id, ub_sps)
 
 	log(verbose, 'adding reaction nodes')
 	reactions2nodes(get_r_comp, graph, id2n, input_model)
-
-	# log(verbose, 'setting organelles attributes')
-	# graph.setAttribute(ORGANELLES, ";".join(organelles))
-	# graph.setAttribute(CYTOPLASM, cytoplasm)
 
 	log(verbose, 'duplicating nodes')
 	duplicate_nodes(graph)

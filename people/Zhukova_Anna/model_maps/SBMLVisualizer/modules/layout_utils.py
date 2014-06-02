@@ -144,7 +144,7 @@ def layout_cytoplasm(graph, margin=5):
 	qo = sub.inducedSubGraph([n for n in sub.getNodes() if not root[UBIQUITOUS][n]])
 	layout_force(qo, margin)
 	remove_overlaps(qo, margin)
-	graph.delAllSubGraphs(sub)
+	# graph.delAllSubGraphs(sub)
 	layout_ub_sps(graph)
 	pack_cc(graph)
 	# graph.applyAlgorithm("Edge bundling")
@@ -185,7 +185,7 @@ def layout_comp(graph):
 #	sub.applyAlgorithm("Edge bundling")
 	for m in mns:
 		sub.openMetaNode(m)
-	graph.delAllSubGraphs(ssub)
+	# graph.delAllSubGraphs(ssub)
 	layout_ub_sps(graph)
 	pack_cc(graph)
 
@@ -260,17 +260,17 @@ def layout(graph, margin=5):
 	for gr in cycles:
 		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root[UBIQUITOUS][n]])
 		layout_circle(qo, margin)
-		layout_ub_sps(gr)
+		# layout_ub_sps(gr)
 #		remove_overlaps(gr, margin)
 
 	for gr in mess:
 		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root[UBIQUITOUS][n]])
 		layout_force(qo, margin)
-		remove_overlaps(qo, margin)
-		layout_ub_sps(gr)
+		# remove_overlaps(qo, margin)
+		# layout_ub_sps(gr)
 
 	pack_cc(sub)
-	graph.delAllSubGraphs(sub)
+	# graph.delAllSubGraphs(sub)
 
 	# apply_layout(graph, onto)
 
@@ -432,6 +432,7 @@ def layout_generalized_nodes(graph):
 		view_layout.translate(tlp.Coord(-x0, -y0), mg)
 		view_layout.rotateZ(-alpha, mg)
 		view_layout.translate(tlp.Coord(x0, y0), mg)
+
 
 
 def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):

@@ -2,12 +2,12 @@ import logging
 from os.path import splitext, basename, dirname, abspath
 from modules.sbml2tlp import import_sbml
 from runner.mod_gen_helper import check_if_already_generalized
-from runner.tulip_helper import visualize_model
+from runner.serializer import serialize
 from libsbml import *
 from tulip import tlp
+from runner.tulip_helper import graph2geojson
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from utils.compartment_positioner import comp2level
 
 __author__ = 'anna'
 help_message = '''
@@ -72,12 +72,11 @@ def main(argv=None):
 	# graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True)
 	graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True)
 	url = '%s/mm/comp.html' % MIMOZA_URL
-	# visualize_model(directory='/Users/anna/Documents/PhD/magnome/', m_dir_id='mm', input_model=input_model, graph=graph,
-	#                 name2id_go=name2id_go, groups_sbml=groups_sbml, url=url, main_url='http://mimoza.bordeaux.inria.fr',
-	#                 scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=FAVIICON, verbose=True)
-	visualize_model(directory='/Users/anna/Documents/PhD/magnome/', m_dir_id='mm', input_model=input_model, graph=graph,
-	                c_id2info=c_id2info, groups_sbml=groups_sbml, url=url, main_url='http://mimoza.bordeaux.inria.fr',
-	                scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=FAVIICON, verbose=True)
+
+	fc, root_compartment = graph2geojson(c_id2info, graph, input_model, True)
+	serialize(directory='/Users/anna/Documents/PhD/magnome/', m_dir_id='mm', input_model=input_model, features=fc,
+	          root_compartment=root_compartment, groups_sbml=groups_sbml, url=url,
+	          main_url='http://mimoza.bordeaux.inria.fr', scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=FAVIICON, verbose=True)
 
 if __name__ == "__main__":
 	sys.exit(main())
