@@ -241,7 +241,7 @@ def layout(graph, margin=5):
 		graph = tlp.newCloneSubGraph(graph)
 		graph.setName("original graph")
 
-	sub = graph.inducedSubGraph([n for n in graph.getNodes() if graph.deg(n)])
+	sub = graph.inducedSubGraph([n for n in graph.getNodes()])
 	simples, cycles, mess = detect_components(sub)
 
 	side = None
@@ -261,21 +261,21 @@ def layout(graph, margin=5):
 		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root[UBIQUITOUS][n]])
 		layout_circle(qo, margin)
 		# layout_ub_sps(gr)
-#		remove_overlaps(gr, margin)
+		# remove_overlaps(gr, margin)
 
 	for gr in mess:
 		qo = gr.inducedSubGraph([n for n in gr.getNodes() if not root[UBIQUITOUS][n]])
 		layout_force(qo, margin)
-		# remove_overlaps(qo, margin)
+		remove_overlaps(qo, margin)
 		# layout_ub_sps(gr)
 
-	pack_cc(sub)
+	# pack_cc(sub)
 	# graph.delAllSubGraphs(sub)
 
 	# apply_layout(graph, onto)
 
 	layout_ub_sps(graph)
-	# pack_cc(graph)
+	pack_cc(graph)
 
 
 def detect_components(graph):
@@ -372,11 +372,10 @@ def lo_a_line(graph, side=None):
 
 def get_alpha(lo, o_lo):
 	alpha = degrees(atan2(lo.getY() - o_lo.getY(), o_lo.getX() - lo.getX()))
-	return alpha
+	return normalize_alpha(alpha)
 
 
 def normalize_alpha(alpha):
-	alpha %= 180
 	if -22.5 <= alpha < 22.5:
 		return 0
 	elif 22.5 <= alpha < 67.5:
@@ -405,23 +404,28 @@ def layout_generalized_nodes(graph):
 
 	for n in (n for n in graph.getNodes() if graph.isMetaNode(n)):
 		lo = view_layout[n]
-		if graph.deg(n) == 0:
-			alpha = 0
+		meta_neighbours = lambda nodes: sorted((t for t in nodes if graph.isMetaNode(t)), key=lambda t: -view_size[t].getW())
+		o_n_1 = meta_neighbours(graph.getInNodes(n))
+		o_n_2 = meta_neighbours(graph.getOutNodes(n))
+		if not o_n_1:
+			alpha = get_alpha(lo, view_layout[o_n_2[0]]) if o_n_2 else 0
+		elif not o_n_2:
+			alpha = get_alpha(view_layout[o_n_1[0]], lo)
 		else:
-			ns = sorted((m for m in graph.getInOutNodes(n)), key=lambda it: -view_meta_graph[it].numberOfNodes() if graph.isMetaNode(it) else -1)
-			alpha = get_alpha(lo, view_layout[ns[0]])
-			if len(ns) > 1:
-				alpha = (alpha + get_alpha(lo, view_layout[ns[1]])) / 2 - 90
+			alpha = get_alpha(view_layout[o_n_1[0]], view_layout[o_n_2[0]])
 
 		mg = view_meta_graph[n]
 		ns = sorted(mg.getNodes(), key=lambda it: root[ID][it])
 		s = view_size[n].getW()
-		s_m = tlp.Size(s / len(ns), s / len(ns))
+		ns_num = len(ns)
+		s_m = tlp.Size(s / ns_num, s / ns_num)
 		n_type = root[TYPE][n]
-		if TYPE_REACTION == n_type and (alpha == 45 or alpha == 135 or alpha == -45 or alpha == -135):
-			s *= sqrt(2)
-		dy = s / len(ns)
-		x0, y0 = lo.getX(), lo.getY() - s / 2 + dy / 2
+		# this is a hack as when tulip opens a metanode it rescales inner nodes as if in a square
+		if TYPE_SPECIES == n_type and (abs(alpha % 90) != 0):
+			# s = sqrt(2)
+			root[VIEW_SIZE][n] = tlp.Size(s / sqrt(2), s / sqrt(2))
+		dy = s / ns_num
+		x0, y0 = (s / ns_num) / 2, -s / 2 + dy / 2
 		x, y = x0, y0
 		for m in ns:
 			root[VIEW_SIZE][m] = s_m
@@ -429,9 +433,17 @@ def layout_generalized_nodes(graph):
 			root[VIEW_SIZE][m] = s_m
 			y += dy
 
-		view_layout.translate(tlp.Coord(-x0, -y0), mg)
+		# view_layout.translate(tlp.Coord(-x0, -y0), mg)
 		view_layout.rotateZ(-alpha, mg)
-		view_layout.translate(tlp.Coord(x0, y0), mg)
+		# view_layout.translate(tlp.Coord(x0, y0), mg)
+
+		o_n_1.extend(o_n_2)
+		for m in o_n_1:
+			alpha == get_alpha(view_layout[m], view_layout[n])
+			if alpha == 0 or alpha == 180 or alpha == -180:
+				view_layout.translate(tlp.Coord(-x0, -y0), mg)
+				view_layout.rotateZ(-5, mg)
+				view_layout.translate(tlp.Coord(x0, y0), mg)
 
 
 
