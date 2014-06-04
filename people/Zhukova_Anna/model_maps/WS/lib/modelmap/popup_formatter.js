@@ -7,7 +7,7 @@ function formatGA(ga) {
     if (ga) {
         var or_closes = ga.split('&');
         ga_res = '<table border="0"><tr class="centre"><th colspan="' + (2 * or_closes.length - 1) + '"  class="centre">Gene association</th></tr><tr>';
-        for (i = 0, len = or_closes.length; i < len; i++) {
+        for (var i = 0, len = or_closes.length; i < len; i++) {
             var or_close = or_closes[i];
             ga_res += '<td><table border="0">';
             var genes = or_close.split('|');
@@ -87,28 +87,41 @@ function getBounds(feature, map) {
     return new L.LatLngBounds(southWest, northEast);
 }
 
+function p(text) {
+    return "<p class='popup centre'>" + text + "</p>";
+}
+
+function i(text) {
+    return "<span class='explanation'>" + text + "</span>";
+}
+
+function h2(text) {
+    return "<h2>" + text + "</h2>";
+}
+
 function addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId) {
-    var content = '';
-    var label = '';
-    if (REACTION == feature.properties.type) {
-        var transport = feature.properties.transport ? "<p class='popup centre'>Is a transport reaction.</p>" : "";
-        var ga_res = formatGA(feature.properties.gene_association);
-        var formula = formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products);
-        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p><p class="popup centre">' + ga_res + "</p>" + transport;
-        label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + formula + '</p>' + transport;
-    } else if (SPECIES == feature.properties.type) {
-        var transport = feature.properties.transport ? "<p class='popup centre'>Participates in a transport reaction.</p>" : "";
-        var ch = formatChebi(feature.properties.term);
-        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + ch + "</p>" + transport;
-        label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p>" + transport;
-    } else if (COMPARTMENT == feature.properties.type) {
-        var link = formatLink(feature.properties.name);
-        var go_term = formatGo(feature.properties.term);
-        content = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p><p class='popup centre'>" + go_term + "</p><p class='popup centre'>" + link + "</p>";
-        label = '<h2>' + feature.properties.name + "</h2><p class='popup centre'><i>id: </i>" + feature.properties.id + "</p>";
-    }
     if (EDGE == feature.properties.type) {
         return;
+    }
+    var content = h2(feature.properties.name) + p(i("id: ") + feature.properties.id);
+    var label = content;
+    if (REACTION == feature.properties.type) {
+        var transport = feature.properties.transport ? p(i("Is a transport reaction.")) : "";
+        var ga_res = p(formatGA(feature.properties.gene_association));
+        var formula = p(formatFormula(feature.properties.reversible,
+            feature.properties.reactants, feature.properties.products));
+        content += formula + ga_res + transport;
+        label += formula + transport;
+    } else if (SPECIES == feature.properties.type) {
+        var transported = feature.properties.transport ? p(i("Participates in a transport reaction.")) : "";
+        var ch = p(formatChebi(feature.properties.term));
+        var compartment = p(i("compartment: ") + feature.properties.compartment);
+        content += compartment + ch + transported;
+        label += compartment + transported;
+    } else if (COMPARTMENT == feature.properties.type) {
+        var link = p(formatLink(feature.properties.name));
+        var go_term = p(formatGo(feature.properties.term));
+        content += go_term + link;
     }
     var bounds = getBounds(feature, map);
     var size = $('#' + mapId).height();

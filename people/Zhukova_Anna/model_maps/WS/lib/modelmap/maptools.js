@@ -294,10 +294,9 @@ function getGeoJson(map, json_data, z, ubLayer, mapId) {
     var ub_json = getUbiquitousJson(map, json_data, name2popup, specific_names, name2selection, z, mapId);
 
     var all_names = Object.keys(name2popup);
-    ub_json.addTo(ubLayer);
     if (map.getZoom() == z) {
-        sp_json.addTo(map);
-        ub_json.addTo(map);
+        map.addLayer(sp_json);
+        ubLayer.addLayer(ub_json);
         setAutocomplete(map, map.hasLayer(ubLayer) ? all_names : specific_names, name2popup);
     }
 

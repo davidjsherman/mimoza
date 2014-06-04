@@ -45,7 +45,7 @@ def edge2feature(graph, e, id, scale, level_min, level_max, x_scale, y_scale):
 	return geojson.Feature(geometry=geom, properties=props, id=id)
 
 
-def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto):
+def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info):
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
@@ -82,7 +82,10 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto):
 				transported = next((r for r in rs if transport[r]), False) is not False
 				if transported:
 					break
-			props.update({"term": annotation[n], "transport": transported, "ubiquitous": root[UBIQUITOUS][n]})
+			# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
+			comp_name = c_id2info[root[COMPARTMENT][n]][0]
+			props.update({"term": annotation[n], "transport": transported, "ubiquitous": root[UBIQUITOUS][n],
+			              "compartment": comp_name})
 
 		bg_feature = None
 		if generalized:

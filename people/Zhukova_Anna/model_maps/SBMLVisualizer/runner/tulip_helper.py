@@ -80,7 +80,7 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 			i += 1
 
 		for n in (n for n in meta_graph.getNodes() if level == min_zoom[n]):
-			f, bg = node2feature(meta_graph, n, i, scale, min_zoom[n], max_zoom[n], max_zooming_level, onto)
+			f, bg = node2feature(meta_graph, n, i, scale, min_zoom[n], max_zoom[n], max_zooming_level, onto, c_id2info)
 			i += (2 if bg else 1)
 			features.append(f)
 			if bg:

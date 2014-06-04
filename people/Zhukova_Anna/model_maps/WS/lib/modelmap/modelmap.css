@@ -68,6 +68,12 @@ th {
     text-align: center;
 }
 
+.explanation {
+    font-style:italic;
+    color:gray;
+    text-color:gray;
+}
+
 .img-centre {
     display: block;
     margin-left: auto;
