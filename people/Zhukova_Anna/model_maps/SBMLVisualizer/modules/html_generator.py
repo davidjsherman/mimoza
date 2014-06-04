@@ -99,7 +99,7 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(default_organelle, org2scripts, page, map_id):
+def add_js(default_organelle, org2scripts, page, map_id, max_zoom):
 	page.script('var comp2geojson = %s; var compartment = "%s";' % (org2scripts, normalize(default_organelle)) + '''
         var comp = gup('name');
         if (comp) {
@@ -112,20 +112,20 @@ def add_js(default_organelle, org2scripts, page, map_id):
             }
             span.appendChild(document.createTextNode(compartment.replace('_', ' ')));
 
-            initializeMap(comp2geojson[compartment], "%s");
-        } ''' % map_id
+            initializeMap(comp2geojson[compartment], "%s", %d);
+        } ''' % (map_id, max_zoom)
 	)
 
 
-def add_min_js(default_organelle, org2scripts, page):
+def add_min_js(default_organelle, org2scripts, page, map_id, max_zoom):
 	page.script('var comp2geojson = %s; var compartment = "%s";' % (org2scripts, normalize(default_organelle)) + '''
         var comp = gup('name');
         if (comp) {
             compartment = comp;
         }
         if (compartment) {
-            initializeMap(comp2geojson[compartment]);
-        } '''
+            initializeMap(comp2geojson[compartment], "%s", %d);
+        } ''' % (map_id, max_zoom)
 	)
 
 
@@ -158,7 +158,7 @@ def add_embedding_dialog(page, url):
 
 
 def create_html(model, directory, url, embed_url, redirect_url, organelles, groups_sbml_url, archive_url, scripts, css,
-                fav, map_id):
+                fav, map_id, max_zoom):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -201,7 +201,7 @@ def create_html(model, directory, url, embed_url, redirect_url, organelles, grou
 
 	page.div.close()
 
-	add_js(default_organelle, org2scripts, page, map_id)
+	add_js(default_organelle, org2scripts, page, map_id, max_zoom)
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -209,7 +209,7 @@ def create_html(model, directory, url, embed_url, redirect_url, organelles, grou
 		f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
 
 
-def create_embedded_html(model, directory, organelles, scripts, css, fav, map_id):
+def create_embedded_html(model, directory, organelles, scripts, css, fav, map_id, max_zoom):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -230,7 +230,7 @@ def create_embedded_html(model, directory, organelles, scripts, css, fav, map_id
 
 	add_map(page, map_id)
 
-	add_min_js(default_organelle, org2scripts, page)
+	add_min_js(default_organelle, org2scripts, page, map_id, max_zoom)
 
 	with open('%s/comp_min.html' % directory, 'w+') as f:
 		f.write(str(page))

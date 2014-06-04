@@ -17,8 +17,10 @@ __author__ = 'anna'
 
 def print_info(level, meta_graph):
 	print level, " : ", meta_graph.numberOfEdges(), " ", meta_graph.numberOfNodes()
-	for n in sorted((n for n in meta_graph.getNodes() if meta_graph[TYPE][n] == TYPE_REACTION), key=lambda n: meta_graph[ID][n]):
-		print meta_graph[ID][n], " (", meta_graph[NAME][n], ') : ', sorted(meta_graph[NAME][m] for m in meta_graph.getInOutNodes(n))
+	for n in sorted((n for n in meta_graph.getNodes() if meta_graph[TYPE][n] == TYPE_REACTION),
+	                key=lambda n: meta_graph[ID][n]):
+		print meta_graph[ID][n], " (", meta_graph[NAME][n], ') : ', sorted(
+			meta_graph[NAME][m] for m in meta_graph.getInOutNodes(n))
 	print '======================='
 	print
 
@@ -27,7 +29,7 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 	max_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
 	root = graph.getRoot()
 	min_zoom, max_zoom = root.getIntegerProperty("min_level"), root.getIntegerProperty("max_level")
-	min_level = 0#max_level - 1
+	min_level = 0  # max_level - 1
 	min_zoom.setAllNodeValue(min_level)
 	max_zooming_level = max_level + 2
 	max_zoom.setAllNodeValue(max_zooming_level)
@@ -95,7 +97,8 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 
 		if level == max_level:
 			resize_nodes(meta_graph)
-	return geojson.FeatureCollection(features, geometry=geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), root_compartment
+	return geojson.FeatureCollection(features, geometry=geojson.Polygon(
+		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), root_compartment, max_zooming_level
 
 
 def process_generalized_entities(graph):

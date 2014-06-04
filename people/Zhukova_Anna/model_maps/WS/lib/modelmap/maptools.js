@@ -28,15 +28,14 @@ function adjustMapSize(mapId) {
 }
 
 const MARGIN = 156;
-const MAX_ZOOM = 5;
 const MAP_DIMENSION_SIZE = 512;
 
 
-function getBaseMap(layers, mapId) {
+function getBaseMap(layers, mapId, maxZoom) {
     adjustMapSize(mapId);
 
     var map = L.map(mapId, {
-        maxZoom: MAX_ZOOM,
+        maxZoom: maxZoom,
         minZoom: 0,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
@@ -90,7 +89,7 @@ function clearLabels(map, labels) {
         }
     }
 }
-function initializeMap(jsonData, mapId) {
+function initializeMap(jsonData, mapId, maxZoom) {
     var labels = {};
     var ub_labels = {};
     console.log(mapId);
@@ -99,7 +98,7 @@ function initializeMap(jsonData, mapId) {
     var labelsLayer = L.featureGroup();
     var tiles = getTiles("lib/modelmap/white512.jpg");
     var gray_tiles =  getTiles("lib/modelmap/gray512.jpg");
-    var map = getBaseMap([tiles, labelsLayer, ubLayer], mapId);
+    var map = getBaseMap([tiles, labelsLayer, ubLayer], mapId, maxZoom);
 
 
     if (jsonData == null) {
@@ -115,7 +114,7 @@ function initializeMap(jsonData, mapId) {
     var any_name2popup = {};
     var ub_names = {};
 //    var zoom2json = {};
-    for (var z = 0; z <= MAX_ZOOM; z++) {
+    for (var z = 0; z <= maxZoom; z++) {
         getGeoJson(map, jsonData, z, ubLayer);
     }
 //    zoom2json[0].addTo(map);
