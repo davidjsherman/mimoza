@@ -87,7 +87,7 @@ function getBounds(feature, map) {
     return new L.LatLngBounds(southWest, northEast);
 }
 
-function addPopups(map, name2popup, ub_names, name2selection, feature, layer) {
+function addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId) {
     var content = '';
     var label = '';
     if (REACTION == feature.properties.type) {
@@ -111,7 +111,7 @@ function addPopups(map, name2popup, ub_names, name2selection, feature, layer) {
         return;
     }
     var bounds = getBounds(feature, map);
-    var size = $('#map').height();
+    var size = $('#' + mapId).height();
     var popup = L.popup({autoPan: true, keepInView: true, maxWidth: size - 2, maxHeight: size - 2, autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
     if (feature.properties.ubiquitous) {
         if (!name2selection.hasOwnProperty(feature.properties.id)) {
@@ -131,11 +131,11 @@ function addPopups(map, name2popup, ub_names, name2selection, feature, layer) {
         });
     }
     layer.bindLabel(label).bindPopup(popup);
-    [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.chebi].forEach(function (key) {
+    [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.term].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
-            if (feature.properties.ubiquitous) {
-                ub_names[key] = true;
+            if (!feature.properties.ubiquitous) {
+                specific_names.push(key);
             }
         }
     });
