@@ -1,9 +1,10 @@
 import logging
 from os.path import splitext, basename, dirname, abspath
+from mimoza.mimoza import JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON
 from modules.sbml2tlp import import_sbml
 from runner.mod_gen_helper import check_if_already_generalized
 from runner.serializer import serialize
-from libsbml import *
+from libsbml import SBMLReader
 from tulip import tlp
 from runner.tulip_helper import graph2geojson
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
@@ -14,22 +15,6 @@ help_message = '''
 Generalizes and visualizes the model.
 usage: main.py --model model.xml --verbose
 '''
-
-MIMOZA_URL = 'http://mimoza.bordeaux.inria.fr'
-
-TILE = '%s/lib/modelmap/white512.jpg' % MIMOZA_URL
-
-FAVIICON = '%s/lib/modelmap/fav.ico' % MIMOZA_URL
-
-JS_SCRIPTS = [('%s/lib/leaflet/leaflet.js' % MIMOZA_URL),
-              ('%s/lib/leaflet_label/leaflet.label.js' % MIMOZA_URL),
-              'http://code.jquery.com/jquery-2.0.3.min.js', 'http://code.jquery.com/ui/1.10.4/jquery-ui.js',
-              ('%s/lib/modelmap/maptools.js' % MIMOZA_URL)]
-
-CSS_SCRIPTS = [('%s/lib/modelmap/modelmap.css' % MIMOZA_URL),
-               ('%s/lib/leaflet/leaflet.css' % MIMOZA_URL),
-               ('%s/lib/leaflet_label/leaflet.label.css' % MIMOZA_URL),
-               'http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css']
 
 import sys
 
@@ -71,12 +56,12 @@ def main(argv=None):
 	graph = tlp.newGraph()
 	# graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True)
 	graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True)
-	url = '%s/mm/comp.html' % MIMOZA_URL
+	url = 'comp.html'
 
 	fc, root_compartment = graph2geojson(c_id2info, graph, input_model, True)
-	serialize(directory='/Users/anna/Documents/PhD/magnome/', m_dir_id='mm', input_model=input_model, features=fc,
+	serialize(directory='/Users/anna/Documents/PhD/magnome/model_maps/mimoza/html/mm/', m_dir_id='mm', input_model=input_model, features=fc,
 	          root_compartment=root_compartment, groups_sbml=groups_sbml, url=url,
-	          main_url='http://mimoza.bordeaux.inria.fr', scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=FAVIICON, verbose=True)
+	          main_url='http://mimoza.bordeaux.inria.fr', scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=True)
 
 if __name__ == "__main__":
 	sys.exit(main())

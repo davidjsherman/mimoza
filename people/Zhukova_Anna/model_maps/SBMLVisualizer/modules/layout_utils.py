@@ -150,7 +150,6 @@ def layout_cytoplasm(graph, margin=5):
 	# graph.applyAlgorithm("Edge bundling")
 
 
-
 def layout_comp(graph):
 	root = graph.getRoot()
 
@@ -175,8 +174,7 @@ def layout_comp(graph):
 		gr.setName(org)
 		layout(gr, 1)
 		shorten_edges(gr)
-		bb = tlp.computeBoundingBox(gr)
-		root[VIEW_SIZE][meta_node] = tlp.Size(bb.width(), bb.height())
+		root[VIEW_SIZE][meta_node] = get_n_size(sub, meta_node)
 		root[NAME][meta_node] = org
 		root[VIEW_SHAPE][meta_node] = SQUARE_SHAPE
 		mns.append(meta_node)

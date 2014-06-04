@@ -88,9 +88,9 @@ def format_color(color_name, r, g, b, a=0.8):
 	return '<span style="background-color:rgba(%d, %d, %d, %.2f)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' % (r, g, b, a)
 
 
-def add_map(page):
+def add_map(page, map_id):
 	""" <div class="margin" id="map" style="width: 1024px; height: 1024px"></div> """
-	page.div('', class_='margin map', id='map')
+	page.div('', class_='margin map', id=map_id)
 
 
 def add_model_description(model, page):
@@ -99,7 +99,7 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(default_organelle, org2scripts, page):
+def add_js(default_organelle, org2scripts, page, map_id):
 	page.script('var comp2geojson = %s; var compartment = "%s";' % (org2scripts, normalize(default_organelle)) + '''
         var comp = gup('name');
         if (comp) {
@@ -112,8 +112,8 @@ def add_js(default_organelle, org2scripts, page):
             }
             span.appendChild(document.createTextNode(compartment.replace('_', ' ')));
 
-            initializeMap(comp2geojson[compartment]);
-        } '''
+            initializeMap(comp2geojson[compartment], "%s");
+        } ''' % map_id
 	)
 
 
@@ -157,7 +157,8 @@ def add_embedding_dialog(page, url):
 	page.div.close()
 
 
-def create_html(model, directory, url, embed_url, redirect_url, organelles, groups_sbml_url, archive_url, scripts, css, fav):
+def create_html(model, directory, url, embed_url, redirect_url, organelles, groups_sbml_url, archive_url, scripts, css,
+                fav, map_id):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -192,7 +193,7 @@ def create_html(model, directory, url, embed_url, redirect_url, organelles, grou
 
 	add_search(page)
 
-	add_map(page)
+	add_map(page, map_id)
 
 	add_model_description(model, page)
 
@@ -200,7 +201,7 @@ def create_html(model, directory, url, embed_url, redirect_url, organelles, grou
 
 	page.div.close()
 
-	add_js(default_organelle, org2scripts, page)
+	add_js(default_organelle, org2scripts, page, map_id)
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -208,7 +209,7 @@ def create_html(model, directory, url, embed_url, redirect_url, organelles, grou
 		f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
 
 
-def create_embedded_html(model, directory, organelles, scripts, css, fav):
+def create_embedded_html(model, directory, organelles, scripts, css, fav, map_id):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -227,7 +228,7 @@ def create_embedded_html(model, directory, organelles, scripts, css, fav):
 	model_id = model.getId()
 	page.init(title=model_id, css=css, script=scripts, fav=fav)
 
-	add_map(page)
+	add_map(page, map_id)
 
 	add_min_js(default_organelle, org2scripts, page)
 
@@ -313,25 +314,29 @@ def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, 
 	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to generalise!", '',
 	                           'Now let\'s generalise it: To start the generalisation press the button below.',
 	                           '''<br>When the generalisation is done, it will become available at <a href="%s">%s</a>.
-                               <br>It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :)''' % (url, url),
+                               <br>It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :)''' % (
+		                           url, url),
 	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'generalize.py', False)
 
 
 def generate_uploaded_generalized_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualise!", '',
 	                           'Your model seems to be already generalised. Now let\'s visualise it: To start the visualisation press the button below.',
-	                           '''<br>When the visualisation is done, it will become available at <a href="%s">%s</a>.''' % (url, url),
+	                           '''<br>When the visualisation is done, it will become available at <a href="%s">%s</a>.''' % (
+		                           url, url),
 	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
 
 def generate_generalized_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Generalised" % model_id, "Generalised, time to visualise!", '',
 	                           'Your model is successfully generalised. Now let\'s visualise it: To start the visualisation press the button below.',
-	                           '''<br>When the visualisation is done, it will become available at <a href="%s">%s</a>.''' % (url, url),
+	                           '''<br>When the visualisation is done, it will become available at <a href="%s">%s</a>.''' % (
+		                           url, url),
 	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
 
-def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id, sbml, m_dir_id, progress_icon, action, header=True):
+def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id, sbml, m_dir_id, progress_icon, action,
+                        header=True):
 	scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in js])
 	h = "Content-Type: text/html;charset=utf-8" if header else "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>"
 	return '''%s

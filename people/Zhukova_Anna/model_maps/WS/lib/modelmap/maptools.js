@@ -2,12 +2,12 @@
  * Created by anna on 12/12/13.
  */
 
-function adjustMapSize() {
+function adjustMapSize(mapId) {
     const VIEWPORT_MARGIN = 50;
     const MIN_DIMENTION_SIZE = 256;
     var width = Math.max(MIN_DIMENTION_SIZE, $(window).width() - VIEWPORT_MARGIN);
     var height = Math.max(MIN_DIMENTION_SIZE, $(window).height() - VIEWPORT_MARGIN);
-    var $map_div = $("#map");
+    var $map_div = $("#" + mapId);
     var old_height = $map_div.height();
     var old_width = $map_div.width();
     if (old_width != width || old_height != height) {
@@ -31,15 +31,11 @@ const MARGIN = 156;
 const MAX_ZOOM = 5;
 const MAP_DIMENSION_SIZE = 512;
 
-const ZOOM_IN = 2;
-const ZOOM_OUT = 1;
-const ZOOM_ANY = 3;
-const ZOOM_CHANGING = 3;
 
-function getBaseMap(layers) {
-    adjustMapSize();
+function getBaseMap(layers, mapId) {
+    adjustMapSize(mapId);
 
-    var map = L.map('map', {
+    var map = L.map(mapId, {
         maxZoom: MAX_ZOOM,
         minZoom: 0,
         attributionControl: false,
@@ -67,7 +63,7 @@ function getBaseMap(layers) {
     });
 
     window.onresize = function (event) {
-        adjustMapSize();
+        adjustMapSize(mapId);
     };
     return map;
 }
@@ -94,18 +90,19 @@ function clearLabels(map, labels) {
         }
     }
 }
-function initializeMap(json_data) {
+function initializeMap(jsonData, mapId) {
     var labels = {};
     var ub_labels = {};
+    console.log(mapId);
 
     var ubLayer = L.layerGroup();
     var labelsLayer = L.featureGroup();
     var tiles = getTiles("lib/modelmap/white512.jpg");
     var gray_tiles =  getTiles("lib/modelmap/gray512.jpg");
-    var map = getBaseMap([tiles, labelsLayer, ubLayer]);
+    var map = getBaseMap([tiles, labelsLayer, ubLayer], mapId);
 
 
-    if (json_data == null) {
+    if (jsonData == null) {
         return map;
     }
     var name2selection = {};
@@ -119,7 +116,7 @@ function initializeMap(json_data) {
     var ub_names = {};
 //    var zoom2json = {};
     for (var z = 0; z <= MAX_ZOOM; z++) {
-        getGeoJson(map, json_data, z, ubLayer);
+        getGeoJson(map, jsonData, z, ubLayer);
     }
 //    zoom2json[0].addTo(map);
 //    setAutocomplete(map, any_name2popup, null);
@@ -129,7 +126,7 @@ function initializeMap(json_data) {
 //    var zi_ub_edges = L.layerGroup();
 //    var zi_edges = L.layerGroup();
 //    var zi_name2popup = jQuery.extend({}, any_name2popup);
-//    var zoom_in = getSimpleJson(map, json_data, zi_name2popup, ub_names, name2selection, zi_edges, zi_ub_edges, zi_ubiquitous, labels, ub_labels, ZOOM_IN, ZOOM_CHANGING, map.getMaxZoom());
+//    var zoom_in = getSimpleJson(map, jsonData, zi_name2popup, ub_names, name2selection, zi_edges, zi_ub_edges, zi_ubiquitous, labels, ub_labels, ZOOM_IN, ZOOM_CHANGING, map.getMaxZoom());
 //
 //    var zo_ubiquitous = L.featureGroup();
 //    var zo_ub_edges = L.layerGroup();
@@ -137,7 +134,7 @@ function initializeMap(json_data) {
 //    zo_ub_edges.addTo(ubLayer);
 //    zo_ubiquitous.addTo(ubLayer);
 //    var zo_name2popup = any_name2popup;
-//    var zoom_out = getSimpleJson(map, json_data, zo_name2popup, ub_names, name2selection, zo_edges, zo_ub_edges, zo_ubiquitous, labels, ub_labels, ZOOM_OUT, map.getMinZoom(), ZOOM_CHANGING - 1);
+//    var zoom_out = getSimpleJson(map, jsonData, zo_name2popup, ub_names, name2selection, zo_edges, zo_ub_edges, zo_ubiquitous, labels, ub_labels, ZOOM_OUT, map.getMinZoom(), ZOOM_CHANGING - 1);
 //    zoom_out.addTo(map);
 
 //    setAutocomplete(map, zo_name2popup, null);
@@ -278,7 +275,7 @@ const ROUND = 'round';
 function pnt2layer(map, feature, zoom) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.width / 2;
-    var h = feature.properties.height / 2;
+    var h =  feature.properties.height / 2;
     if (EDGE == feature.properties.type) {
         var color = feature.properties.ubiquitous ? GREY : (feature.properties.generalized ? (feature.properties.transport ? TURQUOISE : GREEN) : (feature.properties.transport ? VIOLET : BLUE));
         return L.polyline(e.map(function (coord) {
@@ -355,7 +352,7 @@ function pnt2layer(map, feature, zoom) {
             {
                 icon: L.divIcon({
                     className: 'label',
-                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label + "</span>",
+                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label  + w + " " + h + "</span>",
                     iconSize: [w * scaleFactor, h * scaleFactor],
                     zIndexOffset: -1000,
                     riseOnHover: false

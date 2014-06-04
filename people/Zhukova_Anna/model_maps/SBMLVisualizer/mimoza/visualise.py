@@ -65,7 +65,6 @@ try:
         # sbml -> tulip graph
         log(True, 'sbml -> tlp')
         graph = tlp.newGraph()
-        # graph, onto, name2id_go = import_sbml(graph, input_model, groups_sbml, True, log_file)
         graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True, log_file)
 
         features, root_compartment = graph2geojson(c_id2info, graph, input_model, True)

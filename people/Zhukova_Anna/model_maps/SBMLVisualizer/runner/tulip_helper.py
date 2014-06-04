@@ -27,7 +27,7 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 	max_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
 	root = graph.getRoot()
 	min_zoom, max_zoom = root.getIntegerProperty("min_level"), root.getIntegerProperty("max_level")
-	min_level = max_level - 1
+	min_level = 0#max_level - 1
 	min_zoom.setAllNodeValue(min_level)
 	max_zooming_level = max_level + 2
 	max_zoom.setAllNodeValue(max_zooming_level)
@@ -41,23 +41,21 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 	layout(meta_graph)
 	root_compartment = c_id2info[min(c_id2info.iterkeys(), key=lambda c_id: c_id2info[c_id][2][0])][0]
 	level = max_level - 1
-	# while level > 0:
-	# 	meta_nodes = []
-	# 	print_info(level, meta_graph)
-	# 	for c_id in {comp.getId() for comp in input_model.getListOfCompartments() if
-	# 	             level == c_id2info[comp.getId()][2][0]}:
-	# 		(name, go, (level, out_c_id)) = c_id2info[c_id]
-	# 		meta_node = comp_to_meta_node(meta_graph, c_id, (c_id, go), out_c_id)
-	# 		min_zoom[meta_node] = level - 1
-	# 		max_zoom[meta_node] = level - 1
-	# 		for m in root[VIEW_META_GRAPH][meta_node].getNodes():
-	# 			min_zoom[m] = level
-	# 		meta_nodes.append(meta_node)
-	# 	layout(meta_graph)
-	# 	resize_edges(meta_graph)
-	# 	resize_nodes(meta_graph)
-	# 	shorten_edges(meta_graph)
-	# 	level -= 1
+	while level > 0:
+		meta_nodes = []
+		for c_id in {comp.getId() for comp in input_model.getListOfCompartments() if
+		             level == c_id2info[comp.getId()][2][0]}:
+			(name, go, (level, out_c_id)) = c_id2info[c_id]
+			meta_node = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id)
+			min_zoom[meta_node] = max_zoom[meta_node] = level - 1
+			for m in root[VIEW_META_GRAPH][meta_node].getNodes():
+				min_zoom[m] = level
+			meta_nodes.append(meta_node)
+		# resize_nodes(meta_graph)
+		resize_edges(meta_graph)
+		layout(meta_graph)
+		shorten_edges(meta_graph)
+		level -= 1
 	# print_info(level, meta_graph)
 	features = []
 	(m_x, m_y), (M_x, M_y) = get_min_max(meta_graph)
@@ -95,7 +93,8 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 		for n in metas:
 			meta_graph.openMetaNode(n)
 
-		resize_nodes(meta_graph)
+		if level == max_level:
+			resize_nodes(meta_graph)
 	return geojson.FeatureCollection(features, geometry=geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), root_compartment
 
 

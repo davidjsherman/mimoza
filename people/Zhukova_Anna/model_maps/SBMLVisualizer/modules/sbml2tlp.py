@@ -133,7 +133,7 @@ def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
 
 	log(verbose, 'duplicating nodes')
 	duplicate_nodes(graph)
-	clean(graph)
+	# clean(graph)
 
 	log(verbose, 'marking species/reaction groups')
 	mark_ancestors(graph, r_id2g_id, s_id2gr_id)

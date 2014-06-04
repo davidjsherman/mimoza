@@ -75,7 +75,7 @@ def factor_nodes(graph):
 
 		root[NAME][meta_node] = mg.getName()
 
-	root.delSubGraph(clone)
+	# root.delSubGraph(clone)
 	for n in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n] and graph.isMetaNode(n)):
 		for e in graph.getInOutEdges(n):
 			root[STOICHIOMETRY][e] = root[STOICHIOMETRY][list(root[VIEW_META_GRAPH][e])[0]]
@@ -83,34 +83,26 @@ def factor_nodes(graph):
 	resize_edges(graph)
 
 
-def nodes_to_meta_node(comp, meta_graph, ns, (c_id, go_id), out_comp):
+def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
+	root = meta_graph.getRoot()
+	ns = filter(lambda n: root[COMPARTMENT][n] == c_id, meta_graph.getNodes())
 	if not ns:
 		return None
-	root = meta_graph.getRoot()
 	meta_node = meta_graph.createMetaNode(ns, False)
 	comp_graph = root[VIEW_META_GRAPH][meta_node]
-	# comp_graph = meta_graph.getSuperGraph().inducedSubGraph(ns)
 	layout(comp_graph)
 	bb = tlp.computeBoundingBox(comp_graph)
-	dimension = max(bb.width(), bb.height())
-	w, h = dimension, dimension
-	# meta_node = meta_graph.createMetaNode(comp_graph, False)
-	comp_graph.setName("_" + comp)
-	root[VIEW_SIZE][meta_node] = tlp.Size(w, h)
+	comp_graph.setName("_" + c_id)
+	s = max(bb.width(), bb.height())
+	root[VIEW_SIZE][meta_node] = tlp.Size(s, s)
 	root[VIEW_LAYOUT][meta_node] = bb.center()
-	root[NAME][meta_node] = comp
+	root[NAME][meta_node] = c_name
 	root[COMPARTMENT][meta_node] = out_comp
 	root[TYPE][meta_node] = TYPE_COMPARTMENT
 	root[VIEW_SHAPE][meta_node] = SQUARE_SHAPE
 	root[ID][meta_node] = c_id
 	root[ANNOTATION][meta_node] = go_id
 	return meta_node
-
-
-def comp_to_meta_node(meta_graph, comp, (c_id, go_id), out_comp):
-	root = meta_graph.getRoot()
-	ns = filter(lambda n: root[COMPARTMENT][n] == comp, meta_graph.getNodes())
-	return nodes_to_meta_node(comp, meta_graph, ns, (c_id, go_id), out_comp)
 
 
 def factor_comps(meta_graph, c_name2id_go):

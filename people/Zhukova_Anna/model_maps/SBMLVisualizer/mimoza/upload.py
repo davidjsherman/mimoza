@@ -6,17 +6,16 @@ import hashlib
 import logging
 import os
 import cgitb
-from shutil import copyfile, copytree
-from tulip import tlp
-from libsbml import SBMLReader, writeSBMLToFile
+from shutil import copytree
 import sys
-from modules.html_generator import create_thanks_for_uploading_html, create_thanks_for_uploading_generalized_html
-from sbml_generalization.utils.compartment_positioner import get_comp2go, sort_comps
-from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Term
-from sbml_generalization.generalization.reaction_filters import getGeneAssociation
 import base64
+
+from libsbml import SBMLReader, writeSBMLToFile
+
+from modules.html_generator import create_thanks_for_uploading_html, create_thanks_for_uploading_generalized_html
 from mimoza.mimoza import *
-from runner.mod_gen_helper import process_generalized_model, check_if_already_generalized
+from runner.mod_gen_helper import check_if_already_generalized
+
 
 ALREADY_EXISTS = 1
 OK = 0
@@ -81,6 +80,7 @@ def check_md5(file_name):
 
 verbose = True
 
+
 def process_file(sbml_file):
     reader = SBMLReader()
     doc = reader.readSBML(sbml_file)
@@ -93,7 +93,7 @@ def process_file(sbml_file):
         model.setId(sbml_name)
         model_id = sbml_name
 
-    m_id = check_md5(sbml_file) #"%s" % model_id
+    m_id = check_md5(sbml_file)
     directory = '../html/%s/' % m_id
     if os.path.exists(directory):
         if os.path.exists('%sindex.html' % directory):
@@ -152,34 +152,14 @@ if OK == result:
     (m_id, m_name, m_dir_id) = args
     create_thanks_for_uploading_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
                                        MIMOZA_FAVICON, PROGRESS_ICON)
-    # existing_m_url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
-    # print generate_redirecting_html(existing_m_url, MIMOZA_CSS, MIMOZA_FAVICON)
-# elif NOT_MODEL == result:
-# 	pass
-    # print generate_error_html(MIMOZA_CSS, MIMOZA_FAVICON, 'Upload Error', 'Is it really in SBML?',
-    #                     'Your file does not seem to contain a model in <a href="%s" target="_blank">SBML</a> format.</p>' % SBML_ORG,
-    #                     '''Please, check you file and <a href="%s">try again</a>.
-    #                            <br>Or contact %s to complain about this problem.''' % (MIMOZA_URL, generate_contact(CONTACT_EMAIL)))
 elif ALREADY_EXISTS == result:
-    # model_id, m_dir_id, existing_m_dir_id = args
-    #
-    # # existing_m_url = '%s/%s/comp.html' % (MIMOZA_URL, existing_m_dir_id)
-    # # url = '%s/%s/comp.html' % (MIMOZA_URL, m_dir_id)
-    # # sbml = '../html/%s/%s.xml' % (m_dir_id, model_id)
-    #
-    # create_exists_html(model_id, existing_m_dir_id, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
-    #                                    MIMOZA_FAVICON, PROGRESS_ICON)
-    # url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
-    # # print generate_exists_html(MIMOZA_CSS, JS_SCRIPTS, MIMOZA_FAVICON, model_id, existing_m_url, url, sbml, m_dir_id, PROGRESS_ICON)
-
     model_id, m_dir_id = args
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 elif ALREADY_GENERALIZED == result:
     (m_id, m_name, m_dir_id) = args
     create_thanks_for_uploading_generalized_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
                                        MIMOZA_FAVICON, PROGRESS_ICON)
-    # existing_m_url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 
 

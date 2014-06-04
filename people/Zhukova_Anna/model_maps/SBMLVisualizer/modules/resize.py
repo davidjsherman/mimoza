@@ -13,15 +13,18 @@ def get_n_size(graph, n):
 	root = graph.getRoot()
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 	view_meta_graph = root.getGraphProperty(VIEW_META_GRAPH)
-	num = 1
-	if graph.isMetaNode(n):
-		num = view_meta_graph[n].numberOfNodes()
-	if TYPE_REACTION == root[TYPE][n]:
-		s = r_size * num
+
+	n_type = root[TYPE][n]
+	s = 0
+	if TYPE_REACTION == n_type:
+		s = r_size * (view_meta_graph[n].numberOfNodes() if graph.isMetaNode(n) else 1)
+	elif TYPE_COMPARTMENT == n_type:
+		bb = tlp.computeBoundingBox(view_meta_graph[n])
+		s = max(bb.width(), bb.height())
 	elif ubiquitous[n]:
 		s = ub_sp_size
 	else:
-		s = sp_size * num
+		s = sp_size * (view_meta_graph[n].numberOfNodes() if graph.isMetaNode(n) else 1)
 	return tlp.Size(s, s)
 
 

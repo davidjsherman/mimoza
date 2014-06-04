@@ -10,7 +10,7 @@ from sbml_generalization.utils.logger import log
 __author__ = 'anna'
 
 
-def serialize(directory, m_dir_id, input_model, features, root_compartment, groups_sbml, url, main_url, scripts, css, fav, verbose):
+def serialize(directory, m_dir_id, input_model, features, root_compartment, groups_sbml, url, main_url, scripts, css, fav, verbose, map_id=None):
 	json = '%s/%s.json' % (directory, root_compartment)
 	with open(json, 'w+') as f:
 		f.write("var gjsn__{1} = {0}\n".format(geojson.dumps(features).replace('"id": null', ''), root_compartment))
@@ -23,10 +23,14 @@ def serialize(directory, m_dir_id, input_model, features, root_compartment, grou
 	embed_url = '%s/%s/comp_min.html' % (main_url, m_dir_id)
 	redirect_url = 'comp.html'
 	archive_url = "%s.zip" % m_dir_id
-	create_html(input_model, directory, url, embed_url, redirect_url, comp_names, groups_sbml_url, archive_url, scripts,
-	            css, fav)
 
-	create_embedded_html(input_model, directory, comp_names, scripts, css, fav)
+	if not map_id:
+		map_id = m_dir_id
+
+	create_html(input_model, directory, url, embed_url, redirect_url, comp_names, groups_sbml_url, archive_url, scripts,
+	            css, fav, map_id)
+
+	create_embedded_html(input_model, directory, comp_names, scripts, css, fav, map_id)
 
 	archive_path = "%s/../../uploads/%s.zip" % (directory, m_dir_id)
 	archive(directory, archive_path)
