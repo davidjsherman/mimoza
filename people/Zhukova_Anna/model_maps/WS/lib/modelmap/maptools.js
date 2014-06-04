@@ -99,7 +99,8 @@ function initializeMap(jsonData, mapId, maxZoom) {
         minZoom: 0,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
-        layers: [tiles, ubLayer]
+        layers: [tiles, ubLayer],
+        crs: L.CRS.Simple
     });
 
     if (jsonData == null) {
@@ -184,7 +185,7 @@ function pnt2layer(map, feature, zoom) {
     var centre = map.unproject([x, y], 1);//bounds.getCenter();
     if (BG_SPECIES == feature.properties.type) {
         props["fillColor"] = ORANGE;
-        return L.circle(centre, d / 1.8, props);
+        return L.circle(centre, d / 2, props);
     }
     if (BG_REACTION == feature.properties.type) {
         props["fillColor"] = feature.properties.transport ? TURQUOISE : GREEN;
@@ -215,7 +216,7 @@ function pnt2layer(map, feature, zoom) {
             {
                 icon: L.divIcon({
                     className: 'label',
-                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label  + w + " " + h + "</span>",
+                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label + "</span>",
                     iconSize: [w * scaleFactor, h * scaleFactor],
                     zIndexOffset: -1000,
                     riseOnHover: false
@@ -225,14 +226,6 @@ function pnt2layer(map, feature, zoom) {
         node.addLayer(label);
     }
     return node;
-}
-
-function addLayer(map, key, value) {
-    if (map.hasOwnProperty(key)) {
-        map[key].addLayer(value);
-    } else {
-        map[key] = L.featureGroup([value]);
-    }
 }
 
 
@@ -336,14 +329,6 @@ function getGeoJson(map, json_data, z, ubLayer, mapId) {
     });
 }
 
-
-function clear(dict) {
-    for (var prop in dict) {
-        if (dict.hasOwnProperty(prop)) {
-            delete dict[prop];
-        }
-    }
-}
 
 function gup(name) {
     name = new RegExp('[?&]' + name.replace(/([[\]])/, '\\$1') + '=([^&#]*)');
