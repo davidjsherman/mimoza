@@ -62,7 +62,7 @@ def main(argv=None):
 	serialize(directory='/Users/anna/Documents/PhD/magnome/model_maps/mimoza/html/mm/', m_dir_id='mm',
 	          input_model=input_model, features=fc, groups_sbml=groups_sbml, url=url,
 	          main_url='http://mimoza.bordeaux.inria.fr', scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON,
-	          verbose=True, max_zoom=max_zoom)
+	          verbose=True, max_zoom=max_zoom, comps=c_id2info)
 
 if __name__ == "__main__":
 	sys.exit(main())

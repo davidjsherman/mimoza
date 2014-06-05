@@ -26,6 +26,15 @@ def print_info(level, meta_graph):
 
 
 def graph2geojson(c_id2info, graph, input_model, verbose):
+	c_id2outs = {}
+	for c_id in c_id2info.iterkeys():
+		_, _, (_, out_c_id) = c_id2info[c_id]
+		outs = []
+		while out_c_id:
+			outs.append(out_c_id)
+			_, _, (_, out_c_id) = c_id2info[out_c_id]
+		c_id2outs[c_id] = outs
+
 	max_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
 	root = graph.getRoot()
 	min_zoom, max_zoom = root.getIntegerProperty("min_level"), root.getIntegerProperty("max_level")
@@ -75,11 +84,11 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 		# print_info(level, meta_graph)
 
 		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e)):
-			features.append(edge2feature(meta_graph, e, i, scale, e_min_zoom(e), e_max_zoom(e), x_scale, y_scale))
+			features.append(edge2feature(meta_graph, e, i, scale, e_min_zoom(e), e_max_zoom(e), x_scale, y_scale, c_id2outs))
 			i += 1
 
 		for n in (n for n in meta_graph.getNodes() if level == min_zoom[n]):
-			f, bg = node2feature(meta_graph, n, i, scale, min_zoom[n], max_zoom[n], max_zooming_level, onto, c_id2info)
+			f, bg = node2feature(meta_graph, n, i, scale, min_zoom[n], max_zoom[n], max_zooming_level, onto, c_id2info, c_id2outs)
 			i += (2 if bg else 1)
 			features.append(f)
 			if bg:

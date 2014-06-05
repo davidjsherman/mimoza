@@ -21,11 +21,13 @@ def add_header(model_id, model_name, page):
 	page.h1.close()
 
 
-def add_compartment_menu(page):
+def add_compartment_menu(page, c_id2info):
 	page.ul(class_='menu margin centre')
-	page.li()
-	page.a("Full model view", href='?name=')
-	page.li.close()
+	for c_id in c_id2info.iterkeys():
+		c_name, _, _ = c_id2info[c_id]
+		page.li()
+		page.a(c_name, href='?name=%s' % c_id)
+		page.li.close()
 	page.ul.close()
 
 
@@ -135,7 +137,7 @@ def add_embedding_dialog(page, url):
 
 
 def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url, archive_url, scripts, css,
-                fav, map_id, max_zoom):
+                fav, map_id, max_zoom, c_id2info):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -153,7 +155,7 @@ def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url
 	add_header(model_id, model_name, page)
 
 	page.div(class_='centre', id='all')
-	add_compartment_menu(page)
+	add_compartment_menu(page, c_id2info)
 
 	add_download_link(groups_sbml_url, archive_url, page)
 

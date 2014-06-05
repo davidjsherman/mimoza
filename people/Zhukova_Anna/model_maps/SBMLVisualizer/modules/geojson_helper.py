@@ -24,7 +24,7 @@ def get_border_coord(xy_center, other_xy, r):
 	return transformation(x_center, other_x), transformation(y_center, other_y)
 
 
-def edge2feature(graph, e, id, scale, level_min, level_max, x_scale, y_scale):
+def edge2feature(graph, e, id, scale, level_min, level_max, x_scale, y_scale, c_id2outs):
 	root = graph.getRoot()
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
 	transport = root.getBooleanProperty(TRANSPORT)
@@ -42,12 +42,17 @@ def edge2feature(graph, e, id, scale, level_min, level_max, x_scale, y_scale):
 	         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous,
 	         "generalized": generalized, "transport": is_transport, "zoom_min": level_min,
 	         "zoom_max": level_max}
-	if root[COMPARTMENT][s] == root[COMPARTMENT][t]:
-		props["c_id"] = root[COMPARTMENT][s]
+	s_c_id = root[COMPARTMENT][s]
+	t_c_id = root[COMPARTMENT][t]
+	if s_c_id == t_c_id:
+		props["c_id"] = s_c_id
+		props["c_outs"] = ','.join(c_id2outs[s_c_id])
+	else:
+		props["c_outs"] = ','.join(set(c_id2outs[s_c_id]) | set(c_id2outs[t_c_id]))
 	return geojson.Feature(geometry=geom, properties=props, id=id)
 
 
-def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info):
+def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info, c_id2outs):
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
@@ -62,7 +67,8 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
 	c_id = root[COMPARTMENT][n]
 	props = {"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-	         "type": type_[n], "zoom_min": level_min, "zoom_max": level_max, "c_id": c_id}
+	         "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
+	         "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 
 	if type_[n] in TYPE_BG:
 		return geojson.Feature(geometry=geom, properties=props, id=id)
@@ -97,7 +103,8 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 		bg_feature = None
 		if generalized:
 			bg_props = {"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-			            "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1, "zoom_max": max_bg_level}
+			            "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1, "zoom_max": max_bg_level,
+			            "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 			bg_feature = geojson.Feature(geometry=geom, properties=bg_props, id=id + 1)
 		return geojson.Feature(geometry=geom, properties=props, id=id), bg_feature
 

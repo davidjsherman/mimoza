@@ -10,7 +10,8 @@ from sbml_generalization.utils.logger import log
 __author__ = 'anna'
 
 
-def serialize(directory, m_dir_id, input_model, features, groups_sbml, url, main_url, scripts, css, fav, verbose, max_zoom, map_id=None):
+def serialize(directory, m_dir_id, input_model, features, groups_sbml, url, main_url, scripts, css, fav, verbose,
+              max_zoom, comps, map_id=None):
 	json = '%s/gjson.json' % directory
 	with open(json, 'w+') as f:
 		f.write("var gjsn = %s" % geojson.dumps(features).replace('"id": null', ''))
@@ -28,7 +29,7 @@ def serialize(directory, m_dir_id, input_model, features, groups_sbml, url, main
 
 	gjson_json = './gjson.json'
 	create_html(input_model, directory, embed_url, redirect_url, gjson_json, groups_sbml_url, archive_url, scripts,
-	            css, fav, map_id, max_zoom)
+	            css, fav, map_id, max_zoom, comps)
 
 	create_embedded_html(input_model, directory, gjson_json, scripts, css, fav, map_id, max_zoom)
 
