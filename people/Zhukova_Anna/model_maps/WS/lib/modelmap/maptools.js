@@ -273,13 +273,12 @@ function setAutocomplete(map, tags, name2popup) {
 }
 
 function matchesCompartment(cId, feature) {
-    return (!cId
-        || cId == feature.properties.c_id || cId == feature.properties.c_s_id || cId == feature.properties.c_t_id);
+    outCompIds = feature.properties.c_outs ? feature.properties.c_outs.split(',') : [];
+    return !cId || cId == feature.properties.c_id || outCompIds.indexOf(cId) > -1;
 }
 
 
 function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId) {
-    console.log(cId);
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
             return pnt2layer(map, feature, level);
