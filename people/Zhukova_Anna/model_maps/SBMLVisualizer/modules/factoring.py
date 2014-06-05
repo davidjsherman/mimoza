@@ -4,7 +4,7 @@ from modules.layout_utils import layout
 from modules.merge_inside_comp import mic
 from modules.model_utils import merge_nodes
 from modules.resize import get_n_size, resize_edges
-from modules.graph_tools import *
+from modules.graph_properties import *
 
 __author__ = 'anna'
 
@@ -33,7 +33,7 @@ def merge_ubs_for_similar_reactions(graph):
 
 def factor_nodes(graph):
 	root = graph.getRoot()
-	clone = root.inducedSubGraph(list(graph.getNodes()))
+	# clone = root.inducedSubGraph(list(graph.getNodes()))
 
 	merge_ubs_for_similar_reactions(graph)
 
@@ -53,7 +53,7 @@ def factor_nodes(graph):
 		mg = graph[VIEW_META_GRAPH][meta_node]
 		n = nodes[0]
 
-		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_COLOR, VIEW_LAYOUT, VIEW_SHAPE]:
+		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_LAYOUT, VIEW_SHAPE]: #, VIEW_COLOR
 			root[prop][meta_node] = root[prop][n]
 		root[ID][meta_node] = root[ANCESTOR_ID][n]
 		root[NAME][meta_node] = root[ANCESTOR_NAME][n]

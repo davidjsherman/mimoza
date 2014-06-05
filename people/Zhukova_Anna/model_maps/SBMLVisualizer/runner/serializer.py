@@ -10,12 +10,11 @@ from sbml_generalization.utils.logger import log
 __author__ = 'anna'
 
 
-def serialize(directory, m_dir_id, input_model, features, root_compartment, groups_sbml, url, main_url, scripts, css, fav, verbose, max_zoom, map_id=None):
-	json = '%s/%s.json' % (directory, root_compartment)
+def serialize(directory, m_dir_id, input_model, features, groups_sbml, url, main_url, scripts, css, fav, verbose, max_zoom, map_id=None):
+	json = '%s/gjson.json' % directory
 	with open(json, 'w+') as f:
-		f.write("var gjsn__{1} = {0}\n".format(geojson.dumps(features).replace('"id": null', ''), root_compartment))
+		f.write("var gjsn = %s" % geojson.dumps(features).replace('"id": null', ''))
 
-	comp_names = [root_compartment]
 
 	log(verbose, 'create html')
 	groups_sbml_url = os.path.basename(groups_sbml)
@@ -27,10 +26,11 @@ def serialize(directory, m_dir_id, input_model, features, root_compartment, grou
 	if not map_id:
 		map_id = m_dir_id
 
-	create_html(input_model, directory, url, embed_url, redirect_url, comp_names, groups_sbml_url, archive_url, scripts,
+	gjson_json = './gjson.json'
+	create_html(input_model, directory, embed_url, redirect_url, gjson_json, groups_sbml_url, archive_url, scripts,
 	            css, fav, map_id, max_zoom)
 
-	create_embedded_html(input_model, directory, comp_names, scripts, css, fav, map_id, max_zoom)
+	create_embedded_html(input_model, directory, gjson_json, scripts, css, fav, map_id, max_zoom)
 
 	archive_path = "%s/../../uploads/%s.zip" % (directory, m_dir_id)
 	archive(directory, archive_path)

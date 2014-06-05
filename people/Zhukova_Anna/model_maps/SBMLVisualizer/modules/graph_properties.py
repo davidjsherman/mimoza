@@ -7,7 +7,6 @@ ANCESTOR_ANNOTATION = 'ancestor_annotation'
 ANCESTOR_NAME = "ancestor_name"
 
 COMPARTMENT = "compartment"
-REAL_COMPARTMENT = "real_compartment"
 
 VIEW_COLOR = "viewColor"
 
@@ -41,18 +40,3 @@ TYPE_2_BG_TYPE = {TYPE_SPECIES: TYPE_BG_SPECIES, TYPE_REACTION: TYPE_BG_REACTION
 
 SQUARE_SHAPE = 18
 ROUND_SHAPE = 14
-
-
-def find_subgraph_by_name(root, name):
-	def check_collection(collection, name):
-		new_collection = []
-		for element in collection:
-			if element:
-				if name == element.getName():
-					return element
-				subs = list(element.getSubGraphs())
-				if subs:
-					new_collection.extend(subs)
-		return check_collection(new_collection, name) if new_collection else None
-
-	return check_collection(list(root.getSubGraphs()), name)

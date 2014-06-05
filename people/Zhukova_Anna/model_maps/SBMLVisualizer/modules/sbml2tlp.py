@@ -1,6 +1,6 @@
 from tulip import tlp
 from sbml_generalization.utils.logger import log
-from modules.graph_tools import *
+from modules.graph_properties import *
 
 from sbml_generalization.generalization.sbml_helper import check_names, check_compartments
 
@@ -16,18 +16,13 @@ from runner.mod_gen_helper import process_generalized_model
 
 __author__ = 'anna'
 
-arrowShape = 50
 
-
-# def species2nodes(comp2go_term, get_comp, graph, input_model, species_id2chebi_id, ub_sps):
-def species2nodes(comp2go_term, graph, input_model, species_id2chebi_id, ub_sps):
+def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 	id2n = {}
 	for s in input_model.getListOfSpecies():
 		n = graph.addNode()
 		comp = input_model.getCompartment(s.getCompartment())
-		graph[REAL_COMPARTMENT][n] = '{0}, {1}, {2}'.format(comp.getName(), comp.getId(),
-		                                                    comp2go_term[comp.getId()])
-		graph[COMPARTMENT][n] = comp.getId()#get_comp(comp.getId())
+		graph[COMPARTMENT][n] = comp.getId()
 
 		_id = s.getId()
 		graph[ID][n] = _id
@@ -54,8 +49,6 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		all_comps.add(get_sp_comp(s_id))
 		species_node = id2n[s_id]
 		e = graph.addEdge(species_node, reaction_node) if is_reactant else graph.addEdge(reaction_node, species_node)
-		# graph["viewSrcAnchorShape"][e] = arrowShape if (not is_reactant or r.getReversible()) else -1
-		# graph["viewTgtAnchorShape"][e] = -1 if (not is_reactant or r.getReversible()) else arrowShape
 		stoich = sp_ref.getStoichiometry()
 		if not stoich:
 			stoich = sp_ref.getStoichiometryMath()
@@ -102,7 +95,7 @@ def get_quotient_maps(chebi, input_model, sbml_file, verbose):
 	return r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
 
 
-def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
+def import_sbml(graph, input_model, sbml_file, verbose=False):
 	chebi = parse(get_chebi())
 
 	r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = get_quotient_maps(chebi, input_model, sbml_file, verbose)
@@ -126,7 +119,7 @@ def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
 	create_props(graph)
 
 	log(verbose, 'adding species nodes')
-	id2n = species2nodes(comp2go_term, graph, input_model, species_id2chebi_id, ub_sps)
+	id2n = species2nodes(graph, input_model, species_id2chebi_id, ub_sps)
 
 	log(verbose, 'adding reaction nodes')
 	reactions2nodes(get_r_comp, graph, id2n, input_model)
@@ -137,7 +130,6 @@ def import_sbml(graph, input_model, sbml_file, verbose=False, log_file=None):
 
 	log(verbose, 'marking species/reaction groups')
 	mark_ancestors(graph, r_id2g_id, s_id2gr_id)
-	# return graph, chebi, name2id_go
 
 	c_id2info = {}
 	for comp in input_model.getListOfCompartments():
@@ -157,7 +149,6 @@ def create_props(graph):
 	graph.getStringProperty(ANNOTATION)
 
 	graph.getStringProperty(COMPARTMENT)
-	graph.getStringProperty(REAL_COMPARTMENT)
 
 	graph.getStringProperty(ID)
 	graph.getStringProperty(NAME)
@@ -171,7 +162,7 @@ def create_props(graph):
 	graph.getBooleanProperty(UBIQUITOUS)
 
 	graph.getLayoutProperty(VIEW_LAYOUT)
-	graph.getColorProperty(VIEW_COLOR)
+	# graph.getColorProperty(VIEW_COLOR)
 	graph.getIntegerProperty(VIEW_SHAPE)
 	graph.getSizeProperty(VIEW_SIZE)
 

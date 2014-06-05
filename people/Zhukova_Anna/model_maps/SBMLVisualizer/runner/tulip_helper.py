@@ -2,7 +2,7 @@ import geojson
 
 from modules.factoring import factor_nodes, comp_to_meta_node
 from modules.geojson_helper import DIMENSION, edge2feature, node2feature, get_min_max
-from modules.graph_tools import VIEW_META_GRAPH, NAME, TYPE, TYPE_REACTION, ID
+from modules.graph_properties import VIEW_META_GRAPH, NAME, TYPE, TYPE_REACTION, ID
 from modules.layout_utils import layout, layout_generalized_nodes, shorten_edges
 from modules.resize import resize_edges, resize_nodes
 from sbml_generalization.utils.logger import log
@@ -29,19 +29,18 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 	max_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
 	root = graph.getRoot()
 	min_zoom, max_zoom = root.getIntegerProperty("min_level"), root.getIntegerProperty("max_level")
-	min_level = 0  # max_level - 1
-	min_zoom.setAllNodeValue(min_level)
-	max_zooming_level = max_level + 2
+	min_zooming_level = 0  # max_level - 1
+	min_zoom.setAllNodeValue(min_zooming_level)
+	max_zooming_level = max_level + 3
 	max_zoom.setAllNodeValue(max_zooming_level)
 	log(verbose, 'generalized species/reactions -> metanodes')
 	meta_graph = process_generalized_entities(graph)
 	for n in (n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)):
 		max_zoom[n] = max_level - 1
-		min_zoom[n] = min_level
+		min_zoom[n] = min_zooming_level
 		for m in root[VIEW_META_GRAPH][n].getNodes():
 			min_zoom[m] = max_level
 	layout(meta_graph)
-	root_compartment = c_id2info[min(c_id2info.iterkeys(), key=lambda c_id: c_id2info[c_id][2][0])][0]
 	level = max_level - 1
 	while level > 0:
 		meta_nodes = []
@@ -98,7 +97,7 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 		if level == max_level:
 			resize_nodes(meta_graph)
 	return geojson.FeatureCollection(features, geometry=geojson.Polygon(
-		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), root_compartment, max_zooming_level
+		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), max_zooming_level
 
 
 def process_generalized_entities(graph):

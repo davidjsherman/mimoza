@@ -67,10 +67,10 @@ try:
 		# sbml -> tulip graph
 		log(True, 'sbml -> tlp')
 		graph = tlp.newGraph()
-		graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True, log_file)
+		graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True)
 
-		features, root_compartment, max_zoom = graph2geojson(c_id2info, graph, input_model, True)
-		url = serialize(directory, m_dir_id, input_model, features, root_compartment, groups_sbml, url, MIMOZA_URL,
+		features, max_zoom = graph2geojson(c_id2info, graph, input_model, True)
+		url = serialize(directory, m_dir_id, input_model, features, groups_sbml, url, MIMOZA_URL,
 		                JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True, max_zoom)
 
 except Exception as e:

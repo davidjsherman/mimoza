@@ -1,6 +1,6 @@
 import colorsys
 from tulip import tlp
-from modules.graph_tools import *
+from modules.graph_properties import *
 
 __author__ = 'anna'
 

@@ -21,12 +21,11 @@ def add_header(model_id, model_name, page):
 	page.h1.close()
 
 
-def add_compartment_menu(url, organelles, page):
+def add_compartment_menu(page):
 	page.ul(class_='menu margin centre')
-	for organelle in organelles:
-		page.li()
-		page.a(denormalize(organelle), href='?name=%s' % (normalize(organelle)))
-		page.li.close()
+	page.li()
+	page.a("Full model view", href='?name=')
+	page.li.close()
 	page.ul.close()
 
 
@@ -99,33 +98,11 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(default_organelle, org2scripts, page, map_id, max_zoom):
-	page.script('var comp2geojson = %s; var compartment = "%s";' % (org2scripts, normalize(default_organelle)) + '''
+def add_js(page, map_id, max_zoom):
+	page.script('''
         var comp = gup('name');
-        if (comp) {
-            compartment = comp;
-        }
-        if (compartment) {
-            var span = document.getElementById('comp');
-            while (span.firstChild) {
-                span.removeChild(span.firstChild);
-            }
-            span.appendChild(document.createTextNode(compartment.replace('_', ' ')));
-
-            initializeMap(comp2geojson[compartment], "%s", %d);
-        } ''' % (map_id, max_zoom)
-	)
-
-
-def add_min_js(default_organelle, org2scripts, page, map_id, max_zoom):
-	page.script('var comp2geojson = %s; var compartment = "%s";' % (org2scripts, normalize(default_organelle)) + '''
-        var comp = gup('name');
-        if (comp) {
-            compartment = comp;
-        }
-        if (compartment) {
-            initializeMap(comp2geojson[compartment], "%s", %d);
-        } ''' % (map_id, max_zoom)
+        initializeMap(gjsn, "%s", %d, comp);
+    ''' % (map_id, max_zoom)
 	)
 
 
@@ -157,19 +134,12 @@ def add_embedding_dialog(page, url):
 	page.div.close()
 
 
-def create_html(model, directory, url, embed_url, redirect_url, organelles, groups_sbml_url, archive_url, scripts, css,
+def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url, archive_url, scripts, css,
                 fav, map_id, max_zoom):
 	page = markup.page()
 	if not scripts:
 		scripts = []
-	default_organelle = normalize(organelles[0]) if organelles else ''
-	org2scripts = '{'
-	for organelle in organelles:
-		organelle = normalize(organelle)
-
-		scripts.append('./%s.json' % organelle)
-		org2scripts += "'{0}': gjsn__{0},".format(organelle)
-	org2scripts += '}'
+	scripts.append(json)
 
 	if not css:
 		css = []
@@ -183,7 +153,7 @@ def create_html(model, directory, url, embed_url, redirect_url, organelles, grou
 	add_header(model_id, model_name, page)
 
 	page.div(class_='centre', id='all')
-	add_compartment_menu(url, organelles, page)
+	add_compartment_menu(page)
 
 	add_download_link(groups_sbml_url, archive_url, page)
 
@@ -201,7 +171,7 @@ def create_html(model, directory, url, embed_url, redirect_url, organelles, grou
 
 	page.div.close()
 
-	add_js(default_organelle, org2scripts, page, map_id, max_zoom)
+	add_js(page, map_id, max_zoom)
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -209,18 +179,11 @@ def create_html(model, directory, url, embed_url, redirect_url, organelles, grou
 		f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
 
 
-def create_embedded_html(model, directory, organelles, scripts, css, fav, map_id, max_zoom):
+def create_embedded_html(model, directory, json, scripts, css, fav, map_id, max_zoom):
 	page = markup.page()
 	if not scripts:
 		scripts = []
-	default_organelle = normalize(organelles[0]) if organelles else ''
-	org2scripts = '{'
-	for organelle in organelles:
-		organelle = normalize(organelle)
-
-		scripts.append('./%s.json' % organelle)
-		org2scripts += "'{0}': gjsn__{0},".format(organelle)
-	org2scripts += '}'
+	scripts.append(json)
 
 	if not css:
 		css = []
@@ -230,7 +193,7 @@ def create_embedded_html(model, directory, organelles, scripts, css, fav, map_id
 
 	add_map(page, map_id)
 
-	add_min_js(default_organelle, org2scripts, page, map_id, max_zoom)
+	add_js(page, map_id, max_zoom)
 
 	with open('%s/comp_min.html' % directory, 'w+') as f:
 		f.write(str(page))

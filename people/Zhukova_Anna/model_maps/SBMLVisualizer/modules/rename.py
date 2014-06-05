@@ -1,4 +1,4 @@
-from modules.graph_tools import *
+from modules.graph_properties import *
 
 
 def get_short_name(graph, n, onto):
@@ -7,7 +7,7 @@ def get_short_name(graph, n, onto):
 	
 	# remove compartment from the name,
 	# e.g. H2O [peroxisome] --> H2O
-	short_name.replace("[{0}]".format(graph[REAL_COMPARTMENT][n].split(',')[0]), '').replace("[{0}]".format(graph[COMPARTMENT][n]), '').strip()
+	short_name.replace("[%s]" % graph[COMPARTMENT][n], '').strip()
 		
 	# replace with a chebi name 
 	# if it is shorter 

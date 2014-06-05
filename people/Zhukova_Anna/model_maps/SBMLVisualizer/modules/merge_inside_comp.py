@@ -1,6 +1,6 @@
 from collections import defaultdict
 from model_utils import merge_nodes
-from modules.graph_tools import COMPARTMENT, UBIQUITOUS, ID
+from modules.graph_properties import COMPARTMENT, UBIQUITOUS, ID
 
 
 def mic(graph):

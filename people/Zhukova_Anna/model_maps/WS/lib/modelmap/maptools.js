@@ -87,7 +87,7 @@ function handlePopUpClosing(map) {
 }
 
 
-function initializeMap(jsonData, mapId, maxZoom) {
+function initializeMap(jsonData, mapId, maxZoom, cId) {
     var ubLayer = L.layerGroup();
     var tiles = getTiles("lib/modelmap/white512.jpg");
     var gray_tiles =  getTiles("lib/modelmap/gray512.jpg");
@@ -119,8 +119,27 @@ function initializeMap(jsonData, mapId, maxZoom) {
         adjustMapSize(mapId);
     };
 
+    var zMin = -1;
+    var zMax = -1;
     for (var z = 0; z <= maxZoom; z++) {
-        getGeoJson(map, jsonData, z, ubLayer, mapId);
+        if (getGeoJson(map, jsonData, z, ubLayer, mapId, cId)) {
+            if (-1 == zMin) {
+                zMin = z;
+            } else {
+                zMax = z;
+            }
+        }
+    }
+
+    if (zMin > 0 || zMax < maxZoom) {
+        map.on('zoomend', function (e) {
+            var zoom = map.getZoom();
+            if (zoom < zMin) {
+                map.setZoom(zMin);
+            } else if (zoom > zMax) {
+                map.setZoom(zMin);
+            }
+        });
     }
 
     var baseLayers = {
@@ -253,7 +272,14 @@ function setAutocomplete(map, tags, name2popup) {
     }
 }
 
-function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, level, mapId) {
+function matchesCompartment(cId, feature) {
+    return (!cId
+        || cId == feature.properties.c_id || cId == feature.properties.c_s_id || cId == feature.properties.c_t_id);
+}
+
+
+function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId) {
+    console.log(cId);
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
             return pnt2layer(map, feature, level);
@@ -262,12 +288,12 @@ function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, l
             addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId);
         },
         filter: function (feature, layer) {
-            return !feature.properties.ubiquitous && matchesLevel(level, feature);
+            return !feature.properties.ubiquitous && matchesLevel(level, feature) && matchesCompartment(cId, feature);
         }
     })
 }
 
-function getUbiquitousJson(map, jsn, name2popup, specific_names, name2selection, level, mapId) {
+function getUbiquitousJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId) {
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
             return pnt2layer(map, feature, level);
@@ -276,7 +302,7 @@ function getUbiquitousJson(map, jsn, name2popup, specific_names, name2selection,
             addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId);
         },
         filter: function (feature, layer) {
-            return feature.properties.ubiquitous && matchesLevel(level, feature);
+            return feature.properties.ubiquitous && matchesLevel(level, feature) && matchesCompartment(cId, feature);
         }
     })
 }
@@ -285,15 +311,19 @@ function matchesLevel(level, feature) {
     return level >= feature.properties.zoom_min && level <= feature.properties.zoom_max
 }
 
-function getGeoJson(map, json_data, z, ubLayer, mapId) {
+function getGeoJson(map, json_data, z, ubLayer, mapId, cId) {
     var name2selection = {};
     var name2popup = {};
     var specific_names = [];
 
-    var sp_json = getSpecificJson(map, json_data, name2popup, specific_names, name2selection, z, mapId);
-    var ub_json = getUbiquitousJson(map, json_data, name2popup, specific_names, name2selection, z, mapId);
+    var sp_json = getSpecificJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId);
+    var ub_json = getUbiquitousJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId);
 
     var all_names = Object.keys(name2popup);
+    if (all_names.length <= 0) {
+        return false;
+    }
+
     if (map.getZoom() == z) {
         map.addLayer(sp_json);
         ubLayer.addLayer(ub_json);
@@ -320,12 +350,13 @@ function getGeoJson(map, json_data, z, ubLayer, mapId) {
             setAutocomplete(map, all_names, name2popup);
         }
     });
-
     map.on('overlayremove', function(e) {
         if (e.layer == ubLayer && map.getZoom() == z) {
             setAutocomplete(map, specific_names, name2popup);
         }
     });
+
+    return true;
 }
 
 

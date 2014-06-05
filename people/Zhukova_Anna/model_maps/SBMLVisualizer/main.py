@@ -58,10 +58,11 @@ def main(argv=None):
 	graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True)
 	url = 'comp.html'
 
-	fc, root_compartment, max_zoom = graph2geojson(c_id2info, graph, input_model, True)
-	serialize(directory='/Users/anna/Documents/PhD/magnome/model_maps/mimoza/html/mm/', m_dir_id='mm', input_model=input_model, features=fc,
-	          root_compartment=root_compartment, groups_sbml=groups_sbml, url=url,
-	          main_url='http://mimoza.bordeaux.inria.fr', scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=True, max_zoom=max_zoom)
+	fc, max_zoom = graph2geojson(c_id2info, graph, input_model, True)
+	serialize(directory='/Users/anna/Documents/PhD/magnome/model_maps/mimoza/html/mm/', m_dir_id='mm',
+	          input_model=input_model, features=fc, groups_sbml=groups_sbml, url=url,
+	          main_url='http://mimoza.bordeaux.inria.fr', scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON,
+	          verbose=True, max_zoom=max_zoom)
 
 if __name__ == "__main__":
 	sys.exit(main())

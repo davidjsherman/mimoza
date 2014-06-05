@@ -1,5 +1,5 @@
 from color_keys import key2coord
-from modules.graph_tools import *
+from modules.graph_properties import *
 
 
 # def getKey2Layout(graph):

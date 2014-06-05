@@ -1,5 +1,5 @@
 from tulip import *
-from modules.graph_tools import *
+from modules.graph_properties import *
 
 sp_size = 2.5
 ub_sp_size = 2

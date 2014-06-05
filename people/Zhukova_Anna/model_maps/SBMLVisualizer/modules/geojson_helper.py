@@ -3,7 +3,7 @@ from sympy.logic.boolalg import disjuncts, conjuncts
 import geojson
 from sbml_generalization.utils.obo_ontology import get_chebi, parse
 from modules.rename import get_short_name
-from modules.graph_tools import *
+from modules.graph_properties import *
 
 __author__ = 'anna'
 
@@ -42,6 +42,8 @@ def edge2feature(graph, e, id, scale, level_min, level_max, x_scale, y_scale):
 	         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous,
 	         "generalized": generalized, "transport": is_transport, "zoom_min": level_min,
 	         "zoom_max": level_max}
+	if root[COMPARTMENT][s] == root[COMPARTMENT][t]:
+		props["c_id"] = root[COMPARTMENT][s]
 	return geojson.Feature(geometry=geom, properties=props, id=id)
 
 
@@ -58,8 +60,9 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 	y_scale = DIMENSION / (M_y - m_y)
 
 	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
+	c_id = root[COMPARTMENT][n]
 	props = {"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
-	         "type": type_[n], "zoom_min": level_min, "zoom_max": level_max}
+	         "type": type_[n], "zoom_min": level_min, "zoom_max": level_max, "c_id": c_id}
 
 	if type_[n] in TYPE_BG:
 		return geojson.Feature(geometry=geom, properties=props, id=id)
@@ -73,6 +76,10 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 			props.update(
 				{"gene_association": get_gene_association_list(annotation[n]), "reversible": root[REVERSIBLE][n],
 				 'reactants': ins, 'products': outs, "transport": transport[n]})
+			for m in graph.getInOutNodes(n):
+				if c_id != root[COMPARTMENT][m]:
+					del props["c_id"]
+					break
 		elif TYPE_COMPARTMENT == type_[n]:
 			props['term'] = annotation[n]
 		elif TYPE_SPECIES == type_[n]:
@@ -83,7 +90,7 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 				if transported:
 					break
 			# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
-			comp_name = c_id2info[root[COMPARTMENT][n]][0]
+			comp_name = c_id2info[c_id][0]
 			props.update({"term": annotation[n], "transport": transported, "ubiquitous": root[UBIQUITOUS][n],
 			              "compartment": comp_name})
 

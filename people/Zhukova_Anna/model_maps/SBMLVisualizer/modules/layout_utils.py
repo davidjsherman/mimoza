@@ -3,7 +3,7 @@ from math import radians, atan2, cos, sin, degrees, sqrt
 
 from modules.model_utils import clone_node
 from modules.resize import ub_sp_size, get_n_size
-from modules.graph_tools import *
+from modules.graph_properties import *
 
 COMPONENT_PACKING = "Connected Component Packing"
 
@@ -420,7 +420,6 @@ def layout_generalized_nodes(graph):
 		n_type = root[TYPE][n]
 		# this is a hack as when tulip opens a metanode it rescales inner nodes as if in a square
 		if TYPE_SPECIES == n_type and (abs(alpha % 90) != 0):
-			# s = sqrt(2)
 			root[VIEW_SIZE][n] = tlp.Size(s / sqrt(2), s / sqrt(2))
 		dy = s / ns_num
 		x0, y0 = (s / ns_num) / 2, -s / 2 + dy / 2
@@ -598,20 +597,3 @@ def layout_generalization_based(graph, do_not_open=None, bundle_edges=False):
 	# 		pass
 
 	return clone
-
-
-# def get_corners(graph):
-# 	root = graph.getRoot()
-# 	layout = root.getLayoutProperty("viewLayout")
-# 	size = graph.getRoot().getSizeProperty("viewSize")
-# 	m = lambda l, s: (l.getX() - s.getW() / 2, l.getY() - s.getH() / 2)
-# 	M = lambda l, s: (l.getX() + s.getW() / 2, l.getY() + s.getH() / 2)
-# 	mM = lambda n: (m(layout[n], size[n]), M(layout[n], size[n]))
-# 	(m_x, m_y), (M_x, M_y) = mM(graph.getNodes().next())
-# 	for n in graph.getNodes():
-# 		(m_x_, m_y_), (M_x_, M_y_) = mM(n)
-# 		if m_x_ < m_x: m_x = m_x_
-# 		if m_y_ < m_y: m_y = m_y_
-# 		if M_x_ > M_x: M_x = M_x_
-# 		if M_y_ > M_y: M_y = M_y_
-# 	return (m_x, m_y), (M_x, M_y)

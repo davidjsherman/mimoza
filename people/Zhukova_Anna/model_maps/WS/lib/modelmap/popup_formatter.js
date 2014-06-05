@@ -70,9 +70,9 @@ function formatGo(term) {
     return "";
 }
 
-function formatLink(comp) {
-    if (comp) {
-        return "<a href=\'?name=" + comp.toLowerCase().replace(' ', '_') + "\'>Go inside</a>";
+function formatLink(c_id) {
+    if (c_id) {
+        return "<a href=\'?name=" + c_id + "\'>Go inside</a>";
     }
     return "";
 }
@@ -119,7 +119,7 @@ function addPopups(map, name2popup, specific_names, name2selection, feature, lay
         content += compartment + ch + transported;
         label += compartment + transported;
     } else if (COMPARTMENT == feature.properties.type) {
-        var link = p(formatLink(feature.properties.name));
+        var link = p(formatLink(feature.properties.id));
         var go_term = p(formatGo(feature.properties.term));
         content += go_term + link;
     }
