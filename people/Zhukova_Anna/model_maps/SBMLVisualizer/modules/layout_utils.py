@@ -2,7 +2,7 @@ from tulip import tlp
 from math import radians, atan2, cos, sin, degrees, sqrt
 
 from modules.model_utils import clone_node
-from modules.resize import ub_sp_size, get_n_size
+from modules.resize import ub_sp_size, get_n_size, resize_nodes
 from modules.graph_properties import *
 
 COMPONENT_PACKING = "Connected Component Packing"
@@ -124,6 +124,9 @@ def shorten_edges(graph):
 						alpha = atan2(-dx, -dy)
 						v_lo[s] = tlp.Coord(t_lo.getX() + short_len * sin(alpha), t_lo.getY() + short_len * cos(alpha))
 						moved.add(s)
+
+	# layout_ub_sps(graph)
+	# resize_nodes(graph)
 
 
 def neighbours(ns, org_ns, graph, processed, limit=500):

@@ -94,17 +94,20 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 			if bg:
 				features.append(bg)
 
+
+		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and level == max_zoom[n]]
+
 		level += 1
 
 		if level == max_level:
 			layout_generalized_nodes(meta_graph)
 
-		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)]
 		for n in metas:
 			meta_graph.openMetaNode(n)
 
 		if level == max_level:
 			resize_nodes(meta_graph)
+
 	return geojson.FeatureCollection(features, geometry=geojson.Polygon(
 		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), max_zooming_level
 
