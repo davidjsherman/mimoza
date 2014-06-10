@@ -1,6 +1,7 @@
 from sympy import to_cnf
 from sympy.logic.boolalg import disjuncts, conjuncts
 import geojson
+from modules.resize import get_n_size, get_n_length, get_e_length
 from sbml_generalization.utils.obo_ontology import get_chebi, parse
 from modules.rename import get_short_name
 from modules.graph_properties import *
@@ -35,10 +36,10 @@ def edge2feature(graph, e, id, scale, level_min, level_max, x_scale, y_scale, c_
 	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), size[s].getW() / 2)
 	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), size[t].getW() / 2)
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
-	ubiquitous = graph[UBIQUITOUS][s] or graph[UBIQUITOUS][t]
+	ubiquitous = graph[UBIQUITOUS][e]
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 	is_transport = transport[s] or transport[t]
-	props = {"width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
+	props = {"size": get_e_length(graph, e),#"width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
 	         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous,
 	         "generalized": generalized, "transport": is_transport, "zoom_min": level_min,
 	         "zoom_max": level_max}
@@ -56,7 +57,6 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
-	size = root.getSizeProperty(VIEW_SIZE)
 	transport = root.getBooleanProperty(TRANSPORT)
 	annotation = root.getStringProperty(ANNOTATION)
 
@@ -66,7 +66,8 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 
 	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
 	c_id = root[COMPARTMENT][n]
-	props = {"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+	#size = get_n_size(graph, n)root[VIEW_SIZE][n]
+	props = {"size": get_n_size(graph, n).getW() * x_scale if type_[n] in [TYPE_COMPARTMENT, COMPARTMENT] else get_n_length(graph, n),#"width": size.getW() * x_scale, "height": size.getH() * y_scale,
 	         "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
 	         "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 
@@ -102,7 +103,7 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 
 		bg_feature = None
 		if generalized:
-			bg_props = {"width": size[n].getW() * x_scale, "height": size[n].getH() * y_scale,
+			bg_props = {"size": get_n_size(graph, n).getW() * x_scale if type_[n] in [TYPE_COMPARTMENT, COMPARTMENT] else get_n_length(graph, n),#"width": size.getW() * x_scale, "height": size.getH() * y_scale,
 			            "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1, "zoom_max": max_bg_level,
 			            "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 			bg_feature = geojson.Feature(geometry=geom, properties=bg_props, id=id + 1)

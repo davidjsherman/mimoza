@@ -56,8 +56,9 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 			stoich = 1
 		graph[STOICHIOMETRY][e] = stoich
 		graph[NAME][e] = input_model.getSpecies(s_id).getName()
-		graph[VIEW_SIZE][e] = tlp.Size(ub_e_size, ub_e_size) if graph[UBIQUITOUS][species_node] else tlp.Size(e_size,
-		                                                                                                      e_size)
+		ub = graph[UBIQUITOUS][species_node]
+		graph[VIEW_SIZE][e] = tlp.Size(ub_e_size, ub_e_size) if ub else tlp.Size(e_size, e_size)
+		graph[UBIQUITOUS][e] = ub
 
 	for r in input_model.getListOfReactions():
 		name = r.getName()

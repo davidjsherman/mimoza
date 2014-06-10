@@ -19,13 +19,13 @@ def merge_ubs_for_similar_reactions(graph):
 			ancestor = ancestor, root[COMPARTMENT][node]
 			ancestor2nodes[ancestor].append(node)
 
-	is_ubiquitous = root[UBIQUITOUS]
+	ubiquitous = root[UBIQUITOUS]
 	for nodes in ancestor2nodes.itervalues():
 		if len(nodes) <= 1:
 			continue
 		id2ub_ns = defaultdict(set)
 		for node in nodes:
-			for n in (n for n in graph.getInOutNodes(node) if is_ubiquitous[n]):
+			for n in (n for n in graph.getInOutNodes(node) if ubiquitous[n]):
 				id2ub_ns[root[ID][n]].add(n)
 		for ubs in id2ub_ns.itervalues():
 			merge_nodes(root, ubs)
@@ -55,6 +55,8 @@ def factor_nodes(graph):
 
 		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_LAYOUT, VIEW_SHAPE]: #, VIEW_COLOR
 			root[prop][meta_node] = root[prop][n]
+		for e in root.getInOutEdges(meta_node):
+			root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
 		root[ID][meta_node] = root[ANCESTOR_ID][n]
 		root[NAME][meta_node] = root[ANCESTOR_NAME][n]
 		root[VIEW_SIZE][meta_node] = get_n_size(root, meta_node)
@@ -102,6 +104,8 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root[VIEW_SHAPE][meta_node] = SQUARE_SHAPE
 	root[ID][meta_node] = c_id
 	root[ANNOTATION][meta_node] = go_id
+	for e in root.getInOutEdges(meta_node):
+		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
 	return meta_node
 
 

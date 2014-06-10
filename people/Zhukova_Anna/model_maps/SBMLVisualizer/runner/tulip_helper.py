@@ -3,8 +3,8 @@ import geojson
 from modules.factoring import factor_nodes, comp_to_meta_node
 from modules.geojson_helper import DIMENSION, edge2feature, node2feature, get_min_max
 from modules.graph_properties import VIEW_META_GRAPH, NAME, TYPE, TYPE_REACTION, ID
-from modules.layout_utils import layout, layout_generalized_nodes, shorten_edges
-from modules.resize import resize_edges, resize_nodes
+from modules.layout_utils import layout, layout_generalized_nodes, shorten_edges, layout_ub_sps
+from modules.resize import resize, resize_nodes
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
 
@@ -13,16 +13,6 @@ CELL_GO_ID = 'go:0005623'
 CELL = 'cell'
 
 __author__ = 'anna'
-
-
-def print_info(level, meta_graph):
-	print level, " : ", meta_graph.numberOfEdges(), " ", meta_graph.numberOfNodes()
-	for n in sorted((n for n in meta_graph.getNodes() if meta_graph[TYPE][n] == TYPE_REACTION),
-	                key=lambda n: meta_graph[ID][n]):
-		print meta_graph[ID][n], " (", meta_graph[NAME][n], ') : ', sorted(
-			meta_graph[NAME][m] for m in meta_graph.getInOutNodes(n))
-	print '======================='
-	print
 
 
 def graph2geojson(c_id2info, graph, input_model, verbose):
@@ -38,7 +28,7 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 	max_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
 	root = graph.getRoot()
 	min_zoom, max_zoom = root.getIntegerProperty("min_level"), root.getIntegerProperty("max_level")
-	min_zooming_level = 0  # max_level - 1
+	min_zooming_level = 0 #max_level - 1
 	min_zoom.setAllNodeValue(min_zooming_level)
 	max_zooming_level = max_level + 3
 	max_zoom.setAllNodeValue(max_zooming_level)
@@ -51,7 +41,7 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 			min_zoom[m] = max_level
 	layout(meta_graph)
 	level = max_level - 1
-	while level > 0:
+	while level > min_zooming_level:
 		meta_nodes = []
 		for c_id in {comp.getId() for comp in input_model.getListOfCompartments() if
 		             level == c_id2info[comp.getId()][2][0]}:
@@ -61,12 +51,11 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 			for m in root[VIEW_META_GRAPH][meta_node].getNodes():
 				min_zoom[m] = level
 			meta_nodes.append(meta_node)
-		# resize_nodes(meta_graph)
-		resize_edges(meta_graph)
 		layout(meta_graph)
+		layout_ub_sps(meta_graph)
+		resize(graph)
 		shorten_edges(meta_graph)
 		level -= 1
-	# print_info(level, meta_graph)
 	features = []
 	(m_x, m_y), (M_x, M_y) = get_min_max(meta_graph)
 	x_scale = DIMENSION / (M_x - m_x)
@@ -77,14 +66,12 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 
 	onto = parse(get_chebi())
 	i = 0
-	e_min_zoom = lambda e: max(min_zoom[meta_graph.target(e)], min_zoom[meta_graph.source(e)])
-	e_max_zoom = lambda e: min(max_zoom[meta_graph.target(e)], max_zoom[meta_graph.source(e)])
+	e_min_zoom = lambda e, gr: max(min_zoom[gr.target(e)], min_zoom[gr.source(e)])
+	e_max_zoom = lambda e, gr: min(max_zoom[gr.target(e)], max_zoom[gr.source(e)])
 
 	while level <= max_level:
-		# print_info(level, meta_graph)
-
-		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e)):
-			features.append(edge2feature(meta_graph, e, i, scale, e_min_zoom(e), e_max_zoom(e), x_scale, y_scale, c_id2outs))
+		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e, meta_graph)):
+			features.append(edge2feature(meta_graph, e, i, scale, e_min_zoom(e, meta_graph), e_max_zoom(e, meta_graph), x_scale, y_scale, c_id2outs))
 			i += 1
 
 		for n in (n for n in meta_graph.getNodes() if level == min_zoom[n]):
@@ -107,6 +94,9 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 
 		if level == max_level:
 			resize_nodes(meta_graph)
+		else:
+			layout_ub_sps(meta_graph)
+
 
 	return geojson.FeatureCollection(features, geometry=geojson.Polygon(
 		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), max_zooming_level

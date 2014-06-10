@@ -50,7 +50,7 @@ function adjustMapSize(mapId) {
         const LEAFLET_POPUP_MARGIN = 10;
         $(".leaflet-popup-content").css({
             'maxHeight': height - LEAFLET_POPUP_MARGIN,
-            'maxWidth': width -LEAFLET_POPUP_MARGIN
+            'maxWidth': width - LEAFLET_POPUP_MARGIN
         });
     }
 }
@@ -101,7 +101,7 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
         padding: [MARGIN, MARGIN],
         layers: [tiles, ubLayer],
         crs: L.CRS.Simple
-    });
+    }).setView([0, 0], 1);
 
     if (jsonData == null) {
         return map;
@@ -110,7 +110,7 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
     var southWest = map.unproject([0 - MARGIN, MAP_DIMENSION_SIZE + MARGIN], 1);
     var northEast = map.unproject([MAP_DIMENSION_SIZE + MARGIN, 0 - MARGIN], 1);
     var bounds = new L.LatLngBounds(southWest, northEast);
-    map.setView(bounds.getCenter(), 1);
+//    map.setView(bounds.getCenter(), 1);
     map.setMaxBounds(bounds);
 
     handlePopUpClosing(map);
@@ -154,19 +154,43 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
     return map;
 }
 
+const sp_size = 2.5;
+const ub_sp_size = 2;
+const r_size = 1.5;
+
+const ub_e_size = 0.5;
+const e_size = 0.8;
+
+function get_w(feature) {
+    var fType = feature.properties.type;
+    if (EDGE == fType) {
+        return feature.properties.ubiquitous ? ub_e_size : e_size * feature.properties.size;
+    }
+    if ((SPECIES == fType) || (BG_SPECIES == fType)) {
+//        w /= Math.sqrt(2);
+//        h /= Math.sqrt(2);
+        return feature.properties.ubiquitous ? ub_sp_size : sp_size * feature.properties.size;
+    }
+    if ((REACTION == fType) || (BG_REACTION == fType)) {
+        return r_size * feature.properties.size * 2;
+    }
+    return feature.properties.size;
+}
 
 function pnt2layer(map, feature, zoom) {
     var e = feature.geometry.coordinates;
-    var w = feature.properties.width / 2;
-    var h =  feature.properties.height / 2;
+//    var w = feature.properties.width / 2;
+//    var h =  feature.properties.height / 2;
+    var w = get_w(feature) / 2;
     if (EDGE == feature.properties.type) {
-        var color = feature.properties.ubiquitous ? GREY : (feature.properties.generalized ? (feature.properties.transport ? TURQUOISE : GREEN) : (feature.properties.transport ? VIOLET : BLUE));
+        var color = feature.properties.ubiquitous ? GREY : (feature.properties.generalized
+            ? (feature.properties.transport ? TURQUOISE : GREEN) : (feature.properties.transport ? VIOLET : BLUE));
         return L.polyline(e.map(function (coord) {
             return map.unproject(coord, 1)
         }), {
             color: color,
             opacity: 1,
-            weight: w * Math.pow(2, zoom - 1),
+            weight: w * Math.pow(2, zoom),
             lineCap: ROUND,
             lineJoin: ROUND,
             clickable: false,
@@ -176,10 +200,6 @@ function pnt2layer(map, feature, zoom) {
         });
     }
     var x = e[0], y = e[1];
-    if ((SPECIES == feature.properties.type) || (BG_SPECIES == feature.properties.type)) {
-        w /= Math.sqrt(2);
-        h /= Math.sqrt(2);
-    }
     var is_bg = -1 != BG.indexOf(feature.properties.type);
     var props = {
         name: feature.properties.name,
@@ -191,20 +211,24 @@ function pnt2layer(map, feature, zoom) {
         opacity: 1,
         lineCap: ROUND,
         lineJoin: ROUND,
-        weight: is_bg ? 0 : Math.min(2, w / 10 * Math.pow(2, map.getZoom() - 1)),
+        weight: is_bg ? 0 : Math.min(2, w / 10 * Math.pow(2, zoom)),
         fill: true,
         clickable: !is_bg,
         zIndexOffset: is_bg ? -2000 : 1000,
         riseOnHover: !is_bg
     };
-    var southWest = map.unproject([x - w, y + h], 1),
-        northEast = map.unproject([x + w, y - h], 1),
+    var southWest = map.unproject([x - w, y + w], 1),
+        northEast = map.unproject([x + w, y - w], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
-    var d = southWest.distanceTo(northEast);
+//    var d = southWest.distanceTo(northEast);
+    var scaleFactor = Math.pow(2, zoom);
+    var d = w * scaleFactor;
     var centre = map.unproject([x, y], 1);//bounds.getCenter();
     if (BG_SPECIES == feature.properties.type) {
         props["fillColor"] = ORANGE;
-        return L.circle(centre, d / 2, props);
+        node = L.circleMarker(centre, props);
+        node.setRadius(d);
+        return node;
     }
     if (BG_REACTION == feature.properties.type) {
         props["fillColor"] = feature.properties.transport ? TURQUOISE : GREEN;
@@ -223,20 +247,20 @@ function pnt2layer(map, feature, zoom) {
         node = L.rectangle(bounds, props);
     } else if (SPECIES == feature.properties.type) {
         props["fillColor"] = feature.properties.ubiquitous ? GREY : (feature.properties.generalized ? ORANGE : RED);
-        node = L.circle(centre, d / 2, props);
+        node = L.circleMarker(centre, props);
+        node.setRadius(d);
     } else {
         return null;
     }
     node = L.featureGroup([node]);
-    var scaleFactor = Math.pow(2, zoom);
-    if (h * scaleFactor >= 10) {
-        var size = Math.max(h * scaleFactor / 4, 8);
+    if (w * scaleFactor * 0.89 >= 10) {
+        var size = Math.max(w * scaleFactor * 0.89 / 4, 8);
         var label = L.marker(centre,
             {
                 icon: L.divIcon({
                     className: 'label',
                     html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label + "</span>",
-                    iconSize: [w * scaleFactor, h * scaleFactor],
+                    iconSize: [w * scaleFactor * 0.89, w * scaleFactor * 0.89],
                     zIndexOffset: -1000,
                     riseOnHover: false
                 })
@@ -272,8 +296,9 @@ function setAutocomplete(map, tags, name2popup) {
     }
 }
 
+
 function matchesCompartment(cId, feature) {
-    outCompIds = feature.properties.c_outs ? feature.properties.c_outs.split(',') : [];
+    var outCompIds = feature.properties.c_outs ? feature.properties.c_outs.split(',') : [];
     return !cId || cId == feature.properties.c_id || outCompIds.indexOf(cId) > -1;
 }
 
