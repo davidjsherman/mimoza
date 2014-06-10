@@ -191,15 +191,21 @@ def layout_comp(graph):
 	pack_cc(graph)
 
 
+def get_distance(n2size, qo):
+	return max(
+		n2size[n] + (max(n2size[m] for m in qo.getOutNodes(n)) if qo.outdeg(n) else 0) for n in n2size.iterkeys())
+
+
 def layout_hierarchically(qo, margin=5):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(HIERARCHICAL_GRAPH, qo)
 	if qo.numberOfNodes() > 1:
-		[s, s1] = sorted((root[VIEW_SIZE][n] for n in qo.getNodes()))[-2:]
+		n2size = {n: get_n_size(qo, n).getW() / 2 for n in qo.getNodes()}
 		# looks like there is a bug in Tulip and it uses the 'layer spacing' value
 		# instead of the 'node spacing' one and visa versa
-		ds["layer spacing"] = s.getW() / 2 + s1.getW() / 2 + margin
-		ds["node spacing"] = s.getH() / 2 + s1.getH() / 2 + margin
+		d = get_distance(n2size, qo)
+		ds["layer spacing"] = d + margin
+		ds["node spacing"] = d + margin
 	qo.computeLayoutProperty(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
 
 
@@ -207,8 +213,8 @@ def layout_circle(qo, margin=5):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(CIRCULAR, qo)
 	if qo.numberOfNodes() > 1:
-		[s, s1] = sorted((root[VIEW_SIZE][n] for n in qo.getNodes()))[-2:]
-		ds["minDistCircle"] = s.getW() / 2 + s1.getW() / 2
+		n2size = {n: get_n_size(qo, n).getW() / 2 for n in qo.getNodes()}
+		ds["minDistCircle"] = get_distance(n2size, qo) + margin
 		ds["minDistLevel"] = margin
 		ds["minDistCC"] = 1
 		ds["minDistSibling"] = 0
@@ -402,7 +408,6 @@ def layout_generalized_nodes(graph):
 	root = graph.getRoot()
 	view_meta_graph = root.getGraphProperty(VIEW_META_GRAPH)
 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
-	view_size = root.getSizeProperty(VIEW_SIZE)
 
 	meta_ns = {n for n in graph.getNodes() if graph.isMetaNode(n)}
 	meta_sps = {n for n in meta_ns if TYPE_SPECIES == root[TYPE][n]}
@@ -442,7 +447,7 @@ def layout_generalized_nodes(graph):
 
 	for n in meta_ns:
 		lo = view_layout[n]
-		meta_neighbours = lambda nodes: sorted((t for t in nodes if graph.isMetaNode(t)), key=lambda t: -view_size[t].getW())
+		meta_neighbours = lambda nodes: sorted((t for t in nodes if graph.isMetaNode(t)), key=lambda t: -view_meta_graph[t].numberOfNodes())
 		o_n_1 = meta_neighbours(graph.getInNodes(n))
 		o_n_2 = meta_neighbours(graph.getOutNodes(n))
 		if not o_n_1:
@@ -454,33 +459,32 @@ def layout_generalized_nodes(graph):
 
 		mg = view_meta_graph[n]
 		ns = sorted(mg.getNodes(), key=lambda it: node2key[it] if it in node2key else (root[ID][it], 0, ''))#root[ID][it])
-		s = view_size[n].getW()
+		s = get_n_size(graph, n).getW()
 		ns_num = len(ns)
-		s_m = tlp.Size(s / ns_num, s / ns_num)
-		n_type = root[TYPE][n]
+		s_width = s / ns_num
+		s_m = tlp.Size(s_width, s_width)
+		# n_type = root[TYPE][n]
 		# this is a hack as when tulip opens a metanode it rescales inner nodes as if in a square
-		if TYPE_SPECIES == n_type and (abs(alpha % 90) != 0):
-			root[VIEW_SIZE][n] = tlp.Size(s / sqrt(2), s / sqrt(2))
-		dy = s / ns_num
-		x0, y0 = (s / ns_num) / 2, -s / 2 + dy / 2
+		# if TYPE_SPECIES == n_type and (abs(alpha % 90) != 0):
+		# 	root[VIEW_SIZE][n] = tlp.Size(s / sqrt(2), s / sqrt(2))
+		x0, y0 = s / 2, s_width / 2
 		x, y = x0, y0
 		for m in ns:
 			root[VIEW_SIZE][m] = s_m
 			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
-			root[VIEW_SIZE][m] = s_m
-			y += dy
+			y += s_width
 
-		# view_layout.translate(tlp.Coord(-x0, -y0), mg)
+		view_layout.translate(tlp.Coord(-s / 2, -s / 2), mg)
 		view_layout.rotateZ(-alpha, mg)
-		# view_layout.translate(tlp.Coord(x0, y0), mg)
+		view_layout.translate(tlp.Coord(s / 2, s / 2), mg)
 
 		o_n_1.extend(o_n_2)
 		for m in o_n_1:
 			alpha == get_alpha(view_layout[m], view_layout[n])
 			if alpha == 0 or alpha == 180 or alpha == -180:
-				view_layout.translate(tlp.Coord(-x0, -y0), mg)
+				view_layout.translate(tlp.Coord(-s / 2, -s / 2), mg)
 				view_layout.rotateZ(-5, mg)
-				view_layout.translate(tlp.Coord(x0, y0), mg)
+				view_layout.translate(tlp.Coord(s / 2, s / 2), mg)
 
 
 

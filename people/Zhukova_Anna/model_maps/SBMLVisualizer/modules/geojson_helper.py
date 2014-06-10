@@ -25,7 +25,7 @@ def get_border_coord(xy_center, other_xy, r):
 	return transformation(x_center, other_x), transformation(y_center, other_y)
 
 
-def edge2feature(graph, e, id, scale, level_min, level_max, x_scale, y_scale, c_id2outs):
+def edge2feature(graph, e, id, scale, level_min, level_max, c_id2outs):
 	root = graph.getRoot()
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
 	transport = root.getBooleanProperty(TRANSPORT)
@@ -53,22 +53,18 @@ def edge2feature(graph, e, id, scale, level_min, level_max, x_scale, y_scale, c_
 	return geojson.Feature(geometry=geom, properties=props, id=id)
 
 
-def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info, c_id2outs):
+def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info, c_id2outs, scale_coefficient):
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
-	layout = root.getLayoutProperty(VIEW_LAYOUT)
+	layout = graph.getLayoutProperty(VIEW_LAYOUT)
 	transport = root.getBooleanProperty(TRANSPORT)
 	annotation = root.getStringProperty(ANNOTATION)
 
-	(m_x, m_y), (M_x, M_y) = get_min_max(graph)
-	x_scale = DIMENSION / (M_x - m_x)
-	y_scale = DIMENSION / (M_y - m_y)
-
 	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
 	c_id = root[COMPARTMENT][n]
-	#size = get_n_size(graph, n)root[VIEW_SIZE][n]
-	props = {"size": get_n_size(graph, n).getW() * x_scale if type_[n] in [TYPE_COMPARTMENT, COMPARTMENT] else get_n_length(graph, n),#"width": size.getW() * x_scale, "height": size.getH() * y_scale,
-	         "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
+	size = get_n_size(graph, n).getW() * scale_coefficient if type_[n] in [TYPE_COMPARTMENT,
+	                                                                     COMPARTMENT] else get_n_length(graph, n)
+	props = {"size": size, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
 	         "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 
 	if type_[n] in TYPE_BG:
@@ -103,8 +99,7 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 
 		bg_feature = None
 		if generalized:
-			bg_props = {"size": get_n_size(graph, n).getW() * x_scale if type_[n] in [TYPE_COMPARTMENT, COMPARTMENT] else get_n_length(graph, n),#"width": size.getW() * x_scale, "height": size.getH() * y_scale,
-			            "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1, "zoom_max": max_bg_level,
+			bg_props = {"size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1, "zoom_max": max_bg_level,
 			            "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 			bg_feature = geojson.Feature(geometry=geom, properties=bg_props, id=id + 1)
 		return geojson.Feature(geometry=geom, properties=props, id=id), bg_feature
@@ -149,10 +144,23 @@ def triplet(c, lettercase=LOWERCASE):
 
 
 def get_min_max(graph):
-	lo = graph.getRoot().getLayoutProperty(VIEW_LAYOUT)
-	# (m_x, m_y), (M_x, M_y) = get_corners(graph)
-	m, M = lo.getMin(graph), lo.getMax(graph)
+	root = graph.getRoot()
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	view_size = root.getSizeProperty(VIEW_SIZE)
+	m, M = view_layout.getMin(graph), view_layout.getMax(graph)
 	(m_x, m_y), (M_x, M_y) = (m.getX(), m.getY()), (M.getX(), M.getY())
+
+	for n in graph.getNodes():
+		x, y = view_layout[n].getX(), view_layout[n].getY()
+		w, h = view_size[n].getW() / 2, view_size[n].getH() / 2
+		if x - w < m_x:
+			m_x = x - w
+		if x + w > M_x:
+			M_x = x + w
+		if y - h < m_y:
+			m_y = y - h
+		if y + h > M_y:
+			M_y = y + h
 
 	w, h = M_x - m_x, M_y - m_y
 	if w > h:

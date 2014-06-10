@@ -3,7 +3,7 @@ import geojson
 from modules.factoring import factor_nodes, comp_to_meta_node
 from modules.geojson_helper import DIMENSION, edge2feature, node2feature, get_min_max
 from modules.graph_properties import VIEW_META_GRAPH, NAME, TYPE, TYPE_REACTION, ID
-from modules.layout_utils import layout, layout_generalized_nodes, shorten_edges, layout_ub_sps
+from modules.layout_utils import layout, layout_generalized_nodes, shorten_edges, layout_ub_sps, remove_overlaps
 from modules.resize import resize, resize_nodes
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
@@ -55,14 +55,13 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 		layout_ub_sps(meta_graph)
 		resize(graph)
 		shorten_edges(meta_graph)
+		remove_overlaps(meta_graph)
+		layout_ub_sps(meta_graph)
 		level -= 1
 	features = []
-	(m_x, m_y), (M_x, M_y) = get_min_max(meta_graph)
-	x_scale = DIMENSION / (M_x - m_x)
-	y_scale = DIMENSION / (M_y - m_y)
 
-	def scale(x, y):
-		return [(x - m_x) * x_scale, (M_y - y) * y_scale]
+	(m_x, m_y), (M_x, M_y) = get_min_max(meta_graph)
+	scale_coefficient = DIMENSION / (M_x - m_x)
 
 	onto = parse(get_chebi())
 	i = 0
@@ -70,12 +69,17 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 	e_max_zoom = lambda e, gr: min(max_zoom[gr.target(e)], max_zoom[gr.source(e)])
 
 	while level <= max_level:
+
+		def scale(x, y):
+			x, y = (x - m_x) * scale_coefficient, (M_y - y) * scale_coefficient
+			return [x, y]
+
 		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e, meta_graph)):
-			features.append(edge2feature(meta_graph, e, i, scale, e_min_zoom(e, meta_graph), e_max_zoom(e, meta_graph), x_scale, y_scale, c_id2outs))
+			features.append(edge2feature(meta_graph, e, i, scale, e_min_zoom(e, meta_graph), e_max_zoom(e, meta_graph), c_id2outs))
 			i += 1
 
 		for n in (n for n in meta_graph.getNodes() if level == min_zoom[n]):
-			f, bg = node2feature(meta_graph, n, i, scale, min_zoom[n], max_zoom[n], max_zooming_level, onto, c_id2info, c_id2outs)
+			f, bg = node2feature(meta_graph, n, i, scale, min_zoom[n], max_zoom[n], max_zooming_level, onto, c_id2info, c_id2outs, scale_coefficient)
 			i += (2 if bg else 1)
 			features.append(f)
 			if bg:
@@ -94,8 +98,8 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 
 		if level == max_level:
 			resize_nodes(meta_graph)
-		else:
-			layout_ub_sps(meta_graph)
+		# else:
+		# 	layout_ub_sps(meta_graph)
 
 
 	return geojson.FeatureCollection(features, geometry=geojson.Polygon(

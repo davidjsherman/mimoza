@@ -169,10 +169,10 @@ function get_w(feature) {
     if ((SPECIES == fType) || (BG_SPECIES == fType)) {
 //        w /= Math.sqrt(2);
 //        h /= Math.sqrt(2);
-        return feature.properties.ubiquitous ? ub_sp_size : sp_size * feature.properties.size;
+        return (feature.properties.ubiquitous ? ub_sp_size : sp_size * feature.properties.size) / Math.sqrt(2);
     }
     if ((REACTION == fType) || (BG_REACTION == fType)) {
-        return r_size * feature.properties.size * 2;
+        return r_size * feature.properties.size;
     }
     return feature.properties.size;
 }
@@ -220,14 +220,13 @@ function pnt2layer(map, feature, zoom) {
     var southWest = map.unproject([x - w, y + w], 1),
         northEast = map.unproject([x + w, y - w], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
-//    var d = southWest.distanceTo(northEast);
     var scaleFactor = Math.pow(2, zoom);
-    var d = w * scaleFactor;
+    var r = w * scaleFactor;
     var centre = map.unproject([x, y], 1);//bounds.getCenter();
     if (BG_SPECIES == feature.properties.type) {
         props["fillColor"] = ORANGE;
         node = L.circleMarker(centre, props);
-        node.setRadius(d);
+        node.setRadius(r);
         return node;
     }
     if (BG_REACTION == feature.properties.type) {
@@ -248,7 +247,7 @@ function pnt2layer(map, feature, zoom) {
     } else if (SPECIES == feature.properties.type) {
         props["fillColor"] = feature.properties.ubiquitous ? GREY : (feature.properties.generalized ? ORANGE : RED);
         node = L.circleMarker(centre, props);
-        node.setRadius(d);
+        node.setRadius(r);
     } else {
         return null;
     }
