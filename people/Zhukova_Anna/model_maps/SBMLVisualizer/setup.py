@@ -10,12 +10,12 @@ if version < '2.2.3':
     DistributionMetadata.download_url = None
 
 
-setup(name='SBMLVisualizer',
-      description='SBML visualization utilities.',
+setup(name='Mimoza',
+      description='SBML zoomable visualization utilities.',
       long_description=open('README.txt').read(),
       author='Anna Zhukova',
       author_email='anna.zhukova@inria.fr',
-      url='https://team.inria.fr/magnome/software/',
+      url='http://mimoza.bordeaux.inria.fr/',
       version='1.0',
       packages=find_packages(exclude=['plugins']),
       package_data={},
