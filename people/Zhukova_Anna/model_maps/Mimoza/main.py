@@ -9,17 +9,20 @@ import os
 from os.path import dirname, abspath
 from shutil import copytree, copyfile
 import shutil
+from tulip import tlp
+
+from libsbml import SBMLReader
+
 from mimoza.mimoza import JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, MIMOZA_URL
 from modules.sbml2tlp import import_sbml
 from runner.mod_gen_helper import check_if_already_generalized
 from runner.serializer import serialize
-from libsbml import SBMLReader
-from tulip import tlp
 from runner.tulip_helper import graph2geojson
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
 import mimoza.mimoza
-from utils.md5_checker import check_md5
+from modules.md5_checker import check_md5
+
 
 __author__ = 'anna'
 help_message = '''

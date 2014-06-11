@@ -14,7 +14,7 @@ from libsbml import SBMLReader, writeSBMLToFile
 from modules.html_generator import create_thanks_for_uploading_html, create_thanks_for_uploading_generalized_html
 from mimoza.mimoza import *
 from runner.mod_gen_helper import check_if_already_generalized
-from utils.md5_checker import check_md5
+from modules.md5_checker import check_md5
 
 
 ALREADY_EXISTS = 1
