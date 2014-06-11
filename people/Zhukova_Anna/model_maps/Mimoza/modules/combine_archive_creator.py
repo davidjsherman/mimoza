@@ -1,8 +1,6 @@
 import mimetypes
 import os
-from shutil import copytree
 from zipfile import ZipFile, ZIP_DEFLATED
-import sys
 
 __author__ = 'anna'
 
@@ -39,15 +37,5 @@ def archive(path, zip_file):
 	with ZipFile(zip_file, 'a') as zip:
 		zip.write(manifest_file, os.path.relpath(manifest_file, path), compress_type=ZIP_DEFLATED)
 
-
-def main(argv=None):
-	path = "/Users/anna/Desktop/yst/"
-	copytree(path, "/Users/anna/Desktop/yst2")
-	zip = "/Users/anna/Desktop/yst.zip"
-	archive(path, zip)
-
-
-if __name__ == "__main__":
-	sys.exit(main())
 
 
