@@ -57,7 +57,7 @@ sys.stdout.flush()
 
 temp = os.dup(sys.stdout.fileno())
 try:
-	url = 'comp.html'
+	url = '/%s/comp.html' % m_dir_id
 
 	if not os.path.exists('../html/%s/comp.html' % m_dir_id):
 		chebi = parse(get_chebi())
