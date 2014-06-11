@@ -1,7 +1,8 @@
 import os
-from shutil import copyfile
+from shutil import copyfile, copytree
 
 import geojson
+import shutil
 
 from modules.combine_archive_creator import archive
 from modules.html_generator import create_html, create_embedded_html
@@ -10,7 +11,7 @@ from sbml_generalization.utils.logger import log
 __author__ = 'anna'
 
 
-def serialize(directory, m_dir_id, input_model, features, groups_sbml, url, main_url, scripts, css, fav, verbose,
+def serialize(directory, m_dir_id, input_model, features, groups_sbml, main_url, scripts, css, fav, verbose,
               max_zoom, comps, map_id=None):
 	json = '%s/gjson.json' % directory
 	with open(json, 'w+') as f:
@@ -33,11 +34,11 @@ def serialize(directory, m_dir_id, input_model, features, groups_sbml, url, main
 
 	create_embedded_html(input_model, directory, gjson_json, scripts, css, fav, map_id, max_zoom)
 
-	archive_path = "%s/../../uploads/%s.zip" % (directory, m_dir_id)
-	archive(directory, archive_path)
-	if os.path.exists(archive_path):
-		copyfile(archive_path, "%s/%s.zip" % (directory, m_dir_id))
-		os.remove(archive_path)
-
-	log(verbose, 'returning url: %s' % url)
-	return url
+	temp_copy = '%s/%s' % (directory, m_dir_id)
+	archive_path = "%s/%s.zip" % (directory, m_dir_id)
+	if not os.path.exists(temp_copy):
+		copytree(directory, temp_copy)
+	if os.path.exists(temp_copy):
+		archive(temp_copy, archive_path)
+		shutil.rmtree(temp_copy)
+	return archive_path

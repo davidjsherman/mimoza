@@ -28,7 +28,7 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 	max_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
 	root = graph.getRoot()
 	min_zoom, max_zoom = root.getIntegerProperty("min_level"), root.getIntegerProperty("max_level")
-	min_zooming_level = 0 #max_level - 1
+	min_zooming_level = 0#max_level - 1
 	min_zoom.setAllNodeValue(min_zooming_level)
 	max_zooming_level = max_level + 3
 	max_zoom.setAllNodeValue(max_zooming_level)

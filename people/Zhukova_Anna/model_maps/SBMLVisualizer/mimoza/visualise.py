@@ -1,5 +1,6 @@
-# !/usr/local/bin/python2.7
+#!/usr/local/bin/python2.7
 # -*- coding: UTF-8 -*-
+
 import logging
 import os
 import cgi
@@ -56,7 +57,7 @@ sys.stdout.flush()
 
 temp = os.dup(sys.stdout.fileno())
 try:
-	url = '%s/%s/comp.html' % (MIMOZA_URL, m_dir_id)
+	url = 'comp.html'
 
 	if not os.path.exists('../html/%s/comp.html' % m_dir_id):
 		chebi = parse(get_chebi())
@@ -68,10 +69,9 @@ try:
 		log(True, 'sbml -> tlp')
 		graph = tlp.newGraph()
 		graph, onto, c_id2info = import_sbml(graph, input_model, groups_sbml, True)
-
 		features, max_zoom = graph2geojson(c_id2info, graph, input_model, True)
-		url = serialize(directory, m_dir_id, input_model, features, groups_sbml, url, MIMOZA_URL,
-		                JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True, max_zoom)
+		serialize(directory, m_dir_id, input_model, features, groups_sbml, MIMOZA_URL,
+		                JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True, max_zoom, c_id2info)
 
 except Exception as e:
 	log(True, e.message)

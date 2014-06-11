@@ -2,7 +2,6 @@
 # -*- coding: UTF-8 -*-
 
 import cgi
-import hashlib
 import logging
 import os
 import cgitb
@@ -15,6 +14,7 @@ from libsbml import SBMLReader, writeSBMLToFile
 from modules.html_generator import create_thanks_for_uploading_html, create_thanks_for_uploading_generalized_html
 from mimoza.mimoza import *
 from runner.mod_gen_helper import check_if_already_generalized
+from utils.md5_checker import check_md5
 
 
 ALREADY_EXISTS = 1
@@ -70,13 +70,6 @@ def upload_file():
     else:
         return NOT_MODEL, None
 
-
-def check_md5(file_name):
-    with open(file_name) as file_to_check:
-        # read contents of the file
-        data = file_to_check.read()
-        # pipe contents of the file through
-        return hashlib.md5(data).hexdigest()
 
 verbose = True
 
