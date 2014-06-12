@@ -1,7 +1,7 @@
 import tulipplugins
 
 from tulip import *
-from tulip.layout.layout_utils import layout
+from sbml_vis.tulip.layout.layout_utils import layout
 
 
 class SBMLLayout(tlp.Algorithm):

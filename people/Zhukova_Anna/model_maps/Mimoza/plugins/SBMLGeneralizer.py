@@ -1,7 +1,7 @@
 import tulipplugins
 
 from tulip import *
-from tulip.cluster.factoring import factor_nodes
+from sbml_vis.tulip.cluster.factoring import factor_nodes
 
 
 class SBMLGeneralizer(tlp.Algorithm):

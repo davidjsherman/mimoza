@@ -1,7 +1,7 @@
 import tulipplugins
 
 from tulip import *
-from tulip.resize import get_n_size, get_e_size
+from sbml_vis.tulip.resize import resize
 
 
 class SBMLResizer(tlp.Algorithm):
@@ -12,11 +12,7 @@ class SBMLResizer(tlp.Algorithm):
 		return True, ""
 
 	def run(self):
-		view_size = self.graph.getRoot().getSizeProperty("viewSize")
-		for n in self.graph.getNodes():		
-			view_size[n] = get_n_size(self.graph, n)
-		for e in self.graph.getEdges():		
-			view_size[e] = get_e_size(self.graph, e)
+		resize(self.graph)
 		return True
 
 # The line below does the magic to register the plugin to the plugin database

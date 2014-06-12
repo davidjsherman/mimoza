@@ -1,7 +1,7 @@
 import tulipplugins
 
 from tulip import *
-from tulip.layout.layout_utils import layout_generalization_based
+from sbml_vis.tulip.layout.layout_utils import layout_generalization_based
 
 
 class SBMLGeneralizationBasedLayout(tlp.Algorithm):

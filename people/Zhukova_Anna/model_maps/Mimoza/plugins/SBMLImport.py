@@ -4,7 +4,7 @@ from libsbml import SBMLReader
 import tulipplugins
 
 from tulip import *
-from converter.sbml2tlp import import_sbml
+from sbml_vis.converter.sbml2tlp import import_sbml
 
 
 class SBMLImport(tlp.ImportModule):

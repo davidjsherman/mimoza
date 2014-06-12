@@ -1,7 +1,7 @@
 import tulipplugins
 
 from tulip import *
-from tulip.layout.layout_utils import layout_ub_sps
+from sbml_vis.tulip.layout.layout_utils import layout_ub_sps
 
 
 class SBMLLayoutUbiquitousSpecies(tlp.Algorithm):
