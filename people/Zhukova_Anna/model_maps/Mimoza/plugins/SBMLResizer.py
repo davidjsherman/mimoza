@@ -9,7 +9,7 @@ class SBMLResizer(tlp.Algorithm):
 		tlp.Algorithm.__init__(self, context)
 
 	def check(self):
-		return True, ""
+		return True, " "
 
 	def run(self):
 		resize(self.graph)
