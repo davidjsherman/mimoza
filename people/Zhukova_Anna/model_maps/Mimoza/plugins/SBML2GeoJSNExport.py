@@ -1,6 +1,7 @@
-from tulip import *
 import tulipplugins
-from modules.geojson_helper import tulip2geojson
+
+from tulip import *
+from converter.tlp2geojson import tulip2geojson
 
 
 class SBML2GeoJSNExport(tlp.Algorithm):

@@ -1,6 +1,7 @@
-from tulip import *
 import tulipplugins
-from modules.resize import get_n_size, get_e_size
+
+from tulip import *
+from tulip.resize import get_n_size, get_e_size
 
 
 class SBMLResizer(tlp.Algorithm):

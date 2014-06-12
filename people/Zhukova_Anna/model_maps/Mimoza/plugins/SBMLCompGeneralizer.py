@@ -1,7 +1,8 @@
-from tulip import *
 import tulipplugins
-from modules.factoring import factor_comps
-from modules.graph_tools import find_subgraph_by_name
+
+from tulip import *
+from tulip.cluster.factoring import factor_comps
+from sbml_vis.graph_tools import find_subgraph_by_name
 
 
 class SBMLCompGeneralizer(tlp.Algorithm):

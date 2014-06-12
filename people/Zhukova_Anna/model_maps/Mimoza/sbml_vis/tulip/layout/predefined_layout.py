@@ -1,5 +1,9 @@
-from color_keys import key2coord
-from modules.graph_properties import *
+from sbml_vis.tulip.color.color_keys import key2coord
+from sbml_vis.tulip.graph_properties import *
+
+
+CONJUGATE_ACID_OF = 'is_conjugate_acid_of'
+CONJUGATE_BASE_OF = 'is_conjugate_base_of'
 
 
 # def getKey2Layout(graph):
@@ -72,5 +76,5 @@ def get_keys(n, graph, onto, primary=False):
 
 
 def get_primary_id(term, onto):
-	terms = {term} | onto.getEquivalentTerms(term, None, 0, {'is_conjugate_base_of', 'is_conjugate_acid_of'})
+	terms = {term} | onto.getEquivalentTerms(term, None, 0, {CONJUGATE_BASE_OF, CONJUGATE_ACID_OF})
 	return sorted([t.getId() for t in terms])[0]

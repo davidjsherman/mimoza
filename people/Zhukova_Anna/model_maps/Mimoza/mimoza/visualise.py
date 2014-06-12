@@ -5,17 +5,20 @@ import logging
 import os
 import cgi
 import cgitb
-from tulip import tlp
 import sys
 
 from libsbml import SBMLReader
 
-from runner.serializer import serialize
-from sbml_generalization.utils.logger import log
+from tulip import tlp
+
+from sbml_vis.file.serializer import serialize
+from sbml_vis.converter.graph2geojson import graph2geojson
+from sbml_vis.converter.sbml2tlp import import_sbml
 from mimoza.mimoza import *
-from modules.sbml2tlp import import_sbml
-from runner.tulip_helper import graph2geojson
+
+from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
+
 
 cgitb.enable()
 # Windows needs stdio set for binary mode.

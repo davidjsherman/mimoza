@@ -1,12 +1,15 @@
 import geojson
 
-from modules.factoring import factor_nodes, comp_to_meta_node
-from modules.geojson_helper import DIMENSION, edge2feature, node2feature, get_min_max
-from modules.graph_properties import VIEW_META_GRAPH, NAME, TYPE, TYPE_REACTION, ID
-from modules.layout_utils import layout, layout_generalized_nodes, shorten_edges, layout_ub_sps, remove_overlaps
-from modules.resize import resize, resize_nodes
+from sbml_vis.tulip.cluster.factoring import factor_nodes, comp_to_meta_node
+from sbml_vis.converter.tlp2geojson import edge2feature, node2feature
+from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH
+from sbml_vis.tulip.layout.layout_utils import layout, layout_generalized_nodes, shorten_edges, layout_ub_sps, remove_overlaps
+from sbml_vis.tulip.resize import resize_nodes, get_min_max, resize
+
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
+
+DIMENSION = 512
 
 
 CELL_GO_ID = 'go:0005623'
@@ -60,7 +63,7 @@ def graph2geojson(c_id2info, graph, input_model, verbose):
 		level -= 1
 	features = []
 
-	(m_x, m_y), (M_x, M_y) = get_min_max(meta_graph)
+	(m_x, m_y), (M_x, M_y) = get_min_max(meta_graph, 5)
 	scale_coefficient = DIMENSION / (M_x - m_x)
 
 	onto = parse(get_chebi())

@@ -1,7 +1,8 @@
-from tulip import *
 import tulipplugins
+
+from tulip import *
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from modules.rename import split_into_parts, get_short_name
+from tulip.rename import split_into_parts, get_short_name
 
 
 class SBMLRenamer(tlp.Algorithm):

@@ -9,19 +9,21 @@ import os
 from os.path import dirname, abspath
 from shutil import copytree, copyfile
 import shutil
-from tulip import tlp
 
 from libsbml import SBMLReader
 
+from tulip import tlp
+
 from mimoza.mimoza import JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, MIMOZA_URL
-from modules.sbml2tlp import import_sbml
-from runner.mod_gen_helper import check_if_already_generalized
-from runner.serializer import serialize
-from runner.tulip_helper import graph2geojson
+from sbml_vis.converter.sbml2tlp import import_sbml
+from sbml_vis.file.md5_checker import check_md5
+from sbml_vis.file.serializer import serialize
+from sbml_vis.converter.graph2geojson import graph2geojson
+import mimoza.mimoza
+
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-import mimoza.mimoza
-from modules.md5_checker import check_md5
+from sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
 
 
 __author__ = 'anna'
@@ -98,7 +100,7 @@ def main(argv=None):
 		logging.basicConfig(level=logging.INFO, filename=log_file)
 
 	groups_sbml = '%s%s_with_groups.xml' % (directory, model_id)
-	if check_if_already_generalized(sbml):
+	if check_for_groups(sbml, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
 		if sbml != groups_sbml:
 			if not writeSBMLToFile(doc, groups_sbml):
 				raise Exception("Could not write your model to %s" % groups_sbml)

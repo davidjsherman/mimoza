@@ -1,9 +1,10 @@
-from tulip import tlp
 from math import radians, atan2, cos, sin, degrees, sqrt
 
-from modules.model_utils import clone_node
-from modules.resize import ub_sp_size, get_n_size, resize_nodes, resize_edges
-from modules.graph_properties import *
+from tulip import tlp
+from sbml_vis.tulip.node_cloner import clone_node
+from sbml_vis.tulip.resize import UBIQUITOUS_SPECIES_SIZE, get_n_size, resize_nodes, resize_edges
+from sbml_vis.tulip.graph_properties import *
+
 
 COMPONENT_PACKING = "Connected Component Packing"
 
@@ -38,7 +39,7 @@ def layout_ub_sps(graph):
 
 			specific_reactants = filter(lambda nd: not ubiquitous[nd], get_reactants(r))
 			r_radius = view_size[r].getW() * sqrt(2) / 2
-			edge_len = ub_sp_size * max(ub_reactants_len / 2, 3)
+			edge_len = UBIQUITOUS_SPECIES_SIZE * max(ub_reactants_len / 2, 3)
 			if specific_reactants:
 				specific_reactant_example = specific_reactants[0]
 				x2, y2 = view_layout[specific_reactant_example].getX(), view_layout[specific_reactant_example].getY()
@@ -51,7 +52,7 @@ def layout_ub_sps(graph):
 					x3, y3 = view_layout[specific_product_example].getX(), view_layout[specific_product_example].getY()
 					x2, y2 = x1 - (x3 - x1), y1 - (y3 - y1)					
 				else:
-					x2, y2 = x1 + view_size[r].getW() + ub_sp_size * ub_reactants_len * direction, y1
+					x2, y2 = x1 + view_size[r].getW() + UBIQUITOUS_SPECIES_SIZE * ub_reactants_len * direction, y1
 
 			# beta is the max angle between the ubiquitous and the specific edges
 			gap = 2 * min(100, max(60, ub_reactants_len * 20))
@@ -60,10 +61,10 @@ def layout_ub_sps(graph):
 			d_beta = radians(gap/(ub_reactants_len - 1))
 
 			# distance from reaction to the edge bent
-			bent = min(ub_sp_size / 2, edge_len / 2)
+			bent = min(UBIQUITOUS_SPECIES_SIZE / 2, edge_len / 2)
 			s0 = r_radius + bent
 			s = s0
-			ds = min(2 * (edge_len - bent - ub_sp_size / 2) / ub_reactants_len, ub_sp_size)
+			ds = min(2 * (edge_len - bent - UBIQUITOUS_SPECIES_SIZE / 2) / ub_reactants_len, UBIQUITOUS_SPECIES_SIZE)
 			# s += ds * ub_reactants_len / 2
 
 			# angle between the horizontal line and the reaction-specific-species edge
@@ -79,7 +80,7 @@ def layout_ub_sps(graph):
 
 				gamma = alpha + beta
 				# edge-after-bent length
-				c = min(edge_len - s0 + dc + r_radius - ub_sp_size, 2 * ub_sp_size)
+				c = min(edge_len - s0 + dc + r_radius - UBIQUITOUS_SPECIES_SIZE, 2 * UBIQUITOUS_SPECIES_SIZE)
 
 				x3, y3 = x0 + c * cos(gamma), y0 + c * sin(gamma)
 				view_layout[ub] = tlp.Coord(x3, y3)

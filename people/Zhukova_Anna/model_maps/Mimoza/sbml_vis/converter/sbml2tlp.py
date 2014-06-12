@@ -1,17 +1,15 @@
 from tulip import tlp
+
 from sbml_generalization.utils.logger import log
-from modules.graph_properties import *
-
-from sbml_generalization.generalization.sbml_helper import check_names, check_compartments
-
+from sbml_generalization.generalization.sbml_helper import check_names, check_compartments, parse_group_sbml, GrPlError
 from sbml_generalization.utils.compartment_positioner import get_comp2go, comp2level
 from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Term
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
+from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 
-from modules.model_utils import clone_node
-
-from modules.resize import r_size, ub_sp_size, sp_size, ub_e_size, e_size
-from runner.mod_gen_helper import process_generalized_model
+from sbml_vis.tulip.node_cloner import clone_node
+from sbml_vis.tulip.graph_properties import *
+from sbml_vis.tulip.resize import REACTION_SIZE, UBIQUITOUS_SPECIES_SIZE, SPECIES_SIZE, UBIQUITOUS_EDGE_SIZE, EDGE_SIZE
 
 
 __author__ = 'anna'
@@ -37,7 +35,7 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 			graph[ANNOTATION][n] = species_id2chebi_id[_id]
 
 		graph[VIEW_SHAPE][n] = ROUND_SHAPE
-		graph[VIEW_SIZE][n] = tlp.Size(ub_sp_size, ub_sp_size) if ub else tlp.Size(sp_size, sp_size)
+		graph[VIEW_SIZE][n] = tlp.Size(UBIQUITOUS_SPECIES_SIZE, UBIQUITOUS_SPECIES_SIZE) if ub else tlp.Size(SPECIES_SIZE, SPECIES_SIZE)
 	return id2n
 
 
@@ -57,7 +55,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[STOICHIOMETRY][e] = stoich
 		graph[NAME][e] = input_model.getSpecies(s_id).getName()
 		ub = graph[UBIQUITOUS][species_node]
-		graph[VIEW_SIZE][e] = tlp.Size(ub_e_size, ub_e_size) if ub else tlp.Size(e_size, e_size)
+		graph[VIEW_SIZE][e] = tlp.Size(UBIQUITOUS_EDGE_SIZE, UBIQUITOUS_EDGE_SIZE) if ub else tlp.Size(EDGE_SIZE, EDGE_SIZE)
 		graph[UBIQUITOUS][e] = ub
 
 	for r in input_model.getListOfReactions():
@@ -76,7 +74,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[REVERSIBLE][n] = r.getReversible()
 
 		graph[VIEW_SHAPE][n] = SQUARE_SHAPE
-		graph[VIEW_SIZE][n] = tlp.Size(r_size, r_size)
+		graph[VIEW_SIZE][n] = tlp.Size(REACTION_SIZE, REACTION_SIZE)
 
 		all_comps = set()
 		for sp_ref in r.getListOfReactants():
@@ -89,16 +87,19 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 
 
 def get_quotient_maps(chebi, input_model, sbml_file, verbose):
-	log(verbose, 'reading generalized model from %s' % sbml_file)
-	r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = process_generalized_model(chebi, input_model,
-	                                                                                           sbml_file)
-
-	return r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
+	try:
+		r_id2g_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
+		species_id2chebi_id = get_species_to_chebi(input_model, chebi) if (r_id2g_id or ub_sps) else {}
+		return r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
+	except GrPlError:
+		return None, None, None, None, None
 
 
 def import_sbml(graph, input_model, sbml_file, verbose=False):
+	log(verbose, 'parsing ChEBI')
 	chebi = parse(get_chebi())
 
+	log(verbose, 'reading generalized model from %s' % sbml_file)
 	r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = get_quotient_maps(chebi, input_model, sbml_file, verbose)
 
 	log(verbose, 'fixing labels and compartments')

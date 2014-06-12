@@ -1,12 +1,12 @@
 from tulip import *
-from modules.graph_properties import *
+from sbml_vis.tulip.graph_properties import *
 
-sp_size = 2.5
-ub_sp_size = 2
-r_size = 1.5
+SPECIES_SIZE = 2.5
+UBIQUITOUS_SPECIES_SIZE = 2
+REACTION_SIZE = 1.5
 
-ub_e_size = 0.5
-e_size = 0.8
+UBIQUITOUS_EDGE_SIZE = 0.5
+EDGE_SIZE = 0.8
 
 
 def get_n_length(graph, n):
@@ -28,14 +28,14 @@ def get_n_size(graph, n):
 	n_type = root[TYPE][n]
 	s = 0
 	if TYPE_REACTION == n_type:
-		s = r_size * get_n_length(graph, n)
+		s = REACTION_SIZE * get_n_length(graph, n)
 	elif TYPE_COMPARTMENT == n_type:
 		bb = tlp.computeBoundingBox(view_meta_graph[n])
 		s = max(bb.width(), bb.height())
 	elif ubiquitous[n]:
-		s = ub_sp_size
+		s = UBIQUITOUS_SPECIES_SIZE
 	else:
-		s = sp_size * get_n_length(graph, n)
+		s = SPECIES_SIZE * get_n_length(graph, n)
 	return tlp.Size(s, s)
 
 
@@ -43,8 +43,8 @@ def get_e_size(graph, e):
 	root = graph.getRoot()
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 	if ubiquitous[e]:
-		return ub_e_size
-	return e_size * get_e_length(graph, e)
+		return UBIQUITOUS_EDGE_SIZE
+	return EDGE_SIZE * get_e_length(graph, e)
 
 
 def get_comp_size(graph, n):
@@ -75,4 +75,34 @@ def resize_nodes(graph):
 def resize(graph):
 	resize_nodes(graph)
 	resize_edges(graph)
+
+
+def get_min_max(graph, margin=0):
+	root = graph.getRoot()
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	view_size = root.getSizeProperty(VIEW_SIZE)
+	m, M = view_layout.getMin(graph), view_layout.getMax(graph)
+	(m_x, m_y), (M_x, M_y) = (m.getX(), m.getY()), (M.getX(), M.getY())
+
+	for n in graph.getNodes():
+		x, y = view_layout[n].getX(), view_layout[n].getY()
+		w, h = view_size[n].getW() / 2, view_size[n].getH() / 2
+		if x - w < m_x:
+			m_x = x - w
+		if x + w > M_x:
+			M_x = x + w
+		if y - h < m_y:
+			m_y = y - h
+		if y + h > M_y:
+			M_y = y + h
+
+	w, h = M_x - m_x, M_y - m_y
+	if w > h:
+		m_y -= (w - h) / 2
+		M_y += (w - h) / 2
+	elif h > w:
+		m_x -= (h - w) / 2
+		M_x += (h - w) / 2
+
+	return (m_x - margin, m_y - margin), (M_x + margin, M_y + margin)
 

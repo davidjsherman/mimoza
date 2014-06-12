@@ -1,6 +1,7 @@
-from tulip import *
 import tulipplugins
-from modules.color import color
+
+from tulip import *
+from tulip import color
 
 
 class SBMLRandomColor(tlp.Algorithm):

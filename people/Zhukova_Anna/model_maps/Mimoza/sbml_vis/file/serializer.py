@@ -1,12 +1,13 @@
 import os
-from shutil import copyfile, copytree
-
-import geojson
+from shutil import copytree
 import shutil
 
-from modules.combine_archive_creator import archive
-from modules.html_generator import create_html, create_embedded_html
+import geojson
+
+from sbml_vis.file.combine_archive_creator import archive
+from sbml_vis.html.html_generator import create_html, create_embedded_html
 from sbml_generalization.utils.logger import log
+
 
 __author__ = 'anna'
 

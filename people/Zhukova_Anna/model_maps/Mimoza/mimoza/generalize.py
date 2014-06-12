@@ -1,19 +1,20 @@
 #!/usr/local/bin/python2.7
 # -*- coding: UTF-8 -*-
 import logging
-
 import os
 import cgi
 import cgitb
 from os.path import dirname, abspath
-from sbml_generalization.generalization.sbml_generalizer import generalize_model
-from sbml_generalization.utils.logger import log
+import sys
 
 from libsbml import SBMLReader
-import sys
-from mimoza.mimoza import *
-from modules.html_generator import create_thanks_for_uploading_generalized_html, generate_generalized_html
+
+from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
+from sbml_generalization.utils.logger import log
+
+from mimoza.mimoza import *
+from sbml_vis.html.html_generator import create_thanks_for_uploading_generalized_html, generate_generalized_html
 
 
 cgitb.enable()

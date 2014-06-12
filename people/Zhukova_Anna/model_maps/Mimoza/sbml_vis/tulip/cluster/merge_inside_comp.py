@@ -1,6 +1,7 @@
 from collections import defaultdict
-from model_utils import merge_nodes
-from modules.graph_properties import COMPARTMENT, UBIQUITOUS, ID
+
+from sbml_vis.tulip.node_cloner import merge_nodes
+from sbml_vis.tulip.graph_properties import COMPARTMENT, UBIQUITOUS, ID
 
 
 def mic(graph):

@@ -1,7 +1,8 @@
-from tulip import *
 import tulipplugins
-from modules.factoring import comp_to_meta_node
-from modules.graph_tools import find_subgraph_by_name
+
+from tulip import *
+from tulip.cluster.factoring import comp_to_meta_node
+from sbml_vis.graph_tools import find_subgraph_by_name
 
 
 class SBMLCytoGeneralizer(tlp.Algorithm):

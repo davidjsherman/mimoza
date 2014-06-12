@@ -1,5 +1,6 @@
+from sbml_vis.html import markup
+
 __author__ = 'anna'
-import markup
 
 
 def normalize(organelle):

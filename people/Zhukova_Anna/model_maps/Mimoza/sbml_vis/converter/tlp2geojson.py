@@ -1,20 +1,17 @@
 from sympy import to_cnf
 from sympy.logic.boolalg import disjuncts, conjuncts
 import geojson
-from modules.resize import get_n_size, get_n_length, get_e_length
-from sbml_generalization.utils.obo_ontology import get_chebi, parse
-from modules.rename import get_short_name
-from modules.graph_properties import *
+
+from sbml_vis.tulip.rename import get_short_name
+from sbml_vis.tulip.graph_properties import *
+from sbml_vis.tulip.resize import get_n_length, get_n_size, get_e_length
+
 
 __author__ = 'anna'
 
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 LOWERCASE, UPPERCASE = 'x', 'X'
-DIMENSION = 512
-MARGIN = 3.8
-
-ZOOM_OUT, ZOOM_IN, ZOOM_ANY = 1, 2, 3
 
 
 def get_border_coord(xy_center, other_xy, r):
@@ -39,7 +36,7 @@ def edge2feature(graph, e, id, scale, level_min, level_max, c_id2outs):
 	ubiquitous = graph[UBIQUITOUS][e]
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 	is_transport = transport[s] or transport[t]
-	props = {"size": get_e_length(graph, e),#"width": size[e].getW() * x_scale, "height": size[e].getH() * y_scale,
+	props = {"size": get_e_length(graph, e),
 	         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous,
 	         "generalized": generalized, "transport": is_transport, "zoom_min": level_min,
 	         "zoom_max": level_max}
@@ -141,33 +138,3 @@ def rgb(rrggbb):
 
 def triplet(c, lettercase=LOWERCASE):
 	return '#' + format((c.getR() << 16 | c.getG() << 8 | c.getB()), '06' + lettercase)
-
-
-def get_min_max(graph):
-	root = graph.getRoot()
-	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
-	view_size = root.getSizeProperty(VIEW_SIZE)
-	m, M = view_layout.getMin(graph), view_layout.getMax(graph)
-	(m_x, m_y), (M_x, M_y) = (m.getX(), m.getY()), (M.getX(), M.getY())
-
-	for n in graph.getNodes():
-		x, y = view_layout[n].getX(), view_layout[n].getY()
-		w, h = view_size[n].getW() / 2, view_size[n].getH() / 2
-		if x - w < m_x:
-			m_x = x - w
-		if x + w > M_x:
-			M_x = x + w
-		if y - h < m_y:
-			m_y = y - h
-		if y + h > M_y:
-			M_y = y + h
-
-	w, h = M_x - m_x, M_y - m_y
-	if w > h:
-		m_y -= (w - h) / 2
-		M_y += (w - h) / 2
-	elif h > w:
-		m_x -= (h - w) / 2
-		M_x += (h - w) / 2
-
-	return (m_x - MARGIN, m_y - MARGIN), (M_x + MARGIN, M_y + MARGIN)

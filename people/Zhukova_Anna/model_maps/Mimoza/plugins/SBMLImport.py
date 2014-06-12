@@ -1,8 +1,10 @@
-from tulip import *
+import traceback
+
 from libsbml import SBMLReader
 import tulipplugins
-import traceback
-from modules.sbml2tlp import import_sbml
+
+from tulip import *
+from converter.sbml2tlp import import_sbml
 
 
 class SBMLImport(tlp.ImportModule):

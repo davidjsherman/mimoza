@@ -1,7 +1,7 @@
 from tulip import *
 import tulipplugins
 import colorsys
-from modules.graph_tools import *
+from sbml_vis.graph_tools import *
 
 grey = tlp.Color(200, 200, 200)
 transparent_grey = tlp.Color(200, 200, 200, 80)

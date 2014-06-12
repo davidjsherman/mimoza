@@ -1,4 +1,4 @@
-from modules.graph_properties import *
+from sbml_vis.tulip.graph_properties import *
 
 
 def get_short_name(graph, n, onto):
