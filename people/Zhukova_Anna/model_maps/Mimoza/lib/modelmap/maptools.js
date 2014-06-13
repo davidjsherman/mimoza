@@ -101,7 +101,7 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
         padding: [MARGIN, MARGIN],
         layers: [tiles, ubLayer],
         crs: L.CRS.Simple
-    }).setView([0, 0], 1);
+    }); // .setView([0, 0], 1);
 
     if (jsonData == null) {
         return map;
@@ -110,7 +110,7 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
     var southWest = map.unproject([0 - MARGIN, MAP_DIMENSION_SIZE + MARGIN], 1);
     var northEast = map.unproject([MAP_DIMENSION_SIZE + MARGIN, 0 - MARGIN], 1);
     var bounds = new L.LatLngBounds(southWest, northEast);
-//    map.setView(bounds.getCenter(), 1);
+    map.setView(bounds.getCenter(), 0);
     map.setMaxBounds(bounds);
 
     handlePopUpClosing(map);
@@ -179,9 +179,9 @@ function get_w(feature) {
 
 function pnt2layer(map, feature, zoom) {
     var e = feature.geometry.coordinates;
-//    var w = feature.properties.width / 2;
+	var w = feature.properties.size / 2;
 //    var h =  feature.properties.height / 2;
-    var w = get_w(feature) / 2;
+//    var w = get_w(feature) / 2;
     if (EDGE == feature.properties.type) {
         var color = feature.properties.ubiquitous ? GREY : (feature.properties.generalized
             ? (feature.properties.transport ? TURQUOISE : GREEN) : (feature.properties.transport ? VIOLET : BLUE));

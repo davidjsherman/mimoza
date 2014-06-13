@@ -42,7 +42,6 @@ def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_z
 	root = graph.getRoot()
 
 	while level > min_zooming_level:
-		meta_nodes = []
 		for c_id in {comp.getId() for comp in input_model.getListOfCompartments() if
 		             level == c_id2info[comp.getId()][2][0]}:
 			(name, go, (level, out_c_id)) = c_id2info[c_id]
@@ -50,7 +49,6 @@ def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_z
 			root[MIN_ZOOM][meta_node] = root[MAX_ZOOM][meta_node] = level - 1
 			for m in root[VIEW_META_GRAPH][meta_node].getNodes():
 				root[MIN_ZOOM][m] = level
-			meta_nodes.append(meta_node)
 		layout(meta_graph)
 		layout_ub_sps(meta_graph)
 		resize(graph)

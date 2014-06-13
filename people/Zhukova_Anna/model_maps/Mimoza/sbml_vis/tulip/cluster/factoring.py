@@ -4,7 +4,7 @@ from tulip import tlp
 from sbml_vis.tulip.layout.layout_utils import layout
 from sbml_vis.tulip.cluster.merge_inside_comp import mic
 from sbml_vis.tulip.node_cloner import merge_nodes
-from sbml_vis.tulip.resize import get_n_size, resize_edges
+from sbml_vis.tulip.resize import get_n_size, resize_edges, get_e_size
 from sbml_vis.tulip.graph_properties import *
 
 
@@ -95,11 +95,9 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	meta_node = meta_graph.createMetaNode(ns, False)
 	comp_graph = root[VIEW_META_GRAPH][meta_node]
 	layout(comp_graph)
-	bb = tlp.computeBoundingBox(comp_graph)
 	comp_graph.setName("_" + c_id)
-	s = max(bb.width(), bb.height())
-	root[VIEW_SIZE][meta_node] = tlp.Size(s, s)
-	root[VIEW_LAYOUT][meta_node] = bb.center()
+	root[VIEW_SIZE][meta_node] = get_n_size(meta_graph, meta_node)
+	# root[VIEW_LAYOUT][meta_node] = bb.center()
 	root[NAME][meta_node] = c_name
 	root[COMPARTMENT][meta_node] = out_comp
 	root[TYPE][meta_node] = TYPE_COMPARTMENT
@@ -107,28 +105,31 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root[ID][meta_node] = c_id
 	root[ANNOTATION][meta_node] = go_id
 	for e in root.getInOutEdges(meta_node):
-		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
+		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]] 
+		# todo: fix size: we have no more metanodes
+		s = get_e_size(meta_graph, e)
+		root[VIEW_SIZE][e] = tlp.Size(s, s)
 	return meta_node
 
 
-def factor_comps(meta_graph, c_name2id_go):
-	mic(meta_graph)
-	root = meta_graph.getRoot()
-	cytoplasm = root.getAttribute(CYTOPLASM)
-	organelle2meta_node = {}
-	for organelle in root.getAttribute(ORGANELLES).split(";"):
-		(c_id, go) = c_name2id_go[organelle] if organelle in c_name2id_go else ('', '')
-		meta_node = comp_to_meta_node(meta_graph, organelle, (c_id, go), cytoplasm)
-		if meta_node:
-			organelle2meta_node[organelle] = meta_node
-	resize_edges(meta_graph)
-	return organelle2meta_node
+# def factor_comps(meta_graph, c_name2id_go):
+# 	mic(meta_graph)
+# 	root = meta_graph.getRoot()
+# 	cytoplasm = root.getAttribute(CYTOPLASM)
+# 	organelle2meta_node = {}
+# 	for organelle in root.getAttribute(ORGANELLES).split(";"):
+# 		(c_id, go) = c_name2id_go[organelle] if organelle in c_name2id_go else ('', '')
+# 		meta_node = comp_to_meta_node(meta_graph, organelle, (c_id, go), cytoplasm)
+# 		if meta_node:
+# 			organelle2meta_node[organelle] = meta_node
+# 	resize_edges(meta_graph)
+# 	return organelle2meta_node
 
 
-def factor_cytoplasm(meta_graph, c_name2id_go):
-	root = meta_graph.getRoot()
-	cytoplasm = root.getAttribute(CYTOPLASM)
-	(c_id, go) = c_name2id_go[cytoplasm] if cytoplasm in c_name2id_go else ('', '')
-	meta_node = comp_to_meta_node(meta_graph, cytoplasm, (c_id, go), EXTRACELLULAR)
-	resize_edges(meta_graph)
-	return cytoplasm, meta_node
+# def factor_cytoplasm(meta_graph, c_name2id_go):
+# 	root = meta_graph.getRoot()
+# 	cytoplasm = root.getAttribute(CYTOPLASM)
+# 	(c_id, go) = c_name2id_go[cytoplasm] if cytoplasm in c_name2id_go else ('', '')
+# 	meta_node = comp_to_meta_node(meta_graph, cytoplasm, (c_id, go), EXTRACELLULAR)
+# 	resize_edges(meta_graph)
+# 	return cytoplasm, meta_node

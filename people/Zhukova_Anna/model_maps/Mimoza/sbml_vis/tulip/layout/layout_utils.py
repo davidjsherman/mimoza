@@ -127,7 +127,6 @@ def shorten_edges(graph):
 						moved.add(s)
 
 	layout_ub_sps(graph)
-	resize_nodes(graph)
 
 
 def neighbours(ns, org_ns, graph, processed, limit=500):
@@ -201,7 +200,7 @@ def layout_hierarchically(qo, margin=5):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(HIERARCHICAL_GRAPH, qo)
 	if qo.numberOfNodes() > 1:
-		n2size = {n: get_n_size(qo, n).getW() / 2 for n in qo.getNodes()}
+		n2size = {n: root[VIEW_SIZE][n].getW() / 2 for n in qo.getNodes()}
 		# looks like there is a bug in Tulip and it uses the 'layer spacing' value
 		# instead of the 'node spacing' one and visa versa
 		d = get_distance(n2size, qo)
@@ -214,7 +213,7 @@ def layout_circle(qo, margin=5):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(CIRCULAR, qo)
 	if qo.numberOfNodes() > 1:
-		n2size = {n: get_n_size(qo, n).getW() / 2 for n in qo.getNodes()}
+		n2size = {n: root[VIEW_SIZE][n].getW() / 2 for n in qo.getNodes()}
 		ds["minDistCircle"] = get_distance(n2size, qo) + margin
 		ds["minDistLevel"] = margin
 		ds["minDistCC"] = 1
@@ -284,7 +283,7 @@ def layout(graph, margin=5):
 
 	layout_ub_sps(graph)
 	pack_cc(graph)
-	resize_edges(graph)
+	# resize_edges(graph)
 
 
 def detect_components(graph):
@@ -403,6 +402,86 @@ def normalize_alpha(alpha):
 		return -90
 	elif -67.5 <= alpha < -22.5:
 		return -45
+
+
+def layout_generalized_ns(graph, n2graph):
+	root = graph.getRoot()
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+
+	meta_ns = {n for n in graph.getNodes() if n in n2graph}
+	meta_sps = {n for n in meta_ns if TYPE_SPECIES == root[TYPE][n]}
+	meta_rs = {n for n in meta_ns - meta_sps if TYPE_REACTION == root[TYPE][n]}
+
+	depends_on = {}
+	our_sps, our_rs = set(), set()
+	for s in meta_sps:
+		rs = set(graph.getInOutNodes(s)) & meta_rs
+		sps = set()
+		for r in rs:
+			sps |= set(graph.getInOutNodes(r)) & meta_sps
+		depends_on[s] = sps - {s}
+		our_sps |= set(n2graph[s].getNodes())
+	for r in meta_rs:
+		our_rs |= set(n2graph[r].getNodes())
+
+	node2key = {}
+	while meta_sps:
+		n = min(meta_sps, key=lambda s: len(depends_on[s] & meta_sps))
+		meta_sps -= {n}
+		for s in n2graph[n].getNodes():
+			rs = set(root.getInOutNodes(s)) & our_rs
+			sps = set()
+			for r in rs:
+				sps |= set(root.getInOutNodes(r)) & our_sps
+			sps -= {s}
+			node2key[s] = (root[ID][n], root.deg(s), root[ID][s])
+			for ss in sps:
+				if ss in node2key:
+					node2key[s] = node2key[ss]
+	for n in meta_rs:
+		for r in n2graph[n].getNodes():
+			node2key[r] = sorted(node2key[it] for it in set(root.getInOutNodes(r)) & our_sps)
+
+	for n in meta_ns:
+		lo = view_layout[n]
+		meta_neighbours = lambda nodes: sorted((t for t in nodes if graph.isMetaNode(t)), key=lambda t: -n2graph[t].numberOfNodes())
+		o_n_1 = meta_neighbours(graph.getInNodes(n))
+		o_n_2 = meta_neighbours(graph.getOutNodes(n))
+		if not o_n_1:
+			alpha = get_alpha(lo, view_layout[o_n_2[0]]) if o_n_2 else 0
+		elif not o_n_2:
+			alpha = get_alpha(view_layout[o_n_1[0]], lo)
+		else:
+			alpha = get_alpha(view_layout[o_n_1[0]], view_layout[o_n_2[0]])
+
+		ns = sorted(n2graph[n].getNodes(), key=lambda it: node2key[it] if it in node2key else (root[ID][it], 0, ''))#root[ID][it])
+		s = root[VIEW_SIZE][n].getW()
+		ns_num = len(ns)
+		s_width = s / ns_num
+		# s_m = tlp.Size(s_width, s_width)
+		# n_type = root[TYPE][n]
+		# this is a hack as when tulip opens a metanode it rescales inner nodes as if in a square
+		# if TYPE_SPECIES == n_type and (abs(alpha % 90) != 0):
+		# 	root[VIEW_SIZE][n] = tlp.Size(s / sqrt(2), s / sqrt(2))
+		x0, y0 = s / 2, s_width / 2
+		x, y = x0, y0
+		for m in ns:
+			# root[VIEW_SIZE][m] = s_m
+			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
+			y += s_width
+
+		mg = n2graph[n]
+		view_layout.translate(tlp.Coord(-x0, -y0), mg)
+		view_layout.rotateZ(-alpha, mg)
+		view_layout.translate(tlp.Coord(x0, y0), mg)
+
+		o_n_1.extend(o_n_2)
+		for m in o_n_1:
+			alpha == get_alpha(view_layout[m], view_layout[n])
+			if alpha == 0 or alpha == 180 or alpha == -180:
+				view_layout.translate(tlp.Coord(-x0, -y0), mg)
+				view_layout.rotateZ(-5, mg)
+				view_layout.translate(tlp.Coord(x0, y0), mg)
 
 
 def layout_generalized_nodes(graph):

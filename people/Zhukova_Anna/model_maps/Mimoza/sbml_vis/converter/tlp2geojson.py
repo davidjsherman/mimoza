@@ -22,6 +22,85 @@ def get_border_coord(xy_center, other_xy, r):
 	return transformation(x_center, other_x), transformation(y_center, other_y)
 
 
+def e2feature(graph, e, id, scale, level_min, level_max, c_id2outs, n2graph):
+	root = graph.getRoot()
+	layout = root.getLayoutProperty(VIEW_LAYOUT)
+	transport = root.getBooleanProperty(TRANSPORT)
+	size = root.getSizeProperty(VIEW_SIZE)
+
+	s, t = graph.source(e), graph.target(e)
+	xy = lambda n: (layout[n].getX(), layout[n].getY())
+	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), size[s].getW() / 2)
+	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), size[t].getW() / 2)
+	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
+	ubiquitous = graph[UBIQUITOUS][e]
+	generalized = s in n2graph or t in n2graph
+	is_transport = transport[s] or transport[t]
+	props = {"size": root[VIEW_SIZE][e].getW(),
+	         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous,
+	         "generalized": generalized, "transport": is_transport, "zoom_min": level_min,
+	         "zoom_max": level_max}
+	s_c_id = root[COMPARTMENT][s]
+	t_c_id = root[COMPARTMENT][t]
+	if s_c_id == t_c_id:
+		props["c_id"] = s_c_id
+		props["c_outs"] = ','.join(c_id2outs[s_c_id])
+	else:
+		props["c_outs"] = ','.join(set(c_id2outs[s_c_id]) | set(c_id2outs[t_c_id]))
+	return geojson.Feature(geometry=geom, properties=props, id=id)
+
+
+def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info, c_id2outs, scale_coefficient, n2graph):
+	root = graph.getRoot()
+	type_ = root.getIntegerProperty(TYPE)
+	layout = graph.getLayoutProperty(VIEW_LAYOUT)
+	transport = root.getBooleanProperty(TRANSPORT)
+	annotation = root.getStringProperty(ANNOTATION)
+
+	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
+	c_id = root[COMPARTMENT][n]
+	size = root[VIEW_SIZE][n].getW() * scale_coefficient # if type_[n] in [TYPE_COMPARTMENT, COMPARTMENT] else get_n_length(graph, n)
+	props = {"size": size, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
+	         "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
+
+	if type_[n] in TYPE_BG:
+		return geojson.Feature(geometry=geom, properties=props, id=id)
+
+	if type_[n] in TYPE_ENTITY:
+		generalized = n in n2graph
+		props.update({"id": root[ID][n], "name": root[NAME][n], "label": get_short_name(graph, n, onto),
+		              "generalized": generalized})
+		if TYPE_REACTION == type_[n]:
+			ins, outs = get_formula(graph, n)
+			props.update(
+				{"gene_association": get_gene_association_list(annotation[n]), "reversible": root[REVERSIBLE][n],
+				 'reactants': ins, 'products': outs, "transport": transport[n]})
+			for m in graph.getInOutNodes(n):
+				if c_id != root[COMPARTMENT][m]:
+					del props["c_id"]
+					break
+		elif TYPE_COMPARTMENT == type_[n]:
+			props['term'] = annotation[n]
+		elif TYPE_SPECIES == type_[n]:
+			n_id = root[ID][n]
+			transported = False
+			for rs in (root.getInOutNodes(m) for m in root.getNodes() if n_id == root[ID][m]):
+				transported = next((r for r in rs if transport[r]), False) is not False
+				if transported:
+					break
+			# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
+			comp_name = c_id2info[c_id][0]
+			props.update({"term": annotation[n], "transport": transported, "ubiquitous": root[UBIQUITOUS][n],
+			              "compartment": comp_name})
+
+		bg_feature = None
+		if generalized:
+			bg_props = {"size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1, "zoom_max": max_bg_level,
+			            "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
+			bg_feature = geojson.Feature(geometry=geom, properties=bg_props, id=id + 1)
+		return geojson.Feature(geometry=geom, properties=props, id=id), bg_feature
+
+
 def edge2feature(graph, e, id, scale, level_min, level_max, c_id2outs):
 	root = graph.getRoot()
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
@@ -36,7 +115,7 @@ def edge2feature(graph, e, id, scale, level_min, level_max, c_id2outs):
 	ubiquitous = graph[UBIQUITOUS][e]
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 	is_transport = transport[s] or transport[t]
-	props = {"size": get_e_length(graph, e),
+	props = {"size": root[VIEW_SIZE][e].getW(),
 	         "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous,
 	         "generalized": generalized, "transport": is_transport, "zoom_min": level_min,
 	         "zoom_max": level_max}
@@ -59,8 +138,7 @@ def node2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, 
 
 	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
 	c_id = root[COMPARTMENT][n]
-	size = get_n_size(graph, n).getW() * scale_coefficient if type_[n] in [TYPE_COMPARTMENT,
-	                                                                     COMPARTMENT] else get_n_length(graph, n)
+	size = root[VIEW_SIZE][n].getW() * scale_coefficient # if type_[n] in [TYPE_COMPARTMENT, COMPARTMENT] else get_n_length(graph, n)
 	props = {"size": size, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
 	         "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 
