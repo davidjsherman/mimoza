@@ -54,6 +54,7 @@ function getSize(feature) {
 function pnt2layer(map, feature, zoom) {
     var e = feature.geometry.coordinates;
     var w = getSize(feature) / 2;
+    var scaleFactor = Math.pow(2, zoom);
     if (EDGE == feature.properties.type) {
         var color = feature.properties.ubiquitous ? GREY : (feature.properties.generalized
             ? (feature.properties.transport ? TURQUOISE : GREEN) : (feature.properties.transport ? VIOLET : BLUE));
@@ -62,7 +63,7 @@ function pnt2layer(map, feature, zoom) {
         }), {
             color: color,
             opacity: 1,
-            weight: w * Math.pow(2, zoom),
+            weight: w / 2 * scaleFactor,
             lineCap: ROUND,
             lineJoin: ROUND,
             clickable: false,
@@ -92,7 +93,6 @@ function pnt2layer(map, feature, zoom) {
     var southWest = map.unproject([x - w, y + w], 1),
         northEast = map.unproject([x + w, y - w], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
-    var scaleFactor = Math.pow(2, zoom);
     var r = w * scaleFactor;
 //    r = southWest.distanceTo(northEast) / 2;
     var centre = map.unproject([x, y], 1);//bounds.getCenter();

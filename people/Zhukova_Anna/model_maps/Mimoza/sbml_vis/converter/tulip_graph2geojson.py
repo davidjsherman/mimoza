@@ -62,7 +62,7 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e, meta_graph)):
 			features.append(
 				e2feature(meta_graph, e, i, scale, e_min_zoom(e, meta_graph), e_max_zoom(e, meta_graph), c_id2outs,
-				          node2graph))
+				          scale_coefficient, node2graph))
 			i += 1
 
 		for n in (n for n in meta_graph.getNodes() if level == root[MIN_ZOOM][n]):
@@ -166,10 +166,10 @@ def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_z
 			mg = root[VIEW_META_GRAPH][meta_node]
 			for m in mg.getNodes():
 				root[MIN_ZOOM][m] = level
-			for e in (e for e in meta_graph.getEdges() if meta_graph.isMetaEdge(e)):
+			node2graph[meta_node] = mg
+			for e in meta_graph.getInOutEdges(meta_node):
 				root[VIEW_META_GRAPH][e] = edge_def_val
 			root[VIEW_META_GRAPH][meta_node] = node_def_val
-			node2graph[meta_node] = mg
 		layout_cytoplasm(meta_graph)
 		shorten_edges(meta_graph)
 		remove_overlaps(meta_graph)

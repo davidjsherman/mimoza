@@ -5,8 +5,8 @@ SPECIES_SIZE = 2.5
 UBIQUITOUS_SPECIES_SIZE = 2
 REACTION_SIZE = 1.5
 
-UBIQUITOUS_EDGE_SIZE = 0.5
-EDGE_SIZE = 0.8
+UBIQUITOUS_EDGE_SIZE = 0.4
+EDGE_SIZE = 0.5
 
 
 def get_n_length(graph, n):
@@ -16,8 +16,14 @@ def get_n_length(graph, n):
 
 def get_e_length(graph, e):
 	s, t = graph.source(e), graph.target(e)
-	r = s if TYPE_REACTION == graph.getRoot()[TYPE][s] else t
-	return get_n_length(graph, r)
+	r = None
+	if TYPE_REACTION == graph.getRoot()[TYPE][s]:
+		r = s
+	elif TYPE_REACTION == graph.getRoot()[TYPE][t]:
+		r = t
+	if r:
+		return graph.getRoot()[VIEW_SIZE][r].getW() / REACTION_SIZE
+	return len(list(graph.getRoot()[VIEW_META_GRAPH][e])) if graph.isMetaEdge(e) else 1
 
 
 def get_n_size(graph, n):
@@ -41,9 +47,8 @@ def get_n_size(graph, n):
 def get_e_size(graph, e):
 	root = graph.getRoot()
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
-	if ubiquitous[e]:
-		return UBIQUITOUS_EDGE_SIZE
-	return EDGE_SIZE * get_e_length(graph, e)
+	sz = UBIQUITOUS_EDGE_SIZE if ubiquitous[e] else EDGE_SIZE * get_e_length(graph, e)
+	return tlp.Size(sz, sz)
 
 
 def get_comp_size(graph, n):
@@ -59,8 +64,7 @@ def resize_edges(graph):
 	view_size = root.getSizeProperty(VIEW_SIZE)
 
 	for e in graph.getEdges():
-		sz = get_e_size(graph, e)
-		view_size[e] = tlp.Size(sz, sz)
+		view_size[e] = get_e_size(graph, e)
 
 
 def resize_nodes(graph):

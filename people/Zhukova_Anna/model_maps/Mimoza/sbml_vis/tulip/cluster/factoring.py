@@ -83,8 +83,8 @@ def factor_nodes(graph):
 	for n in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n] and graph.isMetaNode(n)):
 		for e in graph.getInOutEdges(n):
 			root[STOICHIOMETRY][e] = root[STOICHIOMETRY][list(root[VIEW_META_GRAPH][e])[0]]
+			root[VIEW_SIZE][e] = get_e_size(graph, e)
 
-	resize_edges(graph)
 
 
 def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
@@ -107,8 +107,7 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	for e in root.getInOutEdges(meta_node):
 		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
 		# todo: fix size: we have no more metanodes
-		s = get_e_size(meta_graph, e)
-		root[VIEW_SIZE][e] = tlp.Size(s, s)
+		root[VIEW_SIZE][e] = get_e_size(meta_graph, e)
 	return meta_node
 
 
