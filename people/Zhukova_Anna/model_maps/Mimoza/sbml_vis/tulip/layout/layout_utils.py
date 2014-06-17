@@ -138,7 +138,7 @@ def neighbours(ns, org_ns, graph, processed, limit=500):
 	return ns | neighbours(all_ns, org_ns, graph, processed, limit - len(ns))
 
 
-def layout_cytoplasm(graph, margin=5):
+def layout_cytoplasm(graph, margin=1):
 	root = graph.getRoot()
 	for n in graph.getNodes():
 		if TYPE_SPECIES == root[TYPE][n] and not graph.isMetaNode(n) and graph.deg(n) >= 4:
@@ -196,7 +196,7 @@ def get_distance(n2size, qo):
 		n2size[n] + (max(n2size[m] for m in qo.getOutNodes(n)) if qo.outdeg(n) else 0) for n in n2size.iterkeys())
 
 
-def layout_hierarchically(qo, margin=5):
+def layout_hierarchically(qo, margin=1):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(HIERARCHICAL_GRAPH, qo)
 	if qo.numberOfNodes() > 1:
@@ -209,7 +209,7 @@ def layout_hierarchically(qo, margin=5):
 	qo.computeLayoutProperty(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
 
 
-def layout_circle(qo, margin=5):
+def layout_circle(qo, margin=1):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(CIRCULAR, qo)
 	if qo.numberOfNodes() > 1:
@@ -221,14 +221,14 @@ def layout_circle(qo, margin=5):
 	qo.computeLayoutProperty(CIRCULAR, root[VIEW_LAYOUT], ds)
 
 
-def layout_force(qo, margin=5):
+def layout_force(qo, margin=1):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(FM3, qo)
 	ds["Unit edge length"] = margin
 	qo.computeLayoutProperty(FM3, root[VIEW_LAYOUT], ds)
 
 
-def remove_overlaps(graph, margin=5):
+def remove_overlaps(graph, margin=1):
 	root = graph.getRoot()
 	ds = tlp.getDefaultPluginParameters(OVERLAP_REMOVAL, graph)
 	ds["x border"] = margin
@@ -242,7 +242,7 @@ def pack_cc(graph):
 	graph.computeLayoutProperty(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
 
 
-def layout(graph, margin=5):
+def layout(graph, margin=1):
 	root = graph.getRoot()
 	# if graph == root:
 	# 	graph = tlp.newCloneSubGraph(graph)
@@ -474,7 +474,7 @@ def rotate_generalized_ns(graph, n2graph):
 		mg = n2graph[n]
 
 		# the diagonal length is larger than the side for squares
-		if alpha % 45 == 0 and TYPE_SPECIES != root[TYPE][n]:
+		if alpha % 90 == 45 and TYPE_SPECIES != root[TYPE][n]:
 			n_h = root[VIEW_SIZE][n].getH() / 2
 			view_layout.translate(tlp.Coord(0, n_h * (1 - sqrt(2))), mg)
 			view_layout.scale(tlp.Coord(0, sqrt(2)), mg)
