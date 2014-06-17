@@ -79,9 +79,7 @@ function formatLink(c_id) {
 
 function getBounds(feature, map) {
     var e = feature.geometry.coordinates;
-    var w = get_w(feature);
-//    var w = feature.properties.width / 2;
-//    var h = feature.properties.height / 2;
+    var w = getSize(feature) / 2;
     var x = e[0], y = e[1];
     var southWest = map.unproject([x - w, y + w], 1),
         northEast = map.unproject([x + w, y - w], 1);
@@ -174,9 +172,7 @@ function highlightCircle(feature, map) {
     };
     var e = feature.geometry.coordinates;
     var x = e[0], y = e[1];
-    var w = get_w(feature);
-//    var w = feature.properties.width / 2;
-//    var h = feature.properties.height / 2;
+    var w = getSize(feature) / 2;
     var southWest = map.unproject([x - w, y + w], 1),
         northEast = map.unproject([x + w, y - w], 1),
         bounds = new L.LatLngBounds(southWest, northEast);

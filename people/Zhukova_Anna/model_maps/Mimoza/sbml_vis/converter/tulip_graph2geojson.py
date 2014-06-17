@@ -3,11 +3,10 @@ import geojson
 
 from sbml_vis.tulip.cluster.factoring import factor_nodes, comp_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
-from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, VIEW_SIZE, NAME
+from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, VIEW_SIZE
 from sbml_vis.tulip.layout.layout_utils import layout, shorten_edges, layout_ub_sps, remove_overlaps, \
-	layout_generalized_ns, layout_cytoplasm
+	layout_generalized_ns, layout_cytoplasm, align_generalized_ns, rotate_generalized_ns
 from sbml_vis.tulip.resize import get_min_max
-from sbml_vis.tulip.node_cloner import copy_node
 
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
@@ -60,11 +59,6 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 	i = 0
 	level = min_zooming_level
 	while level <= max_comp_level:
-		print level
-		for n in meta_graph.getNodes():
-			if meta_graph.isMetaNode(n):
-				print root[NAME][n]
-
 		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e, meta_graph)):
 			features.append(
 				e2feature(meta_graph, e, i, scale, e_min_zoom(e, meta_graph), e_max_zoom(e, meta_graph), c_id2outs,
@@ -84,33 +78,24 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 		level += 1
 
 		if level == max_comp_level:
-			layout_generalized_ns(meta_graph, node2graph)
+			# layout_generalized_ns(meta_graph, node2graph)
+			rotate_generalized_ns(meta_graph, node2graph)
 
 		ns = set()
 		for n in metas:
-			ms = set(node2graph[n].getNodes())
+			mg = node2graph[n]
+			ms = set(mg.getNodes())
 			ns |= ms
 			for m in ms:
 				for p in root.getInOutNodes(m):
 					if meta_graph.isElement(p) and level <= root[MAX_ZOOM][p]:
 						ns.add(p)
-			coord = root[VIEW_LAYOUT][n]
-			size = root[VIEW_SIZE][n]
-			root[VIEW_LAYOUT].translate(tlp.Coord(coord.getX() - size.getW() / 2, coord.getY() - size.getH() / 2),
-			                            node2graph[n])
+			n_center = root[VIEW_LAYOUT][n]
+			mg_center = tlp.computeBoundingBox(mg).center()
+			d_x, d_y = -mg_center.getX() + n_center.getX(), -mg_center.getY() + n_center.getY()
+			root[VIEW_LAYOUT].translate(tlp.Coord(d_x, d_y), mg)
 
 		meta_graph = root.inducedSubGraph(list(ns))
-
-
-
-
-	# for n in metas:
-	# meta_graph.openMetaNode(n)
-	#
-	# if level == max_comp_level:
-	# 	resize_nodes(meta_graph)
-	# else:
-	# layout_ub_sps(meta_graph)
 	return features
 
 
@@ -163,6 +148,8 @@ def process_generalized_entities(graph, max_level, min_level, node2graph):
 
 	layout(meta_graph)
 
+	align_generalized_ns(meta_graph, node2graph)
+
 	return meta_graph
 
 
@@ -177,10 +164,10 @@ def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_z
 			meta_node = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id)
 			root[MIN_ZOOM][meta_node] = root[MAX_ZOOM][meta_node] = level - 1
 			mg = root[VIEW_META_GRAPH][meta_node]
-			for e in (e for e in meta_graph.getEdges() if meta_graph.isMetaEdge(e)):
-				root[VIEW_META_GRAPH][e] = edge_def_val
 			for m in mg.getNodes():
 				root[MIN_ZOOM][m] = level
+			for e in (e for e in meta_graph.getEdges() if meta_graph.isMetaEdge(e)):
+				root[VIEW_META_GRAPH][e] = edge_def_val
 			root[VIEW_META_GRAPH][meta_node] = node_def_val
 			node2graph[meta_node] = mg
 		layout_cytoplasm(meta_graph)

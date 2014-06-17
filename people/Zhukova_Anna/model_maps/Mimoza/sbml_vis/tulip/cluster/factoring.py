@@ -55,7 +55,7 @@ def factor_nodes(graph):
 		mg = graph[VIEW_META_GRAPH][meta_node]
 		n = nodes[0]
 
-		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_LAYOUT, VIEW_SHAPE]: #, VIEW_COLOR
+		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_SHAPE]: #, VIEW_COLOR, VIEW_LAYOUT
 			root[prop][meta_node] = root[prop][n]
 		for e in root.getInOutEdges(meta_node):
 			root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
@@ -96,16 +96,16 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	comp_graph = root[VIEW_META_GRAPH][meta_node]
 	layout(comp_graph)
 	comp_graph.setName("_" + c_id)
-	root[VIEW_SIZE][meta_node] = get_n_size(meta_graph, meta_node)
-	# root[VIEW_LAYOUT][meta_node] = bb.center()
+	# root[VIEW_LAYOUT][meta_node] = tlp.computeBoundingBox(comp_graph).center()
 	root[NAME][meta_node] = c_name
 	root[COMPARTMENT][meta_node] = out_comp
 	root[TYPE][meta_node] = TYPE_COMPARTMENT
-	root[VIEW_SHAPE][meta_node] = SQUARE_SHAPE
+	root[VIEW_SHAPE][meta_node] = REACTION_SHAPE
 	root[ID][meta_node] = c_id
 	root[ANNOTATION][meta_node] = go_id
+	root[VIEW_SIZE][meta_node] = get_n_size(meta_graph, meta_node)
 	for e in root.getInOutEdges(meta_node):
-		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]] 
+		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
 		# todo: fix size: we have no more metanodes
 		s = get_e_size(meta_graph, e)
 		root[VIEW_SIZE][e] = tlp.Size(s, s)

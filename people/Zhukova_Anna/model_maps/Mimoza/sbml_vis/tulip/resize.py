@@ -26,7 +26,6 @@ def get_n_size(graph, n):
 	view_meta_graph = root.getGraphProperty(VIEW_META_GRAPH)
 
 	n_type = root[TYPE][n]
-	s = 0
 	if TYPE_REACTION == n_type:
 		s = REACTION_SIZE * get_n_length(graph, n)
 	elif TYPE_COMPARTMENT == n_type:

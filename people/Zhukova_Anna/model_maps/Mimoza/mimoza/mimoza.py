@@ -9,6 +9,7 @@ MIMOZA_UPLOAD_ERROR_URL = '%s/upload_error.html' % MIMOZA_URL
 
 MIMOZA_JS = 'lib/modelmap/maptools.js'
 MIMOZA_POPUP_JS = 'lib/modelmap/popup_formatter.js'
+MIMOZA_GEOJSON_JS = 'lib/modelmap/geojson_manager.js'
 MIMOZA_CSS = 'lib/modelmap/modelmap.css'
 MIMOZA_FAVICON = 'lib/modelmap/fav.ico'
 
@@ -26,5 +27,5 @@ LOADER_ICON = 'lib/modelmap/loader.gif'
 
 SBML_ORG = "http://sbml.org"
 
-JS_SCRIPTS = [LEAFLET_JS, LEAFLET_LABEL_JS, JQUERY_JS, MIMOZA_JS, MIMOZA_POPUP_JS, JQUERY_UI_JS]
+JS_SCRIPTS = [LEAFLET_JS, LEAFLET_LABEL_JS, JQUERY_JS, MIMOZA_JS, MIMOZA_POPUP_JS, MIMOZA_GEOJSON_JS, JQUERY_UI_JS]
 CSS_SCRIPTS = [MIMOZA_CSS, LEAFLET_CSS, LEAFLET_LABEL_CSS, JQUERY_UI_CSS]
