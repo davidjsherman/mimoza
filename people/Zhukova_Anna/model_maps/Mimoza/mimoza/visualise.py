@@ -8,11 +8,11 @@ import cgitb
 import sys
 
 from libsbml import SBMLReader
+from converter.tulip_graph2geojson import graph2geojson
 
 from tulip import tlp
 
 from sbml_vis.file.serializer import serialize
-from sbml_vis.converter.graph2geojson import graph2geojson
 from sbml_vis.converter.sbml2tlp import import_sbml
 from mimoza.mimoza import *
 

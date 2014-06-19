@@ -154,10 +154,14 @@ function matchesLevel(level, feature) {
     return level >= feature.properties.zoom_min && level <= feature.properties.zoom_max
 }
 
-function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId) {
+function rescaleZoom(zMin, level) {
+    return -1 == zMin ? 0 : level - zMin;
+}
+
+function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId, zMin) {
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, level);
+            return pnt2layer(map, feature, rescaleZoom(zMin, level));
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId);
@@ -168,10 +172,10 @@ function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, l
     })
 }
 
-function getUbiquitousJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId) {
+function getUbiquitousJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId, zMin) {
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, level);
+            return pnt2layer(map, feature, rescaleZoom(zMin, level));
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId);
@@ -182,18 +186,20 @@ function getUbiquitousJson(map, jsn, name2popup, specific_names, name2selection,
     })
 }
 
-function getGeoJson(map, json_data, z, ubLayer, mapId, cId) {
+function getGeoJson(map, json_data, z, ubLayer, mapId, cId, zMin) {
     var name2selection = {};
     var name2popup = {};
     var specific_names = [];
 
-    var sp_json = getSpecificJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId);
-    var ub_json = getUbiquitousJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId);
+    var sp_json = getSpecificJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId, zMin);
+    var ub_json = getUbiquitousJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId, zMin);
 
     var all_names = Object.keys(name2popup);
     if (all_names.length <= 0) {
         return false;
     }
+
+    z = rescaleZoom(zMin, z);
 
     if (map.getZoom() == z) {
         map.addLayer(sp_json);

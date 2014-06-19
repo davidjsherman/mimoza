@@ -5,7 +5,7 @@ SPECIES_SIZE = 2.5
 UBIQUITOUS_SPECIES_SIZE = 2
 REACTION_SIZE = 1.5
 
-UBIQUITOUS_EDGE_SIZE = 0.4
+UBIQUITOUS_EDGE_SIZE = 0.2
 EDGE_SIZE = 0.5
 
 
@@ -35,8 +35,8 @@ def get_n_size(graph, n):
 	if TYPE_REACTION == n_type:
 		s = REACTION_SIZE * get_n_length(graph, n)
 	elif TYPE_COMPARTMENT == n_type:
-		bb = tlp.computeBoundingBox(view_meta_graph[n])
-		s = max(bb.width(), bb.height())
+		(m_x, m_y), (M_x, M_y) = get_min_max(view_meta_graph[n])
+		s = max(M_x - m_x, M_y - m_y)
 	elif ubiquitous[n]:
 		s = UBIQUITOUS_SPECIES_SIZE
 	else:

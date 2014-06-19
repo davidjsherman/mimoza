@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from tulip import tlp
-from sbml_vis.tulip.layout.layout_utils import layout
+from sbml_vis.tulip.layout.layout_utils import layout, layout_single_species
 from sbml_vis.tulip.cluster.merge_inside_comp import mic
 from sbml_vis.tulip.node_cloner import merge_nodes
 from sbml_vis.tulip.resize import get_n_size, resize_edges, get_e_size
@@ -86,7 +86,6 @@ def factor_nodes(graph):
 			root[VIEW_SIZE][e] = get_e_size(graph, e)
 
 
-
 def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root = meta_graph.getRoot()
 	ns = filter(lambda n: root[COMPARTMENT][n] == c_id, meta_graph.getNodes())
@@ -95,6 +94,7 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	meta_node = meta_graph.createMetaNode(ns, False)
 	comp_graph = root[VIEW_META_GRAPH][meta_node]
 	layout(comp_graph)
+	# layout_single_species(comp_graph, {})
 	comp_graph.setName("_" + c_id)
 	# root[VIEW_LAYOUT][meta_node] = tlp.computeBoundingBox(comp_graph).center()
 	root[NAME][meta_node] = c_name
@@ -104,7 +104,7 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root[ID][meta_node] = c_id
 	root[ANNOTATION][meta_node] = go_id
 	root[VIEW_SIZE][meta_node] = get_n_size(meta_graph, meta_node)
-	for e in root.getInOutEdges(meta_node):
+	for e in meta_graph.getInOutEdges(meta_node):
 		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
 		# todo: fix size: we have no more metanodes
 		root[VIEW_SIZE][e] = get_e_size(meta_graph, e)

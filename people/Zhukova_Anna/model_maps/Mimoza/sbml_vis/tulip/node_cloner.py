@@ -90,36 +90,14 @@ def merge_nodes(graph, ns):
 
 	root = graph.getRoot()
 	
-	graphs_to_update = set()
-	for m in ns:
-		graphs_to_update |= set(get_graphs_by_node(m, root))
-	graphs_to_update -= {root}
+	# graphs_to_update = set()
+	# for m in ns:
+	# 	graphs_to_update |= set(get_graphs_by_node(m, root))
+	# graphs_to_update -= {root}
 	n = ns.pop()
 	for m in ns:
-		for old_e in root.getInEdges(m):
-			from_m = root.source(old_e)
-			e = None#root.addEdge(from_m, n)
-			for gr in graphs_to_update:
-				if gr.isElement(from_m) and gr.isElement(m):
-					if not gr.isElement(n):
-						gr.addNode(n)
-					if e:
-						gr.addEdge(e)
-					else:
-						e = gr.addEdge(from_m, n)
-			for propName in root.getProperties():
-				root[propName][e] = root[propName][old_e]
-		for old_e in root.getOutEdges(m):
-			to_m = root.target(old_e)
-			e = None#root.addEdge(n, to_m)
-			for gr in graphs_to_update:
-				if gr.isElement(to_m) and gr.isElement(m):
-					if not gr.isElement(n):
-						gr.addNode(n)
-					if e:
-						gr.addEdge(e)
-					else:
-						e = gr.addEdge(n, to_m)
-			for propName in root.getProperties():
-				root[propName][e] = root[propName][old_e]
+		for e in root.getInEdges(m):
+			root.setTarget(e, n)
+		for e in root.getOutEdges(m):
+			root.setSource(e, n)
 		root.delNode(m, True)

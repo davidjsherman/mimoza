@@ -31,7 +31,7 @@ function getTiles(img) {
     return L.tileLayer(img, {
         continuousWorld: true,
         noWrap: true,
-        tileSize: 512,
+        tileSize: 256,
         maxZoom: 5,
         minZoom: 0,
         tms: true,
@@ -58,8 +58,8 @@ function handlePopUpClosing(map) {
 
 function initializeMap(jsonData, mapId, maxZoom, cId) {
     var ubLayer = L.layerGroup();
-    var tiles = getTiles("lib/modelmap/white512.jpg");
-    var gray_tiles =  getTiles("lib/modelmap/gray512.jpg");
+    var tiles = getTiles("lib/modelmap/white.jpg");
+    var gray_tiles =  getTiles("lib/modelmap/gray.jpg");
 
     adjustMapSize(mapId);
 
@@ -70,7 +70,7 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
         padding: [MARGIN, MARGIN],
         layers: [gray_tiles, ubLayer],
         crs: L.CRS.Simple
-    }); // .setView([0, 0], 1);
+    }).setView([0, 0], 1);
 
     if (jsonData == null) {
         return map;
@@ -90,7 +90,7 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
     var zMin = -1;
     var zMax = -1;
     for (var z = 0; z <= maxZoom; z++) {
-        if (getGeoJson(map, jsonData, z, ubLayer, mapId, cId)) {
+        if (getGeoJson(map, jsonData, z, ubLayer, mapId, cId, zMin)) {
             if (-1 == zMin) {
                 zMin = z;
             } else {
@@ -102,14 +102,12 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
     if (zMin > 0 || zMax < maxZoom) {
         map.on('zoomend', function (e) {
             var zoom = map.getZoom();
-            if (zoom < zMin) {
-                map.setZoom(zMin);
-            } else if (zoom > zMax) {
-                map.setZoom(zMin);
+            if (zoom > zMax - zMin) {
+                map.setZoom(zMax - zMin);
             }
         });
     }
-    map.setView(bounds.getCenter(), zMin);
+//    map.setView(bounds.getCenter(), zMin);
 
     var baseLayers = {
         "White background": tiles,

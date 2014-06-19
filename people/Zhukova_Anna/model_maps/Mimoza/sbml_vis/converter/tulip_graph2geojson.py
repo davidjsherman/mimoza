@@ -1,15 +1,18 @@
-from tulip import tlp
 import geojson
+
+from tulip import tlp
 
 from sbml_vis.tulip.cluster.factoring import factor_nodes, comp_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
-from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, VIEW_SIZE
-from sbml_vis.tulip.layout.layout_utils import layout, shorten_edges, layout_ub_sps, remove_overlaps, \
-	layout_generalized_ns, layout_cytoplasm, align_generalized_ns, rotate_generalized_ns
+from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT
+from sbml_vis.tulip.layout.layout_utils import layout, layout_cytoplasm
 from sbml_vis.tulip.resize import get_min_max
+from sbml_vis.tulip.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
+from sbml_vis.tulip.layout.ubiquitous_layout import bend_ubiquitous_edges
 
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
+
 
 DIMENSION = 512
 
@@ -78,8 +81,8 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 		level += 1
 
 		if level == max_comp_level:
-			# layout_generalized_ns(meta_graph, node2graph)
 			rotate_generalized_ns(meta_graph, node2graph)
+			bend_ubiquitous_edges(meta_graph, metas, node2graph)
 
 		ns = set()
 		for n in metas:
@@ -136,6 +139,8 @@ def process_generalized_entities(graph, max_level, min_level, node2graph):
 
 	meta_ns = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)]
 	for e in (e for e in meta_graph.getEdges() if meta_graph.isMetaEdge(e)):
+		for edg in root[VIEW_META_GRAPH][e]:
+			root[VIEW_LAYOUT][edg] = []
 		root[VIEW_META_GRAPH][e] = edge_def_val
 	for n in meta_ns:
 		root[MAX_ZOOM][n] = max_level - 1
@@ -158,6 +163,8 @@ def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_z
 	edge_def_val, node_def_val = root[VIEW_META_GRAPH].getEdgeDefaultValue(), root[VIEW_META_GRAPH].getNodeDefaultValue()
 
 	while level > min_zooming_level:
+		# mic(meta_graph)
+		grs = []
 		for c_id in {comp.getId() for comp in input_model.getListOfCompartments() if
 		             level == c_id2info[comp.getId()][2][0]}:
 			(name, go, (level, out_c_id)) = c_id2info[c_id]
@@ -168,10 +175,15 @@ def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_z
 				root[MIN_ZOOM][m] = level
 			node2graph[meta_node] = mg
 			for e in meta_graph.getInOutEdges(meta_node):
+				for edg in root[VIEW_META_GRAPH][e]:
+					root[VIEW_LAYOUT][edg] = []
 				root[VIEW_META_GRAPH][e] = edge_def_val
 			root[VIEW_META_GRAPH][meta_node] = node_def_val
-		layout_cytoplasm(meta_graph)
-		shorten_edges(meta_graph)
-		remove_overlaps(meta_graph)
-		layout_ub_sps(meta_graph)
+			grs.append(mg)
+		layout_cytoplasm(meta_graph, node2graph)
+		# shorten_edges(meta_graph)
+		# remove_overlaps(meta_graph)
+		# layout_ub_sps(meta_graph)
+		# for mg in grs:
+		# 	layout_single_species(mg, node2graph)
 		level -= 1
