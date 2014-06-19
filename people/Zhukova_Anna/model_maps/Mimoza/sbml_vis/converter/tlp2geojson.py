@@ -69,7 +69,7 @@ def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_i
 		props.update({"id": root[ID][n], "name": root[NAME][n], "label": get_short_name(graph, n, onto),
 		              "generalized": generalized})
 		if TYPE_REACTION == type_[n]:
-			ins, outs = get_formula(graph, n)
+			ins, outs = get_formula(graph, n, n2graph)
 			props.update(
 				{"gene_association": get_gene_association_list(annotation[n]), "reversible": root[REVERSIBLE][n],
 				 'reactants': ins, 'products': outs, "transport": transport[n]})
@@ -111,21 +111,32 @@ def get_gene_association_list(ga):
 		return ''
 
 
-def get_formula(graph, n):
+def get_formula(graph, n, n2graph):
 	root = graph.getRoot()
 	ins, outs = [], []
 	stoich_formatter = lambda edge, node: "{0} * {1}".format(int(root[STOICHIOMETRY][edge]), root[NAME][node])
-	for edge in graph.getInOutEdges(n):
-		es = [edge]
-		if TYPE_COMPARTMENT == root[TYPE][graph.source(edge)] or TYPE_COMPARTMENT == root[TYPE][graph.target(edge)]:
-			es = root[VIEW_META_GRAPH][edge]
-		for e in es:
-			nd = root.source(e)
-			if nd == n:
-				nd = root.target(e)
-				outs.append(stoich_formatter(e, nd))
-			else:
-				ins.append(stoich_formatter(e, nd))
+	for m in graph.getInNodes(n):
+		for m in n2graph[m].getNodes() if TYPE_COMPARTMENT == root[TYPE][m] else [m]:
+			e = root.existEdge(m, n, False)
+			if root.isElement(e):
+				ins.append(stoich_formatter(e, m))
+	for m in graph.getOutNodes(n):
+		for m in n2graph[m].getNodes() if TYPE_COMPARTMENT == root[TYPE][m] else [m]:
+			e = root.existEdge(m, n, False)
+			if root.isElement(e):
+				outs.append(stoich_formatter(e, m))
+
+	# for edge in graph.getInOutEdges(n):
+	# 	es = [edge]
+	# 	if TYPE_COMPARTMENT == root[TYPE][graph.source(edge)] or TYPE_COMPARTMENT == root[TYPE][graph.target(edge)]:
+	# 		es = root[VIEW_META_GRAPH][edge]
+	# 	for e in es:
+	# 		nd = root.source(e)
+	# 		if nd == n:
+	# 			nd = root.target(e)
+	# 			outs.append(stoich_formatter(e, nd))
+	# 		else:
+	# 			ins.append(stoich_formatter(e, nd))
 	return '&'.join(ins), '&'.join(outs)
 
 
