@@ -2,8 +2,17 @@ from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
 from sbml_vis.tulip.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, COMPARTMENT, TYPE_SPECIES
 
+OVERLAP_REMOVAL = "Fast Overlap Removal"
+
 __author__ = 'anna'
 
+
+def remove_overlaps(graph, margin=1):
+	root = graph.getRoot()
+	ds = tlp.getDefaultPluginParameters(OVERLAP_REMOVAL, graph)
+	ds["x border"] = margin
+	ds["y border"] = margin
+	graph.computeLayoutProperty(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 def ub_or_single(nd, graph):
 	root = graph.getRoot()
@@ -16,6 +25,7 @@ def layout_ub_sps(graph, comp2node=None, comp2out=None):
 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
 	view_size = root.getSizeProperty(VIEW_SIZE)
 
+	ns = []
 	for r in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n]):
 		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
 		r_radius = view_size[r].getW() * sqrt(2) / 2
@@ -26,6 +36,7 @@ def layout_ub_sps(graph, comp2node=None, comp2out=None):
 
 			ubiquitous_participants = sorted((nd for nd in get_participants(r) if ub_or_single(nd, graph)),
 			                                 key=lambda nd: root[ID][nd])
+			ns.extend(ubiquitous_participants)
 			ub_participants_len = len(ubiquitous_participants)
 			if not ub_participants_len:
 				continue
@@ -84,10 +95,7 @@ def layout_ub_sps(graph, comp2node=None, comp2out=None):
 				# c = min(edge_len - s0 + dc + r_radius - UBIQUITOUS_SPECIES_SIZE, 2 * UBIQUITOUS_SPECIES_SIZE)
 				c = min(edge_len - s0 + dc + r_radius - size, 2 * size)
 				if comp2node:
-					margin = max(c * cos(gamma), c * sin(gamma)) + 2
-					dx, dy = ub_layout_shift(root,
-					                         (x0, y0, root[VIEW_SIZE][ub].getW() / 2, root[VIEW_SIZE][ub].getH() / 2),
-					                         margin, root[COMPARTMENT][r], root[COMPARTMENT][ub], comp2node, comp2out)
+					dx, dy = ub_layout_shift(root, (x0, y0), (c * cos(gamma), c * sin(gamma)), root[COMPARTMENT][r], root[COMPARTMENT][ub], comp2node, comp2out)
 					x0 += dx
 					y0 += dy
 
@@ -106,9 +114,11 @@ def layout_ub_sps(graph, comp2node=None, comp2out=None):
 					dc += ds
 				# if degrees(beta) < 0:
 				# s -= ds
+	remove_overlaps(root.inducedSubGraph(ns))
 
 
-def ub_layout_shift(root, (u_x, u_y, u_w, u_h), margin, cur_comp, other_comp, comp2node, comp2out):
+
+def ub_layout_shift(root, (u_x, u_y), (margin_x, margin_y), cur_comp, other_comp, comp2node, comp2out):
 	if cur_comp == other_comp:
 		return 0, 0
 	# _, _, (_, out_c_id) = c_id2info[c_id]
@@ -116,9 +126,9 @@ def ub_layout_shift(root, (u_x, u_y, u_w, u_h), margin, cur_comp, other_comp, co
 		n = comp2node[cur_comp]
 		n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
 		n_w, n_h = root[VIEW_LAYOUT][n].getW() / 2, root[VIEW_LAYOUT][n].getH() / 2
-		x_bottom, x_top = n_x - n_w - margin, n_x + n_w + margin
+		x_bottom, x_top = n_x - n_w - margin_x, n_x + n_w + margin_x
 		x_bottom, x_top = u_x - x_bottom, x_top - u_x
-		y_bottom, y_top = n_y - n_h - margin, n_y + n_h + margin
+		y_bottom, y_top = n_y - n_h - margin_y, n_y + n_h + margin_y
 		y_bottom, y_top = u_y - y_bottom, y_top - u_y
 		x_diff, y_diff = min(x_bottom, x_top), min(y_bottom, y_top)
 		if x_diff > y_diff:
@@ -131,8 +141,8 @@ def ub_layout_shift(root, (u_x, u_y, u_w, u_h), margin, cur_comp, other_comp, co
 		n = comp2node[other_comp]
 		n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
 		n_w, n_h = root[VIEW_LAYOUT][n].getW() / 2, root[VIEW_LAYOUT][n].getH() / 2
-		x_bottom, x_top = n_x - n_w + margin, n_x + n_w - margin
-		y_bottom, y_top = n_y - n_h + margin, n_y + n_h - margin
+		x_bottom, x_top = n_x - n_w + margin_x, n_x + n_w - margin_x
+		y_bottom, y_top = n_y - n_h + margin_y, n_y + n_h - margin_y
 		x, y = 0, 0
 		if x_bottom > u_x:
 			x = x_bottom - u_x

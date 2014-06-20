@@ -2,14 +2,12 @@ from math import atan2, cos, sin, sqrt
 
 from tulip import tlp
 from sbml_vis.tulip.node_cloner import clone_node
-from sbml_vis.tulip.resize import get_n_size, get_min_max
+from sbml_vis.tulip.resize import get_n_size
 from sbml_vis.tulip.graph_properties import *
-from sbml_vis.tulip.layout.ubiquitous_layout import layout_ub_sps, ub_or_single
+from sbml_vis.tulip.layout.ubiquitous_layout import layout_ub_sps, ub_or_single, remove_overlaps
 
 
 COMPONENT_PACKING = "Connected Component Packing"
-
-OVERLAP_REMOVAL = "Fast Overlap Removal"
 
 FM3 = "FM^3 (OGDF)"
 
@@ -171,14 +169,6 @@ def layout_force(qo, margin=1):
 	ds = tlp.getDefaultPluginParameters(FM3, qo)
 	ds["Unit edge length"] = margin
 	qo.computeLayoutProperty(FM3, root[VIEW_LAYOUT], ds)
-
-
-def remove_overlaps(graph, margin=1):
-	root = graph.getRoot()
-	ds = tlp.getDefaultPluginParameters(OVERLAP_REMOVAL, graph)
-	ds["x border"] = margin
-	ds["y border"] = margin
-	graph.computeLayoutProperty(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
 def pack_cc(graph):

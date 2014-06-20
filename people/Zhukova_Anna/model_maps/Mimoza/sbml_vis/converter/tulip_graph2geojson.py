@@ -5,7 +5,8 @@ from tulip import tlp
 from sbml_vis.tulip.cluster.factoring import factor_nodes, comp_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, TYPE_REACTION, TYPE
-from sbml_vis.tulip.layout.layout_utils import layout, layout_cytoplasm, layout_single_species
+from sbml_vis.tulip.layout.layout_utils import layout, layout_cytoplasm, layout_single_species, shorten_edges, \
+	remove_overlaps
 from sbml_vis.tulip.resize import get_min_max
 from sbml_vis.tulip.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.tulip.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_ub_sps
@@ -191,8 +192,8 @@ def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_z
 			grs.append(mg)
 			c_id2n[c_id] = meta_node
 		layout_cytoplasm(meta_graph, node2graph)
-		# shorten_edges(meta_graph)
-		# remove_overlaps(meta_graph)
+		shorten_edges(meta_graph)
+		remove_overlaps(meta_graph)
 		# layout_ub_sps(meta_graph)
 		# for mg in grs:
 		# 	layout_single_species(mg, node2graph)
