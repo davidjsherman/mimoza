@@ -2,7 +2,6 @@ from math import atan2, cos, sin, sqrt
 
 from tulip import tlp
 from sbml_vis.tulip.node_cloner import clone_node
-from sbml_vis.tulip.resize import get_n_size
 from sbml_vis.tulip.graph_properties import *
 from sbml_vis.tulip.layout.ubiquitous_layout import layout_ub_sps, ub_or_single, remove_overlaps
 
@@ -14,71 +13,6 @@ FM3 = "FM^3 (OGDF)"
 CIRCULAR = "Circular (OGDF)"
 
 HIERARCHICAL_GRAPH = "Hierarchical Graph"
-
-
-def layout_single_species(meta_ns, node2graph):
-	if not meta_ns:
-		return
-	root = node2graph[meta_ns[0]].getRoot()
-	for n in meta_ns:
-		# m_ns = metanode_single_reactions(graph, node2graph, root)
-		W, H = root[VIEW_SIZE][n].getW(), root[VIEW_SIZE][n].getH()
-		m_x, m_y = root[VIEW_LAYOUT][n].getX() - W / 2, root[VIEW_LAYOUT][n].getY() - H / 2
-		graph = node2graph[n]
-		for s in (n for n in graph.getNodes() if not n in node2graph and 0 == graph.deg(n) and root.deg(n)):
-			w, h = root[VIEW_SIZE][s].getW() / 2, root[VIEW_SIZE][s].getH() / 2
-			ns = [n for n in root.getInOutNodes(s) if not graph.isElement(n)]
-			x, y = sum(root[VIEW_LAYOUT][n].getX() for n in ns) / len(ns) - m_x, sum(root[VIEW_LAYOUT][n].getY() for n in ns) / len(ns) - m_y
-			root[VIEW_LAYOUT][s] = tlp.Coord(min(max(x, w), W - w), min(max(y, h), H - h))
-		# unmetanode(graph, m_ns)
-
-
-def metanode_single_reactions(graph, n2graph, root):
-	m_ns = []
-	for r in (r for r in graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
-		stop = False
-		s_ns = [s for s in graph.getInOutNodes(r) if not s in n2graph]
-		for s in s_ns:
-			if graph.deg(s) > 1:
-				stop = True
-				break
-		if stop:
-			continue
-		s_ns.append(r)
-		meta_node = graph.createMetaNode(s_ns)
-		root[VIEW_SIZE][meta_node] = get_n_size(graph, meta_node)
-		m_ns.append(meta_node)
-	return m_ns
-
-
-def unmetanode(graph, m_ns):
-	for n in m_ns:
-		graph.openMetaNode(n)
-
-
-def layout_outer_single_species(graph, n2graph):
-	root = graph.getRoot()
-	# m_ns = metanode_single_reactions(graph, n2graph, root)
-	for meta_node in (n for n in graph.getNodes() if n in n2graph):
-		print root[NAME][meta_node]
-		mn_size = root[VIEW_SIZE][meta_node]
-		mn_w, mn_h = mn_size.getW() / 2, mn_size.getH() / 2
-		mn_layout = root[VIEW_LAYOUT][meta_node]
-		mn_x, mn_y = mn_layout.getX(), mn_layout.getY()
-		for m in (m for m in graph.getInOutNodes(meta_node) if (not m in n2graph) and graph.deg(m) == 1):
-			m_size = root[VIEW_SIZE][m]
-			w_m, h_m = m_size.getW(), m_size.getH()
-			ts = [t for t in root.getInOutNodes(m) if n2graph[meta_node].isElement(t)]
-			print "  ", [root[NAME][t] for t in ts]
-			x_t, y_t = sum(root[VIEW_LAYOUT][t].getX() for t in ts) / len(ts), sum(root[VIEW_LAYOUT][t].getY() for t in ts) / len(ts)
-			if abs(x_t - mn_w) <= abs(y_t - mn_h):
-				x0 = mn_x - mn_w - w_m if x_t < mn_w else mn_x + mn_w + w_m
-				y0 = mn_y + y_t
-			else:
-				x0 = mn_x + x_t
-				y0 = mn_y - mn_h - h_m if y_t < mn_h else mn_y + mn_h + h_m
-			root[VIEW_LAYOUT][m] = tlp.Coord(x0, y0)
-	# unmetanode(graph, m_ns)
 
 
 def shorten_edges(graph):

@@ -1,11 +1,9 @@
 from collections import defaultdict
 
-from tulip import tlp
-from sbml_vis.tulip.layout.layout_utils import layout, layout_single_species
-from sbml_vis.tulip.cluster.merge_inside_comp import mic
 from sbml_vis.tulip.node_cloner import merge_nodes
-from sbml_vis.tulip.resize import get_n_size, resize_edges, get_e_size
+from sbml_vis.tulip.resize import get_n_size, get_e_size
 from sbml_vis.tulip.graph_properties import *
+from sbml_vis.tulip.layout.layout_utils import layout
 
 
 __author__ = 'anna'

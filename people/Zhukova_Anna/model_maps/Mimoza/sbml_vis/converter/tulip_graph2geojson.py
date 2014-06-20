@@ -5,11 +5,11 @@ from tulip import tlp
 from sbml_vis.tulip.cluster.factoring import factor_nodes, comp_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, TYPE_REACTION, TYPE
-from sbml_vis.tulip.layout.layout_utils import layout, layout_cytoplasm, layout_single_species, shorten_edges, \
-	remove_overlaps
 from sbml_vis.tulip.resize import get_min_max
 from sbml_vis.tulip.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
-from sbml_vis.tulip.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_ub_sps
+from sbml_vis.tulip.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_ub_sps, layout_outer_reactions, \
+	remove_overlaps
+from sbml_vis.tulip.layout.layout_utils import layout, layout_cytoplasm, shorten_edges
 
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
@@ -64,6 +64,8 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 	level = min_zooming_level
 	while level <= max_comp_level:
 		if level < max_comp_level:
+			layout_ub_sps(meta_graph, c_id2n, c_id2info)
+			layout_outer_reactions(meta_graph, node2graph)
 			layout_ub_sps(meta_graph, c_id2n, c_id2info)
 		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e, meta_graph)):
 			features.append(
@@ -192,6 +194,7 @@ def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_z
 			grs.append(mg)
 			c_id2n[c_id] = meta_node
 		layout_cytoplasm(meta_graph, node2graph)
+		layout_outer_reactions(meta_graph, node2graph)
 		shorten_edges(meta_graph)
 		remove_overlaps(meta_graph)
 		# layout_ub_sps(meta_graph)
