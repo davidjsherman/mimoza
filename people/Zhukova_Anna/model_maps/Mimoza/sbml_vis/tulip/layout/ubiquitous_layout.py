@@ -1,6 +1,6 @@
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
-from sbml_vis.tulip.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID
+from sbml_vis.tulip.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, COMPARTMENT, TYPE_SPECIES
 
 __author__ = 'anna'
 
@@ -8,23 +8,24 @@ __author__ = 'anna'
 def ub_or_single(nd, graph):
 	root = graph.getRoot()
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
-	return ubiquitous[nd] or 1 == graph.deg(nd)
+	return (ubiquitous[nd] or 1 == graph.deg(nd)) and TYPE_SPECIES == root[TYPE][nd]
 
 
-def layout_ub_sps(graph):
+def layout_ub_sps(graph, comp2node=None, comp2out=None):
 	root = graph.getRoot()
 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
 	view_size = root.getSizeProperty(VIEW_SIZE)
 
 	for r in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n]):
-		x1, y1 = view_layout[r].getX(), view_layout[r].getY()
+		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
 		r_radius = view_size[r].getW() * sqrt(2) / 2
 		# c = min(view_size[r].getW() * 1.8, 3.5)  # edge-after-bent length
 		for (get_participants, get_reaction_edges, get_other_side_participants, direction) in [
 			(graph.getInNodes, graph.getOutEdges, graph.getOutNodes, 1),
 			(graph.getOutNodes, graph.getInEdges, graph.getInNodes, -1)]:
 
-			ubiquitous_participants = sorted((nd for nd in get_participants(r) if ub_or_single(nd, graph)), key=lambda nd: root[ID][nd])
+			ubiquitous_participants = sorted((nd for nd in get_participants(r) if ub_or_single(nd, graph)),
+			                                 key=lambda nd: root[ID][nd])
 			ub_participants_len = len(ubiquitous_participants)
 			if not ub_participants_len:
 				continue
@@ -38,24 +39,25 @@ def layout_ub_sps(graph):
 			just_one = len(ubiquitous_participants) == 1 and not specific_participants
 			if specific_participants:
 				specific_participant_example = specific_participants[0]
-				x2, y2 = view_layout[specific_participant_example].getX(), view_layout[specific_participant_example].getY()
+				s_x, s_y = view_layout[specific_participant_example].getX(), view_layout[specific_participant_example].getY()
 				species_size = view_size[specific_participant_example].getW() / 2
-				edge_len = (sqrt(pow(x1 - x2, 2) + pow(y2 - y1, 2)) - r_radius - species_size)
+				edge_len = (sqrt(pow(r_x - s_x, 2) + pow(s_y - r_y, 2)) - r_radius - species_size)
 			else:
 				specific_participants = filter(lambda n: not ub_or_single(n, graph), get_other_side_participants(r))
 				if specific_participants:
 					specific_participant_example = specific_participants[0]
-					x3, y3 = view_layout[specific_participant_example].getX(), view_layout[specific_participant_example].getY()
-					x2, y2 = x1 - (x3 - x1), y1 - (y3 - y1)
+					s_x, s_y = view_layout[specific_participant_example].getX(), view_layout[
+						specific_participant_example].getY()
+					s_x, s_y = r_x - (s_x - r_x), r_y - (s_y - r_y)
 				else:
-					# x2, y2 = x1 + view_size[r].getW() + UBIQUITOUS_SPECIES_SIZE * ub_participants_len * direction, y1
-					x2, y2 = x1 + view_size[r].getW() + size * ub_participants_len * direction, y1
+					# s_x, s_y = r_x + view_size[r].getW() + UBIQUITOUS_SPECIES_SIZE * ub_participants_len * direction, r_y
+					s_x, s_y = r_x + view_size[r].getW() + size * ub_participants_len * direction, r_y
 
 			# beta is the max angle between the ubiquitous and the specific edges
 			gap = 0 if just_one else 2 * min(100, max(60, ub_participants_len * 20))
 			beta0 = radians(gap / 2)
 			beta = beta0
-			d_beta = radians(gap/(ub_participants_len - 1))
+			d_beta = radians(gap / (ub_participants_len - 1))
 
 			# distance from reaction to the edge bent
 			# bent = min(UBIQUITOUS_SPECIES_SIZE / 2, edge_len / 2)
@@ -67,25 +69,32 @@ def layout_ub_sps(graph):
 			# s += ds * ub_participants_len / 2
 
 			# angle between the horizontal line and the reaction-specific-species edge
-			alpha = atan2(y2 - y1, x2 - x1)
+			alpha = atan2(s_y - r_y, s_x - r_x)
 
 			dc = 0
 			towards_edge = -1
 			for ub in ubiquitous_participants:
 				# it is the only edge as ubiquitous species are duplicated
 				e = get_reaction_edges(ub).next()
-				x0, y0 = x1 + s * cos(alpha), y1 + s * sin(alpha)
+				x0, y0 = r_x + s * cos(alpha), r_y + s * sin(alpha)
 				view_layout[e] = [tlp.Coord(x0, y0)]
 
 				gamma = alpha + beta
 				# edge-after-bent length
 				# c = min(edge_len - s0 + dc + r_radius - UBIQUITOUS_SPECIES_SIZE, 2 * UBIQUITOUS_SPECIES_SIZE)
 				c = min(edge_len - s0 + dc + r_radius - size, 2 * size)
+				if comp2node:
+					margin = max(c * cos(gamma), c * sin(gamma)) + 2
+					dx, dy = ub_layout_shift(root,
+					                         (x0, y0, root[VIEW_SIZE][ub].getW() / 2, root[VIEW_SIZE][ub].getH() / 2),
+					                         margin, root[COMPARTMENT][r], root[COMPARTMENT][ub], comp2node, comp2out)
+					x0 += dx
+					y0 += dy
 
-				x3, y3 = x0 + c * cos(gamma), y0 + c * sin(gamma)
-				view_layout[ub] = tlp.Coord(x3, y3)
+				s_x, s_y = x0 + c * cos(gamma), y0 + c * sin(gamma)
+				view_layout[ub] = tlp.Coord(s_x, s_y)
 				# if degrees(beta) > 0:
-				# 	s += ds
+				# s += ds
 				if degrees(beta) * degrees(beta + towards_edge * d_beta) < 0:
 					beta = -beta0
 					towards_edge = 1
@@ -96,19 +105,56 @@ def layout_ub_sps(graph):
 					s += ds / 3
 					dc += ds
 				# if degrees(beta) < 0:
-				# 	s -= ds
+				# s -= ds
+
+
+def ub_layout_shift(root, (u_x, u_y, u_w, u_h), margin, cur_comp, other_comp, comp2node, comp2out):
+	if cur_comp == other_comp:
+		return 0, 0
+	# _, _, (_, out_c_id) = c_id2info[c_id]
+	if cur_comp in comp2out and other_comp == comp2out[cur_comp][2][1]:
+		n = comp2node[cur_comp]
+		n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+		n_w, n_h = root[VIEW_LAYOUT][n].getW() / 2, root[VIEW_LAYOUT][n].getH() / 2
+		x_bottom, x_top = n_x - n_w - margin, n_x + n_w + margin
+		x_bottom, x_top = u_x - x_bottom, x_top - u_x
+		y_bottom, y_top = n_y - n_h - margin, n_y + n_h + margin
+		y_bottom, y_top = u_y - y_bottom, y_top - u_y
+		x_diff, y_diff = min(x_bottom, x_top), min(y_bottom, y_top)
+		if x_diff > y_diff:
+			x = -x_bottom if x_bottom < x_top else x_top
+			return x, 0
+		else:
+			y = -y_bottom if y_bottom < y_top else y_top
+			return 0, y
+	else:
+		n = comp2node[other_comp]
+		n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+		n_w, n_h = root[VIEW_LAYOUT][n].getW() / 2, root[VIEW_LAYOUT][n].getH() / 2
+		x_bottom, x_top = n_x - n_w + margin, n_x + n_w - margin
+		y_bottom, y_top = n_y - n_h + margin, n_y + n_h - margin
+		x, y = 0, 0
+		if x_bottom > u_x:
+			x = x_bottom - u_x
+		elif x_top < u_x:
+			x = x_top - u_x
+		if y_bottom > u_y:
+			y = y_bottom - u_y
+		elif y_top < u_y:
+			y = y_top - u_y
+		return x, y
 
 
 def bend_ubiquitous_edges(graph, nodes, node2graph):
 	root = graph.getRoot()
 	for r in (r for r in nodes if TYPE_REACTION == root[TYPE][r]):
-		lo = root[VIEW_LAYOUT][r]
-		s = root[VIEW_SIZE][r].getW()
-		for o_n in filter(lambda t: root[UBIQUITOUS][t] or not t in node2graph, graph.getInOutNodes(r)):
-			lo_n = root[VIEW_LAYOUT][o_n]
-			alpha = atan2(lo_n.getY() - lo.getY(), lo_n.getX() - lo.getX())
-			x0, y0 = lo.getX() + s * 0.7 * cos(alpha), lo.getY() + s * 0.7 * sin(alpha)
+		r_lo = root[VIEW_LAYOUT][r]
+		r_w = root[VIEW_SIZE][r].getW()
+		for s in (s for s in graph.getInOutNodes(r) if root[UBIQUITOUS][s] or not s in node2graph):
+			s_lo = root[VIEW_LAYOUT][s]
+			alpha = atan2(s_lo.getY() - r_lo.getY(), s_lo.getX() - r_lo.getX())
+			x0, y0 = r_lo.getX() + r_w * 0.7 * cos(alpha), r_lo.getY() + r_w * 0.7 * sin(alpha)
 			for m in node2graph[r].getNodes():
 				for e in root.getInOutEdges(m):
-					if o_n == root.target(e) or o_n == root.source(e):
+					if s == root.target(e) or s == root.source(e):
 						root[VIEW_LAYOUT][e] = [tlp.Coord(x0, y0)]

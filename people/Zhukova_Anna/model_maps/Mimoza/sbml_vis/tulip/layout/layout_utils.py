@@ -18,17 +18,21 @@ CIRCULAR = "Circular (OGDF)"
 HIERARCHICAL_GRAPH = "Hierarchical Graph"
 
 
-def layout_single_species(graph, node2graph):
-	root = graph.getRoot()
-	# m_ns = metanode_single_reactions(graph, node2graph, root)
-	(m_x, m_y), (M_x, M_y) = get_min_max(graph)#root.inducedSubGraph([n for n in graph.getNodes() if graph.deg(n)]))
-	W, H = M_x - m_x, M_y - m_y
-	for s in (n for n in graph.getNodes() if not n in node2graph and 0 == graph.deg(n) and root.deg(n)):
-		w, h = root[VIEW_SIZE][s].getW() / 2, root[VIEW_SIZE][s].getH() / 2
-		ns = [n for n in root.getInOutNodes(s) if not graph.isElement(n)]
-		x, y = sum(root[VIEW_LAYOUT][n].getX() for n in ns) / len(ns) - m_x, sum(root[VIEW_LAYOUT][n].getY() for n in ns) / len(ns) - m_y
-		root[VIEW_LAYOUT][s] = tlp.Coord(min(max(x, w), W - w), min(max(y, h), H - h))
-	# unmetanode(graph, m_ns)
+def layout_single_species(meta_ns, node2graph):
+	if not meta_ns:
+		return
+	root = node2graph[meta_ns[0]].getRoot()
+	for n in meta_ns:
+		# m_ns = metanode_single_reactions(graph, node2graph, root)
+		W, H = root[VIEW_SIZE][n].getW(), root[VIEW_SIZE][n].getH()
+		m_x, m_y = root[VIEW_LAYOUT][n].getX() - W / 2, root[VIEW_LAYOUT][n].getY() - H / 2
+		graph = node2graph[n]
+		for s in (n for n in graph.getNodes() if not n in node2graph and 0 == graph.deg(n) and root.deg(n)):
+			w, h = root[VIEW_SIZE][s].getW() / 2, root[VIEW_SIZE][s].getH() / 2
+			ns = [n for n in root.getInOutNodes(s) if not graph.isElement(n)]
+			x, y = sum(root[VIEW_LAYOUT][n].getX() for n in ns) / len(ns) - m_x, sum(root[VIEW_LAYOUT][n].getY() for n in ns) / len(ns) - m_y
+			root[VIEW_LAYOUT][s] = tlp.Coord(min(max(x, w), W - w), min(max(y, h), H - h))
+		# unmetanode(graph, m_ns)
 
 
 def metanode_single_reactions(graph, n2graph, root):

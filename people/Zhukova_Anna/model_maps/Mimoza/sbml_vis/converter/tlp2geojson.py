@@ -125,18 +125,6 @@ def get_formula(graph, n, n2graph):
 			e = root.existEdge(m, n, False)
 			if root.isElement(e):
 				outs.append(stoich_formatter(e, m))
-
-	# for edge in graph.getInOutEdges(n):
-	# 	es = [edge]
-	# 	if TYPE_COMPARTMENT == root[TYPE][graph.source(edge)] or TYPE_COMPARTMENT == root[TYPE][graph.target(edge)]:
-	# 		es = root[VIEW_META_GRAPH][edge]
-	# 	for e in es:
-	# 		nd = root.source(e)
-	# 		if nd == n:
-	# 			nd = root.target(e)
-	# 			outs.append(stoich_formatter(e, nd))
-	# 		else:
-	# 			ins.append(stoich_formatter(e, nd))
 	return '&'.join(ins), '&'.join(outs)
 
 
