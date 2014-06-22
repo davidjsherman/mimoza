@@ -69,7 +69,7 @@ def layout_cytoplasm(graph, node2graph, margin=1):
 
 
 def get_distance(n2size, qo):
-	return max(
+	return 1.4 * max(
 		n2size[n] + (max(n2size[m] for m in qo.getOutNodes(n)) if qo.outdeg(n) else 0) for n in n2size.iterkeys()) / 2
 
 

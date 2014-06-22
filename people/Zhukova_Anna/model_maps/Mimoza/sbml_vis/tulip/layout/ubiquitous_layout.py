@@ -2,7 +2,7 @@ from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
 from sbml_vis.tulip.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, COMPARTMENT, \
 	TYPE_SPECIES, \
-	TYPE_COMPARTMENT
+	TYPE_COMPARTMENT, NAME
 
 OVERLAP_REMOVAL = "Fast Overlap Removal"
 
@@ -202,7 +202,6 @@ def layout_outer_reactions(graph, n2graph):
 						r_y += r_h
 			used_coord.add((r_x, r_y))
 			root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
-
 
 
 def bend_ubiquitous_edges(graph, nodes, node2graph):

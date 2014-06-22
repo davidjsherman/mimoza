@@ -57,7 +57,7 @@ def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_i
 
 	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
 	c_id = root[COMPARTMENT][n]
-	size = root[VIEW_SIZE][n].getW() * scale_coefficient # if type_[n] in [TYPE_COMPARTMENT, COMPARTMENT] else get_n_length(graph, n)
+	size = root[VIEW_SIZE][n].getW() * scale_coefficient
 	props = {"size": size, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
 	         "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 
@@ -111,20 +111,25 @@ def get_gene_association_list(ga):
 		return ''
 
 
+def get_reaction_participants_inside_compartment(n, n2graph, root):
+	if TYPE_COMPARTMENT != root[TYPE][n]:
+		return [n]
+	result = []
+	for m in n2graph[n].getNodes():
+		result += get_reaction_participants_inside_compartment(m, n2graph, root)
+	return result
+
+
 def get_formula(graph, n, n2graph):
 	root = graph.getRoot()
 	ins, outs = [], []
-	stoich_formatter = lambda edge, node: "{0} * {1}".format(int(root[STOICHIOMETRY][edge]), root[NAME][node])
-	for m in graph.getInNodes(n):
-		for m in n2graph[m].getNodes() if TYPE_COMPARTMENT == root[TYPE][m] else [m]:
-			e = root.existEdge(m, n, False)
-			if root.isElement(e):
-				ins.append(stoich_formatter(e, m))
-	for m in graph.getOutNodes(n):
-		for m in n2graph[m].getNodes() if TYPE_COMPARTMENT == root[TYPE][m] else [m]:
-			e = root.existEdge(m, n, False)
-			if root.isElement(e):
-				outs.append(stoich_formatter(e, m))
+	stoich_formatter = lambda edge, node: "{0} * {1} ({2})".format(int(root[STOICHIOMETRY][edge]), root[NAME][node], root[TYPE][node])
+	for n_iterator, n_collection in [(graph.getInNodes(n), ins), (graph.getOutNodes(n), outs)]:
+		for m in n_iterator:
+			for s in get_reaction_participants_inside_compartment(m, n2graph, root):
+				e = root.existEdge(s, n, False)
+				if root.isElement(e):
+					n_collection.append(stoich_formatter(e, s))
 	return '&'.join(ins), '&'.join(outs)
 
 
