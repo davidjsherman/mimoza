@@ -98,8 +98,15 @@ function h2(text) {
     return "<h2>" + text + "</h2>";
 }
 
-function addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId) {
+function addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId, zoom) {
     if (EDGE == feature.properties.type) {
+        return;
+    }
+    var w = getSize(feature) / 2;
+    var scaleFactor = Math.pow(2, zoom);
+    var r = w * scaleFactor;
+    var big_enough = r > 10;
+    if (!big_enough) {
         return;
     }
     var content = h2(feature.properties.name) + p(i("id: ") + feature.properties.id);
@@ -173,12 +180,11 @@ function highlightCircle(feature, map) {
     var e = feature.geometry.coordinates;
     var x = e[0], y = e[1];
     var w = getSize(feature) / 2;
-    var southWest = map.unproject([x - w, y + w], 1),
-        northEast = map.unproject([x + w, y - w], 1),
-        bounds = new L.LatLngBounds(southWest, northEast);
-    var d = southWest.distanceTo(northEast);
-    var centre = bounds.getCenter();
-    return L.circle(centre, d / 2, props);
+    var centre = map.unproject([x, y], 1);
+    var r = w * scaleFactor;
+    node = L.circleMarker(centre, props);
+    node.setRadius(r/2);
+    return node;
 }
 
 function search(map, name2popup) {

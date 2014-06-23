@@ -95,6 +95,27 @@ def get_quotient_maps(chebi, input_model, sbml_file, verbose):
 		return None, None, None, None, None
 
 
+def compute_c_id2info(c_id2level, comp2go_term, input_model):
+	c_id2info = {}
+	for comp in input_model.getListOfCompartments():
+		c_id = comp.getId()
+		c_name = comp.getName()
+		if not c_name:
+			c_name = c_id
+		c_id2info[c_id] = (c_name, comp2go_term[c_id] if c_id in comp2go_term else None, c_id2level[c_id])
+
+	c_id2outs = {}
+	for c_id in c_id2info.iterkeys():
+		_, _, (_, out_c_id) = c_id2info[c_id]
+		outs = []
+		while out_c_id:
+			outs.append(out_c_id)
+			_, _, (_, out_c_id) = c_id2info[out_c_id]
+		c_id2outs[c_id] = outs
+
+	return c_id2info, c_id2outs
+
+
 def import_sbml(graph, input_model, sbml_file, verbose=False):
 	log(verbose, 'parsing ChEBI')
 	chebi = parse(get_chebi())
@@ -110,11 +131,20 @@ def import_sbml(graph, input_model, sbml_file, verbose=False):
 	onto = parse(get_go())
 	comp2go_term = get_comp2go(input_model, onto)
 	c_id2level = comp2level(input_model)
+	c_id2info, c_id2outs = compute_c_id2info(c_id2level, comp2go_term, input_model)
 
 	def get_r_comp(all_comp_ids):
 		if len(all_comp_ids) == 1:
 			return all_comp_ids.pop()
-		return min(all_comp_ids, key=lambda c_id: c_id2level[c_id][0])
+		get_level = lambda c_id: c_id2level[c_id][0]
+		outer_most = min(all_comp_ids, key=get_level)
+		inner_most = max(all_comp_ids, key=get_level)
+		outer_level, inner_level = get_level(outer_most), get_level(inner_most)
+		if outer_level == inner_level or not outer_most in c_id2outs[inner_most]:
+			return min(set(c_id2outs[inner_most]) & set(c_id2outs[outer_most]), key=get_level)
+		if outer_level - inner_level >= 1:
+			return min(c_id2outs[inner_most], key=get_level)
+		return outer_most
 
 	log(verbose, 'initialising the graph')
 	graph.setName(input_model.getId())
@@ -132,15 +162,7 @@ def import_sbml(graph, input_model, sbml_file, verbose=False):
 
 	log(verbose, 'marking species/reaction groups')
 	mark_ancestors(graph, r_id2g_id, s_id2gr_id)
-
-	c_id2info = {}
-	for comp in input_model.getListOfCompartments():
-		c_id = comp.getId()
-		c_name = comp.getName()
-		if not c_name:
-			c_name = c_id
-		c_id2info[c_id] = (c_name, comp2go_term[c_id] if c_id in comp2go_term else None, c_id2level[c_id])
-	return graph, chebi, c_id2info
+	return graph, chebi, c_id2info, c_id2outs
 
 
 def create_props(graph):

@@ -72,6 +72,8 @@ function pnt2layer(map, feature, zoom) {
             riseOnHover: false
         });
     }
+    var r = w * scaleFactor;
+    var big_enough = r > 10;
     var x = e[0], y = e[1];
     var is_bg = -1 != BG.indexOf(feature.properties.type);
     var props = {
@@ -86,14 +88,13 @@ function pnt2layer(map, feature, zoom) {
         lineJoin: ROUND,
         weight: is_bg ? 0 : Math.min(2, w / 10 * Math.pow(2, zoom)),
         fill: true,
-        clickable: !is_bg,
+        clickable: !is_bg && big_enough,
         zIndexOffset: is_bg ? -2000 : 1000,
         riseOnHover: !is_bg
     };
     var southWest = map.unproject([x - w, y + w], 1),
         northEast = map.unproject([x + w, y - w], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
-    var r = w * scaleFactor;
 //    r = southWest.distanceTo(northEast) / 2;
     var centre = map.unproject([x, y], 1);//bounds.getCenter();
     if (BG_SPECIES == feature.properties.type) {
@@ -127,14 +128,14 @@ function pnt2layer(map, feature, zoom) {
         return null;
     }
     node = L.featureGroup([node]);
-    if (w * scaleFactor * 0.89 >= 10) {
-        var size = Math.max(w * scaleFactor * 0.89 / 4, 8);
+    if (big_enough) {
+        var size = Math.max(r * 0.89 / 4, 8);
         var label = L.marker(centre,
             {
                 icon: L.divIcon({
                     className: 'label',
                     html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label + "</span>",
-                    iconSize: [w * scaleFactor * 0.89, w * scaleFactor * 0.89],
+                    iconSize: [r * 0.89, r * 0.89],
                     zIndexOffset: -1000,
                     riseOnHover: false
                 })
@@ -159,12 +160,13 @@ function rescaleZoom(zMin, level) {
 }
 
 function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId, zMin) {
+	var zoom = rescaleZoom(zMin, level);
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, rescaleZoom(zMin, level));
+            return pnt2layer(map, feature, zoom);
         },
         onEachFeature: function (feature, layer) {
-            addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId);
+            addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId, zoom);
         },
         filter: function (feature, layer) {
             return !feature.properties.ubiquitous && matchesLevel(level, feature) && matchesCompartment(cId, feature);
@@ -173,12 +175,13 @@ function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, l
 }
 
 function getUbiquitousJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId, zMin) {
+	var zoom = rescaleZoom(zMin, level);
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, rescaleZoom(zMin, level));
+            return pnt2layer(map, feature, zoom);
         },
         onEachFeature: function (feature, layer) {
-            addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId);
+            addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId, zoom);
         },
         filter: function (feature, layer) {
             return feature.properties.ubiquitous && matchesLevel(level, feature) && matchesCompartment(cId, feature);

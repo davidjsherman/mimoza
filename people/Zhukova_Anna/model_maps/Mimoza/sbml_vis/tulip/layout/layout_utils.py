@@ -140,8 +140,10 @@ def layout(graph, margin=1):
 	pack_cc(gr)
 	lo = root[VIEW_LAYOUT][next(gr.getNodes())]
 	graph.delAllSubGraphs(gr)
-	for m in (m for m in graph.getNodes() if not graph.deg(m)):
+	ms = [m for m in graph.getNodes() if not graph.deg(m)]
+	for m in ms:
 		root[VIEW_LAYOUT][m] = lo
+	remove_overlaps(root.inducedSubGraph(ms))
 
 	# apply_layout(graph, onto)
 
