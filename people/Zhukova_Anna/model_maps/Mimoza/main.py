@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # encoding: utf-8
 
 
@@ -7,8 +7,7 @@ import getopt
 import logging
 import os
 from os.path import dirname, abspath
-from shutil import copytree, copyfile
-import shutil
+from shutil import copytree
 
 from libsbml import SBMLReader
 
@@ -19,6 +18,7 @@ from sbml_vis.converter.sbml2tlp import import_sbml
 from sbml_vis.file.md5_checker import check_md5
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
+from sbml_vis.tulip.graph_properties import TYPE_REACTION, TYPE, NAME, ID
 import mimoza.mimoza
 
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
@@ -115,14 +115,10 @@ def main(argv=None):
 	graph = tlp.newGraph()
 	graph, onto, c_id2info, c_id2outs = import_sbml(graph, input_model, groups_sbml, True)
 
-	fc, max_zoom = graph2geojson(c_id2info, c_id2outs, graph, input_model, True)
-	archive_path = serialize(directory=directory, m_dir_id=m_id,
-	                         input_model=input_model, features=fc, groups_sbml=groups_sbml,
-	                         main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON,
-	                         verbose=verbose, max_zoom=max_zoom, comps=c_id2info)
-	if os.path.exists(archive_path):
-		copyfile(archive_path, "%s/%s.zip" % (sbml_dir, m_id))
-		shutil.rmtree(directory)
+	fc, max_zoom = graph2geojson(c_id2info, c_id2outs, graph, True)
+	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, features=fc, groups_sbml=groups_sbml,
+	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose,
+	          max_zoom=max_zoom, comps=c_id2info)
 
 
 def get_lib():

@@ -4,7 +4,7 @@ import geojson
 
 from sbml_vis.tulip.rename import get_short_name
 from sbml_vis.tulip.graph_properties import *
-from sbml_vis.tulip.resize import get_n_length, get_n_size, get_e_length
+from sbml_vis.tulip.resize import get_n_length, get_n_size, get_e_length, get_e_size
 
 
 __author__ = 'anna'
@@ -36,9 +36,9 @@ def e2feature(graph, e, id, scale, level_min, level_max, c_id2outs, scale_coeffi
 	ubiquitous = graph[UBIQUITOUS][e]
 	generalized = s in n2graph or t in n2graph
 	is_transport = transport[s] or transport[t]
-	size = size[e].getW()
-	props = {"size": size, "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e], "ubiquitous": ubiquitous,
-	         "generalized": generalized, "transport": is_transport, "zoom_min": level_min, "zoom_max": level_max}
+	props = {"size": get_e_size(root, e).getW(), "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e],
+	         "ubiquitous": ubiquitous, "generalized": generalized, "transport": is_transport,
+	         "zoom_min": level_min, "zoom_max": level_max}
 	s_c_id, t_c_id = root[COMPARTMENT][s], root[COMPARTMENT][t]
 	if s_c_id == t_c_id:
 		props["c_id"] = s_c_id
@@ -48,7 +48,8 @@ def e2feature(graph, e, id, scale, level_min, level_max, c_id2outs, scale_coeffi
 	return geojson.Feature(geometry=geom, properties=props, id=id)
 
 
-def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info, c_id2outs, scale_coefficient, n2graph):
+def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info, c_id2outs, scale_coefficient,
+              n2graph):
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
 	layout = graph.getLayoutProperty(VIEW_LAYOUT)
@@ -93,7 +94,8 @@ def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_i
 
 		bg_feature = None
 		if generalized:
-			bg_props = {"size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1, "zoom_max": max_bg_level,
+			bg_props = {"size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1,
+			            "zoom_max": max_bg_level,
 			            "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 			bg_feature = geojson.Feature(geometry=geom, properties=bg_props, id=id + 1)
 		return geojson.Feature(geometry=geom, properties=props, id=id), bg_feature
@@ -113,17 +115,18 @@ def get_gene_association_list(ga):
 
 def get_reaction_participants_inside_compartment(n, n2graph, root):
 	if TYPE_COMPARTMENT != root[TYPE][n]:
-		return [n]
-	result = []
+		return {n}
+	result = set()
 	for m in n2graph[n].getNodes():
-		result += get_reaction_participants_inside_compartment(m, n2graph, root)
+		result |= get_reaction_participants_inside_compartment(m, n2graph, root)
 	return result
 
 
 def get_formula(graph, n, n2graph):
 	root = graph.getRoot()
 	ins, outs = [], []
-	stoich_formatter = lambda edge, node: "{0} * {1} ({2})".format(int(root[STOICHIOMETRY][edge]), root[NAME][node], root[TYPE][node])
+	stoich_formatter = lambda edge, node: "{0} * {1} ({2})".format(int(root[STOICHIOMETRY][edge]), root[NAME][node],
+	                                                               root[TYPE][node])
 	for n_iterator, n_collection in [(graph.getInNodes(n), ins), (graph.getOutNodes(n), outs)]:
 		for m in n_iterator:
 			for s in get_reaction_participants_inside_compartment(m, n2graph, root):

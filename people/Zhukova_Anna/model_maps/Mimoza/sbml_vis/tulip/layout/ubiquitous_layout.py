@@ -2,8 +2,7 @@ from collections import defaultdict
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
 from sbml_vis.tulip.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, COMPARTMENT, \
-	TYPE_SPECIES, \
-	TYPE_COMPARTMENT, NAME
+	TYPE_SPECIES, TYPE_COMPARTMENT, NAME
 
 OVERLAP_REMOVAL = "Fast Overlap Removal"
 
@@ -33,13 +32,19 @@ def layout_ub_sps(graph, comp2node=None, comp2outs=None, filter_nd=lambda r: Tru
 	for r in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n] and filter_nd(n)):
 		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
 		r_radius = view_size[r].getW() * sqrt(2) / 2
+		r_comp_id = root[COMPARTMENT][r]
 		# c = min(view_size[r].getW() * 1.8, 3.5)  # edge-after-bent length
+		# todo: if it's actually a compartment, then
+		# extract the species from it
+		get_all = lambda rn, get_participants: {s for s in get_participants(rn) if TYPE_SPECIES == root[TYPE][s]}
+		# print root[NAME][r]
 		for (get_participants, get_reaction_edges, get_other_side_participants, direction) in [
 			(graph.getInNodes, graph.getOutEdges, graph.getOutNodes, 1),
 			(graph.getOutNodes, graph.getInEdges, graph.getInNodes, -1)]:
 
-			ubiquitous_participants = sorted((nd for nd in get_participants(r) if ub_or_single(nd, graph)),
+			ubiquitous_participants = sorted((nd for nd in get_all(r, get_participants) if ub_or_single(nd, root)),
 			                                 key=lambda nd: root[ID][nd])
+			# print "   ", [root[NAME][ub] for ub in ubiquitous_participants]
 			if comp2node:
 				for ub in ubiquitous_participants:
 					comp2ns[root[COMPARTMENT][ub]].append(ub)
@@ -52,7 +57,7 @@ def layout_ub_sps(graph, comp2node=None, comp2outs=None, filter_nd=lambda r: Tru
 			edge_len = size * max(ub_participants_len / 2, 3)
 			# edge_len = UBIQUITOUS_SPECIES_SIZE * max(ub_participants_len / 2, 3)
 
-			specific_participants = filter(lambda nd: not ub_or_single(nd, graph), get_participants(r))
+			specific_participants = filter(lambda nd: not ub_or_single(nd, root), get_all(r, get_participants))
 			just_one = len(ubiquitous_participants) == 1 and not specific_participants
 			if specific_participants:
 				specific_participant_example = specific_participants[0]
@@ -61,15 +66,19 @@ def layout_ub_sps(graph, comp2node=None, comp2outs=None, filter_nd=lambda r: Tru
 				species_size = view_size[specific_participant_example].getW() / 2
 				edge_len = (sqrt(pow(r_x - s_x, 2) + pow(s_y - r_y, 2)) - r_radius - species_size)
 			else:
-				specific_participants = filter(lambda n: not ub_or_single(n, graph), get_other_side_participants(r))
+				specific_participants = filter(lambda n: not ub_or_single(n, root), get_all(r, get_other_side_participants))
 				if specific_participants:
 					specific_participant_example = specific_participants[0]
 					s_x, s_y = view_layout[specific_participant_example].getX(), view_layout[
 						specific_participant_example].getY()
 					s_x, s_y = r_x - (s_x - r_x), r_y - (s_y - r_y)
 				else:
-					# s_x, s_y = r_x + view_size[r].getW() + UBIQUITOUS_SPECIES_SIZE * ub_participants_len * direction, r_y
 					s_x, s_y = r_x + view_size[r].getW() + size * ub_participants_len * direction, r_y
+					if comp2node:
+						comp_ids = {root[COMPARTMENT][s] for s in ubiquitous_participants} - {r_comp_id}
+						comp_nd = next((comp2node[c_id] for c_id in comp_ids if c_id in comp2node), None)
+						if comp_nd:
+							s_x, s_y = view_layout[comp_nd].getX(), view_layout[comp_nd].getY()
 
 			# beta is the max angle between the ubiquitous and the specific edges
 			gap = 0 if just_one else 2 * min(100, max(60, ub_participants_len * 20))
@@ -101,8 +110,8 @@ def layout_ub_sps(graph, comp2node=None, comp2outs=None, filter_nd=lambda r: Tru
 				# edge-after-bent length
 				# c = min(edge_len - s0 + dc + r_radius - UBIQUITOUS_SPECIES_SIZE, 2 * UBIQUITOUS_SPECIES_SIZE)
 				c = min(edge_len - s0 + dc + r_radius - size, 2 * size)
-				if comp2node:
-					dx, dy = ub_layout_shift(root, (x0, y0), (c * cos(gamma), c * sin(gamma)), root[COMPARTMENT][r],
+				if comp2node and root[COMPARTMENT][ub] != r_comp_id:
+					dx, dy = ub_layout_shift(root, (x0, y0), (c * cos(gamma), c * sin(gamma)), r_comp_id,
 					                         root[COMPARTMENT][ub], comp2node, comp2outs)
 					x0 += dx
 					y0 += dy
@@ -123,7 +132,9 @@ def layout_ub_sps(graph, comp2node=None, comp2outs=None, filter_nd=lambda r: Tru
 				# if degrees(beta) < 0:
 				# s -= ds
 	for c_id, ns in comp2ns.iteritems():
-		remove_overlaps(root.inducedSubGraph(ns))
+		gr = root.inducedSubGraph(ns)
+		remove_overlaps(gr)
+		root.delAllSubGraphs(gr)
 		if c_id in comp2node:
 			for n in ns:
 				fit_into_compartment(n, comp2node[c_id], root)
@@ -133,40 +144,42 @@ def layout_ub_sps(graph, comp2node=None, comp2outs=None, filter_nd=lambda r: Tru
 				fit_out_of_compartment(n, comp2node[inner_c_id], root)
 
 
-def ub_layout_shift(root, (u_x, u_y), (margin_x, margin_y), cur_comp, other_comp, comp2node, comp2outs):
-	if cur_comp == other_comp:
+def ub_layout_shift(root, (u_x, u_y), (margin_x, margin_y), r_comp, ub_comp, comp2node, comp2outs):
+	if r_comp == ub_comp:
 		return 0, 0
-	if cur_comp in comp2outs and other_comp in comp2outs[cur_comp]:
-		n = comp2node[cur_comp]
-		n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
-		n_w, n_h = root[VIEW_LAYOUT][n].getW() / 2, root[VIEW_LAYOUT][n].getH() / 2
+	if r_comp in comp2outs and ub_comp in comp2outs[r_comp]:
+		comp_n = comp2node[r_comp]
+		n_x, n_y = root[VIEW_LAYOUT][comp_n].getX(), root[VIEW_LAYOUT][comp_n].getY()
+		n_w, n_h = root[VIEW_LAYOUT][comp_n].getW() / 2, root[VIEW_LAYOUT][comp_n].getH() / 2
 		x_bottom, x_top = n_x - n_w - margin_x, n_x + n_w + margin_x
-		x_bottom, x_top = u_x - x_bottom, x_top - u_x
+		d_x_bottom, d_x_top = abs(u_x - x_bottom), abs(x_top - u_x)
 		y_bottom, y_top = n_y - n_h - margin_y, n_y + n_h + margin_y
-		y_bottom, y_top = u_y - y_bottom, y_top - u_y
-		x_diff, y_diff = min(x_bottom, x_top), min(y_bottom, y_top)
+		d_y_bottom, d_y_top = abs(u_y - y_bottom), abs(y_top - u_y)
+		x_diff, y_diff = min(d_x_bottom, d_x_top), min(d_y_bottom, d_y_top)
 		if x_diff > y_diff:
-			x = -x_bottom if x_bottom < x_top else x_top
+			x = (x_bottom if d_x_bottom < d_x_top else x_top) - u_x
 			return x, 0
 		else:
-			y = -y_bottom if y_bottom < y_top else y_top
+			y = (y_bottom if d_y_bottom < d_y_top else y_top) - u_y
 			return 0, y
-	else:
-		n = comp2node[other_comp]
-		n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
-		n_w, n_h = root[VIEW_LAYOUT][n].getW() / 2, root[VIEW_LAYOUT][n].getH() / 2
-		x_bottom, x_top = n_x - n_w + margin_x, n_x + n_w - margin_x
-		y_bottom, y_top = n_y - n_h + margin_y, n_y + n_h - margin_y
-		x, y = 0, 0
-		if x_bottom > u_x:
-			x = x_bottom - u_x
-		elif x_top < u_x:
-			x = x_top - u_x
-		if y_bottom > u_y:
-			y = y_bottom - u_y
-		elif y_top < u_y:
-			y = y_top - u_y
-		return x, y
+	# todo: should it be inside-comp-relative position instead for ub?
+	# elif ub_comp in comp2node:
+	# 	comp_n = comp2node[ub_comp]
+	# 	n_x, n_y = root[VIEW_LAYOUT][comp_n].getX(), root[VIEW_LAYOUT][comp_n].getY()
+	# 	n_w, n_h = root[VIEW_LAYOUT][comp_n].getW() / 2, root[VIEW_LAYOUT][comp_n].getH() / 2
+	# 	x_bottom, x_top = n_x - n_w + margin_x, n_x + n_w - margin_x
+	# 	y_bottom, y_top = n_y - n_h + margin_y, n_y + n_h - margin_y
+	# 	x, y = 0, 0
+	# 	if x_bottom > u_x:
+	# 		x = x_bottom - u_x
+	# 	elif x_top < u_x:
+	# 		x = x_top - u_x
+	# 	if y_bottom > u_y:
+	# 		y = y_bottom - u_y
+	# 	elif y_top < u_y:
+	# 		y = y_top - u_y
+	# 	return x, y
+	return 0, 0
 
 
 def layout_outer_reactions(graph, n2graph, filter_nd=lambda nd: True):
@@ -187,6 +200,9 @@ def layout_outer_reactions(graph, n2graph, filter_nd=lambda nd: True):
 		for r in rs:
 			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
 			ss = [s for s in root.getInOutNodes(r) if n2graph[c].isElement(s)]
+			ss_not_ub = [s for s in ss if not ub_or_single(s, n2graph[c])]
+			if ss_not_ub:
+				ss = ss_not_ub
 			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() for s in ss) / len(ss), sum(
 				root[VIEW_LAYOUT][s].getY() for s in ss) / len(ss)
 			x = c_bottom_x if s_x < c_w else c_top_x
@@ -201,6 +217,7 @@ def layout_outer_reactions(graph, n2graph, filter_nd=lambda nd: True):
 			root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
 		rs_graph = root.inducedSubGraph(rs)
 		remove_overlaps(rs_graph)
+		root.delAllSubGraphs(rs_graph)
 		for r in rs:
 			fit_into_compartment(r, c, root)
 

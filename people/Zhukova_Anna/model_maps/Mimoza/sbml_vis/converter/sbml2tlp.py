@@ -9,7 +9,7 @@ from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 
 from sbml_vis.tulip.node_cloner import clone_node
 from sbml_vis.tulip.graph_properties import *
-from sbml_vis.tulip.resize import REACTION_SIZE, UBIQUITOUS_SPECIES_SIZE, SPECIES_SIZE, UBIQUITOUS_EDGE_SIZE, EDGE_SIZE
+from sbml_vis.tulip.resize import REACTION_SIZE, get_n_size, get_e_size
 
 
 __author__ = 'anna'
@@ -21,21 +21,18 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 		n = graph.addNode()
 		comp = input_model.getCompartment(s.getCompartment())
 		graph[COMPARTMENT][n] = comp.getId()
-
 		_id = s.getId()
 		graph[ID][n] = _id
 		id2n[_id] = n
 		name = s.getName()
 		graph[NAME][n] = name
 		graph[TYPE][n] = TYPE_SPECIES
-
 		ub = _id in ub_sps
 		graph[UBIQUITOUS][n] = ub
 		if _id in species_id2chebi_id:
 			graph[ANNOTATION][n] = species_id2chebi_id[_id]
-
 		graph[VIEW_SHAPE][n] = SPECIES_SHAPE
-		graph[VIEW_SIZE][n] = tlp.Size(UBIQUITOUS_SPECIES_SIZE, UBIQUITOUS_SPECIES_SIZE) if ub else tlp.Size(SPECIES_SIZE, SPECIES_SIZE)
+		graph[VIEW_SIZE][n] = get_n_size(graph, n)
 	return id2n
 
 
@@ -44,7 +41,9 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 
 	def link_reaction_to_species(reaction_node, sp_ref, all_comps, is_reactant=True):
 		s_id = sp_ref.getSpecies()
+
 		all_comps.add(get_sp_comp(s_id))
+
 		species_node = id2n[s_id]
 		e = graph.addEdge(species_node, reaction_node) if is_reactant else graph.addEdge(reaction_node, species_node)
 		stoich = sp_ref.getStoichiometry()
@@ -55,16 +54,15 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[STOICHIOMETRY][e] = stoich
 		graph[NAME][e] = input_model.getSpecies(s_id).getName()
 		ub = graph[UBIQUITOUS][species_node]
-		graph[VIEW_SIZE][e] = tlp.Size(UBIQUITOUS_EDGE_SIZE, UBIQUITOUS_EDGE_SIZE) if ub else tlp.Size(EDGE_SIZE, EDGE_SIZE)
 		graph[UBIQUITOUS][e] = ub
 
 	for r in input_model.getListOfReactions():
 		name = r.getName()
 		# do not add fake isa reactions
-		if name.find("isa ") != -1 and 1 == r.getNumReactants() == r.getNumProducts() and get_sp_comp(
-				r.getListOfReactants().get(0).getSpecies()) == get_sp_comp(
-				r.getListOfProducts().get(0).getSpecies()):
-			continue
+		# if name.find("isa ") != -1 and 1 == r.getNumReactants() == r.getNumProducts() and get_sp_comp(
+		# 		r.getListOfReactants().get(0).getSpecies()) == get_sp_comp(
+		# 		r.getListOfProducts().get(0).getSpecies()):
+		# 	continue
 
 		n = graph.addNode()
 		graph[ANNOTATION][n] = getGeneAssociation(r)
@@ -74,7 +72,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[REVERSIBLE][n] = r.getReversible()
 
 		graph[VIEW_SHAPE][n] = REACTION_SHAPE
-		graph[VIEW_SIZE][n] = tlp.Size(REACTION_SIZE, REACTION_SIZE)
+		graph[VIEW_SIZE][n] = get_n_size(graph, n)
 
 		all_comps = set()
 		for sp_ref in r.getListOfReactants():
@@ -141,9 +139,9 @@ def import_sbml(graph, input_model, sbml_file, verbose=False):
 		inner_most = max(all_comp_ids, key=get_level)
 		outer_level, inner_level = get_level(outer_most), get_level(inner_most)
 		if outer_level == inner_level or not outer_most in c_id2outs[inner_most]:
-			return min(set(c_id2outs[inner_most]) & set(c_id2outs[outer_most]), key=get_level)
+			return max(set(c_id2outs[inner_most]) & set(c_id2outs[outer_most]), key=get_level)
 		if outer_level - inner_level >= 1:
-			return min(c_id2outs[inner_most], key=get_level)
+			return max(c_id2outs[inner_most], key=get_level)
 		return outer_most
 
 	log(verbose, 'initialising the graph')
@@ -158,7 +156,6 @@ def import_sbml(graph, input_model, sbml_file, verbose=False):
 
 	log(verbose, 'duplicating nodes')
 	duplicate_nodes(graph)
-	# clean(graph)
 
 	log(verbose, 'marking species/reaction groups')
 	mark_ancestors(graph, r_id2g_id, s_id2gr_id)

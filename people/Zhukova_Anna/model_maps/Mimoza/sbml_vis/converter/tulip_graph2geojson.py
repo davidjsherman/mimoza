@@ -4,7 +4,8 @@ from tulip import tlp
 
 from sbml_vis.tulip.cluster.factoring import factor_nodes, comp_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
-from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT
+from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, NAME, TYPE_REACTION, TYPE, \
+	ID, VIEW_SIZE
 from sbml_vis.tulip.resize import get_min_max
 from sbml_vis.tulip.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.tulip.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_ub_sps, layout_outer_reactions, \
@@ -53,17 +54,17 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 	while level <= max_comp_level:
 		if level < max_comp_level:
 			# node wasn't yet serialised => we can change its position
-			filter_nd=lambda nd: root[MAX_ZOOM][nd] >= level
+			filter_nd=lambda nd: root[MIN_ZOOM][nd] >= level
 			layout_ub_sps(meta_graph, c_id2n, c_id2outs, filter_nd)
 			layout_outer_reactions(meta_graph, node2graph, filter_nd)
 			layout_ub_sps(meta_graph, c_id2n, c_id2outs, filter_nd)
-		for e in (e for e in meta_graph.getEdges() if level == min(max_comp_level, e_max_zoom(e))):
+		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e)):
 			features.append(
 				e2feature(meta_graph, e, i, scale, e_min_zoom(e), e_max_zoom(e), c_id2outs,
 				          scale_coefficient, node2graph))
 			i += 1
 
-		for n in (n for n in meta_graph.getNodes() if level == min(max_comp_level, root[MAX_ZOOM][n])):
+		for n in (n for n in meta_graph.getNodes() if level == root[MIN_ZOOM][n]):
 			f, bg = n2feature(meta_graph, n, i, scale, root[MIN_ZOOM][n], root[MAX_ZOOM][n], max_zooming_level, onto,
 			                  c_id2info, c_id2outs, scale_coefficient, node2graph)
 			i += (2 if bg else 1)
@@ -78,48 +79,30 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 		if level == max_comp_level:
 			rotate_generalized_ns(meta_graph, node2graph)
 			bend_ubiquitous_edges(meta_graph, metas, node2graph)
-		# else:
-		# 	layout_single_species(metas, node2graph)
+
 		for n in metas:
 			mg = node2graph[n]
-			n_center = root[VIEW_LAYOUT][n]
-			mg_center = tlp.computeBoundingBox(mg).center()
-			d_x, d_y = -mg_center.getX() + n_center.getX(), -mg_center.getY() + n_center.getY()
+			n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+			n_w, n_h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
+			mg_bb = tlp.computeBoundingBox(mg)
+			mg_x, mg_y = mg_bb.center().getX(), mg_bb.center().getY()
+			mg_w, mg_h = mg_bb.width() / 2, mg_bb.height() / 2
+			d_x, d_y = -mg_x + n_x, -mg_y + n_y
+			# d_x, d_y = -(mg_x - mg_w) + (n_x - n_w), -(mg_y - mg_h) + (n_y - n_h)
 			root[VIEW_LAYOUT].translate(tlp.Coord(d_x, d_y), mg)
 
-		# ns = set()
-		# e2lo = {}
-		# for r in (r for r in meta_graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
-		# 	for e in root.getInOutEdges(r):
-		# 		e2lo[e] = root[VIEW_LAYOUT][e]
-		# for n in metas:
-		# 	mg = node2graph[n]
-		# 	ms = set(mg.getNodes())
-		# 	ns |= ms
-		# 	for m in ms:
-		# 		for p in root.getInOutNodes(m):
-		# 			# if meta_graph.isElement(p) and level <= root[MAX_ZOOM][p]:
-		# 			if root[MIN_ZOOM][p] <= level <= root[MAX_ZOOM][p]:
-		# 				ns.add(p)
-		# 	n_center = root[VIEW_LAYOUT][n]
-		# 	mg_center = tlp.computeBoundingBox(mg).center()
-		# 	d_x, d_y = -mg_center.getX() + n_center.getX(), -mg_center.getY() + n_center.getY()
-		# 	root[VIEW_LAYOUT].translate(tlp.Coord(d_x, d_y), mg)
-		# for p in meta_graph.getNodes():
-		# 	if root[MIN_ZOOM][p] <= level <= root[MAX_ZOOM][p]:
-		# 		ns.add(p)
 		ns = [n for n in root.getNodes() if root[MIN_ZOOM][n] <= level <= root[MAX_ZOOM][n]]
+		# root.delSubGraph(meta_graph)
 		meta_graph = root.inducedSubGraph(list(ns))
-		# for e in e2lo.iterkeys():
-		# 	root[VIEW_LAYOUT][e] = e2lo[e]
+
 	return features
 
 
-def graph2geojson(c_id2info, c_id2outs, graph, input_model, verbose):
+def graph2geojson(c_id2info, c_id2outs, graph, verbose):
 	root = graph.getRoot()
 
 	max_comp_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
-	min_zooming_level = 0  # max_level - 1
+	min_zooming_level = 0 # max_comp_level - 1
 	max_zooming_level = max_comp_level + 3
 
 	initialize_zoom(root, max_zooming_level, min_zooming_level)
@@ -130,7 +113,7 @@ def graph2geojson(c_id2info, c_id2outs, graph, input_model, verbose):
 	meta_graph = process_generalized_entities(graph, max_comp_level, min_zooming_level, node2graph)
 
 	log(verbose, 'compartments -> metanodes')
-	c_id2n = process_compartments(c_id2info, graph, input_model, max_comp_level - 1, meta_graph, min_zooming_level, node2graph)
+	c_id2n = process_compartments(c_id2info, c_id2outs, max_comp_level - 1, meta_graph, min_zooming_level, node2graph)
 
 	log(verbose, 'tlp nodes -> geojson features')
 	features = meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
@@ -142,63 +125,60 @@ def graph2geojson(c_id2info, c_id2outs, graph, input_model, verbose):
 
 def process_generalized_entities(graph, max_level, min_level, node2graph):
 	root = graph.getRoot()
-	edge_def_val, node_def_val = root.getGraphProperty(VIEW_META_GRAPH).getEdgeDefaultValue(), root[VIEW_META_GRAPH].getNodeDefaultValue()
 
-	ns = list(graph.getNodes())
-	meta_graph = graph.inducedSubGraph(ns)
-	meta_graph.setName("meta graph")
+	meta_graph = graph.inducedSubGraph([n for n in graph.getNodes()])
 	factor_nodes(meta_graph)
 
-	meta_ns = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)]
-	for e in (e for e in meta_graph.getEdges() if meta_graph.isMetaEdge(e)):
-		for edg in root[VIEW_META_GRAPH][e]:
-			root[VIEW_LAYOUT][edg] = []
-		root[VIEW_META_GRAPH][e] = edge_def_val
-	for n in meta_ns:
+	for n in (n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)):
 		root[MAX_ZOOM][n] = max_level - 1
 		root[MIN_ZOOM][n] = min_level
 		mg = root[VIEW_META_GRAPH][n]
 		for m in mg.getNodes():
 			root[MIN_ZOOM][m] = max_level
-		root[VIEW_META_GRAPH][n] = node_def_val
 		node2graph[n] = mg
 
-	layout(meta_graph)
+	unmetanode(meta_graph)
 
+	layout(meta_graph)
 	align_generalized_ns(meta_graph, node2graph)
 
 	return meta_graph
 
 
-def process_compartments(c_id2info, graph, input_model, level, meta_graph, min_zooming_level, node2graph):
-	root = graph.getRoot()
-	edge_def_val, node_def_val = root[VIEW_META_GRAPH].getEdgeDefaultValue(), root[VIEW_META_GRAPH].getNodeDefaultValue()
+def unmetanode(meta_graph, meta_ns=None):
+	root = meta_graph.getRoot()
+	edge_def_val, node_def_val = root.getGraphProperty(VIEW_META_GRAPH).getEdgeDefaultValue(), root[VIEW_META_GRAPH].getNodeDefaultValue()
+	if not meta_ns:
+		meta_ns = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)]
+	root[VIEW_LAYOUT].setAllEdgeValue([])
+	root[VIEW_META_GRAPH].setAllEdgeValue(edge_def_val)
+	for n in meta_ns:
+		root[VIEW_META_GRAPH][n] = node_def_val
+		for e in (e for e in root.getInOutEdges(n) if not meta_graph.isElement(e)):
+			root.delEdge(e, True)
+
+
+def process_compartments(c_id2info, c_id2outs, current_zoom_level, meta_graph, min_zoom_level, n2graph):
+	root = meta_graph.getRoot()
+
 	c_id2n = {}
-	while level > min_zooming_level:
-		# mic(meta_graph)
-		grs = []
-		for c_id in {comp.getId() for comp in input_model.getListOfCompartments() if
-		             level == c_id2info[comp.getId()][2][0]}:
-			(name, go, (level, out_c_id)) = c_id2info[c_id]
-			meta_node = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id)
-			root[MIN_ZOOM][meta_node] = root[MAX_ZOOM][meta_node] = level - 1
-			mg = root[VIEW_META_GRAPH][meta_node]
-			for m in mg.getNodes():
-				root[MIN_ZOOM][m] = level
-			node2graph[meta_node] = mg
-			for e in meta_graph.getInOutEdges(meta_node):
-				for edg in root[VIEW_META_GRAPH][e]:
-					root[VIEW_LAYOUT][edg] = []
-				root[VIEW_META_GRAPH][e] = edge_def_val
-			root[VIEW_META_GRAPH][meta_node] = node_def_val
-			grs.append(mg)
-			c_id2n[c_id] = meta_node
-		layout_cytoplasm(meta_graph, node2graph)
-		layout_outer_reactions(meta_graph, node2graph)
-		shorten_edges(meta_graph)
-		remove_overlaps(meta_graph)
-		# layout_ub_sps(meta_graph)
-		# for mg in grs:
-		# 	layout_single_species(mg, node2graph)
-		level -= 1
+	while current_zoom_level > min_zoom_level:
+		for c_id in c_id2info.iterkeys():
+			(name, go, (l, out_c_id)) = c_id2info[c_id]
+			if current_zoom_level != l:
+				continue
+
+			comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id)
+			root[MIN_ZOOM][comp_n] = root[MAX_ZOOM][comp_n] = current_zoom_level - 1
+			comp_graph = root[VIEW_META_GRAPH][comp_n]
+			for m in comp_graph.getNodes():
+				root[MIN_ZOOM][m] = current_zoom_level
+			n2graph[comp_n] = comp_graph
+			c_id2n[c_id] = comp_n
+			unmetanode(meta_graph, [comp_n])
+		layout_cytoplasm(meta_graph, n2graph, c_id2n, c_id2outs)
+		# layout_outer_reactions(meta_graph, n2graph)
+		# shorten_edges(meta_graph)
+		# remove_overlaps(meta_graph)
+		current_zoom_level -= 1
 	return c_id2n

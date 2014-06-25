@@ -68,9 +68,9 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
         minZoom: 0,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
-        layers: [gray_tiles, ubLayer],
+        layers: [tiles, ubLayer],
         crs: L.CRS.Simple
-    }).setView([0, 0], 1);
+    });
 
     if (jsonData == null) {
         return map;
@@ -107,7 +107,7 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
             }
         });
     }
-//    map.setView(bounds.getCenter(), zMin);
+	map.setView([0, 0], zMin);
 
     var baseLayers = {
         "White background": tiles,

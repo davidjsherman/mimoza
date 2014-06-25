@@ -1,4 +1,5 @@
 from collections import defaultdict
+from tulip import tlp
 
 from sbml_vis.tulip.node_cloner import merge_nodes
 from sbml_vis.tulip.resize import get_n_size, get_e_size
@@ -33,8 +34,6 @@ def merge_ubs_for_similar_reactions(graph):
 
 def factor_nodes(graph):
 	root = graph.getRoot()
-	# clone = root.inducedSubGraph(list(graph.getNodes()))
-
 	merge_ubs_for_similar_reactions(graph)
 
 	ancestor2nodes = defaultdict(list)
@@ -50,19 +49,20 @@ def factor_nodes(graph):
 		all_nodes = list(nodes)
 
 		meta_node = graph.createMetaNode(all_nodes, False)
-		mg = graph[VIEW_META_GRAPH][meta_node]
 		n = nodes[0]
 
 		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_SHAPE]: #, VIEW_COLOR, VIEW_LAYOUT
 			root[prop][meta_node] = root[prop][n]
 		for e in root.getInOutEdges(meta_node):
-			root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
+			sample_e = list(root[VIEW_META_GRAPH][e])[0]
+			root[UBIQUITOUS][e] = root[UBIQUITOUS][sample_e]
+			root[STOICHIOMETRY][e] = root[STOICHIOMETRY][sample_e]
 		root[ID][meta_node] = root[ANCESTOR_ID][n]
 		root[NAME][meta_node] = root[ANCESTOR_NAME][n]
 		root[VIEW_SIZE][meta_node] = get_n_size(root, meta_node)
 
 		if TYPE_REACTION == type_:
-			mg.setName("generalized {0} ({1})".format(root[NAME][n], len(nodes)))
+			root[NAME][meta_node] = "generalized %s (%d)" % (root[NAME][n], len(nodes))
 			root[REVERSIBLE][meta_node] = True
 			root[TRANSPORT][meta_node] = False
 			for n in nodes:
@@ -72,16 +72,8 @@ def factor_nodes(graph):
 					root[TRANSPORT][meta_node] = True
 			root[ANNOTATION][meta_node] = "\nor\n".join({root[ANNOTATION][it] for it in nodes})
 		else:
-			mg.setName("{0} ({1})".format(root[ANCESTOR_NAME][n], len(nodes)))
+			root[NAME][meta_node] = "%s (%d)" % (root[ANCESTOR_NAME][n], len(nodes))
 			root[ANNOTATION][meta_node] = root[ANCESTOR_ANNOTATION][n]
-
-		root[NAME][meta_node] = mg.getName()
-
-	# root.delSubGraph(clone)
-	for n in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n] and graph.isMetaNode(n)):
-		for e in graph.getInOutEdges(n):
-			root[STOICHIOMETRY][e] = root[STOICHIOMETRY][list(root[VIEW_META_GRAPH][e])[0]]
-			root[VIEW_SIZE][e] = get_e_size(graph, e)
 
 
 def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
@@ -89,24 +81,20 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	ns = filter(lambda n: root[COMPARTMENT][n] == c_id, meta_graph.getNodes())
 	if not ns:
 		return None
-	meta_node = meta_graph.createMetaNode(ns, False)
-	comp_graph = root[VIEW_META_GRAPH][meta_node]
+	comp_n = meta_graph.createMetaNode(ns, False)
+	comp_graph = root[VIEW_META_GRAPH][comp_n]
 	layout(comp_graph)
-	# layout_single_species(comp_graph, {})
-	comp_graph.setName("_" + c_id)
-	# root[VIEW_LAYOUT][meta_node] = tlp.computeBoundingBox(comp_graph).center()
-	root[NAME][meta_node] = c_name
-	root[COMPARTMENT][meta_node] = out_comp
-	root[TYPE][meta_node] = TYPE_COMPARTMENT
-	root[VIEW_SHAPE][meta_node] = REACTION_SHAPE
-	root[ID][meta_node] = c_id
-	root[ANNOTATION][meta_node] = go_id
-	root[VIEW_SIZE][meta_node] = get_n_size(meta_graph, meta_node)
-	for e in meta_graph.getInOutEdges(meta_node):
+	root[NAME][comp_n] = c_name
+	root[COMPARTMENT][comp_n] = out_comp
+	root[TYPE][comp_n] = TYPE_COMPARTMENT
+	root[VIEW_SHAPE][comp_n] = COMPARTMENT_SHAPE
+	root[ID][comp_n] = c_id
+	root[ANNOTATION][comp_n] = go_id
+	root[VIEW_SIZE][comp_n] = get_n_size(meta_graph, comp_n)
+	root[VIEW_LAYOUT][comp_n] = tlp.computeBoundingBox(comp_graph).center()
+	for e in meta_graph.getInOutEdges(comp_n):
 		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
-		# todo: fix size: we have no more metanodes
-		root[VIEW_SIZE][e] = get_e_size(meta_graph, e)
-	return meta_node
+	return comp_n
 
 
 # def factor_comps(meta_graph, c_name2id_go):

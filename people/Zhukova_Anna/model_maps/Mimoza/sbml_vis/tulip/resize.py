@@ -3,10 +3,12 @@ from sbml_vis.tulip.graph_properties import *
 
 SPECIES_SIZE = 2.5
 UBIQUITOUS_SPECIES_SIZE = 2
+
 REACTION_SIZE = 1.5
 
 UBIQUITOUS_EDGE_SIZE = 0.2
 EDGE_SIZE = 0.5
+COMP_EDGE_SIZE = 4
 
 
 def get_n_length(graph, n):
@@ -23,7 +25,7 @@ def get_e_length(graph, e):
 		r = t
 	if r:
 		return graph.getRoot()[VIEW_SIZE][r].getW() / REACTION_SIZE
-	return len(list(graph.getRoot()[VIEW_META_GRAPH][e])) if graph.isMetaEdge(e) else 1
+	return None
 
 
 def get_n_size(graph, n):
@@ -47,7 +49,10 @@ def get_n_size(graph, n):
 def get_e_size(graph, e):
 	root = graph.getRoot()
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
-	sz = UBIQUITOUS_EDGE_SIZE if ubiquitous[e] else EDGE_SIZE * get_e_length(graph, e)
+	if ubiquitous[e]:
+		return tlp.Size(UBIQUITOUS_EDGE_SIZE, UBIQUITOUS_EDGE_SIZE)
+	l = get_e_length(graph, e)
+	sz = EDGE_SIZE * l if l else COMP_EDGE_SIZE
 	return tlp.Size(sz, sz)
 
 
@@ -61,18 +66,14 @@ def get_comp_size(graph, n):
 
 def resize_edges(graph):
 	root = graph.getRoot()
-	view_size = root.getSizeProperty(VIEW_SIZE)
-
 	for e in graph.getEdges():
-		view_size[e] = get_e_size(graph, e)
+		root[VIEW_SIZE][e] = get_e_size(graph, e)
 
 
 def resize_nodes(graph):
 	root = graph.getRoot()
-	view_size = root.getSizeProperty(VIEW_SIZE)
-
 	for n in graph.getNodes():
-		view_size[n] = get_n_size(graph, n)
+		root[VIEW_SIZE][n] = get_n_size(graph, n)
 
 
 def resize(graph):
@@ -82,21 +83,18 @@ def resize(graph):
 
 def get_min_max(graph, margin=0):
 	root = graph.getRoot()
-	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
-	view_size = root.getSizeProperty(VIEW_SIZE)
-	m, M = view_layout.getMin(graph), view_layout.getMax(graph)
-	(m_x, m_y), (M_x, M_y) = (m.getX(), m.getY()), (M.getX(), M.getY())
+	(m_x, m_y), (M_x, M_y) = (None, None), (None, None)
 
 	for n in graph.getNodes():
-		x, y = view_layout[n].getX(), view_layout[n].getY()
-		w, h = view_size[n].getW() / 2, view_size[n].getH() / 2
-		if x - w < m_x:
+		x, y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+		w, h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
+		if m_x is None or x - w < m_x:
 			m_x = x - w
-		if x + w > M_x:
+		if M_x is None or x + w > M_x:
 			M_x = x + w
-		if y - h < m_y:
+		if m_y is None or y - h < m_y:
 			m_y = y - h
-		if y + h > M_y:
+		if M_y is None or y + h > M_y:
 			M_y = y + h
 
 	w, h = M_x - m_x, M_y - m_y

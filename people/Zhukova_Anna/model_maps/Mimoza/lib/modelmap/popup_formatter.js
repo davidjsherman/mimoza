@@ -137,7 +137,7 @@ function addPopups(map, name2popup, specific_names, name2selection, feature, lay
             name2selection[feature.properties.id] = L.featureGroup();
         }
         var selection_layer = name2selection[feature.properties.id];
-        selection_layer.addLayer(highlightCircle(feature, map));
+        selection_layer.addLayer(highlightCircle(feature, map, zoom));
         map.on('popupopen', function(e) {
             if (e.popup == popup) {
                 map.addLayer(selection_layer);
@@ -161,7 +161,7 @@ function addPopups(map, name2popup, specific_names, name2selection, feature, lay
 
 }
 
-function highlightCircle(feature, map) {
+function highlightCircle(feature, map, zoom) {
     var props = {
         name: feature.properties.name,
         title: feature.properties.name,
@@ -181,6 +181,7 @@ function highlightCircle(feature, map) {
     var x = e[0], y = e[1];
     var w = getSize(feature) / 2;
     var centre = map.unproject([x, y], 1);
+    var scaleFactor = Math.pow(2, zoom);
     var r = w * scaleFactor;
     node = L.circleMarker(centre, props);
     node.setRadius(r/2);

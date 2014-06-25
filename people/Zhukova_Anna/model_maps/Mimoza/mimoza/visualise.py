@@ -72,7 +72,7 @@ try:
 		log(True, 'sbml -> tlp')
 		graph = tlp.newGraph()
 		graph, onto, c_id2info, c_id2outs = import_sbml(graph, input_model, groups_sbml, True)
-		features, max_zoom = graph2geojson(c_id2info, c_id2outs, graph, input_model, True)
+		features, max_zoom = graph2geojson(c_id2info, c_id2outs, graph, True)
 		serialize(directory, m_dir_id, input_model, features, groups_sbml, MIMOZA_URL,
 		                JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True, max_zoom, c_id2info)
 

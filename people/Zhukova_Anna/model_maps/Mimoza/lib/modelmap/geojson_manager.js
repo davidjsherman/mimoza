@@ -51,7 +51,7 @@ function getSize(feature) {
 //    return feature.properties.size;
 }
 
-function pnt2layer(map, feature, zoom) {
+function pnt2layer(map, feature, zoom, result) {
     var e = feature.geometry.coordinates;
     var w = getSize(feature) / 2;
     var scaleFactor = Math.pow(2, zoom);
@@ -143,6 +143,7 @@ function pnt2layer(map, feature, zoom) {
         );
         node.addLayer(label);
     }
+    result[0] = true;
     return node;
 }
 
@@ -159,32 +160,17 @@ function rescaleZoom(zMin, level) {
     return -1 == zMin ? 0 : level - zMin;
 }
 
-function getSpecificJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId, zMin) {
-	var zoom = rescaleZoom(zMin, level);
+function getFilteredJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId, zMin, result, filterFunction) {
+    var zoom = rescaleZoom(zMin, level);
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, zoom);
+            return pnt2layer(map, feature, zoom, result);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId, zoom);
         },
         filter: function (feature, layer) {
-            return !feature.properties.ubiquitous && matchesLevel(level, feature) && matchesCompartment(cId, feature);
-        }
-    })
-}
-
-function getUbiquitousJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, cId, zMin) {
-	var zoom = rescaleZoom(zMin, level);
-    return L.geoJson(jsn, {
-        pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, zoom);
-        },
-        onEachFeature: function (feature, layer) {
-            addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId, zoom);
-        },
-        filter: function (feature, layer) {
-            return feature.properties.ubiquitous && matchesLevel(level, feature) && matchesCompartment(cId, feature);
+            return filterFunction(feature);
         }
     })
 }
@@ -194,19 +180,28 @@ function getGeoJson(map, json_data, z, ubLayer, mapId, cId, zMin) {
     var name2popup = {};
     var specific_names = [];
 
-    var sp_json = getSpecificJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId, zMin);
-    var ub_json = getUbiquitousJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId, zMin);
-
-    var all_names = Object.keys(name2popup);
-    if (all_names.length <= 0) {
+    var result=[false];
+    var specificJson = getFilteredJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId, zMin, result,
+        function (feature) {
+            return !feature.properties.ubiquitous && matchesLevel(z, feature) && matchesCompartment(cId, feature);
+        }
+    );
+    var ubiquitousJson = getFilteredJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, cId, zMin, result,
+        function (feature) {
+            return feature.properties.ubiquitous && matchesLevel(z, feature) && matchesCompartment(cId, feature);
+        }
+    );
+    if (!result[0]) {
         return false;
     }
+
+    var all_names = Object.keys(name2popup);
 
     z = rescaleZoom(zMin, z);
 
     if (map.getZoom() == z) {
-        map.addLayer(sp_json);
-        ubLayer.addLayer(ub_json);
+        map.addLayer(specificJson);
+        ubLayer.addLayer(ubiquitousJson);
         setAutocomplete(map, map.hasLayer(ubLayer) ? all_names : specific_names, name2popup);
     }
 
@@ -214,13 +209,13 @@ function getGeoJson(map, json_data, z, ubLayer, mapId, cId, zMin) {
         var zoom = map.getZoom();
         // if we are about to zoom in/out to this geojson
         if (zoom == z) {
-            map.addLayer(sp_json);
-            ubLayer.addLayer(ub_json);
+            map.addLayer(specificJson);
+            ubLayer.addLayer(ubiquitousJson);
             setAutocomplete(map, map.hasLayer(ubLayer) ? all_names : specific_names, name2popup);
         } else {
-            if (map.hasLayer(sp_json)) {
-                map.removeLayer(sp_json);
-                ubLayer.removeLayer(ub_json);
+            if (map.hasLayer(specificJson)) {
+                map.removeLayer(specificJson);
+                ubLayer.removeLayer(ubiquitousJson);
             }
         }
     });

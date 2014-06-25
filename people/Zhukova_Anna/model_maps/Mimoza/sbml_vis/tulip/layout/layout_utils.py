@@ -17,28 +17,26 @@ HIERARCHICAL_GRAPH = "Hierarchical Graph"
 
 def shorten_edges(graph):
 	root = graph.getRoot()
-	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
-	view_size = root.getSizeProperty(VIEW_SIZE)
 	diameter = lambda a, b: sqrt(pow(a, 2) + pow(b, 2))
 	for i in xrange(5):
 		processed = set()
 		moved = set()
-		for s in sorted((n for n in graph.getNodes() if not ub_or_single(n, graph)), key=lambda n: -view_size[n].getW()):
+		for s in sorted((n for n in graph.getNodes() if not ub_or_single(n, graph)), key=lambda n: -root[VIEW_SIZE][n].getW()):
 			processed.add(s)
-			s_lo, s_s = view_layout[s], view_size[s]
+			s_lo, s_s = root[VIEW_LAYOUT][s], root[VIEW_SIZE][s]
 			for t in (n for n in graph.getInOutNodes(s) if not ub_or_single(n, graph) and not n in processed):
-				t_lo, t_s = view_layout[t], view_size[t]
+				t_lo, t_s = root[VIEW_LAYOUT][t], root[VIEW_SIZE][t]
 				dx, dy = t_lo.getX() - s_lo.getX(), t_lo.getY() - s_lo.getY()
 				e_len = diameter(dx, dy)
 				short_len = diameter(s_s.getW(), s_s.getH()) / 2 + diameter(t_s.getW(), t_s.getH()) / 2
 				if e_len > short_len:
 					if not t in moved:
 						alpha = atan2(dx, dy)
-						view_layout[t] = tlp.Coord(s_lo.getX() + short_len * sin(alpha), s_lo.getY() + short_len * cos(alpha))
+						root[VIEW_LAYOUT][t] = tlp.Coord(s_lo.getX() + short_len * sin(alpha), s_lo.getY() + short_len * cos(alpha))
 						moved.add(t)
 					else:
 						alpha = atan2(-dx, -dy)
-						view_layout[s] = tlp.Coord(t_lo.getX() + short_len * sin(alpha), t_lo.getY() + short_len * cos(alpha))
+						root[VIEW_LAYOUT][s] = tlp.Coord(t_lo.getX() + short_len * sin(alpha), t_lo.getY() + short_len * cos(alpha))
 						moved.add(s)
 
 	layout_ub_sps(graph)
@@ -53,18 +51,17 @@ def neighbours(ns, org_ns, graph, processed, limit=500):
 	return ns | neighbours(all_ns, org_ns, graph, processed, limit - len(ns))
 
 
-def layout_cytoplasm(graph, node2graph, margin=1):
+def layout_cytoplasm(graph, node2graph, c_id2n, c_id2outs, margin=1):
 	root = graph.getRoot()
-	for n in graph.getNodes():
-		if TYPE_SPECIES == root[TYPE][n] and not n in node2graph and graph.deg(n) >= 4:
-			clone_node(graph, n)
+	# for n in graph.getNodes():
+	# 	if TYPE_SPECIES == root[TYPE][n] and not n in node2graph and graph.deg(n) >= 4:
+	# 		clone_node(graph, n)
 	sub = graph.inducedSubGraph([n for n in graph.getNodes() if not ub_or_single(n, graph)])
 	layout_force(sub, margin)
 	remove_overlaps(sub, margin)
 	pack_cc(sub)
-	# layout_outer_single_species(sub, node2graph)
 	graph.delAllSubGraphs(sub)
-	layout_ub_sps(graph)
+	layout_ub_sps(graph, c_id2n, c_id2outs)
 	# graph.applyAlgorithm("Edge bundling")
 
 
@@ -118,17 +115,18 @@ def layout(graph, margin=1):
 	sub = gr.inducedSubGraph([n for n in gr.getNodes() if not ub_or_single(n, gr)])
 	simples, cycles, mess = detect_components(sub)
 
-	side = None
+	# side = None
 	for qo in simples:
 		if qo.numberOfEdges() == 0:
 			continue
-		d = max((qo.deg(n) for n in qo.getNodes()))
-		if d > 2:
-			layout_hierarchically(qo, margin)
-		else:
-			if not side:
-				side = get_side(graph)
-			lo_a_line(qo, side)
+		layout_hierarchically(qo, margin)
+		# d = max((qo.deg(n) for n in qo.getNodes()))
+		# if d > 2:
+		# 	layout_hierarchically(qo, margin)
+		# else:
+		# 	if not side:
+		# 		side = get_side(graph)
+		# 	lo_a_line(qo, side)
 
 	for qo in cycles:
 		layout_circle(qo, margin)
@@ -136,14 +134,17 @@ def layout(graph, margin=1):
 	for qo in mess:
 		layout_force(qo, margin)
 		remove_overlaps(qo, margin)
+
 	layout_ub_sps(gr)
 	pack_cc(gr)
-	lo = root[VIEW_LAYOUT][next(gr.getNodes())]
+	lo = root[VIEW_LAYOUT][gr.getOneNode()]
 	graph.delAllSubGraphs(gr)
 	ms = [m for m in graph.getNodes() if not graph.deg(m)]
 	for m in ms:
 		root[VIEW_LAYOUT][m] = lo
-	remove_overlaps(root.inducedSubGraph(ms))
+	gr = root.inducedSubGraph(ms)
+	remove_overlaps(gr)
+	root.delAllSubGraphs(gr)
 
 	# apply_layout(graph, onto)
 
