@@ -83,16 +83,13 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 		for n in metas:
 			mg = node2graph[n]
 			n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
-			n_w, n_h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
 			mg_bb = tlp.computeBoundingBox(mg)
 			mg_x, mg_y = mg_bb.center().getX(), mg_bb.center().getY()
-			mg_w, mg_h = mg_bb.width() / 2, mg_bb.height() / 2
 			d_x, d_y = -mg_x + n_x, -mg_y + n_y
-			# d_x, d_y = -(mg_x - mg_w) + (n_x - n_w), -(mg_y - mg_h) + (n_y - n_h)
 			root[VIEW_LAYOUT].translate(tlp.Coord(d_x, d_y), mg)
 
 		ns = [n for n in root.getNodes() if root[MIN_ZOOM][n] <= level <= root[MAX_ZOOM][n]]
-		# root.delSubGraph(meta_graph)
+		root.delSubGraph(meta_graph)
 		meta_graph = root.inducedSubGraph(list(ns))
 
 	return features

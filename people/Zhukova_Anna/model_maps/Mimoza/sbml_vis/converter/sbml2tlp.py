@@ -114,7 +114,7 @@ def compute_c_id2info(c_id2level, comp2go_term, input_model):
 	return c_id2info, c_id2outs
 
 
-def import_sbml(graph, input_model, sbml_file, verbose=False):
+def import_sbml(input_model, sbml_file, verbose=False):
 	log(verbose, 'parsing ChEBI')
 	chebi = parse(get_chebi())
 
@@ -145,6 +145,7 @@ def import_sbml(graph, input_model, sbml_file, verbose=False):
 		return outer_most
 
 	log(verbose, 'initialising the graph')
+	graph = tlp.newGraph()
 	graph.setName(input_model.getId())
 	create_props(graph)
 

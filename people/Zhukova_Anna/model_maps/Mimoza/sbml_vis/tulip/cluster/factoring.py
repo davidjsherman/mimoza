@@ -2,7 +2,7 @@ from collections import defaultdict
 from tulip import tlp
 
 from sbml_vis.tulip.node_cloner import merge_nodes
-from sbml_vis.tulip.resize import get_n_size, get_e_size
+from sbml_vis.tulip.resize import get_n_size
 from sbml_vis.tulip.graph_properties import *
 from sbml_vis.tulip.layout.layout_utils import layout
 
@@ -21,9 +21,7 @@ def merge_ubs_for_similar_reactions(graph):
 			ancestor2nodes[ancestor].append(node)
 
 	ubiquitous = root[UBIQUITOUS]
-	for nodes in ancestor2nodes.itervalues():
-		if len(nodes) <= 1:
-			continue
+	for nodes in (nodes for nodes in ancestor2nodes.itervalues() if len(nodes) > 1):
 		id2ub_ns = defaultdict(set)
 		for node in nodes:
 			for n in (n for n in graph.getInOutNodes(node) if ubiquitous[n]):
@@ -34,7 +32,6 @@ def merge_ubs_for_similar_reactions(graph):
 
 def factor_nodes(graph):
 	root = graph.getRoot()
-	merge_ubs_for_similar_reactions(graph)
 
 	ancestor2nodes = defaultdict(list)
 	for node in graph.getNodes():
@@ -43,37 +40,36 @@ def factor_nodes(graph):
 			ancestor = ancestor, root[TYPE][node], root[COMPARTMENT][node]
 			ancestor2nodes[ancestor].append(node)
 
-	for (ancestor, type_, comp), nodes in ancestor2nodes.iteritems():
-		if len(nodes) <= 1:
-			continue
-		all_nodes = list(nodes)
+	for (ancestor, type_, comp), nodes in ((k, ns) for (k, ns) in ancestor2nodes.iteritems() if len(ns) > 1):
+		sample_n = nodes[0]
+		meta_n = graph.createMetaNode(nodes, False)
 
-		meta_node = graph.createMetaNode(all_nodes, False)
-		n = nodes[0]
+		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_SHAPE]:
+			root[prop][meta_n] = root[prop][sample_n]
+		root[ID][meta_n] = root[ANCESTOR_ID][sample_n]
+		root[VIEW_SIZE][meta_n] = get_n_size(root, meta_n)
 
-		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_SHAPE]: #, VIEW_COLOR, VIEW_LAYOUT
-			root[prop][meta_node] = root[prop][n]
-		for e in root.getInOutEdges(meta_node):
-			sample_e = list(root[VIEW_META_GRAPH][e])[0]
-			root[UBIQUITOUS][e] = root[UBIQUITOUS][sample_e]
-			root[STOICHIOMETRY][e] = root[STOICHIOMETRY][sample_e]
-		root[ID][meta_node] = root[ANCESTOR_ID][n]
-		root[NAME][meta_node] = root[ANCESTOR_NAME][n]
-		root[VIEW_SIZE][meta_node] = get_n_size(root, meta_node)
+		for meta_e in root.getInOutEdges(meta_n):
+			sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
+			root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
+			root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
 
 		if TYPE_REACTION == type_:
-			root[NAME][meta_node] = "generalized %s (%d)" % (root[NAME][n], len(nodes))
-			root[REVERSIBLE][meta_node] = True
-			root[TRANSPORT][meta_node] = False
-			for n in nodes:
-				if not root[REVERSIBLE][n]:
-					root[REVERSIBLE][meta_node] = False
-				if root[TRANSPORT][n]:
-					root[TRANSPORT][meta_node] = True
-			root[ANNOTATION][meta_node] = "\nor\n".join({root[ANNOTATION][it] for it in nodes})
+			root[NAME][meta_n] = "generalized %s (%d)" % (root[NAME][sample_n], len(nodes))
+			root[REVERSIBLE][meta_n] = True
+			root[TRANSPORT][meta_n] = False
+			for sample_n in nodes:
+				if not root[REVERSIBLE][sample_n]:
+					root[REVERSIBLE][meta_n] = False
+				if root[TRANSPORT][sample_n]:
+					root[TRANSPORT][meta_n] = True
+			root[ANNOTATION][meta_n] = "\nor\n".join({root[ANNOTATION][it] for it in nodes})
 		else:
-			root[NAME][meta_node] = "%s (%d)" % (root[ANCESTOR_NAME][n], len(nodes))
-			root[ANNOTATION][meta_node] = root[ANCESTOR_ANNOTATION][n]
+			root[NAME][meta_n] = "%s (%d)" % (root[ANCESTOR_NAME][sample_n], len(nodes))
+			root[ANNOTATION][meta_n] = root[ANCESTOR_ANNOTATION][sample_n]
+
+	merge_ubs_for_similar_reactions(root)
+
 
 
 def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
@@ -97,24 +93,24 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	return comp_n
 
 
-# def factor_comps(meta_graph, c_name2id_go):
-# 	mic(meta_graph)
-# 	root = meta_graph.getRoot()
-# 	cytoplasm = root.getAttribute(CYTOPLASM)
-# 	organelle2meta_node = {}
-# 	for organelle in root.getAttribute(ORGANELLES).split(";"):
-# 		(c_id, go) = c_name2id_go[organelle] if organelle in c_name2id_go else ('', '')
-# 		meta_node = comp_to_meta_node(meta_graph, organelle, (c_id, go), cytoplasm)
-# 		if meta_node:
-# 			organelle2meta_node[organelle] = meta_node
-# 	resize_edges(meta_graph)
-# 	return organelle2meta_node
+	# def factor_comps(meta_graph, c_name2id_go):
+	# mic(meta_graph)
+	# root = meta_graph.getRoot()
+	# 	cytoplasm = root.getAttribute(CYTOPLASM)
+	# 	organelle2meta_node = {}
+	# 	for organelle in root.getAttribute(ORGANELLES).split(";"):
+	# 		(c_id, go) = c_name2id_go[organelle] if organelle in c_name2id_go else ('', '')
+	# 		meta_node = comp_to_meta_node(meta_graph, organelle, (c_id, go), cytoplasm)
+	# 		if meta_node:
+	# 			organelle2meta_node[organelle] = meta_node
+	# 	resize_edges(meta_graph)
+	# 	return organelle2meta_node
 
 
-# def factor_cytoplasm(meta_graph, c_name2id_go):
-# 	root = meta_graph.getRoot()
-# 	cytoplasm = root.getAttribute(CYTOPLASM)
-# 	(c_id, go) = c_name2id_go[cytoplasm] if cytoplasm in c_name2id_go else ('', '')
-# 	meta_node = comp_to_meta_node(meta_graph, cytoplasm, (c_id, go), EXTRACELLULAR)
-# 	resize_edges(meta_graph)
-# 	return cytoplasm, meta_node
+	# def factor_cytoplasm(meta_graph, c_name2id_go):
+	# 	root = meta_graph.getRoot()
+	# 	cytoplasm = root.getAttribute(CYTOPLASM)
+	# 	(c_id, go) = c_name2id_go[cytoplasm] if cytoplasm in c_name2id_go else ('', '')
+	# 	meta_node = comp_to_meta_node(meta_graph, cytoplasm, (c_id, go), EXTRACELLULAR)
+	# 	resize_edges(meta_graph)
+	# 	return cytoplasm, meta_node

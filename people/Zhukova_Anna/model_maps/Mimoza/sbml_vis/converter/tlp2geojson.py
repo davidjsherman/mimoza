@@ -113,26 +113,27 @@ def get_gene_association_list(ga):
 		return ''
 
 
-def get_reaction_participants_inside_compartment(n, n2graph, root):
-	if TYPE_COMPARTMENT != root[TYPE][n]:
+def get_reaction_participants_inside_compartment(n, r, n2graph, root):
+	if TYPE_COMPARTMENT == root[TYPE][n]:
+		result = set()
+		for m in n2graph[n].getNodes():
+			result |= get_reaction_participants_inside_compartment(m, r, n2graph, root)
+		return result
+	elif not n in n2graph or r in n2graph:
 		return {n}
-	result = set()
-	for m in n2graph[n].getNodes():
-		result |= get_reaction_participants_inside_compartment(m, n2graph, root)
-	return result
+	else:
+		return {s for s in n2graph[n].getNodes()}
 
 
-def get_formula(graph, n, n2graph):
+def get_formula(graph, r, n2graph):
 	root = graph.getRoot()
 	ins, outs = [], []
-	stoich_formatter = lambda edge, node: "{0} * {1} ({2})".format(int(root[STOICHIOMETRY][edge]), root[NAME][node],
-	                                                               root[TYPE][node])
-	for n_iterator, n_collection in [(graph.getInNodes(n), ins), (graph.getOutNodes(n), outs)]:
-		for m in n_iterator:
-			for s in get_reaction_participants_inside_compartment(m, n2graph, root):
-				e = root.existEdge(s, n, False)
-				if root.isElement(e):
-					n_collection.append(stoich_formatter(e, s))
+	stoich_formatter = lambda edge, node: "{0} * {1}".format(int(root[STOICHIOMETRY][edge]), root[NAME][node])
+	for s_or_c in graph.getInOutNodes(r):
+		for s in get_reaction_participants_inside_compartment(s_or_c, r, n2graph, root):
+			e = root.existEdge(s, r, False)
+			if root.isElement(e):
+				(ins if s == root.source(e) else outs).append(stoich_formatter(e, s))
 	return '&'.join(ins), '&'.join(outs)
 
 

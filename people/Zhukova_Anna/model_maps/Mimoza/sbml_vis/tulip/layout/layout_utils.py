@@ -111,40 +111,40 @@ def pack_cc(graph):
 def layout(graph, margin=1):
 	root = graph.getRoot()
 
-	gr = graph.inducedSubGraph([n for n in graph.getNodes() if graph.deg(n)])
-	sub = gr.inducedSubGraph([n for n in gr.getNodes() if not ub_or_single(n, gr)])
-	simples, cycles, mess = detect_components(sub)
+	nodes_with_edges = [n for n in graph.getNodes() if graph.deg(n)]
+	nodes_wo_edges = [m for m in graph.getNodes() if not graph.deg(m)]
+	if nodes_with_edges:
+		gr = graph.inducedSubGraph(nodes_with_edges)
+		sub = gr.inducedSubGraph([n for n in gr.getNodes() if not ub_or_single(n, gr)])
+		simples, cycles, mess = detect_components(sub)
 
-	# side = None
-	for qo in simples:
-		if qo.numberOfEdges() == 0:
-			continue
-		layout_hierarchically(qo, margin)
-		# d = max((qo.deg(n) for n in qo.getNodes()))
-		# if d > 2:
-		# 	layout_hierarchically(qo, margin)
-		# else:
-		# 	if not side:
-		# 		side = get_side(graph)
-		# 	lo_a_line(qo, side)
+		# side = None
+		for qo in simples:
+			if qo.numberOfEdges() == 0:
+				continue
+			layout_hierarchically(qo, margin)
+			# d = max((qo.deg(n) for n in qo.getNodes()))
+			# if d > 2:
+			# 	layout_hierarchically(qo, margin)
+			# else:
+			# 	if not side:
+			# 		side = get_side(graph)
+			# 	lo_a_line(qo, side)
 
-	for qo in cycles:
-		layout_circle(qo, margin)
+		for qo in cycles:
+			layout_circle(qo, margin)
 
-	for qo in mess:
-		layout_force(qo, margin)
-		remove_overlaps(qo, margin)
+		for qo in mess:
+			layout_force(qo, margin)
+			remove_overlaps(qo, margin)
 
-	layout_ub_sps(gr)
-	pack_cc(gr)
-	lo = root[VIEW_LAYOUT][gr.getOneNode()]
-	graph.delAllSubGraphs(gr)
-	ms = [m for m in graph.getNodes() if not graph.deg(m)]
-	for m in ms:
-		root[VIEW_LAYOUT][m] = lo
-	gr = root.inducedSubGraph(ms)
-	remove_overlaps(gr)
-	root.delAllSubGraphs(gr)
+		layout_ub_sps(gr)
+		pack_cc(gr)
+		graph.delAllSubGraphs(gr)
+	if nodes_wo_edges:
+		gr = root.inducedSubGraph(nodes_wo_edges)
+		pack_cc(gr)
+		root.delAllSubGraphs(gr)
 
 	# apply_layout(graph, onto)
 

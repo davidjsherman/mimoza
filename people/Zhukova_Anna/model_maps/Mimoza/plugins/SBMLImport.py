@@ -18,7 +18,7 @@ class SBMLImport(tlp.ImportModule):
 			reader = SBMLReader()
 			input_document = reader.readSBML(sbml_file)
 			input_model = input_document.getModel()
-			import_sbml(self.graph, input_model, sbml_file)
+			self.graph = import_sbml(input_model, sbml_file)
 			return True
 		# this is a workaround to avoid a crash from Tulip when an exception is raised
 		# in the import code

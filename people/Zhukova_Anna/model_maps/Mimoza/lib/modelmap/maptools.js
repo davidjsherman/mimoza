@@ -68,7 +68,7 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
         minZoom: 0,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
-        layers: [tiles, ubLayer],
+        layers: [gray_tiles, ubLayer],
         crs: L.CRS.Simple
     });
 
