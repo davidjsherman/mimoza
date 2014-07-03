@@ -1,6 +1,7 @@
 from math import degrees, atan2, sqrt
 from tulip import tlp
-from sbml_vis.tulip.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT
+from sbml_vis.tulip.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, \
+	VIEW_META_GRAPH
 
 __author__ = 'anna'
 
@@ -15,10 +16,10 @@ def normalize_alpha(alpha):
 	return alpha - (alpha % 45)
 
 
-def align_generalized_ns(graph, n2graph):
+def align_generalized_ns(graph):
 	root = graph.getRoot()
 
-	meta_ns = {n for n in graph.getNodes() if n in n2graph}
+	meta_ns = {n for n in graph.getNodes() if graph.isMetaNode(n)}
 	meta_sps = {n for n in meta_ns if TYPE_SPECIES == root[TYPE][n]}
 	meta_rs = {n for n in meta_ns - meta_sps if TYPE_REACTION == root[TYPE][n]}
 
@@ -30,15 +31,15 @@ def align_generalized_ns(graph, n2graph):
 		for r in rs:
 			sps |= set(graph.getInOutNodes(r)) & meta_sps
 		depends_on[s] = sps - {s}
-		our_sps |= set(n2graph[s].getNodes())
+		our_sps |= set(root[VIEW_META_GRAPH][s].getNodes())
 	for r in meta_rs:
-		our_rs |= set(n2graph[r].getNodes())
+		our_rs |= set(root[VIEW_META_GRAPH][r].getNodes())
 
 	node2key = {}
 	while meta_sps:
 		n = min(meta_sps, key=lambda s: len(depends_on[s] & meta_sps))
 		meta_sps -= {n}
-		for s in n2graph[n].getNodes():
+		for s in root[VIEW_META_GRAPH][n].getNodes():
 			rs = set(root.getInOutNodes(s)) & our_rs
 			sps = set()
 			for r in rs:
@@ -49,11 +50,12 @@ def align_generalized_ns(graph, n2graph):
 				if ss in node2key:
 					node2key[s] = node2key[ss]
 	for n in meta_rs:
-		for r in n2graph[n].getNodes():
+		for r in root[VIEW_META_GRAPH][n].getNodes():
 			node2key[r] = sorted(node2key[it] for it in set(root.getInOutNodes(r)) & our_sps)
 
 	for n in meta_ns:
-		ns = sorted(n2graph[n].getNodes(), key=lambda it: node2key[it] if it in node2key else (root[ID][it], 0, ''))#root[ID][it])
+		ns = sorted(root[VIEW_META_GRAPH][n].getNodes(),
+		            key=lambda it: node2key[it] if it in node2key else (root[ID][it], 0, ''))  # root[ID][it])
 		s = root[VIEW_SIZE][n].getW()
 		ns_num = len(ns)
 		s_width = s / ns_num
@@ -64,13 +66,14 @@ def align_generalized_ns(graph, n2graph):
 			y += s_width
 
 
-def rotate_generalized_ns(graph, n2graph):
+def rotate_generalized_ns(graph):
 	root = graph.getRoot()
 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
 
-	for n in (n for n in graph.getNodes() if n in n2graph):
+	for n in (n for n in graph.getNodes() if graph.isMetaNode(n)):
 		lo = view_layout[n]
-		meta_neighbours = lambda nodes: sorted((t for t in nodes if t in n2graph), key=lambda t: -n2graph[t].numberOfNodes())
+		meta_neighbours = lambda nodes: sorted((t for t in nodes if root.isMetaNode(t)),
+		                                       key=lambda t: -root[VIEW_META_GRAPH][t].numberOfNodes())
 		o_n_1 = meta_neighbours(graph.getInNodes(n))
 		o_n_2 = meta_neighbours(graph.getOutNodes(n))
 		if not o_n_1:
@@ -80,10 +83,10 @@ def rotate_generalized_ns(graph, n2graph):
 		else:
 			alpha = get_alpha(view_layout[o_n_1[0]], view_layout[o_n_2[0]])
 
-		mg = n2graph[n]
+		mg = root[VIEW_META_GRAPH][n]
 
 		# the diagonal length is larger than the side for squares
-		if alpha % 90 == 45 and TYPE_SPECIES != root[TYPE][n]:
+		if abs(alpha % 90) == 45 and TYPE_SPECIES != root[TYPE][n]:
 			n_h = root[VIEW_SIZE][n].getH() / 2
 			view_layout.translate(tlp.Coord(0, n_h * (1 - sqrt(2))), mg)
 			view_layout.scale(tlp.Coord(0, sqrt(2)), mg)

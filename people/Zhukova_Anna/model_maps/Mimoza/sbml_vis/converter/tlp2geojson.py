@@ -22,24 +22,20 @@ def get_border_coord(xy_center, other_xy, r):
 	return transformation(x_center, other_x), transformation(y_center, other_y)
 
 
-def e2feature(graph, e, scale, c_id2outs, n2graph):
+def e2feature(graph, e, scale, c_id2outs):
 	root = graph.getRoot()
-	layout = root.getLayoutProperty(VIEW_LAYOUT)
-	transport = root.getBooleanProperty(TRANSPORT)
-	size = root.getSizeProperty(VIEW_SIZE)
-
-
+	layout = root[VIEW_LAYOUT]
 	s, t = graph.source(e), graph.target(e)
 
 	level_min, level_max = max(root[MIN_ZOOM][t], root[MIN_ZOOM][s]), min(root[MAX_ZOOM][t], root[MAX_ZOOM][s])
 
 	xy = lambda n: (layout[n].getX(), layout[n].getY())
-	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), size[s].getW() / 2)
-	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), size[t].getW() / 2)
+	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), root[VIEW_SIZE][s].getW() / 2)
+	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), root[VIEW_SIZE][t].getW() / 2)
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
 	ubiquitous = graph[UBIQUITOUS][e]
-	generalized = s in n2graph or t in n2graph
-	is_transport = transport[s] or transport[t]
+	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
+	is_transport = root[TRANSPORT][s] or root[TRANSPORT][t]
 	props = {"size": get_e_size(root, e).getW(), "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e],
 	         "ubiquitous": ubiquitous, "generalized": generalized, "transport": is_transport,
 	         "zoom_min": level_min, "zoom_max": level_max}
@@ -52,8 +48,7 @@ def e2feature(graph, e, scale, c_id2outs, n2graph):
 	return geojson.Feature(geometry=geom, properties=props)
 
 
-def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, c_id2outs, scale_coefficient,
-              n2graph):
+def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, c_id2outs, scale_coefficient):
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
 	layout = graph.getLayoutProperty(VIEW_LAYOUT)
@@ -72,11 +67,11 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, c_id2outs, scale_c
 		return geojson.Feature(geometry=geom, properties=props)
 
 	if type_[n] in TYPE_ENTITY:
-		generalized = n in n2graph
+		generalized = graph.isMetaNode(n)
 		props.update({"id": root[ID][n], "name": root[NAME][n], "label": get_short_name(graph, n, onto),
 		              "generalized": generalized})
 		if TYPE_REACTION == type_[n]:
-			ins, outs = get_formula(graph, n, n2graph)
+			ins, outs = get_formula(graph, n)
 			props.update(
 				{"gene_association": get_gene_association_list(annotation[n]), "reversible": root[REVERSIBLE][n],
 				 'reactants': ins, 'products': outs, "transport": transport[n]})
@@ -119,24 +114,24 @@ def get_gene_association_list(ga):
 		return ''
 
 
-def get_reaction_participants_inside_compartment(n, r, n2graph, root):
+def get_reaction_participants_inside_compartment(n, r, root):
 	if TYPE_COMPARTMENT == root[TYPE][n]:
 		result = set()
-		for m in n2graph[n].getNodes():
-			result |= get_reaction_participants_inside_compartment(m, r, n2graph, root)
+		for m in root[VIEW_META_GRAPH][n].getNodes():
+			result |= get_reaction_participants_inside_compartment(m, r, root)
 		return result
-	elif not n in n2graph or r in n2graph:
+	elif not root.isMetaNode(n) or root.isMetaNode(r):
 		return {n}
 	else:
-		return {s for s in n2graph[n].getNodes()}
+		return {s for s in root[VIEW_META_GRAPH][n].getNodes()}
 
 
-def get_formula(graph, r, n2graph):
+def get_formula(graph, r):
 	root = graph.getRoot()
 	ins, outs = [], []
 	stoich_formatter = lambda edge, node: "{0} * {1}".format(int(root[STOICHIOMETRY][edge]), root[NAME][node])
 	for s_or_c in graph.getInOutNodes(r):
-		for s in get_reaction_participants_inside_compartment(s_or_c, r, n2graph, root):
+		for s in get_reaction_participants_inside_compartment(s_or_c, r, root):
 			e = root.existEdge(s, r, False)
 			if root.isElement(e):
 				(ins if s == root.source(e) else outs).append(stoich_formatter(e, s))

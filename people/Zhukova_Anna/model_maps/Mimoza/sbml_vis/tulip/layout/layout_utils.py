@@ -50,7 +50,7 @@ def neighbours(ns, org_ns, graph, processed, limit=500):
 	return ns | neighbours(all_ns, org_ns, graph, processed, limit - len(ns))
 
 
-def layout_cytoplasm(graph, node2graph, c_id2n, c_id2outs, margin=1):
+def layout_cytoplasm(graph, c_id2n, c_id2outs, margin=1):
 	root = graph.getRoot()
 	# for n in graph.getNodes():
 	# 	if TYPE_SPECIES == root[TYPE][n] and not n in node2graph and graph.deg(n) >= 4:

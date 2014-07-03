@@ -2,7 +2,7 @@ from collections import defaultdict
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
 from sbml_vis.tulip.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, COMPARTMENT, \
-	TYPE_SPECIES, TYPE_COMPARTMENT, NAME
+	TYPE_SPECIES, TYPE_COMPARTMENT, NAME, VIEW_META_GRAPH
 
 OVERLAP_REMOVAL = "Fast Overlap Removal"
 
@@ -131,17 +131,17 @@ def layout_ub_sps(graph, comp2node=None, comp2outs=None, filter_nd=lambda r: Tru
 					dc += ds
 				# if degrees(beta) < 0:
 				# s -= ds
-	for c_id, ns in comp2ns.iteritems():
-		gr = root.inducedSubGraph(ns)
-		remove_overlaps(gr)
-		root.delAllSubGraphs(gr)
-		if c_id in comp2node:
-			for n in ns:
-				fit_into_compartment(n, comp2node[c_id], root)
-		for inner_c_id in (inner_c_id for inner_c_id in comp2outs.iterkeys() if
-		                   c_id in comp2outs[inner_c_id] and inner_c_id in comp2node):
-			for n in ns:
-				fit_out_of_compartment(n, comp2node[inner_c_id], root)
+	# for c_id, ns in comp2ns.iteritems():
+	# 	gr = root.inducedSubGraph(ns)
+	# 	remove_overlaps(gr)
+	# 	root.delAllSubGraphs(gr)
+	# 	if c_id in comp2node:
+	# 		for n in ns:
+	# 			fit_into_compartment(n, comp2node[c_id], root)
+	# 	for inner_c_id in (inner_c_id for inner_c_id in comp2outs.iterkeys() if
+	# 	                   c_id in comp2outs[inner_c_id] and inner_c_id in comp2node):
+	# 		for n in ns:
+	# 			fit_out_of_compartment(n, comp2node[inner_c_id], root)
 
 
 def ub_layout_shift(root, (u_x, u_y), (margin_x, margin_y), r_comp, ub_comp, comp2node, comp2outs):
@@ -182,7 +182,7 @@ def ub_layout_shift(root, (u_x, u_y), (margin_x, margin_y), r_comp, ub_comp, com
 	return 0, 0
 
 
-def layout_outer_reactions(graph, n2graph, filter_nd=lambda nd: True):
+def layout_outer_reactions(graph, filter_nd=lambda nd: True):
 	root = graph.getRoot()
 
 	def single(r):
@@ -199,8 +199,8 @@ def layout_outer_reactions(graph, n2graph, filter_nd=lambda nd: True):
 		rs = [r for r in graph.getInOutNodes(c) if TYPE_REACTION == root[TYPE][r] and single(r) and filter_nd(r)]
 		for r in rs:
 			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
-			ss = [s for s in root.getInOutNodes(r) if n2graph[c].isElement(s)]
-			ss_not_ub = [s for s in ss if not ub_or_single(s, n2graph[c])]
+			ss = [s for s in root.getInOutNodes(r) if root[VIEW_META_GRAPH][c].isElement(s)]
+			ss_not_ub = [s for s in ss if not ub_or_single(s, root[VIEW_META_GRAPH][c])]
 			if ss_not_ub:
 				ss = ss_not_ub
 			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() for s in ss) / len(ss), sum(
@@ -255,16 +255,16 @@ def fit_out_of_compartment(n, c, root):
 	root[VIEW_LAYOUT][n] = tlp.Coord(n_x, n_y)
 
 
-def bend_ubiquitous_edges(graph, nodes, node2graph):
+def bend_ubiquitous_edges(graph, nodes):
 	root = graph.getRoot()
 	for r in (r for r in nodes if TYPE_REACTION == root[TYPE][r]):
 		r_lo = root[VIEW_LAYOUT][r]
 		r_w = root[VIEW_SIZE][r].getW()
-		for s in (s for s in graph.getInOutNodes(r) if root[UBIQUITOUS][s] or not s in node2graph):
+		for s in (s for s in graph.getInOutNodes(r) if root[UBIQUITOUS][s] or not graph.isMetaNode(s)):
 			s_lo = root[VIEW_LAYOUT][s]
 			alpha = atan2(s_lo.getY() - r_lo.getY(), s_lo.getX() - r_lo.getX())
 			x0, y0 = r_lo.getX() + r_w * 0.7 * cos(alpha), r_lo.getY() + r_w * 0.7 * sin(alpha)
-			for m in node2graph[r].getNodes():
+			for m in root[VIEW_META_GRAPH][r].getNodes():
 				for e in root.getInOutEdges(m):
 					if s == root.target(e) or s == root.source(e):
 						root[VIEW_LAYOUT][e] = [tlp.Coord(x0, y0)]
