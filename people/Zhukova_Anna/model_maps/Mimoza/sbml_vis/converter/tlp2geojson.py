@@ -22,13 +22,17 @@ def get_border_coord(xy_center, other_xy, r):
 	return transformation(x_center, other_x), transformation(y_center, other_y)
 
 
-def e2feature(graph, e, id, scale, level_min, level_max, c_id2outs, scale_coefficient, n2graph):
+def e2feature(graph, e, scale, c_id2outs, n2graph):
 	root = graph.getRoot()
 	layout = root.getLayoutProperty(VIEW_LAYOUT)
 	transport = root.getBooleanProperty(TRANSPORT)
 	size = root.getSizeProperty(VIEW_SIZE)
 
+
 	s, t = graph.source(e), graph.target(e)
+
+	level_min, level_max = max(root[MIN_ZOOM][t], root[MIN_ZOOM][s]), min(root[MAX_ZOOM][t], root[MAX_ZOOM][s])
+
 	xy = lambda n: (layout[n].getX(), layout[n].getY())
 	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), size[s].getW() / 2)
 	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), size[t].getW() / 2)
@@ -45,10 +49,10 @@ def e2feature(graph, e, id, scale, level_min, level_max, c_id2outs, scale_coeffi
 		props["c_outs"] = ','.join(c_id2outs[s_c_id])
 	else:
 		props["c_outs"] = ','.join(set(c_id2outs[s_c_id]) | set(c_id2outs[t_c_id]))
-	return geojson.Feature(geometry=geom, properties=props, id=id)
+	return geojson.Feature(geometry=geom, properties=props)
 
 
-def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_id2info, c_id2outs, scale_coefficient,
+def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, c_id2outs, scale_coefficient,
               n2graph):
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
@@ -59,11 +63,13 @@ def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_i
 	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
 	c_id = root[COMPARTMENT][n]
 	size = root[VIEW_SIZE][n].getW() * scale_coefficient
+	level_min, level_max = root[MIN_ZOOM][n], root[MAX_ZOOM][n]
+
 	props = {"size": size, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
 	         "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
 
 	if type_[n] in TYPE_BG:
-		return geojson.Feature(geometry=geom, properties=props, id=id)
+		return geojson.Feature(geometry=geom, properties=props)
 
 	if type_[n] in TYPE_ENTITY:
 		generalized = n in n2graph
@@ -97,8 +103,8 @@ def n2feature(graph, n, id, scale, level_min, level_max, max_bg_level, onto, c_i
 			bg_props = {"size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1,
 			            "zoom_max": max_bg_level,
 			            "c_id": c_id, "c_outs": ','.join(c_id2outs[c_id])}
-			bg_feature = geojson.Feature(geometry=geom, properties=bg_props, id=id + 1)
-		return geojson.Feature(geometry=geom, properties=props, id=id), bg_feature
+			bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
+		return geojson.Feature(geometry=geom, properties=props), bg_feature
 
 
 def get_gene_association_list(ga):

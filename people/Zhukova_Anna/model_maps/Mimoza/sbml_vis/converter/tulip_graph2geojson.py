@@ -46,10 +46,8 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 	onto = parse(get_chebi())
 
 	e_min_zoom = lambda e: max(root[MIN_ZOOM][root.target(e)], root[MIN_ZOOM][root.source(e)])
-	e_max_zoom = lambda e: min(root[MAX_ZOOM][root.target(e)], root[MAX_ZOOM][root.source(e)])
 
 	features = []
-	i = 0
 	level = min_zooming_level
 	while level <= max_comp_level:
 		if level < max_comp_level:
@@ -60,14 +58,11 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 			layout_ub_sps(meta_graph, c_id2n, c_id2outs, filter_nd)
 		for e in (e for e in meta_graph.getEdges() if level == e_min_zoom(e)):
 			features.append(
-				e2feature(meta_graph, e, i, scale, e_min_zoom(e), e_max_zoom(e), c_id2outs,
-				          scale_coefficient, node2graph))
-			i += 1
+				e2feature(meta_graph, e, scale, c_id2outs, node2graph))
 
 		for n in (n for n in meta_graph.getNodes() if level == root[MIN_ZOOM][n]):
-			f, bg = n2feature(meta_graph, n, i, scale, root[MIN_ZOOM][n], root[MAX_ZOOM][n], max_zooming_level, onto,
+			f, bg = n2feature(meta_graph, n, scale, max_zooming_level, onto,
 			                  c_id2info, c_id2outs, scale_coefficient, node2graph)
-			i += (2 if bg else 1)
 			features.append(f)
 			if bg:
 				features.append(bg)

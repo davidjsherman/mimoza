@@ -1,7 +1,6 @@
 from math import atan2, cos, sin, sqrt
 
 from tulip import tlp
-from sbml_vis.tulip.node_cloner import clone_node
 from sbml_vis.tulip.graph_properties import *
 from sbml_vis.tulip.layout.ubiquitous_layout import layout_ub_sps, ub_or_single, remove_overlaps
 
@@ -199,8 +198,7 @@ def get_side(graph):
 # expects to be called on a subgraph that has no ubiquitous nodes.
 def lo_a_line(graph, side=None):
 	root = graph.getRoot()
-	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
-	view_layout.setAllEdgeValue([])
+	root[VIEW_LAYOUT].setAllEdgeValue([])
 
 	starts = (n for n in graph.getNodes() if 1 == graph.deg(n))
 
@@ -224,7 +222,7 @@ def lo_a_line(graph, side=None):
 		s = root[VIEW_SIZE][n]
 		max_h = max(max_h, s.getH())
 		x, y, max_h = get_coord(s, x, y, max_h)
-		view_layout[n] = tlp.Coord(x, y)
+		root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
 		x, y, max_h = get_coord(s, x, y, max_h)
 		return x, y, max_h
 

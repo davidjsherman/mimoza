@@ -71,7 +71,6 @@ def factor_nodes(graph):
 	merge_ubs_for_similar_reactions(root)
 
 
-
 def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root = meta_graph.getRoot()
 	ns = filter(lambda n: root[COMPARTMENT][n] == c_id, meta_graph.getNodes())
@@ -114,3 +113,21 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	# 	meta_node = comp_to_meta_node(meta_graph, cytoplasm, (c_id, go), EXTRACELLULAR)
 	# 	resize_edges(meta_graph)
 	# 	return cytoplasm, meta_node
+
+
+def mic(graph):
+	root = graph.getRoot()
+	compartment = root.getStringProperty(COMPARTMENT)
+	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
+	id_ = root.getStringProperty(ID)
+
+	id2unused = defaultdict(list)
+	for n in (n for n in graph.getNodes() if ubiquitous[n]):
+		comp = compartment[n]
+		# Check if it is connected to something inside this compartment
+		connected = next((m for m in graph.getInOutNodes(n) if comp == compartment[m]), None)
+		_id = comp, id_[n]
+		if not connected:
+			id2unused[_id].append(n)
+	for _id, unused_ns in id2unused.iteritems():
+		merge_nodes(graph, unused_ns)
