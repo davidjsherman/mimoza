@@ -2,9 +2,10 @@ from collections import defaultdict
 from tulip import tlp
 
 from sbml_vis.tulip.node_cloner import merge_nodes
-from sbml_vis.tulip.resize import get_n_size
+from sbml_vis.tulip.resize import get_n_size, get_mn_size
 from sbml_vis.tulip.graph_properties import *
 from sbml_vis.tulip.layout.layout_utils import layout
+from sbml_vis.tulip.layout.ubiquitous_layout import ub_or_single, layout_ub_reaction
 
 
 __author__ = 'anna'
@@ -86,33 +87,33 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root[ID][comp_n] = c_id
 	root[ANNOTATION][comp_n] = go_id
 	root[VIEW_SIZE][comp_n] = get_n_size(meta_graph, comp_n)
-	root[VIEW_LAYOUT][comp_n] = tlp.computeBoundingBox(comp_graph).center()
+	# root[VIEW_LAYOUT][comp_n] = tlp.computeBoundingBox(comp_graph).center()
 	for e in meta_graph.getInOutEdges(comp_n):
 		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
 	return comp_n
 
 
-	# def factor_comps(meta_graph, c_name2id_go):
-	# mic(meta_graph)
-	# root = meta_graph.getRoot()
-	# 	cytoplasm = root.getAttribute(CYTOPLASM)
-	# 	organelle2meta_node = {}
-	# 	for organelle in root.getAttribute(ORGANELLES).split(";"):
-	# 		(c_id, go) = c_name2id_go[organelle] if organelle in c_name2id_go else ('', '')
-	# 		meta_node = comp_to_meta_node(meta_graph, organelle, (c_id, go), cytoplasm)
-	# 		if meta_node:
-	# 			organelle2meta_node[organelle] = meta_node
-	# 	resize_edges(meta_graph)
-	# 	return organelle2meta_node
+def r_to_meta_node(meta_graph, r):
+	root = meta_graph.getRoot()
 
+	ubs = [s for s in meta_graph.getInOutNodes(r) if ub_or_single(s, meta_graph)]
 
-	# def factor_cytoplasm(meta_graph, c_name2id_go):
-	# 	root = meta_graph.getRoot()
-	# 	cytoplasm = root.getAttribute(CYTOPLASM)
-	# 	(c_id, go) = c_name2id_go[cytoplasm] if cytoplasm in c_name2id_go else ('', '')
-	# 	meta_node = comp_to_meta_node(meta_graph, cytoplasm, (c_id, go), EXTRACELLULAR)
-	# 	resize_edges(meta_graph)
-	# 	return cytoplasm, meta_node
+	if not ubs:
+		return None
+
+	ubs.append(r)
+
+	r_n = meta_graph.createMetaNode(ubs, False)
+	r_graph = root[VIEW_META_GRAPH][r_n]
+	layout_ub_reaction(r_graph, r)
+
+	for prop in [NAME, ID, TYPE, VIEW_SHAPE, COMPARTMENT, ANNOTATION, TRANSPORT, REVERSIBLE]:
+		root[prop][r_n] = root[prop][r]
+
+	s = get_mn_size(r_n, root)
+	root[VIEW_SIZE][r_n] = tlp.Size(s, s)
+	# root[VIEW_LAYOUT][r_n] = tlp.computeBoundingBox(r_graph).center()
+	return r_n
 
 
 def mic(graph):

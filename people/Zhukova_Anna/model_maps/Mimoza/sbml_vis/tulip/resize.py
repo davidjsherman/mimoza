@@ -28,18 +28,20 @@ def get_e_length(graph, e):
 	return None
 
 
+def get_mn_size(n, root):
+	(m_x, m_y), (M_x, M_y) = get_min_max(root[VIEW_META_GRAPH][n])
+	s = max(M_x - m_x, M_y - m_y)
+	return s
+
+
 def get_n_size(graph, n):
 	root = graph.getRoot()
-	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
-	view_meta_graph = root.getGraphProperty(VIEW_META_GRAPH)
-
 	n_type = root[TYPE][n]
 	if TYPE_REACTION == n_type:
 		s = REACTION_SIZE * get_n_length(graph, n)
 	elif TYPE_COMPARTMENT == n_type:
-		(m_x, m_y), (M_x, M_y) = get_min_max(view_meta_graph[n])
-		s = max(M_x - m_x, M_y - m_y)
-	elif ubiquitous[n]:
+		s = get_mn_size(n, root)
+	elif root[UBIQUITOUS][n]:
 		s = UBIQUITOUS_SPECIES_SIZE
 	else:
 		s = SPECIES_SIZE * get_n_length(graph, n)

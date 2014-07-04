@@ -18,16 +18,21 @@ __author__ = 'anna'
 def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 	id2n = {}
 	for s in input_model.getListOfSpecies():
+		_id = s.getId()
+		ub = _id in ub_sps
+
+		# todo
+		if ub:
+			continue
+
 		n = graph.addNode()
 		comp = input_model.getCompartment(s.getCompartment())
 		graph[COMPARTMENT][n] = comp.getId()
-		_id = s.getId()
 		graph[ID][n] = _id
 		id2n[_id] = n
 		name = s.getName()
 		graph[NAME][n] = name
 		graph[TYPE][n] = TYPE_SPECIES
-		ub = _id in ub_sps
 		graph[UBIQUITOUS][n] = ub
 		if _id in species_id2chebi_id:
 			graph[ANNOTATION][n] = species_id2chebi_id[_id]
@@ -37,13 +42,17 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 
 
 def reactions2nodes(get_r_comp, graph, id2n, input_model):
-	get_sp_comp = lambda _id: graph[COMPARTMENT][id2n[_id]]
+	# get_sp_comp = lambda _id: graph[COMPARTMENT][id2n[_id]]
+	get_sp_comp = lambda _id: input_model.getSpecies(_id).getCompartment()
 
 	def link_reaction_to_species(reaction_node, sp_ref, all_comps, is_reactant=True):
 		s_id = sp_ref.getSpecies()
 
 		all_comps.add(get_sp_comp(s_id))
 
+		# todo:
+		if not s_id in id2n:
+			return
 		species_node = id2n[s_id]
 		e = graph.addEdge(species_node, reaction_node) if is_reactant else graph.addEdge(reaction_node, species_node)
 		stoich = sp_ref.getStoichiometry()

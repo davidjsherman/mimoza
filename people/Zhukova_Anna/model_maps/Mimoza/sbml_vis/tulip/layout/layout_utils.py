@@ -38,7 +38,7 @@ def shorten_edges(graph):
 						root[VIEW_LAYOUT][s] = tlp.Coord(t_lo.getX() + short_len * sin(alpha), t_lo.getY() + short_len * cos(alpha))
 						moved.add(s)
 
-	layout_ub_sps(graph)
+	# layout_ub_sps(graph)
 
 
 def neighbours(ns, org_ns, graph, processed, limit=500):
@@ -60,7 +60,7 @@ def layout_cytoplasm(graph, c_id2n, c_id2outs, margin=1):
 	remove_overlaps(sub, margin)
 	pack_cc(sub)
 	graph.delAllSubGraphs(sub)
-	layout_ub_sps(graph, c_id2n, c_id2outs)
+	# layout_ub_sps(graph, c_id2n, c_id2outs)
 	# graph.applyAlgorithm("Edge bundling")
 
 
@@ -137,13 +137,14 @@ def layout(graph, margin=1):
 			layout_force(qo, margin)
 			remove_overlaps(qo, margin)
 
-		layout_ub_sps(gr)
+		# layout_ub_sps(gr)
 		pack_cc(gr)
 		graph.delAllSubGraphs(gr)
 	if nodes_wo_edges:
 		gr = root.inducedSubGraph(nodes_wo_edges)
 		pack_cc(gr)
 		root.delAllSubGraphs(gr)
+	pack_cc(graph)
 
 	# apply_layout(graph, onto)
 
