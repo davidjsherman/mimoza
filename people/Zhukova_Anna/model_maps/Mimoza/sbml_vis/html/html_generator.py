@@ -101,11 +101,11 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(page, map_id, max_zoom):
+def add_js(page, map_id, max_zoom, comps):
 	page.script('''
-        var comp = gup('name');
-        initializeMap(gjsn, "%s", %d, comp);
-    ''' % (map_id, max_zoom)
+        // var comp = gup('name');
+        initializeMap(gjsn, "%s", %d, %s);
+    ''' % (map_id, max_zoom, comps)
 	)
 
 
@@ -138,7 +138,7 @@ def add_embedding_dialog(page, url):
 
 
 def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url, archive_url, scripts, css,
-                fav, map_id, max_zoom, c_id2info):
+                fav, map_id, max_zoom):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -156,7 +156,7 @@ def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url
 	add_header(model_id, model_name, page)
 
 	page.div(class_='centre', id='all')
-	add_compartment_menu(page, c_id2info)
+	# add_compartment_menu(page, c_id2info)
 
 	add_download_link(groups_sbml_url, archive_url, page)
 
@@ -174,7 +174,7 @@ def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url
 
 	page.div.close()
 
-	add_js(page, map_id, max_zoom)
+	add_js(page, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -196,7 +196,7 @@ def create_embedded_html(model, directory, json, scripts, css, fav, map_id, max_
 
 	add_map(page, map_id)
 
-	add_js(page, map_id, max_zoom)
+	add_js(page, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
 
 	with open('%s/comp_min.html' % directory, 'w+') as f:
 		f.write(str(page))

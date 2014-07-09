@@ -56,19 +56,32 @@ function handlePopUpClosing(map) {
     });
 }
 
-function initializeMap(jsonData, mapId, maxZoom, cId) {
+function initializeMap(jsonData, mapId, maxZoom, cIds) {
+    var layers = [];
     var ubLayer = L.layerGroup();
+    layers.push(ubLayer);
+
     var tiles = getTiles("lib/modelmap/white.jpg");
     var gray_tiles =  getTiles("lib/modelmap/gray.jpg");
+    layers.push(gray_tiles);
 
     adjustMapSize(mapId);
+
+    cIds[TRANSPORT] = "<i>Transport reactions</i>";
+
+    var overlays = {};
+    for (var cId in cIds) {
+        var cLayer = L.layerGroup();
+        layers.push(cLayer);
+        overlays[cIds[cId]] = cLayer;
+    }
 
     var map = L.map(mapId, {
         maxZoom: maxZoom,
         minZoom: 0,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
-        layers: [gray_tiles, ubLayer],
+        layers: layers,
         crs: L.CRS.Simple
     });
 
@@ -87,14 +100,18 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
         adjustMapSize(mapId);
     };
 
+
     var zMin = -1;
     var zMax = -1;
-    for (var z = 0; z <= maxZoom; z++) {
-        if (getGeoJson(map, jsonData, z, ubLayer, mapId, cId, zMin)) {
-            if (-1 == zMin) {
-                zMin = z;
-            } else {
-                zMax = z;
+    for (cId in cIds) {
+        var compLayer = overlays[cIds[cId]];
+        for (var z = 0; z <= maxZoom; z++) {
+            if (getGeoJson(map, jsonData, z, ubLayer, compLayer, mapId, cId, zMin)) {
+                if (-1 == zMin) {
+                    zMin = z;
+                } else {
+                    zMax = z;
+                }
             }
         }
     }
@@ -107,15 +124,13 @@ function initializeMap(jsonData, mapId, maxZoom, cId) {
             }
         });
     }
-	map.setView([0, 0], zMin);
+    map.setView([0, 0], zMin);
 
     var baseLayers = {
         "White background": tiles,
         "Gray background": gray_tiles
     };
-    var overlays = {
-        "Ubiquitous species": ubLayer
-    };
+    overlays["<i>Ubiquitous species</i>"] = ubLayer;
     L.control.layers(baseLayers, overlays).addTo(map);
 
     return map;
@@ -160,9 +175,7 @@ function overlay() {
 
     const $embed_w = $("#embed-size-width");
     const $embed_h = $("#embed-size-height");
-    console.log($embed_w, $embed_h);
     $embed_w.focusout(function() {
-        console.log($embed_w.val(), $embed_h.val());
         var w = 800;
         if ($embed_w.val()) {
             var w_ = parseInt($embed_w.val());
@@ -183,7 +196,6 @@ function overlay() {
         $embed_w.select();
     });
     $embed_h.focusout(function() {
-        console.log($embed_w.val(), $embed_h.val());
         var h = 800;
         if ($embed_h.val()) {
             var h_ = parseInt($embed_h.val());

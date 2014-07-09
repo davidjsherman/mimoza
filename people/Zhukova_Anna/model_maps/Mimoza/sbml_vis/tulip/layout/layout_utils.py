@@ -5,7 +5,7 @@ from sbml_vis.tulip.graph_properties import *
 from sbml_vis.tulip.layout.ubiquitous_layout import layout_ub_sps, ub_or_single, remove_overlaps
 
 
-COMPONENT_PACKING = "Connected Component Packing"
+COMPONENT_PACKING = "Connected Component Packing (Polyomino)"  # "Connected Component Packing"
 
 FM3 = "FM^3 (OGDF)"
 
@@ -20,7 +20,8 @@ def shorten_edges(graph):
 	for i in xrange(5):
 		processed = set()
 		moved = set()
-		for s in sorted((n for n in graph.getNodes() if not ub_or_single(n, graph)), key=lambda n: -root[VIEW_SIZE][n].getW()):
+		for s in sorted((n for n in graph.getNodes() if not ub_or_single(n, graph)),
+		                key=lambda n: -root[VIEW_SIZE][n].getW()):
 			processed.add(s)
 			s_lo, s_s = root[VIEW_LAYOUT][s], root[VIEW_SIZE][s]
 			for t in (n for n in graph.getInOutNodes(s) if not ub_or_single(n, graph) and not n in processed):
@@ -31,14 +32,16 @@ def shorten_edges(graph):
 				if e_len > short_len:
 					if not t in moved:
 						alpha = atan2(dx, dy)
-						root[VIEW_LAYOUT][t] = tlp.Coord(s_lo.getX() + short_len * sin(alpha), s_lo.getY() + short_len * cos(alpha))
+						root[VIEW_LAYOUT][t] = tlp.Coord(s_lo.getX() + short_len * sin(alpha),
+						                                 s_lo.getY() + short_len * cos(alpha))
 						moved.add(t)
 					else:
 						alpha = atan2(-dx, -dy)
-						root[VIEW_LAYOUT][s] = tlp.Coord(t_lo.getX() + short_len * sin(alpha), t_lo.getY() + short_len * cos(alpha))
+						root[VIEW_LAYOUT][s] = tlp.Coord(t_lo.getX() + short_len * sin(alpha),
+						                                 t_lo.getY() + short_len * cos(alpha))
 						moved.add(s)
 
-	# layout_ub_sps(graph)
+					# layout_ub_sps(graph)
 
 
 def neighbours(ns, org_ns, graph, processed, limit=500):
@@ -50,33 +53,36 @@ def neighbours(ns, org_ns, graph, processed, limit=500):
 	return ns | neighbours(all_ns, org_ns, graph, processed, limit - len(ns))
 
 
-def layout_cytoplasm(graph, c_id2n, c_id2outs, margin=1):
+def layout_cytoplasm(graph, margin=1):
 	root = graph.getRoot()
 	# for n in graph.getNodes():
-	# 	if TYPE_SPECIES == root[TYPE][n] and not n in node2graph and graph.deg(n) >= 4:
-	# 		clone_node(graph, n)
+	# if TYPE_SPECIES == root[TYPE][n] and not n in node2graph and graph.deg(n) >= 4:
+	# clone_node(graph, n)
 	sub = graph.inducedSubGraph([n for n in graph.getNodes() if not ub_or_single(n, graph)])
 	layout_force(sub, margin)
 	remove_overlaps(sub, margin)
 	pack_cc(sub)
 	graph.delAllSubGraphs(sub)
-	# layout_ub_sps(graph, c_id2n, c_id2outs)
-	# graph.applyAlgorithm("Edge bundling")
 
 
-def get_distance(n2size, qo):
-	return 1.4 * max(
-		n2size[n] + (max(n2size[m] for m in qo.getOutNodes(n)) if qo.outdeg(n) else 0) for n in n2size.iterkeys()) / 2
+# layout_ub_sps(graph, c_id2n, c_id2outs)
+# graph.applyAlgorithm("Edge bundling")
+
+
+def get_distance(qo):
+	root = qo.getRoot()
+	return max(
+		root[VIEW_SIZE][n].getW() + (max(root[VIEW_SIZE][m].getW() for m in qo.getOutNodes(n)) if qo.outdeg(n) else 0)
+		for n in qo.getNodes()) / 2
 
 
 def layout_hierarchically(qo, margin=1):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(HIERARCHICAL_GRAPH, qo)
 	if qo.numberOfNodes() > 1:
-		n2size = {n: root[VIEW_SIZE][n].getW() / 2 for n in qo.getNodes()}
 		# looks like there is a bug in Tulip and it uses the 'layer spacing' value
 		# instead of the 'node spacing' one and visa versa
-		d = get_distance(n2size, qo)
+		d = get_distance(qo)
 		ds["layer spacing"] = d + margin
 		ds["node spacing"] = d + margin
 	qo.computeLayoutProperty(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
@@ -86,8 +92,7 @@ def layout_circle(qo, margin=1):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(CIRCULAR, qo)
 	if qo.numberOfNodes() > 1:
-		n2size = {n: root[VIEW_SIZE][n].getW() / 2 for n in qo.getNodes()}
-		ds["minDistCircle"] = get_distance(n2size, qo) + margin
+		ds["minDistCircle"] = get_distance(qo) + margin
 		ds["minDistLevel"] = margin
 		ds["minDistCC"] = 1
 		ds["minDistSibling"] = 0
@@ -122,13 +127,13 @@ def layout(graph, margin=1):
 			if qo.numberOfEdges() == 0:
 				continue
 			layout_hierarchically(qo, margin)
-			# d = max((qo.deg(n) for n in qo.getNodes()))
-			# if d > 2:
-			# 	layout_hierarchically(qo, margin)
-			# else:
-			# 	if not side:
-			# 		side = get_side(graph)
-			# 	lo_a_line(qo, side)
+		# d = max((qo.deg(n) for n in qo.getNodes()))
+		# if d > 2:
+		# layout_hierarchically(qo, margin)
+		# else:
+		# if not side:
+		# 		side = get_side(graph)
+		# 	lo_a_line(qo, side)
 
 		for qo in cycles:
 			layout_circle(qo, margin)
@@ -146,7 +151,8 @@ def layout(graph, margin=1):
 		root.delAllSubGraphs(gr)
 	pack_cc(graph)
 
-	# apply_layout(graph, onto)
+
+# apply_layout(graph, onto)
 
 
 def detect_components(graph):
@@ -219,6 +225,7 @@ def lo_a_line(graph, side=None):
 				y -= max_h * 4
 				max_h = s.getH()
 			return x, y, max_h
+
 		processed.add(n)
 		s = root[VIEW_SIZE][n]
 		max_h = max(max_h, s.getH())

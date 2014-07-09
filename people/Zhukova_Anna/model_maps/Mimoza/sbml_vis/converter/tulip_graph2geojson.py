@@ -31,7 +31,7 @@ def initialize_zoom(graph, max_zooming_level, min_zooming_level=0):
 	max_zoom.setAllNodeValue(max_zooming_level)
 
 
-def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level, meta_graph, min_zooming_level, c_id2n):
+def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph, min_zooming_level, c_id2n):
 	root = meta_graph.getRoot()
 
 	(m_x, m_y), (M_x, M_y) = get_min_max(meta_graph, 5)
@@ -61,10 +61,10 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 
 		for e in (e for e in meta_graph.getEdges() if
 		          not (meta_graph.target(e) in processed and meta_graph.source(e) in processed)):
-			features.append(e2feature(meta_graph, e, scale, c_id2outs))
+			features.append(e2feature(meta_graph, e, scale))
 
 		for n in (n for n in meta_graph.getNodes() if not n in processed):
-			f, bg = n2feature(meta_graph, n, scale, max_zooming_level, onto, c_id2info, c_id2outs, scale_coefficient)
+			f, bg = n2feature(meta_graph, n, scale, max_zooming_level, onto, c_id2info, scale_coefficient)
 			features.append(f)
 			processed.add(n)
 			if bg:
@@ -91,7 +91,7 @@ def meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
 	return features
 
 
-def graph2geojson(c_id2info, c_id2outs, graph, verbose):
+def graph2geojson(c_id2info, graph, verbose):
 	root = graph.getRoot()
 
 	max_comp_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
@@ -104,10 +104,10 @@ def graph2geojson(c_id2info, c_id2outs, graph, verbose):
 	meta_graph = process_generalized_entities(graph, max_comp_level, min_zooming_level)
 
 	log(verbose, 'compartments -> metanodes')
-	c_id2n = process_compartments(c_id2info, c_id2outs, max_comp_level - 1, meta_graph, min_zooming_level )
+	c_id2n = process_compartments(c_id2info, max_comp_level - 1, meta_graph, min_zooming_level )
 
 	log(verbose, 'tlp nodes -> geojson features')
-	features = meta_graph2features(c_id2info, c_id2outs, max_comp_level, max_zooming_level,
+	features = meta_graph2features(c_id2info, max_comp_level, max_zooming_level,
 	                               meta_graph, min_zooming_level, c_id2n)
 
 	return geojson.FeatureCollection(features, geometry=geojson.Polygon(
@@ -144,7 +144,7 @@ def process_generalized_entities(graph, max_level, min_level):
 	return meta_graph
 
 
-def process_compartments(c_id2info, c_id2outs, current_zoom_level, meta_graph, min_zoom_level):
+def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_level):
 	root = meta_graph.getRoot()
 
 	c_id2n = {}
@@ -155,6 +155,8 @@ def process_compartments(c_id2info, c_id2outs, current_zoom_level, meta_graph, m
 				continue
 
 			comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id)
+			if not comp_n:
+				continue
 			root[MIN_ZOOM][comp_n] = root[MAX_ZOOM][comp_n] = current_zoom_level - 1
 			comp_graph = root[VIEW_META_GRAPH][comp_n]
 			for m in comp_graph.getNodes():
@@ -163,7 +165,7 @@ def process_compartments(c_id2info, c_id2outs, current_zoom_level, meta_graph, m
 					for n in root[VIEW_META_GRAPH][m].getNodes():
 						root[MIN_ZOOM][n] = current_zoom_level
 			c_id2n[c_id] = comp_n
-		layout_cytoplasm(meta_graph, c_id2n, c_id2outs)
+		layout_cytoplasm(meta_graph)
 		# layout_outer_reactions(meta_graph, n2graph)
 		# shorten_edges(meta_graph)
 		# remove_overlaps(meta_graph)

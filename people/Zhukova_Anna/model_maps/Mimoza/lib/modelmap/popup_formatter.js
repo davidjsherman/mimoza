@@ -125,9 +125,8 @@ function addPopups(map, name2popup, specific_names, name2selection, feature, lay
         content += compartment + ch + transported;
         label += compartment + transported;
     } else if (COMPARTMENT == feature.properties.type) {
-        var link = p(formatLink(feature.properties.id));
-        var go_term = p(formatGo(feature.properties.term));
-        content += go_term + link;
+//        var link = p(formatLink(feature.properties.id));log
+        content += p(formatGo(feature.properties.term)); // + link;
     }
     var bounds = getBounds(feature, map);
     var size = $('#' + mapId).height();

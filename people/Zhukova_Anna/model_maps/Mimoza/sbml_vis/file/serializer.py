@@ -31,7 +31,7 @@ def serialize(directory, m_dir_id, input_model, features, groups_sbml, main_url,
 
 	gjson_json = './gjson.json'
 	create_html(input_model, directory, embed_url, redirect_url, gjson_json, groups_sbml_url, archive_url, scripts,
-	            css, fav, map_id, max_zoom, comps)
+	            css, fav, map_id, max_zoom)
 
 	create_embedded_html(input_model, directory, gjson_json, scripts, css, fav, map_id, max_zoom)
 
