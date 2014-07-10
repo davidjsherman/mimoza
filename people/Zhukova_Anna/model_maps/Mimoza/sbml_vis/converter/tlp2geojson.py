@@ -2,9 +2,9 @@ from sympy import to_cnf
 from sympy.logic.boolalg import disjuncts, conjuncts
 import geojson
 
-from sbml_vis.tulip.rename import get_short_name
-from sbml_vis.tulip.graph_properties import *
-from sbml_vis.tulip.resize import get_n_length, get_n_size, get_e_length, get_e_size
+from sbml_vis.graph.rename import get_short_name
+from sbml_vis.graph.graph_properties import *
+from sbml_vis.graph.resize import get_n_length, get_n_size, get_e_length, get_e_size
 
 
 __author__ = 'anna'
@@ -109,7 +109,7 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient)
 		bg_feature = None
 		if generalized:
 			bg_props = {"id": root[ID][n], "size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1,
-			            "zoom_max": max_bg_level, "transport": transport[n]}
+			            "zoom_max": max_bg_level, "transport": props["transport"]}
 			if "c_id" in props:
 				bg_props["c_id"] = c_id #, "c_outs": ','.join(c_id2outs[c_id])}
 			bg_feature = geojson.Feature(geometry=geom, properties=bg_props)

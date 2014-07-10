@@ -1,7 +1,7 @@
 import colorsys
 
 from tulip import tlp
-from sbml_vis.tulip.graph_properties import *
+from sbml_vis.graph.graph_properties import *
 
 
 __author__ = 'anna'

@@ -1,11 +1,11 @@
 from collections import defaultdict
 from tulip import tlp
 
-from sbml_vis.tulip.node_cloner import merge_nodes
-from sbml_vis.tulip.resize import get_n_size, get_mn_size
-from sbml_vis.tulip.graph_properties import *
-from sbml_vis.tulip.layout.layout_utils import layout
-from sbml_vis.tulip.layout.ubiquitous_layout import ub_or_single, layout_ub_reaction
+from sbml_vis.graph.node_cloner import merge_nodes
+from sbml_vis.graph.resize import get_n_size, get_mn_size
+from sbml_vis.graph.graph_properties import *
+from sbml_vis.graph.layout.layout_utils import layout
+from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, layout_ub_reaction
 
 
 __author__ = 'anna'

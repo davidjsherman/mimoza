@@ -1,5 +1,5 @@
 from tulip import *
-from sbml_vis.tulip.graph_properties import *
+from sbml_vis.graph.graph_properties import *
 
 SPECIES_SIZE = 2.5
 UBIQUITOUS_SPECIES_SIZE = 2

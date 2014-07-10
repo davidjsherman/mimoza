@@ -1,5 +1,5 @@
-from sbml_vis.tulip.color.color_keys import key2coord
-from sbml_vis.tulip.graph_properties import *
+from sbml_vis.graph.color.color_keys import key2coord
+from sbml_vis.graph.graph_properties import *
 
 
 CONJUGATE_ACID_OF = 'is_conjugate_acid_of'

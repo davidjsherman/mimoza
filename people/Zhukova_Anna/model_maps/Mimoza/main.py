@@ -18,7 +18,7 @@ from sbml_vis.converter.sbml2tlp import import_sbml
 from sbml_vis.file.md5_checker import check_md5
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
-from sbml_vis.tulip.graph_properties import TYPE_REACTION, TYPE, NAME, ID
+from sbml_vis.graph.graph_properties import TYPE_REACTION, TYPE, NAME, ID
 import mimoza.mimoza
 
 from sbml_generalization.generalization.sbml_generalizer import generalize_model

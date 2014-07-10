@@ -1,14 +1,14 @@
 import geojson
 
-from sbml_vis.tulip.cluster.factoring import factor_nodes, comp_to_meta_node, r_to_meta_node
+from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, r_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
-from sbml_vis.tulip.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, \
+from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, \
 	TYPE
-from sbml_vis.tulip.resize import get_min_max, get_n_size
-from sbml_vis.tulip.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
-from sbml_vis.tulip.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_ub_sps, layout_outer_reactions, \
+from sbml_vis.graph.resize import get_min_max, get_n_size
+from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
+from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_ub_sps, layout_outer_reactions, \
 	ub_or_single
-from sbml_vis.tulip.layout.layout_utils import layout, layout_cytoplasm
+from sbml_vis.graph.layout.layout_utils import layout, layout_cytoplasm
 
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi

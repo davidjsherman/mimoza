@@ -1,7 +1,7 @@
 from collections import defaultdict
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
-from sbml_vis.tulip.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, COMPARTMENT, \
+from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, COMPARTMENT, \
 	TYPE_SPECIES, TYPE_COMPARTMENT, NAME, VIEW_META_GRAPH
 
 OVERLAP_REMOVAL = "Fast Overlap Removal"

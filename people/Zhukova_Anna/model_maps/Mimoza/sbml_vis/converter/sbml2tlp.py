@@ -7,14 +7,15 @@ from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Ter
 from sbml_generalization.generalization.reaction_filters import getGeneAssociation
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 
-from sbml_vis.tulip.node_cloner import clone_node
-from sbml_vis.tulip.graph_properties import *
-from sbml_vis.tulip.resize import REACTION_SIZE, get_n_size, get_e_size
+from sbml_vis.graph.node_cloner import clone_node
+from sbml_vis.graph.graph_properties import *
+from sbml_vis.graph.resize import get_n_size
 
 
 __author__ = 'anna'
 
 SKIP_UBS = True
+
 
 def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 	id2n = {}

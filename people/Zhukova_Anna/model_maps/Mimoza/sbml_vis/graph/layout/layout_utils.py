@@ -1,8 +1,8 @@
 from math import atan2, cos, sin, sqrt
 
 from tulip import tlp
-from sbml_vis.tulip.graph_properties import *
-from sbml_vis.tulip.layout.ubiquitous_layout import layout_ub_sps, ub_or_single, remove_overlaps
+from sbml_vis.graph.graph_properties import *
+from sbml_vis.graph.layout.ubiquitous_layout import layout_ub_sps, ub_or_single, remove_overlaps
 
 
 COMPONENT_PACKING = "Connected Component Packing (Polyomino)"  # "Connected Component Packing"

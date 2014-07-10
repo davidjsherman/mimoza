@@ -1,6 +1,6 @@
 from math import degrees, atan2, sqrt
 from tulip import tlp
-from sbml_vis.tulip.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, \
+from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, \
 	VIEW_META_GRAPH
 
 __author__ = 'anna'
