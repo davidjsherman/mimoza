@@ -153,7 +153,7 @@ function matchesCompartment(cId, feature) {
     if (TRANSPORT == cId) {
         return feature.properties.transport;
     }
-    return cId == feature.properties.c_id;
+    return cId == feature.properties.c_id || cId == feature.properties.id;
 }
 
 function matchesLevel(level, feature) {

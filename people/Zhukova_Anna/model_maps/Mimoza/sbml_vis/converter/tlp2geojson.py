@@ -93,6 +93,7 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient)
 				# props["neighbour_c_ids"] = c_ids
 		elif TYPE_COMPARTMENT == type_[n]:
 			props['term'] = annotation[n]
+			props['transport'] = True
 		elif TYPE_SPECIES == type_[n]:
 			n_id = root[ID][n]
 			transported = False
@@ -107,7 +108,7 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient)
 
 		bg_feature = None
 		if generalized:
-			bg_props = {"size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1,
+			bg_props = {"id": root[ID][n], "size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1,
 			            "zoom_max": max_bg_level, "transport": transport[n]}
 			if "c_id" in props:
 				bg_props["c_id"] = c_id #, "c_outs": ','.join(c_id2outs[c_id])}
