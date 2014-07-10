@@ -57,13 +57,13 @@ def align_generalized_ns(graph):
 		ns = sorted(root[VIEW_META_GRAPH][n].getNodes(),
 		            key=lambda it: node2key[it] if it in node2key else (root[ID][it], 0, ''))  # root[ID][it])
 		s = root[VIEW_SIZE][n].getW()
-		ns_num = len(ns)
-		s_width = s / ns_num
-		x0, y0 = s / 2, s_width / 2
+		x0, y0 = s / 2, 0
 		x, y = x0, y0
 		for m in ns:
+			m_w = root[VIEW_SIZE][m].getW() / 2
+			y += m_w
 			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
-			y += s_width
+			y += m_w
 
 
 def rotate_generalized_ns(graph):
@@ -93,8 +93,15 @@ def rotate_generalized_ns(graph):
 
 		view_layout.rotateZ(-alpha, mg)
 
+		# as Tulip considers everything to be a square when opening meta nodes,
+		# and spreads the nodes along the diagonal,
+		# we'd rather pretend that our node was slightly smaller
+		if TYPE_SPECIES == root[TYPE][n] and abs(alpha % 90) == 45:
+			r = root[VIEW_SIZE][n].getW() / sqrt(2)
+			root[VIEW_SIZE][n] = tlp.Size(r, r)
+
 		o_n_1.extend(o_n_2)
 		for m in o_n_1:
-			alpha == get_alpha(view_layout[m], view_layout[n])
-			if alpha % 180 == 0:
+			beta = get_alpha(view_layout[m], view_layout[n])
+			if beta % 180 == 0:
 				view_layout.rotateZ(-5, mg)

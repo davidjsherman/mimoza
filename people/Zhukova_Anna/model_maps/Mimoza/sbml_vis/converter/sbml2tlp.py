@@ -14,6 +14,7 @@ from sbml_vis.tulip.resize import REACTION_SIZE, get_n_size, get_e_size
 
 __author__ = 'anna'
 
+SKIP_UBS = True
 
 def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 	id2n = {}
@@ -22,7 +23,7 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 		ub = _id in ub_sps
 
 		# todo
-		if ub:
+		if SKIP_UBS and ub:
 			continue
 
 		n = graph.addNode()
@@ -51,7 +52,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		all_comps.add(get_sp_comp(s_id))
 
 		# todo:
-		if not s_id in id2n:
+		if SKIP_UBS and not s_id in id2n:
 			return
 		species_node = id2n[s_id]
 		e = graph.addEdge(species_node, reaction_node) if is_reactant else graph.addEdge(reaction_node, species_node)
