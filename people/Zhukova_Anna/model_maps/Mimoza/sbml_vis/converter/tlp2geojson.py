@@ -142,14 +142,14 @@ def get_reaction_participants_inside_compartment(n, r, root):
 
 def get_formula(graph, r):
 	root = graph.getRoot()
-	ins, outs = [], []
+	ins, outs = set(), set()
 	stoich_formatter = lambda edge, node: "{0} * {1}".format(int(root[STOICHIOMETRY][edge]), root[NAME][node])
 	for s_or_c in graph.getInOutNodes(r):
 		for s in get_reaction_participants_inside_compartment(s_or_c, r, root):
 			e = root.existEdge(s, r, False)
 			if root.isElement(e):
-				(ins if s == root.source(e) else outs).append(stoich_formatter(e, s))
-	return '&'.join(ins), '&'.join(outs)
+				(ins if s == root.source(e) else outs).add(stoich_formatter(e, s))
+	return '&'.join(sorted(ins)), '&'.join(sorted(outs))
 
 
 def rgb(rrggbb):

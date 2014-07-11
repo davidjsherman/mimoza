@@ -277,52 +277,46 @@ def layout_ub_reaction(r_graph, r):
 
 	r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
 	r_radius = view_size[r].getW() * sqrt(2) / 2
-	for (get_participants, get_reaction_edges, get_other_side_participants, direction) in [
-		(r_graph.getInNodes, r_graph.getOutEdges, r_graph.getOutNodes, 1),
-		(r_graph.getOutNodes, r_graph.getInEdges, r_graph.getInNodes, -1)]:
-		participants = sorted(get_participants(r), key=lambda nd: root[ID][nd])
+	for (participants, direction) in [(r_graph.getInNodes(r), 1), (r_graph.getOutNodes(r), -1)]:
+		participants = sorted(participants, key=lambda nd: root[ID][nd])
 		participants_len = len(participants)
 		if not participants_len:
 			continue
 		if participants_len % 2 == 1:
 			participants_len += 1
-		size = max(root[VIEW_SIZE][nd].getW() for nd in participants)
-		edge_len = size * max(participants_len / 2, 3)
-		s_x, s_y = r_x + view_size[r].getW() + size * participants_len * direction, r_y
+		max_participant_w = max(root[VIEW_SIZE][nd].getW() for nd in participants)
 
-		# beta is the max angle between the ubiquitous and the specific edges
-		gap = 2 * min(100, max(60, participants_len * 20))
-		beta0 = radians(gap / 2)
-		beta = beta0
-		d_beta = radians(gap / (participants_len - 1))
+		edge_len = r_radius + max_participant_w * (participants_len / 2)
 
-		# distance from reaction to the edge bent
-		bent = min(size / 2, edge_len / 2)
-		s0 = r_radius + bent
-		s = s0
-		ds = min(2 * (edge_len - bent - size / 2) / participants_len, size)
+		angle_from_top_to_bottom = 2 * min(100, max(60, participants_len * 20))
+		d_angle = radians(angle_from_top_to_bottom / (participants_len - 1))
+		angle_top = radians(angle_from_top_to_bottom / 2)
+		angle = angle_top
 
-		dc = 0
+		from_r_centre_till_edge_bend = r_radius + max_participant_w / 2
+		# edge-after-bend length
+		from_edge_bend_till_end = edge_len - from_r_centre_till_edge_bend
+		from_edge_bend_till_end_current = min(max_participant_w / 2 + r_radius, from_edge_bend_till_end)
+		d_edge = (from_edge_bend_till_end - from_edge_bend_till_end_current) / (participants_len / 2)
+
 		towards_edge = -1
+		x0, y0 = r_x + (r_radius + from_r_centre_till_edge_bend) * direction, r_y
 		for ub in participants:
 			# it is the only edge as ubiquitous species are duplicated
-			e = get_reaction_edges(ub).next()
-			x0, y0 = r_x + s, r_y
+			e = r_graph.getInOutEdges(ub).next()
 			view_layout[e] = [tlp.Coord(x0, y0)]
+			if r_graph.isMetaEdge(e):
+				for inner_e in root[VIEW_META_GRAPH][e]:
+					view_layout[inner_e] = [tlp.Coord(x0, y0)]
 
-			gamma = beta
-			# edge-after-bent length
-			c = min(edge_len - s0 + dc + r_radius - size, 2 * size)
+			end_x, end_y = x0 + from_edge_bend_till_end_current * direction * cos(angle), y0 + from_edge_bend_till_end_current * direction * sin(
+				angle)
+			view_layout[ub] = tlp.Coord(end_x, end_y)
 
-			s_x, s_y = x0 + c * cos(gamma), y0 + c * sin(gamma)
-			view_layout[ub] = tlp.Coord(s_x, s_y)
-
-			if degrees(beta) * degrees(beta + towards_edge * d_beta) < 0:
-				beta = -beta0
+			if degrees(angle) * degrees(angle + towards_edge * d_angle) < 0:
+				angle = -angle_top
+				from_edge_bend_till_end_current = min(max_participant_w / 2 + r_radius, from_edge_bend_till_end)
 				towards_edge = 1
-				s = s0
-				dc = 0
 			else:
-				beta += towards_edge * d_beta
-				s += ds / 3
-				dc += ds
+				angle += towards_edge * d_angle
+				from_edge_bend_till_end_current += d_edge

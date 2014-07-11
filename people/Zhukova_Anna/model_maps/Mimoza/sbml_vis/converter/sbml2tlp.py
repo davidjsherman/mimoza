@@ -14,7 +14,7 @@ from sbml_vis.graph.resize import get_n_size
 
 __author__ = 'anna'
 
-SKIP_UBS = True
+SKIP_UBS = False
 
 
 def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):

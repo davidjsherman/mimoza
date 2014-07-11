@@ -84,7 +84,7 @@ function pnt2layer(map, feature, zoom, result) {
         alt: feature.properties.name,
         id: feature.properties.id,
         color: WHITE,
-        fillOpacity: is_bg ? 0.3 : 1,
+        fillOpacity: is_bg ? 0.1 : 1,
         opacity: 1,
         lineCap: ROUND,
         lineJoin: ROUND,

@@ -30,22 +30,21 @@ def get_e_length(graph, e):
 
 def get_mn_size(n, root):
 	(m_x, m_y), (M_x, M_y) = get_min_max(root[VIEW_META_GRAPH][n])
-	s = max(M_x - m_x, M_y - m_y)
-	return s
+	return M_x - m_x, M_y - m_y
 
 
 def get_n_size(graph, n):
 	root = graph.getRoot()
 	n_type = root[TYPE][n]
 	if TYPE_REACTION == n_type:
-		s = REACTION_SIZE * get_n_length(graph, n)
+		w = h = REACTION_SIZE * get_n_length(graph, n)
 	elif TYPE_COMPARTMENT == n_type:
-		s = get_mn_size(n, root)
+		w, h = get_mn_size(n, root)
 	elif root[UBIQUITOUS][n]:
-		s = UBIQUITOUS_SPECIES_SIZE
+		w = h = UBIQUITOUS_SPECIES_SIZE
 	else:
-		s = SPECIES_SIZE * get_n_length(graph, n)
-	return tlp.Size(s, s)
+		w = h = SPECIES_SIZE * get_n_length(graph, n)
+	return tlp.Size(w, h)
 
 
 def get_e_size(graph, e):

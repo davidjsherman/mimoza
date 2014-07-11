@@ -33,6 +33,7 @@ def merge_ubs_for_similar_reactions(graph):
 
 def factor_nodes(graph):
 	root = graph.getRoot()
+	merge_ubs_for_similar_reactions(root)
 
 	ancestor2nodes = defaultdict(list)
 	for node in graph.getNodes():
@@ -68,8 +69,6 @@ def factor_nodes(graph):
 		else:
 			root[NAME][meta_n] = "%s (%d)" % (root[ANCESTOR_NAME][sample_n], len(nodes))
 			root[ANNOTATION][meta_n] = root[ANCESTOR_ANNOTATION][sample_n]
-
-	merge_ubs_for_similar_reactions(root)
 
 
 def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
@@ -110,8 +109,8 @@ def r_to_meta_node(meta_graph, r):
 	for prop in [NAME, ID, TYPE, VIEW_SHAPE, COMPARTMENT, ANNOTATION, TRANSPORT, REVERSIBLE]:
 		root[prop][r_n] = root[prop][r]
 
-	s = get_mn_size(r_n, root)
-	root[VIEW_SIZE][r_n] = tlp.Size(s, s)
+	w, h = get_mn_size(r_n, root)
+	root[VIEW_SIZE][r_n] = tlp.Size(w, h)
 	# root[VIEW_LAYOUT][r_n] = tlp.computeBoundingBox(r_graph).center()
 	return r_n
 
