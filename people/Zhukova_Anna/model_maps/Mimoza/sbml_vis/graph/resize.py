@@ -35,7 +35,7 @@ def get_mn_size(n, root):
 	return bb.width(), bb.height()
 
 
-def  get_n_size(graph, n):
+def get_n_size(graph, n):
 	root = graph.getRoot()
 	n_type = root[TYPE][n]
 	if TYPE_REACTION == n_type:

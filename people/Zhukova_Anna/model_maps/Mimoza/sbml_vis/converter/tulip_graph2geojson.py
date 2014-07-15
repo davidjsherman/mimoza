@@ -91,8 +91,8 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 		for n in metas:
 			ns = root[VIEW_META_GRAPH][n].getNodes()
 			meta_graph.openMetaNode(n)
-			for n in ns:
-				root[VIEW_SIZE][n] = get_n_size(meta_graph, n)
+			for nd in ns:
+				root[VIEW_SIZE][nd] = get_n_size(meta_graph, nd)
 
 		# if level != max_comp_level:
 		# 	for e in meta_graph.getEdges():

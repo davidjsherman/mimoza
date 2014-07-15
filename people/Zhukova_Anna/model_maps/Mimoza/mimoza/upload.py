@@ -91,7 +91,7 @@ def process_file(sbml_file):
     directory = '../html/%s/' % m_id
     if os.path.exists(directory):
         if os.path.exists('%sindex.html' % directory):
-            return (ALREADY_EXISTS, (model_id, m_id))
+            return ALREADY_EXISTS, (model_id, m_id)
     else:
         os.makedirs(directory)
         copytree(LIB, '%s/lib' % directory)

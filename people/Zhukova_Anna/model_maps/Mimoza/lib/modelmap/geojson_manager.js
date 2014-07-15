@@ -133,7 +133,10 @@ function pnt2layer(map, feature, zoom, result) {
     }
     node = L.featureGroup([node]);
     if (big_enough) {
-        var size = Math.max(r * 0.89 / 4, 8);
+        if (SPECIES == feature.properties.type) {
+            r /= Math.sqrt(2);
+        }
+        var size = Math.max(r * 0.9 / 4, 8);
         var label = L.marker(centre,
             {
                 icon: L.divIcon({
