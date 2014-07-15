@@ -1,7 +1,6 @@
 from math import degrees, atan2, sqrt
 from tulip import tlp
-from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, \
-	VIEW_META_GRAPH
+from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, VIEW_META_GRAPH, FAKE
 
 __author__ = 'anna'
 
@@ -69,7 +68,6 @@ def align_generalized_ns(graph):
 def rotate_generalized_ns(graph):
 	root = graph.getRoot()
 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
-
 	for n in (n for n in graph.getNodes() if graph.isMetaNode(n)):
 		lo = view_layout[n]
 		meta_neighbours = lambda nodes: sorted((t for t in nodes if root.isMetaNode(t)),
@@ -105,3 +103,25 @@ def rotate_generalized_ns(graph):
 			beta = get_alpha(view_layout[m], view_layout[n])
 			if beta % 180 == 0:
 				view_layout.rotateZ(-5, mg)
+
+
+def rotate_fake_ns(graph):
+	root = graph.getRoot()
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	for r in (r for r in graph.getNodes() if root[FAKE][r]):
+		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
+		neighbours = lambda nodes: sorted(nodes, key=lambda t: -root[VIEW_META_GRAPH][t].numberOfNodes() if root.isMetaNode(t) else 1)
+		o_n_1 = neighbours(graph.getInNodes(r))
+		o_n_2 = neighbours(graph.getOutNodes(r))
+		if o_n_1:
+			s_x, s_y = view_layout[o_n_1[0]].getX(), view_layout[o_n_1[0]].getY()
+			alpha = degrees(atan2(s_y - r_y, s_x - r_x))
+		elif o_n_2:
+			s_x, s_y = view_layout[o_n_2[0]].getX(), view_layout[o_n_2[0]].getY()
+			alpha = degrees(atan2(r_y - s_y, r_x - s_x))
+		else:
+			alpha = 0
+
+		mg = root[VIEW_META_GRAPH][r]
+
+		view_layout.rotateZ(alpha, mg)

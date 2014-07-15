@@ -25,6 +25,8 @@ VIEW_META_GRAPH = 'viewMetaGraph'
 MAX_ZOOM = "max_zoom"
 MIN_ZOOM = "min_zoom"
 
+FAKE = "fake"
+
 CYTOPLASM = "cytoplasm"
 ORGANELLES = "organelles"
 EXTRACELLULAR = 'extracellular'

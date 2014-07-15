@@ -199,6 +199,8 @@ def create_props(graph):
 	graph.getIntegerProperty(VIEW_SHAPE)
 	graph.getSizeProperty(VIEW_SIZE)
 
+	graph.getBooleanProperty(FAKE)
+
 
 def duplicate_nodes(graph):
 	root = graph.getRoot()

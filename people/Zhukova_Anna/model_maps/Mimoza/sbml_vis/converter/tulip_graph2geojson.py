@@ -2,18 +2,13 @@ import geojson
 
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, r_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
-from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, \
-	TYPE
+from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_SIZE, TYPE_REACTION, TYPE, FAKE
 from sbml_vis.graph.resize import get_min_max, get_n_size
-from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
-from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_ub_sps, layout_outer_reactions, \
-	ub_or_single
+from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns, rotate_fake_ns
+from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges
 from sbml_vis.graph.layout.layout_utils import layout, layout_cytoplasm
-
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-
-FAKE = "fake"
 
 DIMENSION = 512
 
@@ -53,6 +48,8 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 			# layout_ub_sps(meta_graph, c_id2n, c_id2outs, filter_nd)
 			# layout_outer_reactions(meta_graph, filter_nd)
 			# layout_ub_sps(meta_graph, c_id2n, c_id2outs, filter_nd)
+
+		rotate_fake_ns(meta_graph)
 		for r in (r for r in meta_graph.getNodes() if root[FAKE][r]):
 			ns = root[VIEW_META_GRAPH][r].getNodes()
 			meta_graph.openMetaNode(r)
@@ -132,14 +129,12 @@ def process_generalized_entities(graph, max_level, min_level):
 	# layout(meta_graph)
 	# align_generalized_ns(meta_graph)
 
-	fake = root.getBooleanProperty(FAKE)
 	for r in (r for r in meta_graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
 		r_n = r_to_meta_node(meta_graph, r)
 		if r_n:
 			mg = root[VIEW_META_GRAPH][r_n]
 			root[MAX_ZOOM][r_n] = max(root[MAX_ZOOM][n] for n in mg.getNodes())
 			root[MIN_ZOOM][r_n] = min(root[MIN_ZOOM][n] for n in mg.getNodes())
-			fake[r_n] = True
 
 	layout(meta_graph)
 

@@ -37,7 +37,10 @@ def get_n_size(graph, n):
 	root = graph.getRoot()
 	n_type = root[TYPE][n]
 	if TYPE_REACTION == n_type:
-		w = h = REACTION_SIZE * get_n_length(graph, n)
+		if root[FAKE][n]:
+			w, h = get_mn_size(n, root)
+		else:
+			w = h = REACTION_SIZE * get_n_length(graph, n)
 	elif TYPE_COMPARTMENT == n_type:
 		w, h = get_mn_size(n, root)
 	elif root[UBIQUITOUS][n]:

@@ -109,8 +109,9 @@ def r_to_meta_node(meta_graph, r):
 	for prop in [NAME, ID, TYPE, VIEW_SHAPE, COMPARTMENT, ANNOTATION, TRANSPORT, REVERSIBLE]:
 		root[prop][r_n] = root[prop][r]
 
-	w, h = get_mn_size(r_n, root)
-	root[VIEW_SIZE][r_n] = tlp.Size(w, h)
+	root[FAKE][r_n] = True
+
+	root[VIEW_SIZE][r_n] = get_n_size(meta_graph, r_n)
 	# root[VIEW_LAYOUT][r_n] = tlp.computeBoundingBox(r_graph).center()
 	return r_n
 
