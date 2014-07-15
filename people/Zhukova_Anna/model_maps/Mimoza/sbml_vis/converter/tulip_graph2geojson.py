@@ -5,7 +5,7 @@ import geojson
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, r_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_SIZE, TYPE_REACTION, TYPE, FAKE
-from sbml_vis.graph.resize import get_min_max, get_n_size
+from sbml_vis.graph.resize import get_n_size
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns, rotate_fake_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges
 from sbml_vis.graph.layout.layout_utils import layout, layout_cytoplasm
@@ -28,24 +28,38 @@ def initialize_zoom(graph, max_zooming_level, min_zooming_level=0):
 	max_zoom.setAllNodeValue(max_zooming_level)
 
 
+def open_meta_ns(meta_graph, ns):
+	root = meta_graph.getRoot()
+	for n in ns:
+		inner_ns = root[VIEW_META_GRAPH][n].getNodes()
+		meta_graph.openMetaNode(n)
+		for inner_n in inner_ns:
+			root[VIEW_SIZE][inner_n] = get_n_size(meta_graph, inner_n)
+
+
+def get_scale_coefficients(meta_graph):
+	bb = tlp.computeBoundingBox(meta_graph)
+	c_x, c_y = bb.center()[0], bb.center()[1]
+	bb_w, bb_h = bb.width() / 2, bb.height() / 2
+	min_x, min_y, max_x, max_y = c_x - bb_w, c_y - bb_h, c_x + bb_w, c_y + bb_h
+	w, h = max_x - min_x, max_y - min_y
+	if w > h:
+		max_y += (w - h) / 2
+	elif h > w:
+		min_x -= (h - w) / 2
+
+	def scale(x, y):
+		x, y = (x - min_x) * scale_coefficient, (max_y - y) * scale_coefficient
+		return [float(x), float(y)]
+
+	scale_coefficient = DIMENSION / max(w, h)
+	return scale, scale_coefficient
+
+
 def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph, min_zooming_level, c_id2n):
 	root = meta_graph.getRoot()
 
-	# (m_x, m_y), (M_x, M_y) = get_min_max(meta_graph, 5)
-	bb = tlp.computeBoundingBox(meta_graph)
-	m_x, m_y, M_x, M_y = bb.center()[0] - bb.width() / 2, bb.center()[1] - bb.height() / 2, bb.center()[0] + bb.width() / 2, bb.center()[1] + bb.height() / 2
-
-	w, h = M_x - m_x, M_y - m_y
-	if w > h:
-		M_y += (w - h) / 2
-	elif h > w:
-		m_x -= (h - w) / 2
-
-	scale_coefficient = DIMENSION / max(w, h)
-
-	def scale(x, y):
-		x, y = (x - m_x) * scale_coefficient, (M_y - y) * scale_coefficient
-		return [x, y]
+	scale, scale_coefficient = get_scale_coefficients(meta_graph)
 
 	onto = parse(get_chebi())
 
@@ -56,16 +70,10 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 		# if level < max_comp_level:
 			# node wasn't yet serialised => we can change its position
 			# filter_nd = lambda nd: root[MIN_ZOOM][nd] >= level
-			# layout_ub_sps(meta_graph, c_id2n, c_id2outs, filter_nd)
 			# layout_outer_reactions(meta_graph, filter_nd)
-			# layout_ub_sps(meta_graph, c_id2n, c_id2outs, filter_nd)
 
 		rotate_fake_ns(meta_graph)
-		for r in (r for r in meta_graph.getNodes() if root[FAKE][r]):
-			ns = root[VIEW_META_GRAPH][r].getNodes()
-			meta_graph.openMetaNode(r)
-			for n in ns:
-				root[VIEW_SIZE][n] = get_n_size(meta_graph, n)
+		open_meta_ns(meta_graph, (r for r in meta_graph.getNodes() if root[FAKE][r]))
 
 		for e in (e for e in meta_graph.getEdges() if
 		          not (meta_graph.target(e) in processed and meta_graph.source(e) in processed)):
@@ -78,7 +86,6 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 			if bg:
 				features.append(bg)
 
-		# metas = [n for n in node2graph.iterkeys() if level == root[MAX_ZOOM][n]]
 		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and level == root[MAX_ZOOM][n]]
 
 		level += 1
@@ -88,16 +95,7 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 			rotate_generalized_ns(meta_graph)
 			bend_ubiquitous_edges(meta_graph, metas)
 
-		for n in metas:
-			ns = root[VIEW_META_GRAPH][n].getNodes()
-			meta_graph.openMetaNode(n)
-			for nd in ns:
-				root[VIEW_SIZE][nd] = get_n_size(meta_graph, nd)
-
-		# if level != max_comp_level:
-		# 	for e in meta_graph.getEdges():
-		# 		root[VIEW_LAYOUT][e] = []
-
+		open_meta_ns(meta_graph, metas)
 	return features
 
 
@@ -136,9 +134,6 @@ def process_generalized_entities(graph, max_level, min_level):
 		mg = root[VIEW_META_GRAPH][n]
 		for m in mg.getNodes():
 			root[MIN_ZOOM][m] = max_level
-
-	# layout(meta_graph)
-	# align_generalized_ns(meta_graph)
 
 	for r in (r for r in meta_graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
 		r_n = r_to_meta_node(meta_graph, r)

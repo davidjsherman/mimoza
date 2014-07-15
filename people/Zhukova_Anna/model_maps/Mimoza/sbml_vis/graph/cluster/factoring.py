@@ -86,7 +86,6 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root[ID][comp_n] = c_id
 	root[ANNOTATION][comp_n] = go_id
 	root[VIEW_SIZE][comp_n] = get_n_size(meta_graph, comp_n)
-	# root[VIEW_LAYOUT][comp_n] = tlp.computeBoundingBox(comp_graph).center()
 	for e in meta_graph.getInOutEdges(comp_n):
 		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
 	return comp_n
@@ -106,13 +105,13 @@ def r_to_meta_node(meta_graph, r):
 	r_graph = root[VIEW_META_GRAPH][r_n]
 	layout_ub_reaction(r_graph, r)
 
-	for prop in [NAME, ID, TYPE, VIEW_SHAPE, COMPARTMENT, ANNOTATION, TRANSPORT, REVERSIBLE]:
+	for prop in [NAME, ID, TYPE, COMPARTMENT, ANNOTATION, TRANSPORT, REVERSIBLE]:
 		root[prop][r_n] = root[prop][r]
 
 	root[FAKE][r_n] = True
+	root[VIEW_SHAPE][r_n] = CIRCLE_SHAPE
 
 	root[VIEW_SIZE][r_n] = get_n_size(meta_graph, r_n)
-	# root[VIEW_LAYOUT][r_n] = tlp.computeBoundingBox(r_graph).center()
 	return r_n
 
 

@@ -13,7 +13,7 @@ __author__ = 'anna'
 
 
 def serialize(directory, m_dir_id, input_model, features, groups_sbml, main_url, scripts, css, fav, verbose,
-              max_zoom, comps, map_id=None):
+              max_zoom, map_id=None):
 	json = '%s/gjson.json' % directory
 	with open(json, 'w+') as f:
 		f.write("var gjsn = %s" % geojson.dumps(features).replace('"id": null', ''))

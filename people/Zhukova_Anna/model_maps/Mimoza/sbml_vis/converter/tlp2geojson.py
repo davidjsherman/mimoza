@@ -1,4 +1,6 @@
-from sympy import to_cnf
+from math import degrees, radians
+from geojson.geometry import Geometry
+from sympy import to_cnf, atan2, pi, tan
 from sympy.logic.boolalg import disjuncts, conjuncts
 import geojson
 
@@ -14,12 +16,27 @@ _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 LOWERCASE, UPPERCASE = 'x', 'X'
 
 
-def get_border_coord(xy_center, other_xy, r):
-	(x_center, y_center) = xy_center
-	(other_x, other_y) = other_xy
-	diag = pow(pow(x_center - other_x, 2) + pow(y_center - other_y, 2), 0.5)
-	transformation = lambda z, other_z: (r * (((other_z - z) / diag) if diag else 1)) + z
-	return transformation(x_center, other_x), transformation(y_center, other_y)
+def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
+	if n_type in [TYPE_REACTION, TYPE_COMPARTMENT]:
+		edge_angle = degrees(atan2(other_y - y, other_x - x))
+		diag_angle = degrees(atan2(h, w))
+		abs_edge_angle = abs(edge_angle)
+		if diag_angle < abs_edge_angle < 180 - diag_angle:
+			y += h if edge_angle > 0 else -h
+			if abs_edge_angle <= 90:
+				return x + h / tan(radians(edge_angle)), y
+			else:
+				return x - h / tan(radians(edge_angle)), y
+		else:
+			x += w if abs_edge_angle <= 90 else -w
+			if edge_angle > 0:
+				return x, y + w * tan(radians(edge_angle))
+			else:
+				return x, y - w * tan(radians(edge_angle))
+	else:
+		diag = pow(pow(x - other_x, 2) + pow(y - other_y, 2), 0.5)
+		transformation = lambda z, other_z: (w * (((other_z - z) / diag) if diag else 1)) + z
+		return transformation(x, other_x), transformation(y, other_y)
 
 
 def e2feature(graph, e, scale):
@@ -30,8 +47,9 @@ def e2feature(graph, e, scale):
 	level_min, level_max = max(root[MIN_ZOOM][t], root[MIN_ZOOM][s]), min(root[MAX_ZOOM][t], root[MAX_ZOOM][s])
 
 	xy = lambda n: (layout[n].getX(), layout[n].getY())
-	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), root[VIEW_SIZE][s].getW() / 2)
-	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), root[VIEW_SIZE][t].getW() / 2)
+	wh = lambda n: (root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2)
+	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), wh(s), root[TYPE][s])
+	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), wh(t), root[TYPE][t])
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
 	ubiquitous = graph[UBIQUITOUS][e]
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
@@ -47,17 +65,8 @@ def e2feature(graph, e, scale):
 	props = {"size": get_e_size(root, e).getW(), "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e],
 	         "ubiquitous": ubiquitous, "generalized": generalized, "transport": is_transport,
 	         "zoom_min": level_min, "zoom_max": level_max}
-	# if s == r or t == r:
-	# 	c_ids = sorted({root[COMPARTMENT][m] for m in graph.getInOutNodes(r)})
-	# else:
-	# 	c_ids = [root[COMPARTMENT][s], root[COMPARTMENT][t]]
-	# if len(c_ids) > 1:
-	# 	props["neighbour_c_ids"] = c_ids
-	# else:
-	# 	props["c_id"] = c_ids[0]
 	if not is_transport:
 		props["c_id"] = root[COMPARTMENT][r]
-	# props["c_outs"] = ','.join(set(c_id2outs[s_c_id]) | set(c_id2outs[t_c_id]))
 	return geojson.Feature(geometry=geom, properties=props)
 
 
@@ -75,7 +84,7 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient)
 	level_min, level_max = root[MIN_ZOOM][n], root[MAX_ZOOM][n]
 
 	props = {"w": w, "h": h, "size": size, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
-	         "c_id": c_id} #, "c_outs": ','.join(c_id2outs[c_id])}
+	         "c_id": c_id}
 
 	if type_[n] in TYPE_BG:
 		return geojson.Feature(geometry=geom, properties=props)
@@ -91,7 +100,6 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient)
 				 'reactants': ins, 'products': outs, "transport": transport[n]})
 			if transport[n]:
 				del props["c_id"]
-				# props["neighbour_c_ids"] = c_ids
 		elif TYPE_COMPARTMENT == type_[n]:
 			props['term'] = annotation[n]
 			props['transport'] = True
@@ -109,10 +117,10 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient)
 
 		bg_feature = None
 		if generalized:
-			bg_props = {"id": root[ID][n], "w": w, "h": h, "size": size, "type": TYPE_2_BG_TYPE[type_[n]], "zoom_min": level_max + 1,
-			            "zoom_max": max_bg_level, "transport": props["transport"]}
+			bg_props = {"id": root[ID][n], "w": w, "h": h, "size": size, "type": TYPE_2_BG_TYPE[type_[n]],
+			            "zoom_min": level_max + 1, "zoom_max": max_bg_level, "transport": props["transport"]}
 			if "c_id" in props:
-				bg_props["c_id"] = c_id #, "c_outs": ','.join(c_id2outs[c_id])}
+				bg_props["c_id"] = c_id
 			bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
 		return geojson.Feature(geometry=geom, properties=props), bg_feature
 

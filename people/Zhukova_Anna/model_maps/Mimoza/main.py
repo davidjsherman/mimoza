@@ -117,7 +117,7 @@ def main(argv=None):
 	fc, max_zoom = graph2geojson(c_id2info, graph, True)
 	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, features=fc, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose,
-	          max_zoom=max_zoom, comps=c_id2info)
+	          max_zoom=max_zoom)
 
 
 def get_lib():
