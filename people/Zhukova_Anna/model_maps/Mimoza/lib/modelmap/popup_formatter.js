@@ -79,10 +79,11 @@ function formatLink(c_id) {
 
 function getBounds(feature, map) {
     var e = feature.geometry.coordinates;
-    var w = getSize(feature) / 2;
+    var w = feature.properties.w / 2;
+    var h = feature.properties.h / 2;
     var x = e[0], y = e[1];
-    var southWest = map.unproject([x - w, y + w], 1),
-        northEast = map.unproject([x + w, y - w], 1);
+    var southWest = map.unproject([x - w, y + h], 1),
+        northEast = map.unproject([x + w, y - h], 1);
     return new L.LatLngBounds(southWest, northEast);
 }
 
@@ -102,9 +103,10 @@ function addPopups(map, name2popup, specific_names, name2selection, feature, lay
     if (EDGE == feature.properties.type) {
         return;
     }
-    var w = getSize(feature) / 2;
+    var w = feature.properties.w / 2;
+    var h = feature.properties.h / 2;
     var scaleFactor = Math.pow(2, zoom);
-    var r = w * scaleFactor;
+    var r = Math.min(w, h) * scaleFactor;
     var big_enough = r > 10;
     if (!big_enough) {
         return;
@@ -178,10 +180,11 @@ function highlightCircle(feature, map, zoom) {
     };
     var e = feature.geometry.coordinates;
     var x = e[0], y = e[1];
-    var w = getSize(feature) / 2;
+    var w = feature.properties.w / 2;
+    var h = feature.properties.h / 2;
     var centre = map.unproject([x, y], 1);
     var scaleFactor = Math.pow(2, zoom);
-    var r = w * scaleFactor;
+    var r = Math.min(w, h) * scaleFactor;
     node = L.circleMarker(centre, props);
     node.setRadius(r/2);
     return node;

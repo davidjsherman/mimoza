@@ -119,13 +119,11 @@ def layout(graph, margin=1):
 	nodes_wo_edges = [m for m in graph.getNodes() if not graph.deg(m)]
 	if nodes_with_edges:
 		gr = graph.inducedSubGraph(nodes_with_edges)
-		sub = gr.inducedSubGraph([n for n in gr.getNodes() if not ub_or_single(n, gr)])
-		simples, cycles, mess = detect_components(sub)
+		# sub = gr.inducedSubGraph([n for n in gr.getNodes() if not ub_or_single(n, gr)])
+		simples, cycles, mess = detect_components(gr)
 
 		# side = None
 		for qo in simples:
-			if qo.numberOfEdges() == 0:
-				continue
 			layout_hierarchically(qo, margin)
 		# d = max((qo.deg(n) for n in qo.getNodes()))
 		# if d > 2:

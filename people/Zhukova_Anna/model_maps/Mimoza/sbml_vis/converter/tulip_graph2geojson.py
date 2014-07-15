@@ -1,3 +1,5 @@
+from tulip import tlp
+
 import geojson
 
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, r_to_meta_node
@@ -29,8 +31,17 @@ def initialize_zoom(graph, max_zooming_level, min_zooming_level=0):
 def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph, min_zooming_level, c_id2n):
 	root = meta_graph.getRoot()
 
-	(m_x, m_y), (M_x, M_y) = get_min_max(meta_graph, 5)
-	scale_coefficient = DIMENSION / (M_x - m_x)
+	# (m_x, m_y), (M_x, M_y) = get_min_max(meta_graph, 5)
+	bb = tlp.computeBoundingBox(meta_graph)
+	m_x, m_y, M_x, M_y = bb.center()[0] - bb.width() / 2, bb.center()[1] - bb.height() / 2, bb.center()[0] + bb.width() / 2, bb.center()[1] + bb.height() / 2
+
+	w, h = M_x - m_x, M_y - m_y
+	if w > h:
+		M_y += (w - h) / 2
+	elif h > w:
+		m_x -= (h - w) / 2
+
+	scale_coefficient = DIMENSION / max(w, h)
 
 	def scale(x, y):
 		x, y = (x - m_x) * scale_coefficient, (M_y - y) * scale_coefficient

@@ -29,11 +29,13 @@ def get_e_length(graph, e):
 
 
 def get_mn_size(n, root):
-	(m_x, m_y), (M_x, M_y) = get_min_max(root[VIEW_META_GRAPH][n])
-	return M_x - m_x, M_y - m_y
+	# (m_x, m_y), (M_x, M_y) = get_min_max(root[VIEW_META_GRAPH][n])
+	# return M_x - m_x, M_y - m_y
+	bb = tlp.computeBoundingBox(root[VIEW_META_GRAPH][n])
+	return bb.width(), bb.height()
 
 
-def get_n_size(graph, n):
+def  get_n_size(graph, n):
 	root = graph.getRoot()
 	n_type = root[TYPE][n]
 	if TYPE_REACTION == n_type:

@@ -37,9 +37,9 @@ const TRANSPORT = "transport";
 //const UB_EDGE_SIZE = 0.5;
 //const EDGE_SIZE = 0.8;
 
-function getSize(feature) {
-    return feature.properties.size;
-
+//function getSize(feature) {
+//    return feature.properties.size;
+//
 //    var fType = feature.properties.type;
 //    if (EDGE == fType) {
 //        return feature.properties.ubiquitous ? UB_EDGE_SIZE : EDGE_SIZE * feature.properties.size;
@@ -51,11 +51,13 @@ function getSize(feature) {
 //        return REACTION_SIZE * feature.properties.size;
 //    }
 //    return feature.properties.size;
-}
+//}
 
 function pnt2layer(map, feature, zoom, result) {
     var e = feature.geometry.coordinates;
-    var w = getSize(feature) / 2;
+    var w = feature.properties.w / 2;
+    var h = feature.properties.h / 2;
+    var s = feature.properties.size / 2;
     var scaleFactor = Math.pow(2, zoom);
     if (EDGE == feature.properties.type) {
         var color = feature.properties.ubiquitous ? GREY : (feature.properties.generalized
@@ -65,7 +67,7 @@ function pnt2layer(map, feature, zoom, result) {
         }), {
             color: color,
             opacity: 1,
-            weight: w / 2 * scaleFactor,
+            weight: s / 2 * scaleFactor,
             lineCap: ROUND,
             lineJoin: ROUND,
             clickable: false,
@@ -74,7 +76,7 @@ function pnt2layer(map, feature, zoom, result) {
             riseOnHover: false
         });
     }
-    var r = w * scaleFactor;
+    var r = Math.min(w, h) * scaleFactor;
     var big_enough = r > 10;
     var x = e[0], y = e[1];
     var is_bg = -1 != BG.indexOf(feature.properties.type);
@@ -94,8 +96,8 @@ function pnt2layer(map, feature, zoom, result) {
         zIndexOffset: is_bg ? -2000 : 1000,
         riseOnHover: !is_bg
     };
-    var southWest = map.unproject([x - w, y + w], 1),
-        northEast = map.unproject([x + w, y - w], 1),
+    var southWest = map.unproject([x - w, y + h], 1),
+        northEast = map.unproject([x + w, y - h], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
 //    r = southWest.distanceTo(northEast) / 2;
     var centre = map.unproject([x, y], 1);//bounds.getCenter();
