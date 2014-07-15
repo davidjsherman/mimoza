@@ -1,11 +1,12 @@
 from math import atan2, cos, sin, sqrt
-
 from tulip import tlp
+
 from sbml_vis.graph.graph_properties import *
-from sbml_vis.graph.layout.ubiquitous_layout import layout_ub_sps, ub_or_single, remove_overlaps
+from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, remove_overlaps
 
 
-COMPONENT_PACKING = "Connected Component Packing (Polyomino)"  # "Connected Component Packing"
+COMPONENT_PACKING = "Connected Component Packing (Polyomino)"
+# COMPONENT_PACKING = "Connected Component Packing"
 
 FM3 = "FM^3 (OGDF)"
 
@@ -41,32 +42,12 @@ def shorten_edges(graph):
 						                                 t_lo.getY() + short_len * cos(alpha))
 						moved.add(s)
 
-					# layout_ub_sps(graph)
-
-
-def neighbours(ns, org_ns, graph, processed, limit=500):
-	if not ns or limit < len(ns): return set()
-	processed |= ns
-	all_ns = set()
-	for n in ns:
-		all_ns |= (set(graph.getInOutNodes(n)) - processed)
-	return ns | neighbours(all_ns, org_ns, graph, processed, limit - len(ns))
-
 
 def layout_cytoplasm(graph, margin=1):
-	root = graph.getRoot()
-	# for n in graph.getNodes():
-	# if TYPE_SPECIES == root[TYPE][n] and not n in node2graph and graph.deg(n) >= 4:
-	# clone_node(graph, n)
-	sub = graph.inducedSubGraph([n for n in graph.getNodes() if not ub_or_single(n, graph)])
-	layout_force(sub, margin)
-	remove_overlaps(sub, margin)
-	pack_cc(sub)
-	graph.delAllSubGraphs(sub)
-
-
-# layout_ub_sps(graph, c_id2n, c_id2outs)
-# graph.applyAlgorithm("Edge bundling")
+	layout_force(graph, margin)
+	remove_overlaps(graph, margin)
+	pack_cc(graph)
+	# graph.applyAlgorithm("Edge bundling")
 
 
 def get_distance(qo):
@@ -119,19 +100,10 @@ def layout(graph, margin=1):
 	nodes_wo_edges = [m for m in graph.getNodes() if not graph.deg(m)]
 	if nodes_with_edges:
 		gr = graph.inducedSubGraph(nodes_with_edges)
-		# sub = gr.inducedSubGraph([n for n in gr.getNodes() if not ub_or_single(n, gr)])
 		simples, cycles, mess = detect_components(gr)
 
-		# side = None
 		for qo in simples:
 			layout_hierarchically(qo, margin)
-		# d = max((qo.deg(n) for n in qo.getNodes()))
-		# if d > 2:
-		# layout_hierarchically(qo, margin)
-		# else:
-		# if not side:
-		# 		side = get_side(graph)
-		# 	lo_a_line(qo, side)
 
 		for qo in cycles:
 			layout_circle(qo, margin)
@@ -140,7 +112,6 @@ def layout(graph, margin=1):
 			layout_force(qo, margin)
 			remove_overlaps(qo, margin)
 
-		# layout_ub_sps(gr)
 		pack_cc(gr)
 		graph.delAllSubGraphs(gr)
 	if nodes_wo_edges:
@@ -189,57 +160,3 @@ def dfs(n, graph, visited, prev, limit=3, indent=''):
 			if num > limit:
 				return num
 	return num
-
-
-def get_side(graph):
-	root = graph.getRoot()
-	l = 0
-	for n in graph.getNodes():
-		s = root[VIEW_SIZE][n]
-		l += s.getW() * s.getH() * 16
-	return sqrt(l)
-
-
-# expects to be called on a subgraph that has no ubiquitous nodes.
-def lo_a_line(graph, side=None):
-	root = graph.getRoot()
-	root[VIEW_LAYOUT].setAllEdgeValue([])
-
-	starts = (n for n in graph.getNodes() if 1 == graph.deg(n))
-
-	if not side:
-		side = get_side(graph)
-
-	processed = set()
-	x, y = 0, side
-	max_h = 0
-
-	def process_n(n, x, y, max_h):
-
-		def get_coord(s, x, y, max_h):
-			x += s.getW() / 2 + 2
-			if x > side:
-				x = 0
-				y -= max_h * 4
-				max_h = s.getH()
-			return x, y, max_h
-
-		processed.add(n)
-		s = root[VIEW_SIZE][n]
-		max_h = max(max_h, s.getH())
-		x, y, max_h = get_coord(s, x, y, max_h)
-		root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
-		x, y, max_h = get_coord(s, x, y, max_h)
-		return x, y, max_h
-
-	for n in starts:
-		if n in processed:
-			continue
-		x = side
-		x, y, max_h = process_n(n, x, y, max_h)
-		while True:
-			n = next((m for m in graph.getInOutNodes(n) if not (m in processed)), None)
-			if not n:
-				break
-			x, y, max_h = process_n(n, x, y, max_h)
-	return graph
