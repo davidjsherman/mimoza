@@ -146,14 +146,15 @@ function rescaleZoom(zMin, level) {
     return -1 == zMin ? 0 : level - zMin;
 }
 
-function getFilteredJson(map, jsn, name2popup, specific_names, name2selection, level, mapId, zMin, result, filterFunction) {
-    var zoom = rescaleZoom(zMin, level);
+function getFilteredJson(map, jsn, name2popup, level, mapId, zMin, result, filterFunction) {
+    const zoom = rescaleZoom(zMin, level);
+    const name2selection = {};
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
             return pnt2layer(map, feature, zoom, result);
         },
         onEachFeature: function (feature, layer) {
-            addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId, zoom);
+            addPopups(map, name2popup, name2selection, feature, layer, mapId, zoom);
         },
         filter: function (feature, layer) {
             return filterFunction(feature);
@@ -161,18 +162,14 @@ function getFilteredJson(map, jsn, name2popup, specific_names, name2selection, l
     })
 }
 
-function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin) {
-    var name2selection = {};
-    var name2popup = {};
-    var specific_names = [];
-
+function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin, name2popup) {
     var result=[false];
-    var specificJson = getFilteredJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, zMin, result,
+    var specificJson = getFilteredJson(map, json_data, name2popup, z, mapId, zMin, result,
         function (feature) {
             return !feature.properties.ubiquitous && matchesLevel(z, feature) && matchesCompartment(cId, feature);
         }
     );
-    var ubiquitousJson = getFilteredJson(map, json_data, name2popup, specific_names, name2selection, z, mapId, zMin, result,
+    var ubiquitousJson = getFilteredJson(map, json_data, name2popup, z, mapId, zMin, result,
         function (feature) {
             return feature.properties.ubiquitous && matchesLevel(z, feature) && matchesCompartment(cId, feature);
         }
@@ -181,48 +178,42 @@ function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin) {
         return false;
     }
 
-    var all_names = Object.keys(name2popup);
+    const zz = rescaleZoom(zMin, z);
 
-    z = rescaleZoom(zMin, z);
-
-    if (map.getZoom() == z) {
+    if (map.getZoom() == zz) {
         compLayer.addLayer(specificJson);
-        compLayer.addLayer(ubiquitousJson);
-//        ubLayer.addLayer(ubiquitousJson);
-        setAutocomplete(map, map.hasLayer(ubLayer) ? all_names : specific_names, name2popup);
+        if (map.hasLayer(ubLayer)) {
+            compLayer.addLayer(ubiquitousJson);
+        }
     }
 
     map.on('zoomend', function (e) {
         var zoom = map.getZoom();
         // if we are about to zoom in/out to this geojson
-        if (zoom == z) {
+        if (zoom == zz) {
             compLayer.addLayer(specificJson);
             if (map.hasLayer(ubLayer)) {
                 compLayer.addLayer(ubiquitousJson);
             }
-//            ubLayer.addLayer(ubiquitousJson);
-            setAutocomplete(map, map.hasLayer(ubLayer) ? all_names : specific_names, name2popup);
         } else {
             if (compLayer.hasLayer(specificJson)) {
                 compLayer.removeLayer(specificJson);
                 if (map.hasLayer(ubLayer)) {
                     compLayer.removeLayer(ubiquitousJson);
                 }
-//                ubLayer.removeLayer(ubiquitousJson);
             }
         }
     });
 
     map.on('overlayadd', function(e) {
-        if (e.layer == ubLayer && map.getZoom() == z) {
+        if (e.layer == ubLayer && map.getZoom() == zz) {
             compLayer.addLayer(ubiquitousJson);
-            setAutocomplete(map, all_names, name2popup);
         }
     });
+
     map.on('overlayremove', function(e) {
-        if (e.layer == ubLayer && map.getZoom() == z) {
+        if (e.layer == ubLayer && map.getZoom() == zz) {
             compLayer.removeLayer(ubiquitousJson);
-            setAutocomplete(map, specific_names, name2popup);
         }
     });
 

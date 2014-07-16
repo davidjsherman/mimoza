@@ -99,7 +99,7 @@ function h2(text) {
     return "<h2>" + text + "</h2>";
 }
 
-function addPopups(map, name2popup, specific_names, name2selection, feature, layer, mapId, zoom) {
+function addPopups(map, name2popup, name2selection, feature, layer, mapId, zoom) {
     if (EDGE == feature.properties.type) {
         return;
     }
@@ -132,12 +132,19 @@ function addPopups(map, name2popup, specific_names, name2selection, feature, lay
     }
     var bounds = getBounds(feature, map);
     var size = $('#' + mapId).height();
-    var popup = L.popup({autoPan: true, keepInView: true, maxWidth: size - 2, maxHeight: size - 2, autoPanPadding: [1, 1]}).setContent(content).setLatLng(bounds.getCenter());
+    var popup = L.popup({
+        autoPan: true,
+        keepInView: true,
+        maxWidth: size - 2,
+        maxHeight: size - 2,
+        autoPanPadding: [1, 1]
+    }).setContent(content).setLatLng(bounds.getCenter());
     if (feature.properties.ubiquitous) {
-        if (!name2selection.hasOwnProperty(feature.properties.id)) {
-            name2selection[feature.properties.id] = L.featureGroup();
+        var key = feature.properties.id;
+        if (!name2selection.hasOwnProperty(key)) {
+            name2selection[key] = L.featureGroup();
         }
-        var selection_layer = name2selection[feature.properties.id];
+        var selection_layer = name2selection[key];
         selection_layer.addLayer(highlightCircle(feature, map, zoom));
         map.on('popupopen', function(e) {
             if (e.popup == popup) {
@@ -154,9 +161,6 @@ function addPopups(map, name2popup, specific_names, name2selection, feature, lay
     [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.term].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
-            if (!feature.properties.ubiquitous) {
-                specific_names.push(key);
-            }
         }
     });
 
