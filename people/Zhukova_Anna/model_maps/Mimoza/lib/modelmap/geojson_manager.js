@@ -30,29 +30,6 @@ const ROUND = 'round';
 
 const TRANSPORT = "transport";
 
-//const SPECIES_SIZE = 2.5;
-//const UB_SPECIES_SIZE = 2;
-//const REACTION_SIZE = 1.5;
-//
-//const UB_EDGE_SIZE = 0.5;
-//const EDGE_SIZE = 0.8;
-
-//function getSize(feature) {
-//    return feature.properties.size;
-//
-//    var fType = feature.properties.type;
-//    if (EDGE == fType) {
-//        return feature.properties.ubiquitous ? UB_EDGE_SIZE : EDGE_SIZE * feature.properties.size;
-//    }
-//    if ((SPECIES == fType) || (BG_SPECIES == fType)) {
-//        return (feature.properties.ubiquitous ? UB_SPECIES_SIZE : SPECIES_SIZE * feature.properties.size) / Math.sqrt(2);
-//    }
-//    if ((REACTION == fType) || (BG_REACTION == fType)) {
-//        return REACTION_SIZE * feature.properties.size;
-//    }
-//    return feature.properties.size;
-//}
-
 function pnt2layer(map, feature, zoom, result) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.w / 2;
@@ -210,7 +187,8 @@ function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin) {
 
     if (map.getZoom() == z) {
         compLayer.addLayer(specificJson);
-        ubLayer.addLayer(ubiquitousJson);
+        compLayer.addLayer(ubiquitousJson);
+//        ubLayer.addLayer(ubiquitousJson);
         setAutocomplete(map, map.hasLayer(ubLayer) ? all_names : specific_names, name2popup);
     }
 
@@ -219,23 +197,31 @@ function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin) {
         // if we are about to zoom in/out to this geojson
         if (zoom == z) {
             compLayer.addLayer(specificJson);
-            ubLayer.addLayer(ubiquitousJson);
+            if (map.hasLayer(ubLayer)) {
+                compLayer.addLayer(ubiquitousJson);
+            }
+//            ubLayer.addLayer(ubiquitousJson);
             setAutocomplete(map, map.hasLayer(ubLayer) ? all_names : specific_names, name2popup);
         } else {
             if (compLayer.hasLayer(specificJson)) {
                 compLayer.removeLayer(specificJson);
-                ubLayer.removeLayer(ubiquitousJson);
+                if (map.hasLayer(ubLayer)) {
+                    compLayer.removeLayer(ubiquitousJson);
+                }
+//                ubLayer.removeLayer(ubiquitousJson);
             }
         }
     });
 
     map.on('overlayadd', function(e) {
         if (e.layer == ubLayer && map.getZoom() == z) {
+            compLayer.addLayer(ubiquitousJson);
             setAutocomplete(map, all_names, name2popup);
         }
     });
     map.on('overlayremove', function(e) {
         if (e.layer == ubLayer && map.getZoom() == z) {
+            compLayer.removeLayer(ubiquitousJson);
             setAutocomplete(map, specific_names, name2popup);
         }
     });
