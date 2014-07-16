@@ -105,10 +105,11 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
     var zMax = -1;
 
     var name2popup = {};
+    var name2zoom = {};
     for (var z = 0; z <= maxZoom; z++) {
         for (cId in cIds) {
             var compLayer = overlays[cIds[cId]];
-            if (getGeoJson(map, jsonData, z, ubLayer, compLayer, mapId, cId, zMin, name2popup)) {
+            if (getGeoJson(map, jsonData, z, ubLayer, compLayer, mapId, cId, zMin, name2popup, name2zoom)) {
                 if (-1 == zMin) {
                     zMin = z;
                 } else {
@@ -118,8 +119,7 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
         }
     }
 
-    initializeAutocomplete(name2popup, map);
-    updateTags(map, Object.keys(name2popup), name2popup);
+    initializeAutocomplete(name2popup, name2zoom, map);
 
     if (zMin > 0 || zMax < maxZoom) {
         map.on('zoomend', function (e) {
@@ -142,36 +142,23 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
 }
 
 
-function initializeAutocomplete(name2popup, map) {
+function initializeAutocomplete(name2popup, name2zoom, map) {
     const searchForm = document.getElementById('search_form');
     if (searchForm != null) {
+        $("#tags").autocomplete({
+            source: Object.keys(name2popup),
+            autoFocus: true
+        });
         $('#tags').keypress(function (e) {
             var code = (e.keyCode ? e.keyCode : e.which);
             if (code == $.ui.keyCode.ENTER) {
-                search(map, name2popup);
+                search(map, name2popup, name2zoom);
                 e.preventDefault();
             }
         });
         searchForm.onclick = function () {
-            search(map, name2popup);
+            search(map, name2popup, name2zoom);
         };
-    }
-}
-
-function updateTags(map, tags, name2popup) {
-    const searchForm = document.getElementById('search_form');
-    if (searchForm != null) {
-        var value = searchForm.search_input.value;
-        if (tags.indexOf(value) == -1) {
-            if (name2popup.hasOwnProperty(value)) {
-                map.closePopup(name2popup[value]);
-            }
-            searchForm.search_input.value = '';
-        }
-        $("#tags").autocomplete({
-            source: tags,
-            autoFocus: true
-        });
     }
 }
 

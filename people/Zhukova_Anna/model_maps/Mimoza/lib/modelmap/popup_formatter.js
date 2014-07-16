@@ -70,13 +70,6 @@ function formatGo(term) {
     return "";
 }
 
-function formatLink(c_id) {
-    if (c_id) {
-        return "<a href=\'?name=" + c_id + "\'>Go inside</a>";
-    }
-    return "";
-}
-
 function getBounds(feature, map) {
     var e = feature.geometry.coordinates;
     var w = feature.properties.w / 2;
@@ -99,7 +92,7 @@ function h2(text) {
     return "<h2>" + text + "</h2>";
 }
 
-function addPopups(map, name2popup, name2selection, feature, layer, mapId, zoom) {
+function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom, realZoom) {
     if (EDGE == feature.properties.type) {
         return;
     }
@@ -127,7 +120,6 @@ function addPopups(map, name2popup, name2selection, feature, layer, mapId, zoom)
         content += compartment + ch + transported;
         label += compartment + transported;
     } else if (COMPARTMENT == feature.properties.type) {
-//        var link = p(formatLink(feature.properties.id));log
         content += p(formatGo(feature.properties.term)); // + link;
     }
     var bounds = getBounds(feature, map);
@@ -156,11 +148,22 @@ function addPopups(map, name2popup, name2selection, feature, layer, mapId, zoom)
                 map.removeLayer(selection_layer);
             }
         });
+        map.on('zoomstart', function(e) {
+            if (map.hasLayer(selection_layer)) {
+                map.removeLayer(selection_layer);
+                map.closePopup(popup);
+            }
+        });
     }
     layer.bindLabel(label).bindPopup(popup);
     [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.term].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
+            if (!name2zoom.hasOwnProperty(key)) {
+                name2zoom[key] = [zoom];
+            } else if (name2zoom[key].indexOf(realZoom) == -1){
+                name2zoom[key].push(realZoom);
+            }
         }
     });
 
@@ -194,9 +197,21 @@ function highlightCircle(feature, map, zoom) {
     return node;
 }
 
-function search(map, name2popup) {
+function search(map, name2popup, name2zoom) {
     var srch = document.search_form.search_input.value;
     if (srch && name2popup.hasOwnProperty(srch)) {
+        var zoom = map.getZoom();
+        var zooms = name2zoom[srch];
+        if (zooms.indexOf(zoom) == -1) {
+            var max_zoom = Math.max.apply(Math, zooms);
+            console.log(zoom + " " + zooms + " " + max_zoom);
+            if (zoom > max_zoom) {
+                map.setZoom(max_zoom);
+            } else {
+                var min_zoom = Math.min.apply(Math, zooms);
+                map.setZoom(min_zoom);
+            }
+        }
         name2popup[srch].openOn(map);
     }
 }

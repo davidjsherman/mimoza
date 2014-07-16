@@ -146,15 +146,14 @@ function rescaleZoom(zMin, level) {
     return -1 == zMin ? 0 : level - zMin;
 }
 
-function getFilteredJson(map, jsn, name2popup, level, mapId, zMin, result, filterFunction) {
-    const zoom = rescaleZoom(zMin, level);
+function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, realZoom, mapId, result, filterFunction) {
     const name2selection = {};
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
             return pnt2layer(map, feature, zoom, result);
         },
         onEachFeature: function (feature, layer) {
-            addPopups(map, name2popup, name2selection, feature, layer, mapId, zoom);
+            addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom, realZoom);
         },
         filter: function (feature, layer) {
             return filterFunction(feature);
@@ -162,14 +161,16 @@ function getFilteredJson(map, jsn, name2popup, level, mapId, zMin, result, filte
     })
 }
 
-function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin, name2popup) {
+function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin, name2popup, name2zoom) {
     var result=[false];
-    var specificJson = getFilteredJson(map, json_data, name2popup, z, mapId, zMin, result,
+    const zz = rescaleZoom(zMin, z);
+
+    var specificJson = getFilteredJson(map, json_data, name2popup, name2zoom, zz, z, mapId, result,
         function (feature) {
             return !feature.properties.ubiquitous && matchesLevel(z, feature) && matchesCompartment(cId, feature);
         }
     );
-    var ubiquitousJson = getFilteredJson(map, json_data, name2popup, z, mapId, zMin, result,
+    var ubiquitousJson = getFilteredJson(map, json_data, name2popup, name2zoom, zz, z, mapId, result,
         function (feature) {
             return feature.properties.ubiquitous && matchesLevel(z, feature) && matchesCompartment(cId, feature);
         }
@@ -177,8 +178,6 @@ function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin, nam
     if (!result[0]) {
         return false;
     }
-
-    const zz = rescaleZoom(zMin, z);
 
     if (map.getZoom() == zz) {
         compLayer.addLayer(specificJson);
