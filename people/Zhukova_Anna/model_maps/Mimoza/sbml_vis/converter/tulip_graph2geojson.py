@@ -4,7 +4,8 @@ import geojson
 
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, r_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
-from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_SIZE, TYPE_REACTION, TYPE, FAKE
+from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_SIZE, TYPE_REACTION, TYPE, FAKE, \
+	ID, CLONE_ID
 from sbml_vis.graph.resize import get_n_size
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns, rotate_fake_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges
@@ -66,6 +67,7 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 	features = []
 	processed = set()
 	level = min_zooming_level
+	get_id = lambda nd: "%s_%d" % (root[ID][nd], root[CLONE_ID][nd])
 	while level <= max_comp_level:
 		# if level < max_comp_level:
 			# node wasn't yet serialised => we can change its position
@@ -75,16 +77,20 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 		rotate_fake_ns(meta_graph)
 		open_meta_ns(meta_graph, (r for r in meta_graph.getNodes() if root[FAKE][r]))
 
-		for e in (e for e in meta_graph.getEdges() if
-		          not (meta_graph.target(e) in processed and meta_graph.source(e) in processed)):
-			features.append(e2feature(meta_graph, e, scale))
+		for e in meta_graph.getEdges():
+			e_id = "%s-%s" % (get_id(meta_graph.source(e)), get_id(meta_graph.target(e)))
+			if not e_id in processed:
+				features.append(e2feature(meta_graph, e, scale, e_id))
+				processed.add(e_id)
 
-		for n in (n for n in meta_graph.getNodes() if not n in processed):
-			f, bg = n2feature(meta_graph, n, scale, max_zooming_level, onto, c_id2info, scale_coefficient)
-			features.append(f)
-			processed.add(n)
-			if bg:
-				features.append(bg)
+		for n in meta_graph.getNodes():
+			n_id = get_id(n)
+			if not n_id in processed:
+				f, bg = n2feature(meta_graph, n, scale, max_zooming_level, onto, c_id2info, scale_coefficient, n_id)
+				features.append(f)
+				processed.add(n_id)
+				if bg:
+					features.append(bg)
 
 		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and level == root[MAX_ZOOM][n]]
 
