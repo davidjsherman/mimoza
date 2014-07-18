@@ -1,15 +1,15 @@
 from tulip import tlp
 
 import geojson
+from graph.cluster.factoring import factor_nodes, comp_to_meta_node
 
-from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, r_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
-from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_SIZE, TYPE_REACTION, TYPE, FAKE, \
-	ID, CLONE_ID, COMPARTMENT
+from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, VIEW_SIZE, FAKE, \
+	ID, CLONE_ID
 from sbml_vis.graph.resize import get_n_size
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns, rotate_fake_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges
-from sbml_vis.graph.layout.layout_utils import layout, layout_cytoplasm
+from sbml_vis.graph.layout.layout_utils import layout, create_fake_rs, layout_cytoplasm
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
 
@@ -31,7 +31,7 @@ def initialize_zoom(graph, max_zooming_level, min_zooming_level=0):
 
 def open_meta_ns(meta_graph, ns):
 	root = meta_graph.getRoot()
-	for n in sorted(ns, key=lambda mn: root[VIEW_META_GRAPH][mn].getId()):
+	for n in sorted(ns, key=lambda mn: -root[VIEW_META_GRAPH][mn].getId()):
 		inner_ns = root[VIEW_META_GRAPH][n].getNodes()
 		meta_graph.openMetaNode(n)
 		for inner_n in inner_ns:
@@ -57,7 +57,7 @@ def get_scale_coefficients(meta_graph):
 	return scale, scale_coefficient
 
 
-def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph, min_zooming_level, c_id2n):
+def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph, min_zooming_level):
 	root = meta_graph.getRoot()
 
 	scale, scale_coefficient = get_scale_coefficients(meta_graph)
@@ -118,24 +118,14 @@ def graph2geojson(c_id2info, graph, verbose):
 	meta_graph = process_generalized_entities(graph, max_comp_level, min_zooming_level)
 
 	log(verbose, 'compartments -> metanodes')
-	c_id2n = process_compartments(c_id2info, max_comp_level - 1, meta_graph, min_zooming_level )
+	process_compartments(c_id2info, max_comp_level - 1, meta_graph, min_zooming_level )
 
 	log(verbose, 'tlp nodes -> geojson features')
 	features = meta_graph2features(c_id2info, max_comp_level, max_zooming_level,
-	                               meta_graph, min_zooming_level, c_id2n)
+	                               meta_graph, min_zooming_level)
 
 	return geojson.FeatureCollection(features, geometry=geojson.Polygon(
 		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), max_zooming_level
-
-
-def create_fake_rs(meta_graph):
-	root = meta_graph.getRoot()
-	for r in (r for r in meta_graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
-		r_ns = r_to_meta_node(meta_graph, r)
-		for r_n in r_ns:
-			mg = root[VIEW_META_GRAPH][r_n]
-			root[MAX_ZOOM][r_n] = max(root[MAX_ZOOM][n] for n in mg.getNodes())
-			root[MIN_ZOOM][r_n] = min(root[MIN_ZOOM][n] for n in mg.getNodes())
 
 
 def process_generalized_entities(graph, max_level, min_level):
@@ -152,14 +142,12 @@ def process_generalized_entities(graph, max_level, min_level):
 			root[MIN_ZOOM][m] = max_level
 
 	create_fake_rs(meta_graph)
-
 	return meta_graph
 
 
 def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_level):
 	root = meta_graph.getRoot()
 
-	c_id2n = {}
 	while current_zoom_level > min_zoom_level:
 		for c_id in c_id2info.iterkeys():
 			(name, go, (l, out_c_id)) = c_id2info[c_id]
@@ -178,12 +166,9 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 				if root[FAKE][m]:
 					for n in root[VIEW_META_GRAPH][m].getNodes():
 						root[MIN_ZOOM][n] = current_zoom_level
-			c_id2n[c_id] = comp_n
-
 			# create_fake_rs(meta_graph)
-		layout_cytoplasm(meta_graph)
 		# layout_outer_reactions(meta_graph, n2graph)
 		# shorten_edges(meta_graph)
 		# remove_overlaps(meta_graph)
 		current_zoom_level -= 1
-	return c_id2n
+	layout_cytoplasm(meta_graph)

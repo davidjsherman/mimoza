@@ -149,9 +149,9 @@ def import_sbml(input_model, sbml_file, verbose=False):
 		outer_most = min(all_comp_ids, key=get_level)
 		inner_most = max(all_comp_ids, key=get_level)
 		outer_level, inner_level = get_level(outer_most), get_level(inner_most)
-		if outer_level == inner_level or not outer_most in c_id2outs[inner_most]:
+		if outer_level == inner_level or (not outer_most in c_id2outs[inner_most]):
 			return max(set(c_id2outs[inner_most]) & set(c_id2outs[outer_most]), key=get_level)
-		if outer_level - inner_level >= 1:
+		if inner_level - outer_level > 1:
 			return max(c_id2outs[inner_most], key=get_level)
 		return outer_most
 
