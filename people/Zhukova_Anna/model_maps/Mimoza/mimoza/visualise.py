@@ -70,7 +70,7 @@ try:
 
 		# sbml -> tulip graph
 		log(True, 'sbml -> tlp')
-		graph, onto, c_id2info = import_sbml(input_model, groups_sbml, True)
+		graph, c_id2info = import_sbml(input_model, groups_sbml, True)
 		features, max_zoom = graph2geojson(c_id2info, graph, True)
 		serialize(directory, m_dir_id, input_model, features, groups_sbml, MIMOZA_URL,
 		                JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, True, max_zoom)

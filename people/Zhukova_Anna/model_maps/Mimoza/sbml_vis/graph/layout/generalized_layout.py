@@ -94,7 +94,7 @@ def rotate_generalized_ns(graph):
 		# as Tulip considers everything to be a square when opening meta nodes,
 		# and spreads the nodes along the diagonal,
 		# we'd rather pretend that our node was slightly smaller
-		if TYPE_SPECIES == root[TYPE][n] and abs(alpha % 90) == 45:
+		if TYPE_SPECIES == root[TYPE][n] and abs(alpha % 90) != 0:
 			r = root[VIEW_SIZE][n].getW() / sqrt(2)
 			root[VIEW_SIZE][n] = tlp.Size(r, r)
 

@@ -112,9 +112,9 @@ def main(argv=None):
 	input_document = reader.readSBML(groups_sbml)
 	input_model = input_document.getModel()
 
-	graph, onto, c_id2info = import_sbml(input_model, groups_sbml, True)
+	root, c_id2info = import_sbml(input_model, groups_sbml, True)
 
-	fc, max_zoom = graph2geojson(c_id2info, graph, True)
+	fc, max_zoom = graph2geojson(c_id2info, root, True)
 	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, features=fc, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose,
 	          max_zoom=max_zoom)

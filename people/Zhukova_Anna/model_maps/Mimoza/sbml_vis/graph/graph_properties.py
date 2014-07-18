@@ -27,6 +27,8 @@ MIN_ZOOM = "min_zoom"
 
 FAKE = "fake"
 
+CLONE_ID = "clone_id"
+
 CYTOPLASM = "cytoplasm"
 ORGANELLES = "organelles"
 EXTRACELLULAR = 'extracellular'

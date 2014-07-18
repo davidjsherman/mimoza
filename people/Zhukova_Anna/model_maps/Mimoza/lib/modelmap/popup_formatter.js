@@ -35,7 +35,9 @@ function formatFormula(reversible, reactants, products) {
     res += '<td><table border="0">';
     for (var i = 0, len = reactants.length; i < len; i++) {
         sv = reactants[i].split(' * ');
-        res += '<tr><td>' + sv[0] + '&nbsp;</td><td>' + sv[1] + '</td></tr>';
+        if (sv) {
+            res += '<tr><td>' + sv[0] + '&nbsp;</td><td>' + sv[1] + '</td></tr>';
+        }
     }
     res += '</table></td>';
 
@@ -48,7 +50,9 @@ function formatFormula(reversible, reactants, products) {
     res += '<td><table border="0">';
     for (i = 0, len = products.length; i < len; i++) {
         sv = products[i].split(' * ');
-        res += '<tr><td>' + sv[0] + '&nbsp;</td><td>' + sv[1] + '</td></tr>';
+        if (sv) {
+            res += '<tr><td>' + sv[0] + '&nbsp;</td><td>' + sv[1] + '</td></tr>';
+        }
     }
     res += '</table></td>';
 

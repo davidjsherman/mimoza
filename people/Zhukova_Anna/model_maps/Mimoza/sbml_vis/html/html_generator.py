@@ -16,7 +16,7 @@ def add_header(model_id, model_name, page):
             <span id='comp'>Compartments</span> of <a href="http://www.ebi.ac.uk/biomodels-main/model_id">model_name</a>
         </h1> """
 	page.h1(class_='capitalize')
-	page.span('Compartments', id='comp')
+	page.span('Visualization', id='comp')
 	page.span('&nbsp;of&nbsp;')
 	page.a(model_name, href='http://www.ebi.ac.uk/biomodels-main/{0}'.format(model_id))
 	page.h1.close()
@@ -103,7 +103,6 @@ def add_model_description(model, page):
 
 def add_js(page, map_id, max_zoom, comps):
 	page.script('''
-        // var comp = gup('name');
         initializeMap(gjsn, "%s", %d, %s);
     ''' % (map_id, max_zoom, comps)
 	)

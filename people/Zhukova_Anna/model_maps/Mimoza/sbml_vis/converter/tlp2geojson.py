@@ -18,7 +18,8 @@ LOWERCASE, UPPERCASE = 'x', 'X'
 
 def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 	if n_type in [TYPE_REACTION, TYPE_COMPARTMENT]:
-		edge_angle = degrees(atan2(other_y - y, other_x - x))
+		# todo: why could these coordinates be the same?
+		edge_angle = degrees(atan2(other_y - y, other_x - x)) if other_y != y or other_x != x else 0
 		diag_angle = degrees(atan2(h, w))
 		abs_edge_angle = abs(edge_angle)
 		if diag_angle < abs_edge_angle < 180 - diag_angle:
@@ -39,7 +40,7 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 		return transformation(x, other_x), transformation(y, other_y)
 
 
-def e2feature(graph, e, scale):
+def e2feature(graph, e, scale, e_id):
 	root = graph.getRoot()
 	layout = root[VIEW_LAYOUT]
 	s, t = graph.source(e), graph.target(e)
@@ -49,6 +50,8 @@ def e2feature(graph, e, scale):
 	xy = lambda n: (layout[n].getX(), layout[n].getY())
 	wh = lambda n: (root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2)
 	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), wh(s), root[TYPE][s])
+	# todo swap here t and s and in the method swap signes accordingly,
+	# check how the both x, y are the same
 	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), wh(t), root[TYPE][t])
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
 	ubiquitous = graph[UBIQUITOUS][e]
@@ -67,10 +70,10 @@ def e2feature(graph, e, scale):
 	         "zoom_min": level_min, "zoom_max": level_max}
 	if not is_transport:
 		props["c_id"] = root[COMPARTMENT][r]
-	return geojson.Feature(geometry=geom, properties=props)
+	return geojson.Feature(geometry=geom, properties=props, id=e_id)
 
 
-def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient):
+def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient, n_id):
 	root = graph.getRoot()
 	type_ = root.getIntegerProperty(TYPE)
 	layout = graph.getLayoutProperty(VIEW_LAYOUT)
@@ -122,7 +125,7 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient)
 			if "c_id" in props:
 				bg_props["c_id"] = c_id
 			bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
-		return geojson.Feature(geometry=geom, properties=props), bg_feature
+		return geojson.Feature(geometry=geom, properties=props, id=n_id), bg_feature
 
 
 def get_gene_association_list(ga):
