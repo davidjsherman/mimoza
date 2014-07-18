@@ -119,8 +119,9 @@ def layout_ub_reaction(r_graph, r):
 
 	r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
 	r_radius = view_size[r].getW() * sqrt(2) / 2
-	for (participants, direction) in [(r_graph.getInNodes(r), 1), (r_graph.getOutNodes(r), -1)]:
-		participants = sorted(participants, key=lambda nd: root[ID][nd])
+	nodes_of_interest = set(r_graph.getNodes())
+	for (participants, direction) in [(root.getInNodes(r), 1), (root.getOutNodes(r), -1)]:
+		participants = sorted(set(participants) & nodes_of_interest, key=lambda nd: root[ID][nd])
 		participants_len = len(participants)
 		if not participants_len:
 			continue
@@ -144,8 +145,10 @@ def layout_ub_reaction(r_graph, r):
 		towards_edge = -1
 		x0, y0 = r_x + (r_radius + from_r_centre_till_edge_bend) * direction, r_y
 		for ub in participants:
+			e = next(r_graph.getInOutEdges(ub), None)
+			if not e:
+				continue
 			# it is the only edge as ubiquitous species are duplicated
-			e = r_graph.getInOutEdges(ub).next()
 			view_layout[e] = [tlp.Coord(x0, y0)]
 			if r_graph.isMetaEdge(e):
 				for inner_e in root[VIEW_META_GRAPH][e]:

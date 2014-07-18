@@ -96,29 +96,31 @@ def pack_cc(graph):
 def layout(graph, margin=1):
 	root = graph.getRoot()
 
-	nodes_with_edges = [n for n in graph.getNodes() if graph.deg(n)]
-	nodes_wo_edges = [m for m in graph.getNodes() if not graph.deg(m)]
-	if nodes_with_edges:
-		gr = graph.inducedSubGraph(nodes_with_edges)
-		simples, cycles, mess = detect_components(gr)
+	# nodes_with_edges = [n for n in graph.getNodes() if graph.deg(n)]
+	# nodes_wo_edges = [m for m in graph.getNodes() if not graph.deg(m)]
+	# if nodes_with_edges:
+	# gr = graph.inducedSubGraph(nodes_with_edges)
+	gr = graph.inducedSubGraph([n for n in graph.getNodes()])
+	simples, cycles, mess = detect_components(gr)
 
-		for qo in simples:
-			layout_hierarchically(qo, margin)
+	for qo in simples:
+		layout_hierarchically(qo, margin)
 
-		for qo in cycles:
-			layout_circle(qo, margin)
+	for qo in cycles:
+		layout_circle(qo, margin)
 
-		for qo in mess:
-			layout_force(qo, margin)
-			remove_overlaps(qo, margin)
+	for qo in mess:
+		layout_force(qo, margin)
+		remove_overlaps(qo, margin)
 
-		pack_cc(gr)
-		graph.delAllSubGraphs(gr)
-	if nodes_wo_edges:
-		gr = root.inducedSubGraph(nodes_wo_edges)
-		pack_cc(gr)
-		root.delAllSubGraphs(gr)
-	pack_cc(graph)
+	pack_cc(gr)
+	graph.delAllSubGraphs(gr)
+	# if nodes_wo_edges:
+	# 	gr = root.inducedSubGraph(nodes_wo_edges)
+	# 	pack_cc(gr)
+	# 	remove_overlaps(gr, margin)
+	# 	root.delAllSubGraphs(gr)
+	# pack_cc(graph)
 
 
 # apply_layout(graph, onto)

@@ -86,8 +86,10 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root[ID][comp_n] = c_id
 	root[ANNOTATION][comp_n] = go_id
 	root[VIEW_SIZE][comp_n] = get_n_size(meta_graph, comp_n)
-	for e in meta_graph.getInOutEdges(comp_n):
-		root[UBIQUITOUS][e] = root[UBIQUITOUS][list(root[VIEW_META_GRAPH][e])[0]]
+	for meta_e in root.getInOutEdges(comp_n):
+		sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
+		root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
+		root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
 	return comp_n
 
 
@@ -95,24 +97,44 @@ def r_to_meta_node(meta_graph, r):
 	root = meta_graph.getRoot()
 
 	ubs = [s for s in meta_graph.getInOutNodes(r) if ub_or_single(s, meta_graph)]
+	# c_id2ubs = defaultdict(list)
+	# c_id2ubs[root[COMPARTMENT][r]].append(r)
+	# for s in (s for s in meta_graph.getInOutNodes(r) if ub_or_single(s, meta_graph)):
+	# 	c_id2ubs[root[COMPARTMENT][s]].append(s)
 
 	if not ubs:
-		return None
+		return []
 
 	ubs.append(r)
+
+	r_ns = []
+	# for c_id, ubs in ((c_id, ubs) for (c_id, ubs) in c_id2ubs.iteritems() if len(ubs) > 1):
+	#
+	# 	if c_id != root[COMPARTMENT][r]:
+	# 		continue
 
 	r_n = meta_graph.createMetaNode(ubs, False)
 	r_graph = root[VIEW_META_GRAPH][r_n]
 	layout_ub_reaction(r_graph, r)
 
-	for prop in [NAME, ID, TYPE, COMPARTMENT, ANNOTATION, TRANSPORT, REVERSIBLE]:
+	for prop in [NAME, ID, TYPE, ANNOTATION, TRANSPORT, REVERSIBLE, COMPARTMENT]:
 		root[prop][r_n] = root[prop][r]
+
+	# root[COMPARTMENT][r_n] = c_id
 
 	root[FAKE][r_n] = True
 	root[VIEW_SHAPE][r_n] = CIRCLE_SHAPE
 
 	root[VIEW_SIZE][r_n] = get_n_size(meta_graph, r_n)
-	return r_n
+
+	r_ns.append(r_n)
+
+	for meta_e in root.getInOutEdges(r_n):
+		sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
+		root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
+		root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
+	# return r_n
+	return r_ns
 
 
 def mic(graph):
