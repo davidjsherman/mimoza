@@ -1,13 +1,12 @@
 from math import atan2, cos, sin, sqrt
 from tulip import tlp
-from graph.resize import get_n_size
 
+from sbml_vis.graph.layout.generalized_layout import rotate_fake_ns
+from sbml_vis.graph.resize import get_n_size
 from sbml_vis.graph.graph_properties import *
 from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, remove_overlaps, layout_ub_reaction
 
-
-COMPONENT_PACKING = "Connected Component Packing (Polyomino)"
-# COMPONENT_PACKING = "Connected Component Packing"
+COMPONENT_PACKING = "Connected Component Packing"
 
 FM3 = "FM^3 (OGDF)"
 
@@ -45,10 +44,14 @@ def shorten_edges(graph):
 
 
 def layout_cytoplasm(graph, margin=1):
-	# create_fake_rs(graph)
+	root = graph.getRoot()
+	create_fake_rs(graph)
 	layout_force(graph, margin)
 	remove_overlaps(graph, margin)
+	rotate_fake_ns(graph)
+	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
 	pack_cc(graph)
+
 	# graph.applyAlgorithm("Edge bundling")
 
 
@@ -95,10 +98,19 @@ def pack_cc(graph):
 	graph.computeLayoutProperty(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
 
 
-def layout(graph, margin=1):
-	gr = graph.inducedSubGraph([n for n in graph.getNodes()])
-	# create_fake_rs(gr)
+def open_meta_ns(meta_graph, ns):
+	root = meta_graph.getRoot()
+	for n in sorted(ns, key=lambda mn: -root[VIEW_META_GRAPH][mn].getId()):
+		inner_ns = root[VIEW_META_GRAPH][n].getNodes()
+		meta_graph.openMetaNode(n)
+		for inner_n in inner_ns:
+			root[VIEW_SIZE][inner_n] = get_n_size(meta_graph, inner_n)
 
+
+def layout(graph, margin=1):
+	root = graph.getRoot()
+	gr = graph.inducedSubGraph([n for n in graph.getNodes()])
+	create_fake_rs(gr)
 	simples, cycles, mess = detect_components(gr)
 	for qo in simples:
 		layout_hierarchically(qo, margin)
@@ -107,8 +119,8 @@ def layout(graph, margin=1):
 	for qo in mess:
 		layout_force(qo, margin)
 		remove_overlaps(qo, margin)
-
-
+	rotate_fake_ns(gr)
+	open_meta_ns(gr, (r for r in gr.getNodes() if root[FAKE][r]))
 	graph.delAllSubGraphs(gr)
 
 	pack_cc(graph)
@@ -116,7 +128,7 @@ def layout(graph, margin=1):
 
 def create_fake_rs(meta_graph):
 	root = meta_graph.getRoot()
-	r_ns = [r for r in meta_graph.getNodes() if TYPE_REACTION == root[TYPE][r]]
+	r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
 	for r in r_ns:
 		r_n = r_to_meta_node(meta_graph, r)
 		if r_n:
@@ -169,28 +181,31 @@ def dfs(n, graph, visited, prev, limit=3, indent=''):
 def r_to_meta_node(meta_graph, r):
 	root = meta_graph.getRoot()
 
-	ubs = [s for s in meta_graph.getInOutNodes(r) if ub_or_single(s, meta_graph)]
+	ubs = []
+	for s in root.getInOutNodes(r):
+		if ub_or_single(s, root) and meta_graph.isElement(s):
+			ubs.append(s)
 
-	if not ubs:
+	if meta_graph.isElement(r):
+		ubs.append(r)
+
+	if len(ubs) <= 1:
 		return None
 
-	ubs.append(r)
 
 	r_n = meta_graph.createMetaNode(ubs, False)
 	r_graph = root[VIEW_META_GRAPH][r_n]
-	layout_hierarchically(r_graph)
-	# layout_ub_reaction(r_graph, r)
+	# layout_hierarchically(r_graph)
+	layout_ub_reaction(r_graph, r)
 
-	for prop in [NAME, ID, TYPE, ANNOTATION, TRANSPORT, REVERSIBLE, COMPARTMENT]:
+	for prop in [NAME, ID, TYPE, ANNOTATION, TRANSPORT, REVERSIBLE]:
 		root[prop][r_n] = root[prop][r]
+
+	root[COMPARTMENT][r_n] = root[COMPARTMENT][ubs[0]]
 
 	root[FAKE][r_n] = True
 	root[VIEW_SHAPE][r_n] = CIRCLE_SHAPE
 
 	root[VIEW_SIZE][r_n] = get_n_size(meta_graph, r_n)
 
-	# for meta_e in root.getInOutEdges(r_n):
-	# 	sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
-	# 	root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
-	# 	root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
 	return r_n

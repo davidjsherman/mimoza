@@ -117,51 +117,59 @@ def layout_ub_reaction(r_graph, r):
 	view_layout = root[VIEW_LAYOUT]
 	view_size = root[VIEW_SIZE]
 
-	r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
-	r_radius = view_size[r].getW() * sqrt(2) / 2
 	nodes_of_interest = set(r_graph.getNodes())
-	for (participants, direction) in [(root.getInNodes(r), 1), (root.getOutNodes(r), -1)]:
-		participants = sorted(set(participants) & nodes_of_interest, key=lambda nd: root[ID][nd])
-		participants_len = len(participants)
-		if not participants_len:
-			continue
-		if participants_len % 2 == 1:
-			participants_len += 1
-		max_participant_w = max(root[VIEW_SIZE][nd].getW() for nd in participants)
-
-		edge_len = r_radius + max_participant_w * (participants_len / 2)
-
-		angle_from_top_to_bottom = 2 * min(100, max(60, participants_len * 20))
-		d_angle = radians(angle_from_top_to_bottom / (participants_len - 1))
-		angle_top = radians(angle_from_top_to_bottom / 2)
-		angle = angle_top
-
-		from_r_centre_till_edge_bend = r_radius + max_participant_w / 2
-		# edge-after-bend length
-		from_edge_bend_till_end = edge_len - from_r_centre_till_edge_bend
-		from_edge_bend_till_end_current = min(max_participant_w / 2 + r_radius, from_edge_bend_till_end)
-		d_edge = (from_edge_bend_till_end - from_edge_bend_till_end_current) / (participants_len / 2)
-
-		towards_edge = -1
-		x0, y0 = r_x + (r_radius + from_r_centre_till_edge_bend) * direction, r_y
-		for ub in participants:
-			e = next(r_graph.getInOutEdges(ub), None)
-			if not e:
+	if r in nodes_of_interest:
+		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
+		r_radius = view_size[r].getW() * sqrt(2) / 2
+		for (participants, direction) in [(root.getInNodes(r), 1), (root.getOutNodes(r), -1)]:
+			participants = sorted(set(participants) & nodes_of_interest, key=lambda nd: root[ID][nd])
+			participants_len = len(participants)
+			if not participants_len:
 				continue
-			# it is the only edge as ubiquitous species are duplicated
-			view_layout[e] = [tlp.Coord(x0, y0)]
-			if r_graph.isMetaEdge(e):
-				for inner_e in root[VIEW_META_GRAPH][e]:
-					view_layout[inner_e] = [tlp.Coord(x0, y0)]
+			if participants_len % 2 == 1:
+				participants_len += 1
+			max_participant_w = max(root[VIEW_SIZE][nd].getW() for nd in participants)
 
-			end_x, end_y = x0 + from_edge_bend_till_end_current * direction * cos(angle), y0 + from_edge_bend_till_end_current * direction * sin(
-				angle)
-			view_layout[ub] = tlp.Coord(end_x, end_y)
+			edge_len = r_radius + max_participant_w * (participants_len / 2)
 
-			if degrees(angle) * degrees(angle + towards_edge * d_angle) < 0:
-				angle = -angle_top
-				from_edge_bend_till_end_current = min(max_participant_w / 2 + r_radius, from_edge_bend_till_end)
-				towards_edge = 1
-			else:
-				angle += towards_edge * d_angle
-				from_edge_bend_till_end_current += d_edge
+			angle_from_top_to_bottom = 2 * min(100, max(60, participants_len * 20))
+			d_angle = radians(angle_from_top_to_bottom / (participants_len - 1))
+			angle_top = radians(angle_from_top_to_bottom / 2)
+			angle = angle_top
+
+			from_r_centre_till_edge_bend = r_radius + max_participant_w / 2
+			# edge-after-bend length
+			from_edge_bend_till_end = edge_len - from_r_centre_till_edge_bend
+			from_edge_bend_till_end_current = min(max_participant_w / 2 + r_radius, from_edge_bend_till_end)
+			d_edge = (from_edge_bend_till_end - from_edge_bend_till_end_current) / (participants_len / 2)
+
+			towards_edge = -1
+			x0, y0 = r_x + (r_radius + from_r_centre_till_edge_bend) * direction, r_y
+			for ub in participants:
+				e = next(r_graph.getInOutEdges(ub), None)
+				if not e:
+					continue
+				# it is the only edge as ubiquitous species are duplicated
+				view_layout[e] = [tlp.Coord(x0, y0)]
+				if r_graph.isMetaEdge(e):
+					for inner_e in root[VIEW_META_GRAPH][e]:
+						view_layout[inner_e] = [tlp.Coord(x0, y0)]
+
+				end_x, end_y = x0 + from_edge_bend_till_end_current * direction * cos(angle), y0 + from_edge_bend_till_end_current * direction * sin(
+					angle)
+				view_layout[ub] = tlp.Coord(end_x, end_y)
+
+				if degrees(angle) * degrees(angle + towards_edge * d_angle) < 0:
+					angle = -angle_top
+					from_edge_bend_till_end_current = min(max_participant_w / 2 + r_radius, from_edge_bend_till_end)
+					towards_edge = 1
+				else:
+					angle += towards_edge * d_angle
+					from_edge_bend_till_end_current += d_edge
+	else:
+		x, y = 0, 0
+		for m in sorted(nodes_of_interest, key=lambda nd: (root.isElement(root.existEdge(nd, r, True)), root[ID][nd])):
+			m_h = root[VIEW_SIZE][m].getH() / 2
+			y += m_h
+			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
+			y += m_h

@@ -55,14 +55,14 @@ def align_generalized_ns(graph):
 	for n in meta_ns:
 		ns = sorted(root[VIEW_META_GRAPH][n].getNodes(),
 		            key=lambda it: node2key[it] if it in node2key else (root[ID][it], 0, ''))  # root[ID][it])
-		s = root[VIEW_SIZE][n].getW()
+		s = root[VIEW_SIZE][n].getH()
 		x0, y0 = s / 2, 0
 		x, y = x0, y0
 		for m in ns:
-			m_w = root[VIEW_SIZE][m].getW() / 2
-			y += m_w
+			m_h = root[VIEW_SIZE][m].getH() / 2
+			y += m_h
 			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
-			y += m_w
+			y += m_h
 
 
 def rotate_generalized_ns(graph):
@@ -110,9 +110,9 @@ def rotate_fake_ns(graph):
 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
 	for r in (r for r in graph.getNodes() if root[FAKE][r]):
 		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
-		neighbours = lambda nodes: sorted(nodes, key=lambda t: -root[VIEW_META_GRAPH][t].numberOfNodes() if root.isMetaNode(t) else 1)
-		o_n_1 = neighbours(graph.getInNodes(r))
-		o_n_2 = neighbours(graph.getOutNodes(r))
+		ordered = lambda nodes: sorted(nodes, key=lambda t: -root[VIEW_META_GRAPH][t].numberOfNodes() if root.isMetaNode(t) else 1)
+		o_n_1 = ordered(root.getInNodes(r))
+		o_n_2 = ordered(root.getOutNodes(r))
 		if o_n_1:
 			s_x, s_y = view_layout[o_n_1[0]].getX(), view_layout[o_n_1[0]].getY()
 			alpha = degrees(atan2(s_y - r_y, s_x - r_x))
