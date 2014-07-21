@@ -6,9 +6,9 @@ from graph.cluster.factoring import factor_nodes, comp_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, FAKE, \
 	ID, CLONE_ID
-from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
-from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges
-from sbml_vis.graph.layout.layout_utils import layout_cytoplasm, open_meta_ns
+from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns, rotate_fake_ns
+from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_outer_elements, layout_inner_elements
+from sbml_vis.graph.layout.layout_utils import layout_cytoplasm, open_meta_ns, shorten_edges, create_fake_rs
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
 
@@ -127,8 +127,6 @@ def process_generalized_entities(graph, max_level, min_level):
 		mg = root[VIEW_META_GRAPH][n]
 		for m in mg.getNodes():
 			root[MIN_ZOOM][m] = max_level
-
-	# create_fake_rs(meta_graph)
 	return meta_graph
 
 
@@ -140,9 +138,6 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 			(name, go, (l, out_c_id)) = c_id2info[c_id]
 			if current_zoom_level != l:
 				continue
-
-			# open_meta_ns(meta_graph, (r_n for r_n in meta_graph.getNodes() if root[FAKE][r_n] and c_id != root[COMPARTMENT][r_n]))
-
 			comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id)
 			if not comp_n:
 				continue
@@ -153,9 +148,12 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 				if root[FAKE][m]:
 					for n in root[VIEW_META_GRAPH][m].getNodes():
 						root[MIN_ZOOM][n] = current_zoom_level
-			# create_fake_rs(meta_graph)
-		# layout_outer_reactions(meta_graph, n2graph)
-		# shorten_edges(meta_graph)
+		create_fake_rs(meta_graph)
+		layout_outer_elements(meta_graph)
+		shorten_edges(meta_graph)
 		# remove_overlaps(meta_graph)
+		layout_inner_elements(meta_graph)
+		# rotate_fake_ns(meta_graph)
+		open_meta_ns(meta_graph, (r for r in meta_graph.getNodes() if root[FAKE][r]))
 		current_zoom_level -= 1
 	layout_cytoplasm(meta_graph)

@@ -1,8 +1,11 @@
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
+from graph.layout.generalized_layout import rotate_fake_ns
+from graph.resize import get_n_size
 
 from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, TYPE_SPECIES, \
-	TYPE_COMPARTMENT, VIEW_META_GRAPH
+	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, STOICHIOMETRY, COMPARTMENT, VIEW_SHAPE, ANNOTATION, MAX_ZOOM, \
+	MIN_ZOOM, TRANSPORT, REVERSIBLE, CIRCLE_SHAPE
 
 
 OVERLAP_REMOVAL = "Fast Overlap Removal"
@@ -24,56 +27,146 @@ def ub_or_single(nd, graph):
 	return (ubiquitous[nd] or 1 == graph.deg(nd)) and TYPE_SPECIES == root[TYPE][nd]
 
 
-def layout_outer_reactions(graph, filter_nd=lambda nd: True):
+def layout_outer_elements(graph):
 	root = graph.getRoot()
 
-	def single(r):
-		for s in (s for s in graph.getInOutNodes(r) if TYPE_SPECIES == root[TYPE][s]):
-			if root.deg(s) > 1:
-				return False
-		return True
-
-	for c in (c for c in graph.getNodes() if TYPE_COMPARTMENT == root[TYPE][c]):
+	comps = [c for c in graph.getNodes() if TYPE_COMPARTMENT == root[TYPE][c]]
+	for c in comps:
 		c_w, c_h = root[VIEW_SIZE][c].getW() / 2, root[VIEW_SIZE][c].getH() / 2
 		c_x, c_y = root[VIEW_LAYOUT][c].getX(), root[VIEW_LAYOUT][c].getY()
 		c_bottom_x, c_bottom_y = c_x - c_w, c_y - c_h
 		c_top_x, c_top_y = c_x + c_w, c_y + c_h
-		rs = [r for r in graph.getInOutNodes(c) if TYPE_REACTION == root[TYPE][r] and single(r) and filter_nd(r)]
+		rs = [r for r in graph.getInOutNodes(c) if graph.deg(r) == 1]
+		comp_mg = root[VIEW_META_GRAPH][c]
+		prop2value = open_compartment(c, graph)
 		for r in rs:
+			old_x, old_y = root[VIEW_LAYOUT][r].getX(), root[VIEW_LAYOUT][r].getY()
 			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
-			ss = [s for s in root.getInOutNodes(r) if root[VIEW_META_GRAPH][c].isElement(s)]
-			ss_not_ub = [s for s in ss if not ub_or_single(s, root[VIEW_META_GRAPH][c])]
+			ss = [s for s in root.getInOutNodes(r) if comp_mg.isElement(s)]
+			if root[FAKE][r]:
+				for nd in root[VIEW_META_GRAPH][r].getNodes():
+					ss.extend([s for s in root.getInOutNodes(nd) if comp_mg.isElement(s)])
+			ss_not_ub = [s for s in ss if not ub_or_single(s, comp_mg)]
 			if ss_not_ub:
 				ss = ss_not_ub
 			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() for s in ss) / len(ss), sum(
 				root[VIEW_LAYOUT][s].getY() for s in ss) / len(ss)
-			x = c_bottom_x if s_x < c_w else c_top_x
-			y = c_bottom_y if s_y < c_h else c_top_y
+			x = c_bottom_x if s_x < c_bottom_x + c_w else c_top_x
+			y = c_bottom_y if s_y < c_bottom_y + c_h else c_top_y
 
-			if abs(c_bottom_x + s_x - x) < abs(c_bottom_y + s_y - y):
-				r_x = c_bottom_x + s_x
+			if abs(s_x - x) < abs(s_y - y):
+				r_x = s_x
 				r_y = y - r_h if y == c_bottom_y else y + r_h
 			else:
-				r_y = c_bottom_y + s_y
+				r_y = s_y
 				r_x = x - r_w if x == c_bottom_x else x + r_w
+			root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
+			shift_edges(r, root)
+		rs_graph = root.inducedSubGraph(rs)
+		remove_overlaps(rs_graph)
+		root.delAllSubGraphs(rs_graph)
+
+		for r in rs:
+			fit_into_rectangle(c_h, c_w, c_x, c_y, r, root)
+
+		close_compartment(comp_mg, graph, prop2value)
+
+
+
+def open_compartment(c, graph):
+	root = graph.getRoot()
+	prop2value = {prop: root[prop][c] for prop in
+	              [NAME, COMPARTMENT, TYPE, VIEW_SHAPE, ID, ANNOTATION, VIEW_SIZE, MAX_ZOOM, MIN_ZOOM]}
+	graph.openMetaNode(c)
+	return prop2value
+
+
+def close_compartment(comp_mg, graph, prop2value):
+	root = graph.getRoot()
+
+	new_c = graph.createMetaNode(comp_mg, False)
+	for prop, value in prop2value.iteritems():
+		root[prop][new_c] = value
+	for meta_e in root.getInOutEdges(new_c):
+		sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
+		root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
+		root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
+	return new_c
+
+
+def layout_inner_elements(graph):
+	root = graph.getRoot()
+
+	comps = [c for c in graph.getNodes() if TYPE_COMPARTMENT == root[TYPE][c]]
+	for c in comps:
+		c_w, c_h = root[VIEW_SIZE][c].getW() / 2, root[VIEW_SIZE][c].getH() / 2
+		c_x, c_y = root[VIEW_LAYOUT][c].getX(), root[VIEW_LAYOUT][c].getY()
+		c_bottom_x, c_bottom_y = c_x - c_w, c_y - c_h
+		c_top_x, c_top_y = c_x + c_w, c_y + c_h
+		comp_mg = root[VIEW_META_GRAPH][c]
+		prop2value = open_compartment(c, graph)
+
+		create_fake_rs(comp_mg)
+
+		def get_neighbour_nodes(r):
+			result = [s for s in root.getInOutNodes(r) if graph.isElement(s)]
+			if root[FAKE][r]:
+				for inner_r in root[VIEW_META_GRAPH][r].getNodes():
+					result.extend([s for s in root.getInOutNodes(inner_r) if graph.isElement(s)])
+			return result
+
+		rs = [r for r in comp_mg.getNodes() if comp_mg.deg(r) == 0]
+		for r in rs:
+			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
+			ss = get_neighbour_nodes(r)
+			if not ss:
+				continue
+			ss_not_ub = [s for s in ss if not ub_or_single(s, graph)]
+			if ss_not_ub:
+				ss = ss_not_ub
+			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() for s in ss) / len(ss), sum(
+				root[VIEW_LAYOUT][s].getY() for s in ss) / len(ss)
+
+			if min(abs(s_x - c_bottom_x), abs(s_x - c_top_x)) > min(abs(s_y - c_bottom_y), abs(s_y - c_top_y)):
+				r_x = s_x
+				r_y = c_bottom_y - r_h if abs(s_y - c_bottom_y) < abs(s_y - c_top_y) else c_top_y + r_h
+			else:
+				r_y = s_y
+				r_x = c_bottom_x - r_w if abs(s_x - c_bottom_x) < abs(s_x - c_top_x) else c_top_x + r_w
 			root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
 		rs_graph = root.inducedSubGraph(rs)
 		remove_overlaps(rs_graph)
 		root.delAllSubGraphs(rs_graph)
+
 		for r in rs:
-			fit_into_compartment(r, c, root)
+			fit_into_rectangle(c_h, c_w, c_x, c_y, r, root)
+
+		# rotate_fake_ns(comp_mg)
+		open_meta_ns(comp_mg, (r for r in comp_mg.getNodes() if root[FAKE][r]))
+
+		close_compartment(comp_mg, graph, prop2value)
 
 
-def fit_into_compartment(n, c, root):
-	c_w, c_h = root[VIEW_SIZE][c].getW() / 2, root[VIEW_SIZE][c].getH() / 2
-	c_x, c_y = root[VIEW_LAYOUT][c].getX(), root[VIEW_LAYOUT][c].getY()
+def fit_into_rectangle(c_h, c_w, c_x, c_y, n, root):
 	c_bottom_x, c_bottom_y = c_x - c_w, c_y - c_h
 	c_top_x, c_top_y = c_x + c_w, c_y + c_h
-
-	n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+	old_x, old_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+	n_x, n_y = old_x, old_y
 	n_w, n_h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
 	n_x, n_y = min(max(n_x, c_bottom_x + n_w), c_top_x - n_w), min(max(n_y, c_bottom_y + n_h), c_top_y - n_h)
 	root[VIEW_LAYOUT][n] = tlp.Coord(n_x, n_y)
+	shift_edges(n, root)
+
+
+def shift_edges(n, root):
+	nodes = [n]
+	mg = None
+	if root[FAKE][n]:
+		mg = root[VIEW_META_GRAPH][n]
+		nodes.extend(list(mg.getNodes()))
+	for nd in nodes:
+		for e in (e for e in root.getInOutEdges(nd) if not mg or not mg.isElement(e)):
+			root[VIEW_LAYOUT][e] = []
 
 
 def fit_out_of_compartment(n, c, root):
@@ -82,7 +175,8 @@ def fit_out_of_compartment(n, c, root):
 	c_bottom_x, c_bottom_y = c_x - c_w, c_y - c_h
 	c_top_x, c_top_y = c_x + c_w, c_y + c_h
 
-	n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+	old_x, old_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+	n_x, n_y = old_x, old_y
 	n_w, n_h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
 
 	c_bottom_x -= n_w
@@ -95,6 +189,7 @@ def fit_out_of_compartment(n, c, root):
 		else:
 			n_y = c_bottom_y if n_y - c_bottom_y < c_top_y - n_y else c_top_y
 	root[VIEW_LAYOUT][n] = tlp.Coord(n_x, n_y)
+	shift_edges(n, root)
 
 
 def bend_ubiquitous_edges(graph, nodes):
@@ -173,3 +268,56 @@ def layout_ub_reaction(r_graph, r):
 			y += m_h
 			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
 			y += m_h
+
+
+def create_fake_rs(meta_graph):
+	root = meta_graph.getRoot()
+	r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
+	for r in r_ns:
+		r_n = r_to_meta_node(meta_graph, r)
+		if r_n:
+			mg = root[VIEW_META_GRAPH][r_n]
+			root[MAX_ZOOM][r_n] = max(root[MAX_ZOOM][n] for n in mg.getNodes())
+			root[MIN_ZOOM][r_n] = min(root[MIN_ZOOM][n] for n in mg.getNodes())
+
+
+def r_to_meta_node(meta_graph, r):
+	root = meta_graph.getRoot()
+
+	ubs = []
+	for s in root.getInOutNodes(r):
+		if ub_or_single(s, root) and meta_graph.isElement(s):
+			ubs.append(s)
+
+	if meta_graph.isElement(r):
+		ubs.append(r)
+
+	if len(ubs) <= 1:
+		return None
+
+
+	r_n = meta_graph.createMetaNode(ubs, False)
+	r_graph = root[VIEW_META_GRAPH][r_n]
+	# layout_hierarchically(r_graph)
+	layout_ub_reaction(r_graph, r)
+
+	for prop in [NAME, ID, TYPE, ANNOTATION, TRANSPORT, REVERSIBLE]:
+		root[prop][r_n] = root[prop][r]
+
+	root[COMPARTMENT][r_n] = root[COMPARTMENT][ubs[0]]
+
+	root[FAKE][r_n] = True
+	root[VIEW_SHAPE][r_n] = CIRCLE_SHAPE
+
+	root[VIEW_SIZE][r_n] = get_n_size(meta_graph, r_n)
+
+	return r_n
+
+
+def open_meta_ns(meta_graph, ns):
+	root = meta_graph.getRoot()
+	for n in sorted(ns, key=lambda mn: -root[VIEW_META_GRAPH][mn].getId()):
+		inner_ns = root[VIEW_META_GRAPH][n].getNodes()
+		meta_graph.openMetaNode(n)
+		for inner_n in inner_ns:
+			root[VIEW_SIZE][inner_n] = get_n_size(meta_graph, inner_n)

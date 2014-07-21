@@ -2,9 +2,10 @@ from math import atan2, cos, sin, sqrt
 from tulip import tlp
 
 from sbml_vis.graph.layout.generalized_layout import rotate_fake_ns
-from sbml_vis.graph.resize import get_n_size
 from sbml_vis.graph.graph_properties import *
-from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, remove_overlaps, layout_ub_reaction
+from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, remove_overlaps, layout_outer_elements, create_fake_rs, open_meta_ns, \
+	layout_inner_elements
+
 
 COMPONENT_PACKING = "Connected Component Packing"
 
@@ -47,6 +48,9 @@ def layout_cytoplasm(graph, margin=1):
 	root = graph.getRoot()
 	create_fake_rs(graph)
 	layout_force(graph, margin)
+	layout_outer_elements(graph)
+	shorten_edges(graph)
+	layout_inner_elements(graph)
 	remove_overlaps(graph, margin)
 	rotate_fake_ns(graph)
 	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
@@ -98,15 +102,6 @@ def pack_cc(graph):
 	graph.computeLayoutProperty(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
 
 
-def open_meta_ns(meta_graph, ns):
-	root = meta_graph.getRoot()
-	for n in sorted(ns, key=lambda mn: -root[VIEW_META_GRAPH][mn].getId()):
-		inner_ns = root[VIEW_META_GRAPH][n].getNodes()
-		meta_graph.openMetaNode(n)
-		for inner_n in inner_ns:
-			root[VIEW_SIZE][inner_n] = get_n_size(meta_graph, inner_n)
-
-
 def layout(graph, margin=1):
 	root = graph.getRoot()
 	gr = graph.inducedSubGraph([n for n in graph.getNodes()])
@@ -124,17 +119,6 @@ def layout(graph, margin=1):
 	graph.delAllSubGraphs(gr)
 
 	pack_cc(graph)
-
-
-def create_fake_rs(meta_graph):
-	root = meta_graph.getRoot()
-	r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
-	for r in r_ns:
-		r_n = r_to_meta_node(meta_graph, r)
-		if r_n:
-			mg = root[VIEW_META_GRAPH][r_n]
-			root[MAX_ZOOM][r_n] = max(root[MAX_ZOOM][n] for n in mg.getNodes())
-			root[MIN_ZOOM][r_n] = min(root[MIN_ZOOM][n] for n in mg.getNodes())
 
 
 # apply_layout(graph, onto)
@@ -177,35 +161,3 @@ def dfs(n, graph, visited, prev, limit=3, indent=''):
 				return num
 	return num
 
-
-def r_to_meta_node(meta_graph, r):
-	root = meta_graph.getRoot()
-
-	ubs = []
-	for s in root.getInOutNodes(r):
-		if ub_or_single(s, root) and meta_graph.isElement(s):
-			ubs.append(s)
-
-	if meta_graph.isElement(r):
-		ubs.append(r)
-
-	if len(ubs) <= 1:
-		return None
-
-
-	r_n = meta_graph.createMetaNode(ubs, False)
-	r_graph = root[VIEW_META_GRAPH][r_n]
-	# layout_hierarchically(r_graph)
-	layout_ub_reaction(r_graph, r)
-
-	for prop in [NAME, ID, TYPE, ANNOTATION, TRANSPORT, REVERSIBLE]:
-		root[prop][r_n] = root[prop][r]
-
-	root[COMPARTMENT][r_n] = root[COMPARTMENT][ubs[0]]
-
-	root[FAKE][r_n] = True
-	root[VIEW_SHAPE][r_n] = CIRCLE_SHAPE
-
-	root[VIEW_SIZE][r_n] = get_n_size(meta_graph, r_n)
-
-	return r_n
