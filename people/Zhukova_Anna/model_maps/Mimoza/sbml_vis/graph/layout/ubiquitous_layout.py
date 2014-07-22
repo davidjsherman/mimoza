@@ -37,34 +37,34 @@ def layout_outer_elements(graph):
 		c_top_x, c_top_y = c_x + c_w, c_y + c_h
 		rs = [r for r in graph.getInOutNodes(c) if graph.deg(r) == 1]
 		comp_mg = root[VIEW_META_GRAPH][c]
-		prop2value = open_compartment(c, graph)
+		# prop2value = open_compartment(c, graph)
 		for r in rs:
 			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
 			ss = [s for s in root.getInOutNodes(r) if comp_mg.isElement(s)]
-			if root[FAKE][r]:
-				for nd in root[VIEW_META_GRAPH][r].getNodes():
-					ss.extend([s for s in root.getInOutNodes(nd) if comp_mg.isElement(s)])
 			ss_not_ub = [s for s in ss if not ub_or_single(s, comp_mg)]
 			if ss_not_ub:
 				ss = ss_not_ub
-			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() for s in ss) / len(ss), sum(
-				root[VIEW_LAYOUT][s].getY() for s in ss) / len(ss)
-			x = c_bottom_x if s_x < c_bottom_x + c_w else c_top_x
-			y = c_bottom_y if s_y < c_bottom_y + c_h else c_top_y
+			m_x = min(root[VIEW_LAYOUT][s].getX() - root[VIEW_SIZE][s].getW() / 2 for s in comp_mg.getNodes())
+			m_y = min(root[VIEW_LAYOUT][s].getY() - root[VIEW_SIZE][s].getH() / 2 for s in comp_mg.getNodes())
+			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() - m_x for s in ss) / len(ss), sum(
+				root[VIEW_LAYOUT][s].getY() - m_y for s in ss) / len(ss)
+			x = c_bottom_x if s_x < c_w else c_top_x
+			y = c_bottom_y if s_y < c_h else c_top_y
 
 			if abs(s_x - x) < abs(s_y - y):
-				r_x = s_x
+				r_x = c_bottom_x + s_x
 				r_y = y - r_h if y == c_bottom_y else y + r_h
 			else:
-				r_y = s_y
+				r_y = c_bottom_y + s_y
 				r_x = x - r_w if x == c_bottom_x else x + r_w
 			root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
-			shift_edges(r, root)
+		# for n in root.getNodes():
+		# 	shift_edges(n, root)
 		rs_graph = root.inducedSubGraph(rs)
 		remove_overlaps(rs_graph)
 		root.delAllSubGraphs(rs_graph)
 
-		close_compartment(comp_mg, graph, prop2value)
+		# close_compartment(comp_mg, graph, prop2value)
 
 
 
@@ -240,7 +240,7 @@ def layout_ub_reaction(r_graph, r):
 				if not e:
 					continue
 				# it is the only edge as ubiquitous species are duplicated
-				view_layout[e] = [tlp.Coord(x0, y0)]
+				# view_layout[e] = [tlp.Coord(x0, y0)]
 				if r_graph.isMetaEdge(e):
 					for inner_e in root[VIEW_META_GRAPH][e]:
 						view_layout[inner_e] = [tlp.Coord(x0, y0)]

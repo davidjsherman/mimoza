@@ -5,7 +5,7 @@ from sbml_vis.graph.layout.generalized_layout import rotate_fake_ns
 from sbml_vis.graph.graph_properties import *
 from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, remove_overlaps, layout_outer_elements, \
 	create_fake_rs, open_meta_ns, \
-	layout_inner_elements
+	layout_inner_elements, shift_edges
 
 
 COMPONENT_PACKING = "Connected Component Packing"
@@ -17,45 +17,45 @@ CIRCULAR = "Circular (OGDF)"
 HIERARCHICAL_GRAPH = "Hierarchical Graph"
 
 
-def shorten_edges(graph):
-	root = graph.getRoot()
-	diameter = lambda a, b: sqrt(pow(a, 2) + pow(b, 2))
-	for i in xrange(5):
-		processed = set()
-		moved = set()
-		for s in sorted((n for n in graph.getNodes() if not ub_or_single(n, graph)),
-		                key=lambda n: -root[VIEW_SIZE][n].getW()):
-			processed.add(s)
-			s_lo, s_s = root[VIEW_LAYOUT][s], root[VIEW_SIZE][s]
-			for t in (n for n in graph.getInOutNodes(s) if not ub_or_single(n, graph) and not n in processed):
-				t_lo, t_s = root[VIEW_LAYOUT][t], root[VIEW_SIZE][t]
-				dx, dy = t_lo.getX() - s_lo.getX(), t_lo.getY() - s_lo.getY()
-				e_len = diameter(dx, dy)
-				short_len = diameter(s_s.getW(), s_s.getH()) / 2 + diameter(t_s.getW(), t_s.getH()) / 2
-				if e_len > short_len:
-					if not t in moved:
-						alpha = atan2(dx, dy)
-						root[VIEW_LAYOUT][t] = tlp.Coord(s_lo.getX() + short_len * sin(alpha),
-						                                 s_lo.getY() + short_len * cos(alpha))
-						moved.add(t)
-					else:
-						alpha = atan2(-dx, -dy)
-						root[VIEW_LAYOUT][s] = tlp.Coord(t_lo.getX() + short_len * sin(alpha),
-						                                 t_lo.getY() + short_len * cos(alpha))
-						moved.add(s)
+# def shorten_edges(graph):
+# 	root = graph.getRoot()
+# 	diameter = lambda a, b: sqrt(pow(a, 2) + pow(b, 2))
+# 	for i in xrange(5):
+# 		processed = set()
+# 		moved = set()
+# 		for s in sorted((n for n in graph.getNodes() if not ub_or_single(n, graph)),
+# 		                key=lambda n: -root[VIEW_SIZE][n].getW()):
+# 			processed.add(s)
+# 			s_lo, s_s = root[VIEW_LAYOUT][s], root[VIEW_SIZE][s]
+# 			for t in (n for n in graph.getInOutNodes(s) if not ub_or_single(n, graph) and not n in processed):
+# 				t_lo, t_s = root[VIEW_LAYOUT][t], root[VIEW_SIZE][t]
+# 				dx, dy = t_lo.getX() - s_lo.getX(), t_lo.getY() - s_lo.getY()
+# 				e_len = diameter(dx, dy)
+# 				short_len = diameter(s_s.getW(), s_s.getH()) / 2 + diameter(t_s.getW(), t_s.getH()) / 2
+# 				if e_len > short_len:
+# 					if not t in moved:
+# 						alpha = atan2(dx, dy)
+# 						root[VIEW_LAYOUT][t] = tlp.Coord(s_lo.getX() + short_len * sin(alpha),
+# 						                                 s_lo.getY() + short_len * cos(alpha))
+# 						moved.add(t)
+# 					else:
+# 						alpha = atan2(-dx, -dy)
+# 						root[VIEW_LAYOUT][s] = tlp.Coord(t_lo.getX() + short_len * sin(alpha),
+# 						                                 t_lo.getY() + short_len * cos(alpha))
+# 						moved.add(s)
 
 
-def layout_cytoplasm(graph, margin=1):
-	root = graph.getRoot()
-	create_fake_rs(graph)
-	layout_force(graph, margin)
-	layout_outer_elements(graph)
-	shorten_edges(graph)
-	layout_inner_elements(graph)
-	remove_overlaps(graph, margin)
-	rotate_fake_ns(graph)
-	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
-	pack_cc(graph)
+# def layout_cytoplasm(graph, margin=1):
+# 	root = graph.getRoot()
+# 	create_fake_rs(graph)
+# 	layout_force(graph, margin)
+# 	layout_outer_elements(graph)
+# 	shorten_edges(graph)
+# 	layout_inner_elements(graph)
+# 	remove_overlaps(graph, margin)
+# 	rotate_fake_ns(graph)
+# 	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
+# 	pack_cc(graph)
 
 
 # graph.applyAlgorithm("Edge bundling")
@@ -124,8 +124,9 @@ def layout(graph, margin=1):
 	pack_cc(graph)
 	rotate_fake_ns(graph)
 	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
+	root[VIEW_LAYOUT].setAllEdgeValue([])
 	layout_outer_elements(graph)
-	layout_inner_elements(graph)
+	# layout_inner_elements(graph)
 
 
 # apply_layout(graph, onto)

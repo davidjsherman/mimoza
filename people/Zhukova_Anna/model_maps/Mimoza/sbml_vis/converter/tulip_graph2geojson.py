@@ -1,14 +1,14 @@
 from tulip import tlp
 
 import geojson
-from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node
 
+from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, FAKE, \
-	ID, CLONE_ID
-from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns, rotate_fake_ns
-from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, layout_outer_elements, layout_inner_elements
-from sbml_vis.graph.layout.layout_utils import layout_cytoplasm, open_meta_ns, shorten_edges, create_fake_rs, layout
+	ID, CLONE_ID, NAME
+from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
+from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges
+from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
 
@@ -105,7 +105,7 @@ def graph2geojson(c_id2info, graph, verbose):
 	meta_graph = process_generalized_entities(graph, max_comp_level, min_zooming_level)
 
 	log(verbose, 'compartments -> metanodes')
-	process_compartments(c_id2info, max_comp_level - 1, meta_graph, min_zooming_level )
+	process_compartments(c_id2info, max_comp_level - 1, meta_graph, min_zooming_level)
 
 	log(verbose, 'tlp nodes -> geojson features')
 	features = meta_graph2features(c_id2info, max_comp_level, max_zooming_level,
@@ -148,12 +148,5 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 				if root[FAKE][m]:
 					for n in root[VIEW_META_GRAPH][m].getNodes():
 						root[MIN_ZOOM][n] = current_zoom_level
-		# create_fake_rs(meta_graph)
-		# layout_outer_elements(meta_graph)
-		# shorten_edges(meta_graph)
-		# remove_overlaps(meta_graph)
-		# layout_inner_elements(meta_graph)
-		# rotate_fake_ns(meta_graph)
-		# open_meta_ns(meta_graph, (r for r in meta_graph.getNodes() if root[FAKE][r]))
 		current_zoom_level -= 1
-	layout(meta_graph)
+		layout(meta_graph)
