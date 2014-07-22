@@ -1,7 +1,7 @@
 from tulip import tlp
 
 import geojson
-from graph.cluster.factoring import factor_nodes, comp_to_meta_node
+from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node
 
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, FAKE, \

@@ -1,4 +1,4 @@
-from graph.graph_properties import CLONE_ID
+from sbml_vis.graph.graph_properties import CLONE_ID
 
 __author__ = 'anna'
 

@@ -1,7 +1,6 @@
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
-from graph.layout.generalized_layout import rotate_fake_ns
-from graph.resize import get_n_size
+from sbml_vis.graph.resize import get_n_size
 
 from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, TYPE_SPECIES, \
 	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, STOICHIOMETRY, COMPARTMENT, VIEW_SHAPE, ANNOTATION, MAX_ZOOM, \
@@ -64,9 +63,6 @@ def layout_outer_elements(graph):
 		rs_graph = root.inducedSubGraph(rs)
 		remove_overlaps(rs_graph)
 		root.delAllSubGraphs(rs_graph)
-
-		for r in rs:
-			fit_into_rectangle(c_h, c_w, c_x, c_y, r, root)
 
 		close_compartment(comp_mg, graph, prop2value)
 
