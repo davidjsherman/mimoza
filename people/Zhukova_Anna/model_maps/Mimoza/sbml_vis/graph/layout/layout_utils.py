@@ -3,7 +3,8 @@ from tulip import tlp
 
 from sbml_vis.graph.layout.generalized_layout import rotate_fake_ns
 from sbml_vis.graph.graph_properties import *
-from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, remove_overlaps, layout_outer_elements, create_fake_rs, open_meta_ns, \
+from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, remove_overlaps, layout_outer_elements, \
+	create_fake_rs, open_meta_ns, \
 	layout_inner_elements
 
 
@@ -56,14 +57,18 @@ def layout_cytoplasm(graph, margin=1):
 	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
 	pack_cc(graph)
 
-	# graph.applyAlgorithm("Edge bundling")
+
+# graph.applyAlgorithm("Edge bundling")
 
 
 def get_distance(qo):
 	root = qo.getRoot()
-	return max(
-		root[VIEW_SIZE][n].getW() + (max(root[VIEW_SIZE][m].getW() for m in qo.getOutNodes(n)) if qo.outdeg(n) else 0)
-		for n in qo.getNodes()) / 2
+	n2size = {n: max(root[VIEW_SIZE][n].getW(), root[VIEW_SIZE][n].getH()) for n in qo.getNodes() if
+	          root[TYPE][n] in [TYPE_SPECIES, TYPE_REACTION]}
+	def get_neighbour_size(n):
+		neighbour_sizes = {n2size[m] for m in qo.getOutNodes(n) if m in n2size}
+		return max(neighbour_sizes) if neighbour_sizes else 0
+	return max(n2size[n] + get_neighbour_size(n) for n in n2size.iterkeys()) / 4
 
 
 def layout_hierarchically(qo, margin=1):
@@ -124,18 +129,17 @@ def layout(graph, margin=1):
 # apply_layout(graph, onto)
 
 
-def detect_components(graph):
+def detect_components(graph, cycle_number_threshold=3, node_number_threshold=50):
 	comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
 	cycles, simples, mess = [], [], []
-	threshold = 3
 	for ns in comp_list:
 		gr = graph.inducedSubGraph(ns)
 		visited = set()
-		cycles_num = dfs(list(ns)[0], gr, visited, None, threshold)
+		cycles_num = dfs(list(ns)[0], gr, visited, None, cycle_number_threshold)
 		if cycles_num == 0:
 			gr.setName("acyclic")
 			simples.append(gr)
-		elif cycles_num < threshold * 2 and len(ns) < 100:
+		elif cycles_num < cycle_number_threshold * 2 and len(ns) < node_number_threshold:
 			gr.setName("cycle")
 			cycles.append(gr)
 		else:
