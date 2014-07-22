@@ -37,7 +37,6 @@ def layout_outer_elements(graph):
 		c_top_x, c_top_y = c_x + c_w, c_y + c_h
 		rs = [r for r in graph.getInOutNodes(c) if graph.deg(r) == 1]
 		comp_mg = root[VIEW_META_GRAPH][c]
-		# prop2value = open_compartment(c, graph)
 		for r in rs:
 			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
 			ss = [s for s in root.getInOutNodes(r) if comp_mg.isElement(s)]
@@ -48,23 +47,20 @@ def layout_outer_elements(graph):
 			m_y = min(root[VIEW_LAYOUT][s].getY() - root[VIEW_SIZE][s].getH() / 2 for s in comp_mg.getNodes())
 			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() - m_x for s in ss) / len(ss), sum(
 				root[VIEW_LAYOUT][s].getY() - m_y for s in ss) / len(ss)
-			x = c_bottom_x if s_x < c_w else c_top_x
-			y = c_bottom_y if s_y < c_h else c_top_y
+			x = c_bottom_x - r_w if s_x < c_w else c_top_x + r_h
+			y = c_bottom_y - r_h if s_y < c_h else c_top_y + r_h
 
-			if abs(s_x - x) < abs(s_y - y):
+
+			if abs(c_bottom_x + s_x - x) > abs(c_bottom_y + s_y - y):
 				r_x = c_bottom_x + s_x
-				r_y = y - r_h if y == c_bottom_y else y + r_h
+				r_y = y
 			else:
 				r_y = c_bottom_y + s_y
-				r_x = x - r_w if x == c_bottom_x else x + r_w
+				r_x = x
 			root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
-		# for n in root.getNodes():
-		# 	shift_edges(n, root)
 		rs_graph = root.inducedSubGraph(rs)
 		remove_overlaps(rs_graph)
 		root.delAllSubGraphs(rs_graph)
-
-		# close_compartment(comp_mg, graph, prop2value)
 
 
 
