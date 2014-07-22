@@ -40,7 +40,6 @@ def layout_outer_elements(graph):
 		comp_mg = root[VIEW_META_GRAPH][c]
 		prop2value = open_compartment(c, graph)
 		for r in rs:
-			old_x, old_y = root[VIEW_LAYOUT][r].getX(), root[VIEW_LAYOUT][r].getY()
 			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
 			ss = [s for s in root.getInOutNodes(r) if comp_mg.isElement(s)]
 			if root[FAKE][r]:

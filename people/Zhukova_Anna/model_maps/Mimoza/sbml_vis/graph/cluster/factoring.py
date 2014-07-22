@@ -1,4 +1,5 @@
 from collections import defaultdict
+from graph.layout.ubiquitous_layout import layout_outer_elements, layout_inner_elements
 
 from sbml_vis.graph.node_cloner import merge_nodes
 from sbml_vis.graph.resize import get_n_size

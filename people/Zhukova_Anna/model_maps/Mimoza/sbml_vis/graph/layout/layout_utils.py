@@ -63,11 +63,12 @@ def layout_cytoplasm(graph, margin=1):
 
 def get_distance(qo):
 	root = qo.getRoot()
-	n2size = {n: max(root[VIEW_SIZE][n].getW(), root[VIEW_SIZE][n].getH()) for n in qo.getNodes() if
-	          root[TYPE][n] in [TYPE_SPECIES, TYPE_REACTION]}
+	n2size = {n: max(root[VIEW_SIZE][n].getW(), root[VIEW_SIZE][n].getH()) for n in qo.getNodes()}
+
 	def get_neighbour_size(n):
 		neighbour_sizes = {n2size[m] for m in qo.getOutNodes(n) if m in n2size}
 		return max(neighbour_sizes) if neighbour_sizes else 0
+
 	return max(n2size[n] + get_neighbour_size(n) for n in n2size.iterkeys()) / 4
 
 
@@ -109,8 +110,8 @@ def pack_cc(graph):
 
 def layout(graph, margin=1):
 	root = graph.getRoot()
+	create_fake_rs(graph)
 	gr = graph.inducedSubGraph([n for n in graph.getNodes()])
-	create_fake_rs(gr)
 	simples, cycles, mess = detect_components(gr)
 	for qo in simples:
 		layout_hierarchically(qo, margin)
@@ -119,11 +120,12 @@ def layout(graph, margin=1):
 	for qo in mess:
 		layout_force(qo, margin)
 		remove_overlaps(qo, margin)
-	rotate_fake_ns(gr)
-	open_meta_ns(gr, (r for r in gr.getNodes() if root[FAKE][r]))
 	graph.delAllSubGraphs(gr)
-
 	pack_cc(graph)
+	rotate_fake_ns(graph)
+	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
+	layout_outer_elements(graph)
+	layout_inner_elements(graph)
 
 
 # apply_layout(graph, onto)
@@ -136,14 +138,17 @@ def detect_components(graph, cycle_number_threshold=3, node_number_threshold=50)
 		gr = graph.inducedSubGraph(ns)
 		visited = set()
 		cycles_num = dfs(list(ns)[0], gr, visited, None, cycle_number_threshold)
-		if cycles_num == 0:
+		if next((n for n in ns if graph.getRoot()[TYPE][n] == TYPE_COMPARTMENT), None):
+			gr.setName("mess (has compartment)")
+			mess.append(gr)
+		elif cycles_num == 0:
 			gr.setName("acyclic")
 			simples.append(gr)
 		elif cycles_num < cycle_number_threshold * 2 and len(ns) < node_number_threshold:
 			gr.setName("cycle")
 			cycles.append(gr)
 		else:
-			gr.setName("mess ({0})".format(cycles_num))
+			gr.setName("mess (%d)" % cycles_num)
 			mess.append(gr)
 	return simples, cycles, mess
 
