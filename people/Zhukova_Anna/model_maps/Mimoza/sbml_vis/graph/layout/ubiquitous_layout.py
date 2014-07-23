@@ -50,7 +50,6 @@ def layout_outer_elements(graph):
 			x = c_bottom_x - r_w if s_x < c_w else c_top_x + r_h
 			y = c_bottom_y - r_h if s_y < c_h else c_top_y + r_h
 
-
 			if abs(c_bottom_x + s_x - x) > abs(c_bottom_y + s_y - y):
 				r_x = c_bottom_x + s_x
 				r_y = y
@@ -209,21 +208,32 @@ def bend_edges(graph):
 		reactants, products = list(graph.getInNodes(r)), list(graph.getOutNodes(r))
 
 		if len(products) > 1:
-			sample_product = next((s for s in products if not ub_or_single(s, graph)), next(s for s in products))
-			s_lo = root[VIEW_LAYOUT][sample_product]
-			r_product_angle = atan2(s_lo.getY() - r_y, s_lo.getX() - r_x)
+			sample_product = next((s for s in products if not ub_or_single(s, graph)), None)
+			if sample_product:
+				s_x, s_y = root[VIEW_LAYOUT][sample_product].getX(), root[VIEW_LAYOUT][sample_product].getY()
+			else:
+				cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in products], [root[VIEW_LAYOUT][s].gety() for s
+				                                                               in products]
+				s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_x) + max(cs_x)) / 2
+			r_product_angle = atan2(s_y - r_y, s_x - r_x)
 			product_lo = tlp.Coord(r_x + r_r * cos(r_product_angle), r_y + r_r * sin(r_product_angle))
 			for e in graph.getOutEdges(r):
-				root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
+				if graph.source(e) != sample_product:
+					root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
 
 		if len(reactants) > 1:
-			sample_reactant = next((s for s in reactants if not ub_or_single(s, graph)), next(s for s in reactants))
-			s_lo = root[VIEW_LAYOUT][sample_reactant]
-			r_reactant_angle = atan2(-s_lo.getY() + r_y, -s_lo.getX() + r_x)
+			sample_reactant = next((s for s in reactants if not ub_or_single(s, graph)), None)
+			if sample_reactant:
+				s_x, s_y = root[VIEW_LAYOUT][sample_reactant].getX(), root[VIEW_LAYOUT][sample_reactant].getY()
+			else:
+				cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in reactants], [root[VIEW_LAYOUT][s].gety() for
+				                                                                s in reactants]
+				s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_x) + max(cs_x)) / 2
+			r_reactant_angle = atan2(-s_y + r_y, -s_x + r_x)
 			reactant_lo = tlp.Coord(r_x - r_r * cos(r_reactant_angle), r_y - r_r * sin(r_reactant_angle))
 			for e in graph.getInEdges(r):
-				root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
-
+				if graph.source(e) != sample_reactant:
+					root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
 
 
 def layout_ub_reaction(r_graph, r):
@@ -269,7 +279,8 @@ def layout_ub_reaction(r_graph, r):
 					for inner_e in root[VIEW_META_GRAPH][e]:
 						view_layout[inner_e] = [tlp.Coord(x0, y0)]
 
-				end_x, end_y = x0 + from_edge_bend_till_end_current * direction * cos(angle), y0 + from_edge_bend_till_end_current * direction * sin(
+				end_x, end_y = x0 + from_edge_bend_till_end_current * direction * cos(
+					angle), y0 + from_edge_bend_till_end_current * direction * sin(
 					angle)
 				view_layout[ub] = tlp.Coord(end_x, end_y)
 
@@ -313,7 +324,6 @@ def r_to_meta_node(meta_graph, r):
 
 	if len(ubs) <= 1:
 		return None
-
 
 	r_n = meta_graph.createMetaNode(ubs, False)
 	r_graph = root[VIEW_META_GRAPH][r_n]
