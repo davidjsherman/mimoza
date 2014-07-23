@@ -24,16 +24,9 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 		abs_edge_angle = abs(edge_angle)
 		if diag_angle < abs_edge_angle < 180 - diag_angle:
 			y += h if edge_angle > 0 else -h
-			if abs_edge_angle <= 90:
-				return x + h / tan(radians(edge_angle)), y
-			else:
-				return x - h / tan(radians(edge_angle)), y
 		else:
 			x += w if abs_edge_angle <= 90 else -w
-			if edge_angle > 0:
-				return x, y + w * tan(radians(edge_angle))
-			else:
-				return x, y - w * tan(radians(edge_angle))
+		return x, y
 	else:
 		diag = pow(pow(x - other_x, 2) + pow(y - other_y, 2), 0.5)
 		transformation = lambda z, other_z: (w * (((other_z - z) / diag) if diag else 1)) + z
@@ -50,8 +43,6 @@ def e2feature(graph, e, scale, e_id):
 	xy = lambda n: (layout[n].getX(), layout[n].getY())
 	wh = lambda n: (root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2)
 	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), wh(s), root[TYPE][s])
-	# todo swap here t and s and in the method swap signes accordingly,
-	# check how the both x, y are the same
 	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), wh(t), root[TYPE][t])
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
 	ubiquitous = graph[UBIQUITOUS][e]

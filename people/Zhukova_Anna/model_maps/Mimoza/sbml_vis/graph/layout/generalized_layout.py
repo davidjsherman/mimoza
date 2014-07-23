@@ -1,6 +1,8 @@
 from math import degrees, atan2, sqrt
 from tulip import tlp
-from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, VIEW_META_GRAPH, FAKE
+from graph.layout.ubiquitous_layout import ub_or_single
+from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, VIEW_META_GRAPH, FAKE, \
+	COMPARTMENT, UBIQUITOUS, NAME
 
 __author__ = 'anna'
 
@@ -114,7 +116,7 @@ def rotate_fake_ns(graph):
 		o_n_1 = ordered(root.getInNodes(r))
 		o_n_2 = ordered(root.getOutNodes(r))
 		if o_n_1:
-			s_x, s_y = view_layout[o_n_1[0]].getX(), view_layout[o_n_1[0]].getY()
+			s_x, s_y = -view_layout[o_n_1[0]].getX(), -view_layout[o_n_1[0]].getY()
 			alpha = degrees(atan2(s_y - r_y, s_x - r_x))
 		elif o_n_2:
 			s_x, s_y = view_layout[o_n_2[0]].getX(), view_layout[o_n_2[0]].getY()
@@ -125,3 +127,64 @@ def rotate_fake_ns(graph):
 		mg = root[VIEW_META_GRAPH][r]
 
 		view_layout.rotateZ(alpha, mg)
+
+
+def rotate_ub_ns(graph):
+	root = graph.getRoot()
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	for r in (r for r in graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
+		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
+
+		c_id = root[COMPARTMENT][r]
+		reactants, products = set(s for s in graph.getInNodes(r) if root[COMPARTMENT][s] == c_id), \
+		                      set(s for s in graph.getOutNodes(r) if root[COMPARTMENT][s] == c_id)
+		ub_reactants, ub_products = {s for s in reactants if ub_or_single(s, graph)}, \
+		                            {s for s in products if ub_or_single(s, graph)}
+		order = lambda s: (-root[VIEW_META_GRAPH][s].numberOfNodes() if graph.isMetaNode(s) else 1, -graph.deg(s))
+		sp_reactants, sp_products = sorted(reactants - ub_reactants, key=order), \
+		                            sorted(products - ub_products, key=order)
+
+		print root[NAME][r], [root[NAME][s] for s in ub_reactants], [root[NAME][s] for s in ub_products], \
+		[root[NAME][s] for s in sp_reactants], [root[NAME][s] for s in sp_products]
+
+		reactant_angle, product_angle = 0, 0
+		if sp_reactants:
+			sample_reactant = sp_reactants[0]
+			s_x, s_y = view_layout[sample_reactant].getX(), view_layout[sample_reactant].getY()
+			reactant_angle = degrees(atan2(r_y - s_y, r_x - s_x))
+			if not sp_products:
+				product_angle = reactant_angle
+		if sp_products:
+			sample_product = sp_products[0]
+			s_x, s_y = view_layout[sample_product].getX(), view_layout[sample_product].getY()
+			product_angle = degrees(atan2(-r_y + s_y, -r_x + s_x))
+			if not sp_reactants:
+				reactant_angle = product_angle
+
+		print reactant_angle, product_angle
+
+		if ub_reactants:
+			cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in ub_reactants], \
+			             [root[VIEW_LAYOUT][s].getY() for s in ub_reactants]
+			s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
+			print "rs: ", s_x, s_y
+			reactant_angle -= degrees(atan2(r_y - s_y, r_x - s_x))
+
+			# mg = graph.inducedSubGraph(ub_reactants)
+			# view_layout.translate(tlp.Coord(-r_x, -r_y))
+			# view_layout.rotateZ(reactant_angle, mg)
+			# view_layout.translate(tlp.Coord(r_x, r_y))
+			# graph.delAllSubGraphs(mg)
+		if ub_products:
+			cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in ub_products],\
+			             [root[VIEW_LAYOUT][s].getY() for s in ub_products]
+			s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
+			print "ps: ", s_x, s_y
+			product_angle -= degrees(atan2(-r_y + s_y, -r_x + s_x))
+
+			# mg = graph.inducedSubGraph(ub_products)
+			# view_layout.translate(tlp.Coord(-r_x, -r_y))
+			# view_layout.rotateZ(product_angle, mg)
+			# view_layout.translate(tlp.Coord(r_x, r_y))
+			# graph.delAllSubGraphs(mg)
+		print reactant_angle, product_angle

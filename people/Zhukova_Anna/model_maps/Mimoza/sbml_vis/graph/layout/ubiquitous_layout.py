@@ -207,30 +207,25 @@ def bend_edges(graph):
 		r_r = get_reaction_r(r, root) * 2
 		reactants, products = list(graph.getInNodes(r)), list(graph.getOutNodes(r))
 
-		if len(products) > 1:
-			sample_product = next((s for s in products if not ub_or_single(s, graph)), None)
-			if sample_product:
-				s_x, s_y = root[VIEW_LAYOUT][sample_product].getX(), root[VIEW_LAYOUT][sample_product].getY()
+		def get_bend_coord(species):
+			sample_species = next((s for s in species if not ub_or_single(s, graph)), None)
+			if sample_species:
+				s_x, s_y = root[VIEW_LAYOUT][sample_species].getX(), root[VIEW_LAYOUT][sample_species].getY()
 			else:
-				cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in products], [root[VIEW_LAYOUT][s].gety() for s
-				                                                               in products]
-				s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_x) + max(cs_x)) / 2
-			r_product_angle = atan2(s_y - r_y, s_x - r_x)
-			product_lo = tlp.Coord(r_x + r_r * cos(r_product_angle), r_y + r_r * sin(r_product_angle))
+				cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in species], \
+				             [root[VIEW_LAYOUT][s].getY() for s in species]
+				s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
+			r_species_angle = atan2(s_y - r_y, s_x - r_x)
+			return tlp.Coord(r_x + r_r * cos(r_species_angle), r_y + r_r * sin(r_species_angle)), sample_species
+
+		if len(products) > 1:
+			product_lo, sample_product = get_bend_coord(products)
 			for e in graph.getOutEdges(r):
-				if graph.source(e) != sample_product:
+				if graph.target(e) != sample_product:
 					root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
 
 		if len(reactants) > 1:
-			sample_reactant = next((s for s in reactants if not ub_or_single(s, graph)), None)
-			if sample_reactant:
-				s_x, s_y = root[VIEW_LAYOUT][sample_reactant].getX(), root[VIEW_LAYOUT][sample_reactant].getY()
-			else:
-				cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in reactants], [root[VIEW_LAYOUT][s].gety() for
-				                                                                s in reactants]
-				s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_x) + max(cs_x)) / 2
-			r_reactant_angle = atan2(-s_y + r_y, -s_x + r_x)
-			reactant_lo = tlp.Coord(r_x - r_r * cos(r_reactant_angle), r_y - r_r * sin(r_reactant_angle))
+			reactant_lo, sample_reactant = get_bend_coord(reactants)
 			for e in graph.getInEdges(r):
 				if graph.source(e) != sample_reactant:
 					root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]

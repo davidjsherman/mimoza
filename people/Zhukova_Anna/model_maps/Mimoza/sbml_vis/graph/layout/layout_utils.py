@@ -1,6 +1,6 @@
 from tulip import tlp
 
-from sbml_vis.graph.layout.generalized_layout import rotate_fake_ns
+from sbml_vis.graph.layout.generalized_layout import rotate_ub_ns
 from sbml_vis.graph.graph_properties import *
 from sbml_vis.graph.layout.ubiquitous_layout import remove_overlaps, layout_outer_elements, create_fake_rs, open_meta_ns
 
@@ -119,8 +119,9 @@ def layout(graph, margin=1):
 		remove_overlaps(qo, margin)
 	graph.delAllSubGraphs(gr)
 	pack_cc(graph)
-	rotate_fake_ns(graph)
+	# rotate_fake_ns(graph)
 	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
+	# rotate_ub_ns(graph)
 	root[VIEW_LAYOUT].setAllEdgeValue([])
 	layout_outer_elements(graph)
 	# layout_inner_elements(graph)
