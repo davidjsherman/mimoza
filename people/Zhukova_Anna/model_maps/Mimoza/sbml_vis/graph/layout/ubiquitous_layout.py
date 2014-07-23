@@ -63,7 +63,6 @@ def layout_outer_elements(graph):
 		root.delAllSubGraphs(rs_graph)
 
 
-
 def open_compartment(c, graph):
 	root = graph.getRoot()
 	prop2value = {prop: root[prop][c] for prop in
@@ -183,19 +182,48 @@ def fit_out_of_compartment(n, c, root):
 	shift_edges(n, root)
 
 
+def get_reaction_r(r, root):
+	return sqrt(pow(root[VIEW_SIZE][r].getW(), 2) + pow(root[VIEW_SIZE][r].getH(), 2)) / 2
+
+
 def bend_ubiquitous_edges(graph, nodes):
 	root = graph.getRoot()
 	for r in (r for r in nodes if TYPE_REACTION == root[TYPE][r]):
 		r_lo = root[VIEW_LAYOUT][r]
-		r_w = root[VIEW_SIZE][r].getW()
+		r_r = get_reaction_r(r, root) * 1.5
 		for s in (s for s in graph.getInOutNodes(r) if root[UBIQUITOUS][s] or not graph.isMetaNode(s)):
 			s_lo = root[VIEW_LAYOUT][s]
 			alpha = atan2(s_lo.getY() - r_lo.getY(), s_lo.getX() - r_lo.getX())
-			x0, y0 = r_lo.getX() + r_w * 0.7 * cos(alpha), r_lo.getY() + r_w * 0.7 * sin(alpha)
+			x0, y0 = r_lo.getX() + r_r * cos(alpha), r_lo.getY() + r_r * sin(alpha)
 			for m in root[VIEW_META_GRAPH][r].getNodes():
 				for e in root.getInOutEdges(m):
 					if s == root.target(e) or s == root.source(e):
 						root[VIEW_LAYOUT][e] = [tlp.Coord(x0, y0)]
+
+
+def bend_edges(graph):
+	root = graph.getRoot()
+	for r in (r for r in graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
+		r_x, r_y = root[VIEW_LAYOUT][r].getX(), root[VIEW_LAYOUT][r].getY()
+		r_r = get_reaction_r(r, root) * 2
+		reactants, products = list(graph.getInNodes(r)), list(graph.getOutNodes(r))
+
+		if len(products) > 1:
+			sample_product = next((s for s in products if not ub_or_single(s, graph)), next(s for s in products))
+			s_lo = root[VIEW_LAYOUT][sample_product]
+			r_product_angle = atan2(s_lo.getY() - r_y, s_lo.getX() - r_x)
+			product_lo = tlp.Coord(r_x + r_r * cos(r_product_angle), r_y + r_r * sin(r_product_angle))
+			for e in graph.getOutEdges(r):
+				root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
+
+		if len(reactants) > 1:
+			sample_reactant = next((s for s in reactants if not ub_or_single(s, graph)), next(s for s in reactants))
+			s_lo = root[VIEW_LAYOUT][sample_reactant]
+			r_reactant_angle = atan2(-s_lo.getY() + r_y, -s_lo.getX() + r_x)
+			reactant_lo = tlp.Coord(r_x - r_r * cos(r_reactant_angle), r_y - r_r * sin(r_reactant_angle))
+			for e in graph.getInEdges(r):
+				root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
+
 
 
 def layout_ub_reaction(r_graph, r):

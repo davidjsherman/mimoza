@@ -7,7 +7,7 @@ from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, FAKE, \
 	ID, CLONE_ID, NAME
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
-from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges
+from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges
 from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
 from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
@@ -63,6 +63,7 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 			# node wasn't yet serialised => we can change its position
 			# filter_nd = lambda nd: root[MIN_ZOOM][nd] >= level
 			# layout_outer_reactions(meta_graph, filter_nd)
+		bend_edges(meta_graph)
 
 		for e in meta_graph.getEdges():
 			e_id = "%s-%s" % (get_id(meta_graph.source(e)), get_id(meta_graph.target(e)))

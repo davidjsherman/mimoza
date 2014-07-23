@@ -1,11 +1,8 @@
-from math import atan2, cos, sin, sqrt
 from tulip import tlp
 
 from sbml_vis.graph.layout.generalized_layout import rotate_fake_ns
 from sbml_vis.graph.graph_properties import *
-from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single, remove_overlaps, layout_outer_elements, \
-	create_fake_rs, open_meta_ns, \
-	layout_inner_elements, shift_edges
+from sbml_vis.graph.layout.ubiquitous_layout import remove_overlaps, layout_outer_elements, create_fake_rs, open_meta_ns
 
 
 COMPONENT_PACKING = "Connected Component Packing"

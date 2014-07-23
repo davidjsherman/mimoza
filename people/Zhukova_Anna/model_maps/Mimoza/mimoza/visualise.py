@@ -80,8 +80,6 @@ except Exception as e:
 	url = MIMOZA_ERROR_URL
 
 sys.stdout.flush()
-os.dup2(temp, 2)
-sys.stdout = os.fdopen(2, 'w')
 
 print '''</div>
           </body>
