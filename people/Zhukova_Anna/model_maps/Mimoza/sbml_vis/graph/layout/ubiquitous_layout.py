@@ -221,13 +221,13 @@ def bend_edges(graph):
 		if len(products) > 1:
 			product_lo, sample_product = get_bend_coord(products)
 			for e in graph.getOutEdges(r):
-				if graph.target(e) != sample_product:
+				# if graph.target(e) != sample_product:
 					root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
 
 		if len(reactants) > 1:
 			reactant_lo, sample_reactant = get_bend_coord(reactants)
 			for e in graph.getInEdges(r):
-				if graph.source(e) != sample_reactant:
+				# if graph.source(e) != sample_reactant:
 					root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
 
 
@@ -249,7 +249,7 @@ def layout_ub_reaction(r_graph, r):
 				participants_len += 1
 			max_participant_w = max(root[VIEW_SIZE][nd].getW() for nd in participants)
 
-			edge_len = r_radius + max_participant_w * (participants_len / 2)
+			edge_len = r_radius + max_participant_w * (participants_len / 2) * 0.7
 
 			angle_from_top_to_bottom = 2 * min(100, max(60, participants_len * 20))
 			d_angle = radians(angle_from_top_to_bottom / (participants_len - 1))
