@@ -16,18 +16,6 @@ var BG_REACTION = 5;
 var BG_COMPARTMENT = 6;
 var BG = [BG_SPECIES, BG_REACTION, BG_COMPARTMENT];
 
-var GREY = "#B4B4B4";
-var ORANGE = "#FDB462";
-var YELLOW = "#FFFFB3";
-var RED = "#FB8072";
-var BLUE = "#80B1D3";
-var GREEN = "#B3DE69";
-var VIOLET = "#BEBADA";
-var TURQUOISE = "#8DD3C7";
-var WHITE = 'white';
-
-var ROUND = 'round';
-
 var TRANSPORT = "transport";
 
 var MIN_CLICKABLE_R = 4;
@@ -35,88 +23,90 @@ var MIN_CLICKABLE_R = 4;
 function pnt2layer(map, feature, zoom, result) {
     "use strict";
     var e = feature.geometry.coordinates,
-        scaleFactor = Math.pow(2, zoom);
+        scaleFactor = Math.pow(2, zoom),
+        w = feature.properties.w,
+        h;
     if (EDGE == feature.properties.type) {
-        var color = feature.properties.ubiquitous ? GREY : (feature.properties.generalized
-            ? (feature.properties.transport ? TURQUOISE : GREEN) : (feature.properties.transport ? VIOLET : BLUE));
         return L.polyline(e.map(function (coord) {
             return map.unproject(coord, 1);
         }), {
-            color: color,
+            color: feature.properties.color,
             opacity: 1,
-            weight: (feature.properties.size / 4) * scaleFactor,
-            lineCap: ROUND,
-            lineJoin: ROUND,
+            weight: w * scaleFactor,
+            lineCap: 'round',
+            lineJoin: 'round',
             clickable: false,
             fill: false,
             zIndexOffset: -2000,
             riseOnHover: false
         });
     }
-    var w = feature.properties.w / 2,
-        h = feature.properties.h / 2,
-        r = Math.min(w, h) * scaleFactor,
-        x = e[0], y = e[1],
+    var x = e[0], y = e[1],
         is_bg = -1 !== BG.indexOf(feature.properties.type),
         props = {
             name: feature.properties.name,
             title: feature.properties.name,
             alt: feature.properties.name,
             id: feature.properties.id,
-            color: WHITE,
+            color: 'white',
+            fillColor: feature.properties.color,
             fillOpacity: is_bg ? 0.1 : 1,
             opacity: 1,
-            lineCap: ROUND,
-            lineJoin: ROUND,
             weight: is_bg ? 0 : Math.min(2, w / 10 * Math.pow(2, zoom)),
             fill: true,
-            clickable: !is_bg && r > MIN_CLICKABLE_R,
+            clickable: !is_bg && w * scaleFactor > MIN_CLICKABLE_R,
             zIndexOffset: is_bg ? -2000 : 1000,
             riseOnHover: !is_bg
         },
-        southWest = map.unproject([x - w, y + h], 1),
-        northEast = map.unproject([x + w, y - h], 1),
-        bounds = new L.LatLngBounds(southWest, northEast),
-        centre = map.unproject([x, y], 1);
+        bounds,
+        centre;
     var node = null;
-    if (BG_SPECIES == feature.properties.type) {
-        props.fillColor = ORANGE;
-        node = L.circleMarker(centre, props);
-        node.setRadius(r / 2);
-        return node;
-    }
     if (BG_REACTION == feature.properties.type) {
-        props.fillColor = feature.properties.transport ? TURQUOISE : GREEN;
+        h = feature.properties.w;
+        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
         return L.rectangle(bounds, props);
     }
     if (BG_COMPARTMENT == feature.properties.type) {
-        props.fillColor = YELLOW;
+        h = feature.properties.h;
+        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
         return L.rectangle(bounds, props);
     }
+    if (BG_SPECIES == feature.properties.type) {
+        centre = map.unproject([x, y], 1);
+        node = L.circleMarker(centre, props);
+        node.setRadius(w * scaleFactor / 2);
+        return node;
+    }
     if (REACTION == feature.properties.type) {
-        props.fillColor = feature.properties.generalized ? (feature.properties.transport ? TURQUOISE : GREEN) : (feature.properties.transport ? VIOLET : BLUE);
+        h = feature.properties.w;
+        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
         node = L.rectangle(bounds, props);
     } else if (COMPARTMENT == feature.properties.type) {
-        props.fillColor = YELLOW;
+        h = feature.properties.h;
+        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
         node = L.rectangle(bounds, props);
     } else if (SPECIES == feature.properties.type) {
-        props.fillColor = feature.properties.ubiquitous ? GREY : (feature.properties.generalized ? ORANGE : RED);
+        centre = map.unproject([x, y], 1);
         node = L.circleMarker(centre, props);
-        node.setRadius(r / 2);
+        node.setRadius(w * scaleFactor / 2);
     } else {
         return null;
     }
     node = L.featureGroup([node]);
-    if (r > 8) {
-        if (SPECIES == feature.properties.type) {
-            r /= Math.sqrt(2);
-        }
-        var size = Math.max(r * 0.9 / 4, 8),
+    w *= scaleFactor;
+    if (COMPARTMENT == feature.properties.type){
+        w = Math.min(w, h * scaleFactor);
+    } else if (SPECIES == feature.properties.type) {
+        w /= Math.sqrt(2);
+    }
+    if (w > 8) {
+        centre = map.unproject([x, y], 1);
+        var size = Math.max(w * 0.9 / 4, 8),
             label = L.marker(centre,
                             {icon: L.divIcon({
                                     className: 'label',
                                     html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label + "</span>",
-                                    iconSize: [r * 0.89, r * 0.89],
+                                    iconSize: [w * 0.89, w * 0.89],
                                     zIndexOffset: -1000,
                                     riseOnHover: false})
                             }
@@ -137,7 +127,7 @@ function matchesCompartment(cId, feature) {
 
 function matchesLevel(level, feature) {
     "use strict";
-    return level >= feature.properties.zoom_min && level <= feature.properties.zoom_max;
+    return level >= feature.properties.min_zoom && level <= feature.properties.max_zoom;
 }
 
 function rescaleZoom(zMin, level) {

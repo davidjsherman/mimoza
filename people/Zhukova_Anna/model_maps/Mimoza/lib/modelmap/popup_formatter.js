@@ -77,18 +77,6 @@ function formatGo(term) {
     return "";
 }
 
-function getBounds(feature, map) {
-    "use strict";
-    var e = feature.geometry.coordinates,
-        w = feature.properties.w / 2,
-        h = feature.properties.h / 2,
-        x = e[0],
-        y = e[1],
-        southWest = map.unproject([x - w, y + h], 1),
-        northEast = map.unproject([x + w, y - h], 1);
-    return new L.LatLngBounds(southWest, northEast);
-}
-
 function p(text) {
     "use strict";
     return "<p class='popup centre'>" + text + "</p>";
@@ -105,10 +93,9 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
         return;
     }
     var scaleFactor = Math.pow(2, zoom),
-        r = Math.min(feature.properties.w / 2, feature.properties.h / 2) * scaleFactor,
         content = "<h2>" + feature.properties.name + "</h2>" + p(i("id: ") + feature.properties.id),
         label = content;
-    if (r <= MIN_CLICKABLE_R) {
+    if (feature.properties.w * scaleFactor <= MIN_CLICKABLE_R) {
         return;
     }
     if (REACTION == feature.properties.type) {
@@ -126,15 +113,15 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
     } else if (COMPARTMENT == feature.properties.type) {
         content += p(formatGo(feature.properties.term)); // + link;
     }
-    var bounds = getBounds(feature, map),
-        size = $('#' + mapId).height(),
+    var size = $('#' + mapId).height(),
+        e = feature.geometry.coordinates,
         popup = L.popup({
             autoPan: true,
             keepInView: true,
             maxWidth: size - 2,
             maxHeight: size - 2,
             autoPanPadding: [1, 1]
-        }).setContent(content).setLatLng(bounds.getCenter());
+        }).setContent(content).setLatLng(map.unproject([e[0], e[1]], 1));
     if (feature.properties.ubiquitous) {
         var key = feature.properties.id;
         if (!name2selection.hasOwnProperty(key)) {
@@ -175,7 +162,9 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
 
 function highlightCircle(feature, map, zoom) {
     "use strict";
-    var props = {
+    var e = feature.geometry.coordinates,
+        centre = map.unproject([e[0], e[1]], 1),
+        node = L.circleMarker(centre, {
             name: feature.properties.name,
             title: feature.properties.name,
             alt: feature.properties.name,
@@ -184,17 +173,12 @@ function highlightCircle(feature, map, zoom) {
             fillColor: "#ac3131",
             fillOpacity: 0.7,
             opacity: 1,
-            lineCap: ROUND,
-            lineJoin: ROUND,
             weight: 2,
             fill: true,
             clickable: false
-        },
-        e = feature.geometry.coordinates,
-        centre = map.unproject([e[0], e[1]], 1),
+        }),
         scaleFactor = Math.pow(2, zoom),
-        r = Math.min(feature.properties.w / 2, feature.properties.h / 2) * scaleFactor,
-        node = L.circleMarker(centre, props);
+        r = feature.properties.w * scaleFactor;
     node.setRadius(r / 2);
     return node;
 }

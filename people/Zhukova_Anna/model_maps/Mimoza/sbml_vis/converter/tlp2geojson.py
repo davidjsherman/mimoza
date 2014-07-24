@@ -1,13 +1,46 @@
-from math import degrees, radians
-from geojson.geometry import Geometry
-from sympy import to_cnf, atan2, pi, tan
+from math import degrees
+
+from sympy import to_cnf, atan2
 from sympy.logic.boolalg import disjuncts, conjuncts
 import geojson
+from sbml_vis.graph.color.colorer import get_edge_color, get_reaction_color, get_compartment_color, get_species_color, \
+	get_bg_color
 
 from sbml_vis.graph.rename import get_short_name
 from sbml_vis.graph.graph_properties import *
-from sbml_vis.graph.resize import get_n_length, get_n_size, get_e_length, get_e_size
+from sbml_vis.graph.resize import get_e_size
 
+TRANSPORT = 'transport'
+
+TERM = 'term'
+
+PRODUCTS = 'products'
+
+REACTANTS = 'reactants'
+
+REVERSIBLE = "reversible"
+
+GENE_ASSOCIATION = "gene_association"
+
+GENERALIZED = "generalized"
+
+LABEL = "label"
+
+NAME = "name"
+
+ID = "id"
+
+COMPARTMENT_ID = "c_id"
+
+TYPE = "type"
+
+HEIGHT = "h"
+
+WIDTH = "w"
+
+ENTITY_TYPE = "type"
+
+COLOR = "color"
 
 __author__ = 'anna'
 
@@ -43,9 +76,9 @@ def e2feature(graph, e, scale, e_id):
 	xy = lambda n: (layout[n].getX(), layout[n].getY())
 	wh = lambda n: (root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2)
 	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), wh(s), root[TYPE][s])
-	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), wh(t), root[TYPE][t])
+	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), wh(t),
+	                            root[TYPE][t])
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
-	ubiquitous = graph[UBIQUITOUS][e]
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 
 	options = {t}
@@ -55,67 +88,63 @@ def e2feature(graph, e, scale, e_id):
 			options |= {nd for nd in root[VIEW_META_GRAPH][r].getNodes()}
 		r = options.pop()
 
-	is_transport = root[TRANSPORT][r]
-	props = {"size": get_e_size(root, e).getW(), "type": TYPE_EDGE, "stoichiometry": graph[STOICHIOMETRY][e],
-	         "ubiquitous": ubiquitous, "generalized": generalized, "transport": is_transport,
-	         "zoom_min": level_min, "zoom_max": level_max}
-	if not is_transport:
+	transport = root[TRANSPORT][r]
+	ubiquitous = root[UBIQUITOUS][e]
+	props = {WIDTH: get_e_size(root, e).getW() / 4, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
+	         UBIQUITOUS: ubiquitous, GENERALIZED: generalized, TRANSPORT: transport,
+	         MIN_ZOOM: level_min, MAX_ZOOM: level_max, COLOR: get_edge_color(ubiquitous, generalized, transport)}
+	if not transport:
 		props["c_id"] = root[COMPARTMENT][r]
 	return geojson.Feature(geometry=geom, properties=props, id=e_id)
 
 
 def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient, n_id):
 	root = graph.getRoot()
-	type_ = root.getIntegerProperty(TYPE)
-	layout = graph.getLayoutProperty(VIEW_LAYOUT)
-	transport = root.getBooleanProperty(TRANSPORT)
-	annotation = root.getStringProperty(ANNOTATION)
 
-	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
+	geom = geojson.Point(scale(root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()))
 	c_id = root[COMPARTMENT][n]
-	w, h = root[VIEW_SIZE][n].getW() * scale_coefficient, root[VIEW_SIZE][n].getH() * scale_coefficient
-	level_min, level_max = root[MIN_ZOOM][n], root[MAX_ZOOM][n]
+	w, h = root[VIEW_SIZE][n].getW() * scale_coefficient / 2, root[VIEW_SIZE][n].getH() * scale_coefficient / 2
+	node_type = root[TYPE][n]
+	generalized = graph.isMetaNode(n)
+	props = {WIDTH: w, ENTITY_TYPE: node_type, MIN_ZOOM: root[MIN_ZOOM][n], MAX_ZOOM: root[MAX_ZOOM][n],
+	         COMPARTMENT_ID: c_id,
+	         ID: root[ID][n], NAME: root[NAME][n], LABEL: get_short_name(graph, n, onto), GENERALIZED: generalized}
+	if TYPE_REACTION == node_type:
+		ins, outs = get_formula(graph, n)
+		transport = root[TRANSPORT][n]
+		props.update(
+			{GENE_ASSOCIATION: get_gene_association_list(root[ANNOTATION][n]), REVERSIBLE: root[REVERSIBLE][n],
+			 REACTANTS: ins, PRODUCTS: outs, TRANSPORT: transport,
+			 COLOR: get_reaction_color(generalized, transport)})
+		if transport:
+			del props[COMPARTMENT_ID]
+	elif TYPE_COMPARTMENT == node_type:
+		props.update({TERM: root[ANNOTATION][n], HEIGHT: h, TRANSPORT: True, COLOR: get_compartment_color()})
+	elif TYPE_SPECIES == node_type:
+		ubiquitous = root[UBIQUITOUS][n]
+		n_id = root[ID][n]
+		transported = False
+		for rs in (root.getInOutNodes(m) for m in root.getNodes() if n_id == root[ID][m]):
+			transported = next((r for r in rs if root[TRANSPORT][r]), False) is not False
+			if transported:
+				break
+		# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
+		comp_name = c_id2info[c_id][0]
+		props.update({TERM: root[ANNOTATION][n], TRANSPORT: transported, UBIQUITOUS: ubiquitous,
+		              COMPARTMENT: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
 
-	props = {"w": w, "h": h, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
-	         "c_id": c_id}
-
-	if type_[n] in TYPE_BG:
-		return geojson.Feature(geometry=geom, properties=props)
-
-	if type_[n] in TYPE_ENTITY:
-		generalized = graph.isMetaNode(n)
-		props.update({"id": root[ID][n], "name": root[NAME][n], "label": get_short_name(graph, n, onto),
-		              "generalized": generalized})
-		if TYPE_REACTION == type_[n]:
-			ins, outs = get_formula(graph, n)
-			props.update(
-				{"gene_association": get_gene_association_list(annotation[n]), "reversible": root[REVERSIBLE][n],
-				 'reactants': ins, 'products': outs, "transport": transport[n]})
-			if transport[n]:
-				del props["c_id"]
-		elif TYPE_COMPARTMENT == type_[n]:
-			props['term'] = annotation[n]
-			props['transport'] = True
-		elif TYPE_SPECIES == type_[n]:
-			n_id = root[ID][n]
-			transported = False
-			for rs in (root.getInOutNodes(m) for m in root.getNodes() if n_id == root[ID][m]):
-				transported = next((r for r in rs if transport[r]), False) is not False
-				if transported:
-					break
-			# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
-			comp_name = c_id2info[c_id][0]
-			props.update({"term": annotation[n], "transport": transported, "ubiquitous": root[UBIQUITOUS][n],
-			              "compartment": comp_name})
-
-		bg_feature = None
-		if generalized:
-			bg_props = {"id": root[ID][n], "w": w, "h": h, "type": TYPE_2_BG_TYPE[type_[n]],
-			            "zoom_min": level_max + 1, "zoom_max": max_bg_level, "transport": props["transport"]}
-			if "c_id" in props:
-				bg_props["c_id"] = c_id
-			bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
-		return geojson.Feature(geometry=geom, properties=props, id=n_id), bg_feature
+	bg_feature = None
+	if generalized:
+		node_type = TYPE_2_BG_TYPE[node_type]
+		transport = props[TRANSPORT]
+		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, TRANSPORT: transport,
+		            MIN_ZOOM: root[MAX_ZOOM][n] + 1, MAX_ZOOM: max_bg_level, COLOR: get_bg_color(node_type, transport)}
+		if COMPARTMENT_ID in props:
+			bg_props[COMPARTMENT_ID] = c_id
+		if TYPE_BG_COMPARTMENT == node_type:
+			bg_props[HEIGHT] = h
+		bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
+	return geojson.Feature(geometry=geom, properties=props, id=n_id), bg_feature
 
 
 def get_gene_association_list(ga):
