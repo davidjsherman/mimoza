@@ -99,13 +99,13 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
         return;
     }
     if (REACTION == feature.properties.type) {
-        var transport = feature.properties.transport ? p(i("Is a transport reaction.")) : "",
+        var transport = feature.properties.tr ? p(i("Is a transport reaction.")) : "",
             ga_res = p(formatGA(feature.properties.term)),
-            formula = p(formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products));
+            formula = p(formatFormula(feature.properties.rev, feature.properties.rs, feature.properties.ps));
         content += formula + ga_res + transport;
         label += formula + transport;
     } else if (SPECIES == feature.properties.type) {
-        var transported = feature.properties.transport ? p(i("Participates in a transport reaction.")) : "",
+        var transported = feature.properties.tr ? p(i("Participates in a transport reaction.")) : "",
             ch = p(formatChebi(feature.properties.term)),
             compartment = p(i("compartment: ") + feature.properties.c_name);
         content += compartment + ch + transported;
@@ -122,7 +122,7 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
             maxHeight: size - 2,
             autoPanPadding: [1, 1]
         }).setContent(content).setLatLng(map.unproject([e[0], e[1]], 1));
-    if (feature.properties.ubiquitous) {
+    if (feature.properties.ub) {
         var key = feature.properties.id;
         if (!name2selection.hasOwnProperty(key)) {
             name2selection[key] = L.featureGroup();

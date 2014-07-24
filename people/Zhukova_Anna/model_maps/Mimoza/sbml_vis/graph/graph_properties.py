@@ -2,9 +2,9 @@ ID = 'id'
 TERM = 'term'
 NAME = 'name'
 
-ANCESTOR_ID = 'ancestor_id'
-ANCESTOR_TERM = 'ancestor_term'
-ANCESTOR_NAME = "ancestor_name"
+ANCESTOR_ID = 'anc_id'
+ANCESTOR_TERM = 'anc_term'
+ANCESTOR_NAME = "anc_name"
 
 COMPARTMENT_ID = "c_id"
 COMPARTMENT_NAME = "c_name"
@@ -15,16 +15,16 @@ VIEW_SHAPE = "viewShape"
 VIEW_LAYOUT = "viewLayout"
 VIEW_SIZE = "viewSize"
 
-UBIQUITOUS = 'ubiquitous'
+UBIQUITOUS = 'ub'
 
-STOICHIOMETRY = 'stoichiometry'
-REVERSIBLE = "reversible"
-TRANSPORT = "transport"
+STOICHIOMETRY = 'stoich'
+REVERSIBLE = "rev"
+TRANSPORT = "tr"
 
 VIEW_META_GRAPH = 'viewMetaGraph'
 
-MAX_ZOOM = "max_zoom"
-MIN_ZOOM = "min_zoom"
+MAX_ZOOM = "max_z"
+MIN_ZOOM = "min_z"
 
 FAKE = "fake"
 
@@ -35,8 +35,8 @@ COLOR = "color"
 HEIGHT = "h"
 WIDTH = "w"
 
-PRODUCTS = 'products'
-REACTANTS = 'reactants'
+PRODUCTS = 'ps'
+REACTANTS = 'rs'
 
 CYTOPLASM = "cytoplasm"
 ORGANELLES = "organelles"

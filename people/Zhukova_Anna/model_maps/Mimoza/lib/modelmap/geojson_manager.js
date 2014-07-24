@@ -120,14 +120,14 @@ function pnt2layer(map, feature, zoom, result) {
 function matchesCompartment(cId, feature) {
     "use strict";
     if (TRANSPORT == cId) {
-        return feature.properties.transport;
+        return feature.properties.tr;
     }
     return cId == feature.properties.c_id || cId == feature.properties.id;
 }
 
 function matchesLevel(level, feature) {
     "use strict";
-    return level >= feature.properties.min_zoom && level <= feature.properties.max_zoom;
+    return level >= feature.properties.min_z && level <= feature.properties.max_z;
 }
 
 function rescaleZoom(zMin, level) {
@@ -157,12 +157,12 @@ function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin, nam
         zz = rescaleZoom(zMin, z),
         specificJson = getFilteredJson(map, json_data, name2popup, name2zoom, zz, z, mapId, result,
             function (feature) {
-                return !feature.properties.ubiquitous && matchesLevel(z, feature) && matchesCompartment(cId, feature);
+                return !feature.properties.ub && matchesLevel(z, feature) && matchesCompartment(cId, feature);
             }
         ),
         ubiquitousJson = getFilteredJson(map, json_data, name2popup, name2zoom, zz, z, mapId, result,
             function (feature) {
-                return feature.properties.ubiquitous && matchesLevel(z, feature) && matchesCompartment(cId, feature);
+                return feature.properties.ub && matchesLevel(z, feature) && matchesCompartment(cId, feature);
             }
         );
     if (!result[0]) {
