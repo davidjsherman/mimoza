@@ -1,7 +1,7 @@
 from math import degrees, atan2, sqrt
 from tulip import tlp
 
-from graph.layout.ubiquitous_layout import ub_or_single
+from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single
 from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, VIEW_META_GRAPH, \
 	COMPARTMENT
 
@@ -161,5 +161,3 @@ def rotate_ub_ns(graph):
 			view_layout.rotateZ(product_angle, mg)
 			view_layout.translate(tlp.Coord(r_x, r_y))
 			graph.delAllSubGraphs(mg)
-
-		print reactant_angle, product_angle
