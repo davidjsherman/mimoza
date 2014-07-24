@@ -73,11 +73,10 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient,
 
 	geom = geojson.Point(scale(layout[n].getX(), layout[n].getY()))
 	c_id = root[COMPARTMENT][n]
-	size = root[VIEW_SIZE][n].getW() * scale_coefficient
 	w, h = root[VIEW_SIZE][n].getW() * scale_coefficient, root[VIEW_SIZE][n].getH() * scale_coefficient
 	level_min, level_max = root[MIN_ZOOM][n], root[MAX_ZOOM][n]
 
-	props = {"w": w, "h": h, "size": size, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
+	props = {"w": w, "h": h, "type": type_[n], "zoom_min": level_min, "zoom_max": level_max,
 	         "c_id": c_id}
 
 	if type_[n] in TYPE_BG:
@@ -111,7 +110,7 @@ def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient,
 
 		bg_feature = None
 		if generalized:
-			bg_props = {"id": root[ID][n], "w": w, "h": h, "size": size, "type": TYPE_2_BG_TYPE[type_[n]],
+			bg_props = {"id": root[ID][n], "w": w, "h": h, "type": TYPE_2_BG_TYPE[type_[n]],
 			            "zoom_min": level_max + 1, "zoom_max": max_bg_level, "transport": props["transport"]}
 			if "c_id" in props:
 				bg_props["c_id"] = c_id
