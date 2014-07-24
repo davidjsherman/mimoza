@@ -58,10 +58,14 @@ def e2feature(graph, e, scale, e_id):
 	transport = root[TRANSPORT][r]
 	ubiquitous = root[UBIQUITOUS][e]
 	props = {WIDTH: get_e_size(root, e).getW() / 4, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
-	         UBIQUITOUS: ubiquitous, TRANSPORT: transport,
 	         MIN_ZOOM: level_min, MAX_ZOOM: level_max, COLOR: get_edge_color(ubiquitous, generalized, transport)}
 	if not transport:
 		props["c_id"] = root[COMPARTMENT_ID][r]
+	else:
+	# let's not store unneeded False
+		props[TRANSPORT] = True
+	if ubiquitous:
+		props[UBIQUITOUS] = True
 	return geojson.Feature(geometry=geom, properties=props, id=e_id)
 
 
@@ -74,38 +78,44 @@ def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id)
 	node_type = root[TYPE][n]
 	generalized = graph.isMetaNode(n)
 	props = {WIDTH: w, TYPE: node_type, MIN_ZOOM: root[MIN_ZOOM][n], MAX_ZOOM: root[MAX_ZOOM][n],
-	         COMPARTMENT_ID: c_id,
-	         ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
+	         COMPARTMENT_ID: c_id, ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
 	if TYPE_REACTION == node_type:
 		ins, outs = get_formula(graph, n)
 		transport = root[TRANSPORT][n]
 		props.update(
-			{TERM: get_gene_association_list(root[TERM][n]), REVERSIBLE: root[REVERSIBLE][n],
-			 REACTANTS: ins, PRODUCTS: outs, TRANSPORT: transport,
+			{TERM: get_gene_association_list(root[TERM][n]), REACTANTS: ins, PRODUCTS: outs,
 			 COLOR: get_reaction_color(generalized, transport)})
 		if transport:
 			del props[COMPARTMENT_ID]
+			# let's not store unneeded False
+			props[TRANSPORT] = True
+		if root[REVERSIBLE][n]:
+			props[REVERSIBLE] = True
 	elif TYPE_COMPARTMENT == node_type:
 		props.update({TERM: root[TERM][n], HEIGHT: h, TRANSPORT: True, COLOR: get_compartment_color()})
 	elif TYPE_SPECIES == node_type:
 		ubiquitous = root[UBIQUITOUS][n]
+		if ubiquitous:
+			# let's not store unneeded False
+			props[UBIQUITOUS] = True
 		s_id = root[ID][n]
-		transported = False
 		for rs in (root.getInOutNodes(m) for m in root.getNodes() if s_id == root[ID][m]):
-			transported = next((r for r in rs if root[TRANSPORT][r]), False) is not False
-			if transported:
+			if next((r for r in rs if root[TRANSPORT][r]), False) is not False:
+				props[TRANSPORT] = True
 				break
 		# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
 		comp_name = c_id2info[c_id][0]
-		props.update({TERM: root[TERM][n], TRANSPORT: transported, UBIQUITOUS: ubiquitous,
-		              COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
+		props.update({TERM: root[TERM][n], COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
 
 	bg_feature = None
 	if generalized:
 		node_type = TYPE_2_BG_TYPE[node_type]
-		transport = props[TRANSPORT]
-		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, TRANSPORT: transport,
+		transport = TRANSPORT in props
+		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type,
 		            MIN_ZOOM: root[MAX_ZOOM][n] + 1, MAX_ZOOM: max_bg_level, COLOR: get_bg_color(node_type, transport)}
+		if transport:
+			# let's not store unneeded False
+			bg_props[TRANSPORT] = True
 		if COMPARTMENT_ID in props:
 			bg_props[COMPARTMENT_ID] = c_id
 		if TYPE_BG_COMPARTMENT == node_type:
