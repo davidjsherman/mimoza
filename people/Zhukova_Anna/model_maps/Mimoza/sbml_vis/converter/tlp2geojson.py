@@ -66,7 +66,7 @@ def e2feature(graph, e, scale, e_id):
 		props[TRANSPORT] = True
 	if ubiquitous:
 		props[UBIQUITOUS] = True
-	return geojson.Feature(geometry=geom, properties=props, id=e_id)
+	return geojson.Feature(geometry=geom, properties=props) #, id=e_id)
 
 
 def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id):
@@ -121,7 +121,7 @@ def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id)
 		if TYPE_BG_COMPARTMENT == node_type:
 			bg_props[HEIGHT] = h
 		bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
-	return geojson.Feature(geometry=geom, properties=props, id=n_id), bg_feature
+	return geojson.Feature(geometry=geom, properties=props), bg_feature #, id=n_id)
 
 
 def get_gene_association_list(ga):
