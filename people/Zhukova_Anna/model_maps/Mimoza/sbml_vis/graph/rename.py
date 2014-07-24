@@ -7,11 +7,11 @@ def get_short_name(graph, n, onto):
 	
 	# remove compartment from the name,
 	# e.g. H2O [peroxisome] --> H2O
-	short_name.replace("[%s]" % graph[COMPARTMENT][n], '').strip()
+	short_name.replace("[%s]" % graph[COMPARTMENT_ID][n], '').strip()
 		
 	# replace with a chebi name 
 	# if it is shorter 
-	ch_id = graph[ANNOTATION][n]
+	ch_id = graph[TERM][n]
 	if ch_id:
 		term = onto.getTerm(ch_id)
 		if term:

@@ -29,7 +29,7 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 
 		n = graph.addNode()
 		comp = input_model.getCompartment(s.getCompartment())
-		graph[COMPARTMENT][n] = comp.getId()
+		graph[COMPARTMENT_ID][n] = comp.getId()
 		graph[ID][n] = _id
 		id2n[_id] = n
 		name = s.getName()
@@ -37,7 +37,7 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
 		graph[TYPE][n] = TYPE_SPECIES
 		graph[UBIQUITOUS][n] = ub
 		if _id in species_id2chebi_id:
-			graph[ANNOTATION][n] = species_id2chebi_id[_id]
+			graph[TERM][n] = species_id2chebi_id[_id]
 		graph[VIEW_SHAPE][n] = SPECIES_SHAPE
 		graph[VIEW_SIZE][n] = get_n_size(graph, n)
 	return id2n
@@ -76,7 +76,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		# 	continue
 
 		n = graph.addNode()
-		graph[ANNOTATION][n] = getGeneAssociation(r)
+		graph[TERM][n] = getGeneAssociation(r)
 		graph[ID][n] = r.getId()
 		graph[NAME][n] = name
 		graph[TYPE][n] = TYPE_REACTION
@@ -92,7 +92,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 			link_reaction_to_species(n, sp_ref, all_comps, is_reactant=False)
 
 		graph[TRANSPORT][n] = len(all_comps) > 1
-		graph[COMPARTMENT][n] = get_r_comp(all_comps)
+		graph[COMPARTMENT_ID][n] = get_r_comp(all_comps)
 
 
 def get_quotient_maps(chebi, input_model, sbml_file, verbose):
@@ -175,13 +175,13 @@ def import_sbml(input_model, sbml_file, verbose=False):
 
 
 def create_props(graph):
-	graph.getStringProperty(ANCESTOR_ANNOTATION)
+	graph.getStringProperty(ANCESTOR_TERM)
 	graph.getStringProperty(ANCESTOR_ID)
 	graph.getStringProperty(ANCESTOR_NAME)
 
-	graph.getStringProperty(ANNOTATION)
+	graph.getStringProperty(TERM)
 
-	graph.getStringProperty(COMPARTMENT)
+	graph.getStringProperty(COMPARTMENT_ID)
 
 	graph.getStringProperty(ID)
 	graph.getStringProperty(NAME)
@@ -220,7 +220,7 @@ def mark_ancestors(graph, r_eq2clu, s2clu):
 	id_ = root.getStringProperty(ID)
 	anc_id = root.getStringProperty(ANCESTOR_ID)
 	anc_name = root.getStringProperty(ANCESTOR_NAME)
-	anc_ch_id = root.getStringProperty(ANCESTOR_ANNOTATION)
+	anc_ch_id = root.getStringProperty(ANCESTOR_TERM)
 	type_ = root.getIntegerProperty(TYPE)
 	for n in graph.getNodes():
 		gr_id, gr_name, term = None, None, None

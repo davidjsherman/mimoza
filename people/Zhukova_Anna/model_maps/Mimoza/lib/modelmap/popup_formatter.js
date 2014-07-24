@@ -100,14 +100,14 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
     }
     if (REACTION == feature.properties.type) {
         var transport = feature.properties.transport ? p(i("Is a transport reaction.")) : "",
-            ga_res = p(formatGA(feature.properties.gene_association)),
+            ga_res = p(formatGA(feature.properties.term)),
             formula = p(formatFormula(feature.properties.reversible, feature.properties.reactants, feature.properties.products));
         content += formula + ga_res + transport;
         label += formula + transport;
     } else if (SPECIES == feature.properties.type) {
         var transported = feature.properties.transport ? p(i("Participates in a transport reaction.")) : "",
             ch = p(formatChebi(feature.properties.term)),
-            compartment = p(i("compartment: ") + feature.properties.compartment);
+            compartment = p(i("compartment: ") + feature.properties.c_name);
         content += compartment + ch + transported;
         label += compartment + transported;
     } else if (COMPARTMENT == feature.properties.type) {
@@ -147,7 +147,7 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
         });
     }
     layer.bindLabel(label).bindPopup(popup);
-    [feature.properties.name, feature.properties.label, feature.properties.id, feature.properties.term].forEach(function (key) {
+    [feature.properties.name, feature.properties.id, feature.properties.term].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
             if (!name2zoom.hasOwnProperty(key)) {

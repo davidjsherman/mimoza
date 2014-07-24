@@ -52,8 +52,6 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 
 	scale, scale_coefficient = get_scale_coefficients(meta_graph)
 
-	onto = parse(get_chebi())
-
 	features = []
 	processed = set()
 	level = min_zooming_level
@@ -74,7 +72,7 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 		for n in meta_graph.getNodes():
 			n_id = get_id(n)
 			if not n_id in processed:
-				f, bg = n2feature(meta_graph, n, scale, max_zooming_level, onto, c_id2info, scale_coefficient, n_id)
+				f, bg = n2feature(meta_graph, n, scale, max_zooming_level, c_id2info, scale_coefficient, n_id)
 				features.append(f)
 				processed.add(n_id)
 				if bg:

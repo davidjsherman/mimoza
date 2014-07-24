@@ -105,7 +105,7 @@ function pnt2layer(map, feature, zoom, result) {
             label = L.marker(centre,
                             {icon: L.divIcon({
                                     className: 'label',
-                                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.label + "</span>",
+                                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.name + "</span>",
                                     iconSize: [w * 0.89, w * 0.89],
                                     zIndexOffset: -1000,
                                     riseOnHover: false})

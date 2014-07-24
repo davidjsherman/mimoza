@@ -16,7 +16,7 @@ def merge_ubs_for_similar_reactions(graph):
 	for node in graph.getNodes():
 		ancestor = root[ANCESTOR_ID][node]
 		if ancestor and TYPE_REACTION == root[TYPE][node]:
-			ancestor = ancestor, root[COMPARTMENT][node]
+			ancestor = ancestor, root[COMPARTMENT_ID][node]
 			ancestor2nodes[ancestor].append(node)
 
 	ubiquitous = root[UBIQUITOUS]
@@ -37,14 +37,14 @@ def factor_nodes(graph):
 	for node in graph.getNodes():
 		ancestor = root[ANCESTOR_ID][node]
 		if ancestor:
-			ancestor = ancestor, root[TYPE][node], root[COMPARTMENT][node]
+			ancestor = ancestor, root[TYPE][node], root[COMPARTMENT_ID][node]
 			ancestor2nodes[ancestor].append(node)
 
 	for (ancestor, type_, comp), nodes in ((k, ns) for (k, ns) in ancestor2nodes.iteritems() if len(ns) > 1):
 		sample_n = nodes[0]
 		meta_n = graph.createMetaNode(nodes, False)
 
-		for prop in [COMPARTMENT, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_SHAPE]:
+		for prop in [COMPARTMENT_ID, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_SHAPE]:
 			root[prop][meta_n] = root[prop][sample_n]
 		root[ID][meta_n] = root[ANCESTOR_ID][sample_n]
 		root[VIEW_SIZE][meta_n] = get_n_size(root, meta_n)
@@ -63,26 +63,26 @@ def factor_nodes(graph):
 					root[REVERSIBLE][meta_n] = False
 				if root[TRANSPORT][sample_n]:
 					root[TRANSPORT][meta_n] = True
-			root[ANNOTATION][meta_n] = "\nor\n".join({root[ANNOTATION][it] for it in nodes})
+			root[TERM][meta_n] = "\nor\n".join({root[TERM][it] for it in nodes})
 		else:
 			root[NAME][meta_n] = "%s (%d)" % (root[ANCESTOR_NAME][sample_n], len(nodes))
-			root[ANNOTATION][meta_n] = root[ANCESTOR_ANNOTATION][sample_n]
+			root[TERM][meta_n] = root[ANCESTOR_TERM][sample_n]
 
 
 def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root = meta_graph.getRoot()
-	ns = filter(lambda n: root[COMPARTMENT][n] == c_id, meta_graph.getNodes())
+	ns = filter(lambda n: root[COMPARTMENT_ID][n] == c_id, meta_graph.getNodes())
 	if not ns:
 		return None
 	comp_n = meta_graph.createMetaNode(ns, False)
 	comp_graph = root[VIEW_META_GRAPH][comp_n]
 	layout(comp_graph)
 	root[NAME][comp_n] = c_name
-	root[COMPARTMENT][comp_n] = out_comp
+	root[COMPARTMENT_ID][comp_n] = out_comp
 	root[TYPE][comp_n] = TYPE_COMPARTMENT
 	root[VIEW_SHAPE][comp_n] = COMPARTMENT_SHAPE
 	root[ID][comp_n] = c_id
-	root[ANNOTATION][comp_n] = go_id
+	root[TERM][comp_n] = go_id
 	root[VIEW_SIZE][comp_n] = get_n_size(meta_graph, comp_n)
 	for meta_e in root.getInOutEdges(comp_n):
 		sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
@@ -93,7 +93,7 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 
 def mic(graph):
 	root = graph.getRoot()
-	compartment = root.getStringProperty(COMPARTMENT)
+	compartment = root.getStringProperty(COMPARTMENT_ID)
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 	id_ = root.getStringProperty(ID)
 

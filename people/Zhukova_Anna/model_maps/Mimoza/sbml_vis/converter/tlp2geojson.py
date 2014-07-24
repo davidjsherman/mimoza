@@ -3,44 +3,11 @@ from math import degrees
 from sympy import to_cnf, atan2
 from sympy.logic.boolalg import disjuncts, conjuncts
 import geojson
+
 from sbml_vis.graph.color.colorer import get_edge_color, get_reaction_color, get_compartment_color, get_species_color, \
 	get_bg_color
-
-from sbml_vis.graph.rename import get_short_name
 from sbml_vis.graph.graph_properties import *
 from sbml_vis.graph.resize import get_e_size
-
-TRANSPORT = 'transport'
-
-TERM = 'term'
-
-PRODUCTS = 'products'
-
-REACTANTS = 'reactants'
-
-REVERSIBLE = "reversible"
-
-GENE_ASSOCIATION = "gene_association"
-
-GENERALIZED = "generalized"
-
-LABEL = "label"
-
-NAME = "name"
-
-ID = "id"
-
-COMPARTMENT_ID = "c_id"
-
-TYPE = "type"
-
-HEIGHT = "h"
-
-WIDTH = "w"
-
-ENTITY_TYPE = "type"
-
-COLOR = "color"
 
 __author__ = 'anna'
 
@@ -91,47 +58,47 @@ def e2feature(graph, e, scale, e_id):
 	transport = root[TRANSPORT][r]
 	ubiquitous = root[UBIQUITOUS][e]
 	props = {WIDTH: get_e_size(root, e).getW() / 4, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
-	         UBIQUITOUS: ubiquitous, GENERALIZED: generalized, TRANSPORT: transport,
+	         UBIQUITOUS: ubiquitous, TRANSPORT: transport,
 	         MIN_ZOOM: level_min, MAX_ZOOM: level_max, COLOR: get_edge_color(ubiquitous, generalized, transport)}
 	if not transport:
-		props["c_id"] = root[COMPARTMENT][r]
+		props["c_id"] = root[COMPARTMENT_ID][r]
 	return geojson.Feature(geometry=geom, properties=props, id=e_id)
 
 
-def n2feature(graph, n, scale, max_bg_level, onto, c_id2info, scale_coefficient, n_id):
+def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id):
 	root = graph.getRoot()
 
 	geom = geojson.Point(scale(root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()))
-	c_id = root[COMPARTMENT][n]
+	c_id = root[COMPARTMENT_ID][n]
 	w, h = root[VIEW_SIZE][n].getW() * scale_coefficient / 2, root[VIEW_SIZE][n].getH() * scale_coefficient / 2
 	node_type = root[TYPE][n]
 	generalized = graph.isMetaNode(n)
-	props = {WIDTH: w, ENTITY_TYPE: node_type, MIN_ZOOM: root[MIN_ZOOM][n], MAX_ZOOM: root[MAX_ZOOM][n],
+	props = {WIDTH: w, TYPE: node_type, MIN_ZOOM: root[MIN_ZOOM][n], MAX_ZOOM: root[MAX_ZOOM][n],
 	         COMPARTMENT_ID: c_id,
-	         ID: root[ID][n], NAME: root[NAME][n], LABEL: get_short_name(graph, n, onto), GENERALIZED: generalized}
+	         ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
 	if TYPE_REACTION == node_type:
 		ins, outs = get_formula(graph, n)
 		transport = root[TRANSPORT][n]
 		props.update(
-			{GENE_ASSOCIATION: get_gene_association_list(root[ANNOTATION][n]), REVERSIBLE: root[REVERSIBLE][n],
+			{TERM: get_gene_association_list(root[TERM][n]), REVERSIBLE: root[REVERSIBLE][n],
 			 REACTANTS: ins, PRODUCTS: outs, TRANSPORT: transport,
 			 COLOR: get_reaction_color(generalized, transport)})
 		if transport:
 			del props[COMPARTMENT_ID]
 	elif TYPE_COMPARTMENT == node_type:
-		props.update({TERM: root[ANNOTATION][n], HEIGHT: h, TRANSPORT: True, COLOR: get_compartment_color()})
+		props.update({TERM: root[TERM][n], HEIGHT: h, TRANSPORT: True, COLOR: get_compartment_color()})
 	elif TYPE_SPECIES == node_type:
 		ubiquitous = root[UBIQUITOUS][n]
-		n_id = root[ID][n]
+		s_id = root[ID][n]
 		transported = False
-		for rs in (root.getInOutNodes(m) for m in root.getNodes() if n_id == root[ID][m]):
+		for rs in (root.getInOutNodes(m) for m in root.getNodes() if s_id == root[ID][m]):
 			transported = next((r for r in rs if root[TRANSPORT][r]), False) is not False
 			if transported:
 				break
 		# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
 		comp_name = c_id2info[c_id][0]
-		props.update({TERM: root[ANNOTATION][n], TRANSPORT: transported, UBIQUITOUS: ubiquitous,
-		              COMPARTMENT: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
+		props.update({TERM: root[TERM][n], TRANSPORT: transported, UBIQUITOUS: ubiquitous,
+		              COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
 
 	bg_feature = None
 	if generalized:

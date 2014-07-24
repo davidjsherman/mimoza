@@ -32,13 +32,13 @@ def get_key(n, graph):
 			return an_id
 		return root[ID][n]
 	if TYPE_SPECIES == type_:
-		an_ch = root[ANCESTOR_ANNOTATION][n]
+		an_ch = root[ANCESTOR_TERM][n]
 		if an_ch:
 			return an_ch
 		an_id = root[ANCESTOR_ID][n]
 		if an_id:
 			return an_id
-		ch = root[ANNOTATION][n]
+		ch = root[TERM][n]
 		if ch:
 			return ch
 		return root[ID][n]

@@ -53,8 +53,8 @@ def apply_layout(graph, onto):
 
 def get_keys(n, graph, onto, primary=False):
 	root = graph.getRoot()
-	ancestor_chebi_id = root.getStringProperty(ANCESTOR_ANNOTATION)
-	chebi_id = root.getStringProperty(ANNOTATION)
+	ancestor_chebi_id = root.getStringProperty(ANCESTOR_TERM)
+	chebi_id = root.getStringProperty(TERM)
 	name = root.getStringProperty(NAME)
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 

@@ -3,7 +3,7 @@ from tulip import tlp
 
 from sbml_vis.graph.layout.ubiquitous_layout import ub_or_single
 from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE, TYPE_REACTION, ID, VIEW_SIZE, VIEW_LAYOUT, VIEW_META_GRAPH, \
-	COMPARTMENT
+	COMPARTMENT_ID
 
 
 __author__ = 'anna'
@@ -115,9 +115,9 @@ def rotate_ub_ns(graph):
 	for r in (r for r in graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
 		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
 
-		c_id = root[COMPARTMENT][r]
-		reactants, products = set(s for s in graph.getInNodes(r) if root[COMPARTMENT][s] == c_id), \
-		                      set(s for s in graph.getOutNodes(r) if root[COMPARTMENT][s] == c_id)
+		c_id = root[COMPARTMENT_ID][r]
+		reactants, products = set(s for s in graph.getInNodes(r) if root[COMPARTMENT_ID][s] == c_id), \
+		                      set(s for s in graph.getOutNodes(r) if root[COMPARTMENT_ID][s] == c_id)
 		ub_reactants, ub_products = {s for s in reactants if ub_or_single(s, root)}, \
 		                            {s for s in products if ub_or_single(s, root)}
 		order = lambda s: (-root[VIEW_META_GRAPH][s].numberOfNodes() if graph.isMetaNode(s) else 1, -graph.deg(s))

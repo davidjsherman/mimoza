@@ -1,12 +1,13 @@
 ID = 'id'
-ANNOTATION = 'annotation'
+TERM = 'term'
 NAME = 'name'
 
 ANCESTOR_ID = 'ancestor_id'
-ANCESTOR_ANNOTATION = 'ancestor_annotation'
+ANCESTOR_TERM = 'ancestor_term'
 ANCESTOR_NAME = "ancestor_name"
 
-COMPARTMENT = "compartment"
+COMPARTMENT_ID = "c_id"
+COMPARTMENT_NAME = "c_name"
 
 VIEW_COLOR = "viewColor"
 
@@ -28,6 +29,14 @@ MIN_ZOOM = "min_zoom"
 FAKE = "fake"
 
 CLONE_ID = "clone_id"
+
+COLOR = "color"
+
+HEIGHT = "h"
+WIDTH = "w"
+
+PRODUCTS = 'products'
+REACTANTS = 'reactants'
 
 CYTOPLASM = "cytoplasm"
 ORGANELLES = "organelles"

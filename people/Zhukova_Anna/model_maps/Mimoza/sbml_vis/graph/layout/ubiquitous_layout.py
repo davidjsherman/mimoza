@@ -3,7 +3,7 @@ from tulip import tlp
 from sbml_vis.graph.resize import get_n_size
 
 from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, TYPE_SPECIES, \
-	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, STOICHIOMETRY, COMPARTMENT, VIEW_SHAPE, ANNOTATION, MAX_ZOOM, \
+	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, STOICHIOMETRY, COMPARTMENT_ID, VIEW_SHAPE, TERM, MAX_ZOOM, \
 	MIN_ZOOM, TRANSPORT, REVERSIBLE, CIRCLE_SHAPE
 
 
@@ -65,7 +65,7 @@ def layout_outer_elements(graph):
 def open_compartment(c, graph):
 	root = graph.getRoot()
 	prop2value = {prop: root[prop][c] for prop in
-	              [NAME, COMPARTMENT, TYPE, VIEW_SHAPE, ID, ANNOTATION, VIEW_SIZE, MAX_ZOOM, MIN_ZOOM]}
+	              [NAME, COMPARTMENT_ID, TYPE, VIEW_SHAPE, ID, TERM, VIEW_SIZE, MAX_ZOOM, MIN_ZOOM]}
 	graph.openMetaNode(c)
 	return prop2value
 
@@ -325,10 +325,10 @@ def r_to_meta_node(meta_graph, r):
 	# layout_hierarchically(r_graph)
 	layout_ub_reaction(r_graph, r)
 
-	for prop in [NAME, ID, TYPE, ANNOTATION, TRANSPORT, REVERSIBLE]:
+	for prop in [NAME, ID, TYPE, TERM, TRANSPORT, REVERSIBLE]:
 		root[prop][r_n] = root[prop][r]
 
-	root[COMPARTMENT][r_n] = root[COMPARTMENT][ubs[0]]
+	root[COMPARTMENT_ID][r_n] = root[COMPARTMENT_ID][ubs[0]]
 
 	root[FAKE][r_n] = True
 	root[VIEW_SHAPE][r_n] = CIRCLE_SHAPE
