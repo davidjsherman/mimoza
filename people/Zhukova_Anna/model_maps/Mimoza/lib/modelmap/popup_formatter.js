@@ -2,46 +2,40 @@
  * Created by anna on 4/4/14.
  */
 
-function formatGA(ga) {
+function formatGA(or_closes) {
     "use strict";
-    var ga_res = '',
-        or_closes,
+    var result = '',
         i,
         j,
         genes;
-    if (ga) {
-        or_closes = ga.split('&');
-        ga_res = '<table border="0"><tr class="centre"><th colspan="' + (2 * or_closes.length - 1) + '"  class="centre">Gene association</th></tr><tr>';
+    if (typeof or_closes !== 'undefined' && or_closes.length > 0) {
+        result = '<table border="0"><tr class="centre"><th colspan="' + (2 * or_closes.length - 1) + '"  class="centre">Gene association</th></tr><tr>';
         for (i = 0; i < or_closes.length; i += 1) {
-            genes = or_closes[i].split('|');
-            ga_res += '<td><table border="0">';
+            genes = or_closes[i];
+            result += '<td><table border="0">';
             if (genes.length > 1) {
-                ga_res += "<tr></tr><td class='centre'><i>(or)</i></td></tr>";
+                result += "<tr></tr><td class='centre'><i>(or)</i></td></tr>";
             }
             for (j = 0; j < genes.length; j += 1) {
-                ga_res += "<tr><td><a href=\'http://www.ncbi.nlm.nih.gov/gene/?term=" + genes[j] + "[sym]\' target=\'_blank\'>" + genes[j] + '</a></td></tr>';
+                result += "<tr><td><a href=\'http://www.ncbi.nlm.nih.gov/gene/?term=" + genes[j] + "[sym]\' target=\'_blank\'>" + genes[j] + '</a></td></tr>';
             }
-            ga_res += '</table></td>';
+            result += '</table></td>';
             if (i < or_closes.length - 1) {
-                ga_res += '<td class="centre"><i>and</i></td>';
+                result += '<td class="centre"><i>and</i></td>';
             }
         }
-        ga_res += '</tr></table>';
+        result += '</tr></table>';
     }
-    return ga_res;
+    return result;
 }
 
 function formatFormula(reversible, reactants, products) {
     "use strict";
-    reactants = reactants.split('&');
-    products = products.split('&');
     var res = '<table border="0"><tr><td><table border="0">',
-        i,
-        sv;
-    for (i = 0; i < reactants.length; i += 1) {
-        sv = reactants[i].split(' * ');
-        if (sv) {
-            res += '<tr><td>' + sv[0] + '&nbsp;</td><td>' + sv[1] + '</td></tr>';
+        i;
+    if (typeof reactants !== 'undefined' && reactants.length > 0) {
+        for (i = 0; i < reactants.length; i += 1) {
+            res += '<tr><td>' + reactants[i][1] + '&nbsp;</td><td>' + reactants[i][0] + '</td></tr>';
         }
     }
     res += '</table></td>';
@@ -51,10 +45,9 @@ function formatFormula(reversible, reactants, products) {
         res += '<th class="centre">&#65515;</th>';
     }
     res += '<td><table border="0">';
-    for (i = 0; i < products.length; i += 1) {
-        sv = products[i].split(' * ');
-        if (sv) {
-            res += '<tr><td>' + sv[0] + '&nbsp;</td><td>' + sv[1] + '</td></tr>';
+    if (typeof products !== 'undefined' && products.length > 0) {
+        for (i = 0; i < products.length; i += 1) {
+            res += '<tr><td>' + products[i][1] + '&nbsp;</td><td>' + products[i][0] + '</td></tr>';
         }
     }
     res += '</table></td></tr></table>';

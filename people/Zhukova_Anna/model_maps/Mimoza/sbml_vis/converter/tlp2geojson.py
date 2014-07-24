@@ -82,9 +82,14 @@ def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id)
 	if TYPE_REACTION == node_type:
 		ins, outs = get_formula(graph, n)
 		transport = root[TRANSPORT][n]
-		props.update(
-			{TERM: get_gene_association_list(root[TERM][n]), REACTANTS: ins, PRODUCTS: outs,
-			 COLOR: get_reaction_color(generalized, transport)})
+		genes = get_gene_association_list(root[TERM][n])
+		if genes:
+			props[TERM] = genes
+		if ins:
+			props[REACTANTS] = ins
+		if outs:
+			props[PRODUCTS] = outs
+		props[COLOR] = get_reaction_color(generalized, transport)
 		if transport:
 			del props[COMPARTMENT_ID]
 			# let's not store unneeded False
@@ -92,7 +97,10 @@ def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id)
 		if root[REVERSIBLE][n]:
 			props[REVERSIBLE] = True
 	elif TYPE_COMPARTMENT == node_type:
-		props.update({TERM: root[TERM][n], HEIGHT: h, TRANSPORT: True, COLOR: get_compartment_color()})
+		term = root[TERM][n]
+		if term:
+			props[TERM] = term
+		props.update({HEIGHT: h, TRANSPORT: True, COLOR: get_compartment_color()})
 	elif TYPE_SPECIES == node_type:
 		ubiquitous = root[UBIQUITOUS][n]
 		if ubiquitous:
@@ -105,7 +113,10 @@ def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id)
 				break
 		# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
 		comp_name = c_id2info[c_id][0]
-		props.update({TERM: root[TERM][n], COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
+		term = root[TERM][n]
+		if term:
+			props[TERM] = term
+		props.update({COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
 
 	bg_feature = None
 	if generalized:
@@ -127,13 +138,13 @@ def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id)
 def get_gene_association_list(ga):
 	gene_association = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
 	if not gene_association:
-		return ''
+		return []
 	try:
 		res = to_cnf(gene_association, False)
-		gene_association = '&'.join(['|'.join([str(it) for it in disjuncts(cjs)]) for cjs in conjuncts(res)])
+		gene_association = [[str(it) for it in disjuncts(cjs)] for cjs in conjuncts(res)]
 		return gene_association
 	except:
-		return ''
+		return []
 
 
 def get_reaction_participants_inside_compartment(n, r, root):
@@ -151,13 +162,13 @@ def get_reaction_participants_inside_compartment(n, r, root):
 def get_formula(graph, r):
 	root = graph.getRoot()
 	ins, outs = set(), set()
-	stoich_formatter = lambda edge, node: "{0} * {1}".format(int(root[STOICHIOMETRY][edge]), root[NAME][node])
+	stoich_formatter = lambda edge, node: (root[NAME][node], int(root[STOICHIOMETRY][edge]))
 	for s_or_c in graph.getInOutNodes(r):
 		for s in get_reaction_participants_inside_compartment(s_or_c, r, root):
 			e = root.existEdge(s, r, False)
 			if root.isElement(e):
 				(ins if s == root.source(e) else outs).add(stoich_formatter(e, s))
-	return '&'.join(sorted(ins)), '&'.join(sorted(outs))
+	return [[name, st] for (name, st) in sorted(ins)], [[name, st] for (name, st) in sorted(outs)]
 
 
 def rgb(rrggbb):
