@@ -20,7 +20,7 @@ var TRANSPORT = "transport";
 
 var MIN_CLICKABLE_R = 4;
 
-function pnt2layer(map, feature, zoom, result) {
+function pnt2layer(map, feature, zoom) {
     "use strict";
     var e = feature.geometry.coordinates,
         scaleFactor = Math.pow(2, zoom),
@@ -113,37 +113,26 @@ function pnt2layer(map, feature, zoom, result) {
             );
         node.addLayer(label);
     }
-    result[0] = true;
     return node;
 }
 
 function matchesCompartment(cId, feature) {
     "use strict";
-    if (TRANSPORT == cId) {
-        return feature.properties.tr;
+    if (TRANSPORT === cId) {
+        return typeof feature.properties.tr !== 'undefined' && feature.properties.tr;
     }
-    return cId == feature.properties.c_id || cId == feature.properties.id;
+    return cId === feature.properties.c_id || cId === feature.properties.id;
 }
 
-function matchesLevel(level, feature) {
-    "use strict";
-    return level >= feature.properties.min_z && level <= feature.properties.max_z;
-}
-
-function rescaleZoom(zMin, level) {
-    "use strict";
-    return -1 === zMin ? 0 : level - zMin;
-}
-
-function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, realZoom, mapId, result, filterFunction) {
+function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, filterFunction) {
     "use strict";
     var name2selection = {};
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, zoom, result);
+            return pnt2layer(map, feature, zoom);
         },
         onEachFeature: function (feature, layer) {
-            addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom, realZoom);
+            addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom);
         },
         filter: function (feature, layer) {
             return filterFunction(feature);
@@ -151,24 +140,23 @@ function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, realZoom, mapId,
     });
 }
 
-function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin, name2popup, name2zoom) {
+function getGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom) {
     "use strict";
-    var result = [false],
-        zz = rescaleZoom(zMin, z),
-        specificJson = getFilteredJson(map, json_data, name2popup, name2zoom, zz, z, mapId, result,
+    console.log(cId);
+    console.log(z);
+    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId,
             function (feature) {
-                return !feature.properties.ub && matchesLevel(z, feature) && matchesCompartment(cId, feature);
+                var result = (typeof feature.properties.ub === 'undefined' || !feature.properties.ub) && matchesCompartment(cId, feature);
+                console.log(result + " " + feature.properties.name);
+                return  result;
             }
         ),
-        ubiquitousJson = getFilteredJson(map, json_data, name2popup, name2zoom, zz, z, mapId, result,
+        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId,
             function (feature) {
-                return feature.properties.ub && matchesLevel(z, feature) && matchesCompartment(cId, feature);
+                return (typeof feature.properties.ub !== 'undefined' && feature.properties.ub) && matchesCompartment(cId, feature);
             }
         );
-    if (!result[0]) {
-        return false;
-    }
-    if (map.getZoom() == zz) {
+    if (map.getZoom() == z) {
         compLayer.addLayer(specificJson);
         if (map.hasLayer(ubLayer)) {
             compLayer.addLayer(ubiquitousJson);
@@ -177,7 +165,7 @@ function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin, nam
     map.on('zoomend', function (e) {
         var zoom = map.getZoom();
         // if we are about to zoom in/out to this geojson
-        if (zoom == zz) {
+        if (zoom == z) {
             compLayer.addLayer(specificJson);
             if (map.hasLayer(ubLayer)) {
                 compLayer.addLayer(ubiquitousJson);
@@ -192,14 +180,13 @@ function getGeoJson(map, json_data, z, ubLayer, compLayer, mapId, cId, zMin, nam
         }
     });
     map.on('overlayadd', function(e) {
-        if (e.layer === ubLayer && map.getZoom() == zz) {
+        if (e.layer === ubLayer && map.getZoom() == z) {
             compLayer.addLayer(ubiquitousJson);
         }
     });
     map.on('overlayremove', function(e) {
-        if (e.layer === ubLayer && map.getZoom() == zz) {
+        if (e.layer === ubLayer && map.getZoom() == z) {
             compLayer.removeLayer(ubiquitousJson);
         }
     });
-    return true;
 }

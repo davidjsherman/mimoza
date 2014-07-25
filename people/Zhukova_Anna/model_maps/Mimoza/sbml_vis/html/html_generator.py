@@ -77,16 +77,16 @@ def add_explanations(page):
 
 	page.p(
 		'''%s - compartments; %s/%s/%s - generalised/specific/ubiquitous species; %s/%s/%s/%s - generalised transport/transport/generalised/other reactions.''' % (
-			format_color("yellow", 255, 255, 179),
-			format_color('orange', 253, 180, 98), format_color('red', 251, 128, 114),
-			format_color('gray', 180, 180, 180),
-			format_color('turquoise', 141, 211, 199), format_color('violet', 190, 186, 218),
-			format_color('green', 179, 222, 105), format_color('blue', 128, 177, 211)))
+			format_color(255, 255, 179),
+			format_color(253, 180, 98), format_color(251, 128, 114),
+			format_color(180, 180, 180),
+			format_color(141, 211, 199), format_color(190, 186, 218),
+			format_color(179, 222, 105), format_color(128, 177, 211)))
 
 	page.div.close()
 
 
-def format_color(color_name, r, g, b, a=0.8):
+def format_color(r, g, b, a=0.8):
 	return '<span style="background-color:rgba(%d, %d, %d, %.2f)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' % (r, g, b, a)
 
 
@@ -101,10 +101,10 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(page, map_id, max_zoom, comps):
+def add_js(page, json_vars, map_id, max_zoom, comps):
 	page.script('''
-        initializeMap(gjsn, "%s", %d, %s);
-    ''' % (map_id, max_zoom, comps)
+        initializeMap([%s], "%s", %d, %s);
+    ''' % (", ".join(json_vars), map_id, max_zoom, comps)
 	)
 
 
@@ -136,12 +136,12 @@ def add_embedding_dialog(page, url):
 	page.div.close()
 
 
-def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url, archive_url, scripts, css,
+def create_html(model, directory, embed_url, redirect_url, json_files, json_vars, groups_sbml_url, archive_url, scripts, css,
                 fav, map_id, max_zoom):
 	page = markup.page()
 	if not scripts:
 		scripts = []
-	scripts.append(json)
+	scripts.extend(json_files)
 
 	if not css:
 		css = []
@@ -173,7 +173,7 @@ def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url
 
 	page.div.close()
 
-	add_js(page, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
+	add_js(page, json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -181,11 +181,11 @@ def create_html(model, directory, embed_url, redirect_url, json, groups_sbml_url
 		f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
 
 
-def create_embedded_html(model, directory, json, scripts, css, fav, map_id, max_zoom):
+def create_embedded_html(model, directory, json_files, json_vars, scripts, css, fav, map_id, max_zoom):
 	page = markup.page()
 	if not scripts:
 		scripts = []
-	scripts.append(json)
+	scripts.extend(json_files)
 
 	if not css:
 		css = []
@@ -195,7 +195,7 @@ def create_embedded_html(model, directory, json, scripts, css, fav, map_id, max_
 
 	add_map(page, map_id)
 
-	add_js(page, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
+	add_js(page, json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
 
 	with open('%s/comp_min.html' % directory, 'w+') as f:
 		f.write(str(page))

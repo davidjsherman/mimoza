@@ -38,8 +38,6 @@ def e2feature(graph, e, scale, e_id):
 	layout = root[VIEW_LAYOUT]
 	s, t = graph.source(e), graph.target(e)
 
-	level_min, level_max = max(root[MIN_ZOOM][t], root[MIN_ZOOM][s]), min(root[MAX_ZOOM][t], root[MAX_ZOOM][s])
-
 	xy = lambda n: (layout[n].getX(), layout[n].getY())
 	wh = lambda n: (root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2)
 	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), wh(s), root[TYPE][s])
@@ -58,7 +56,7 @@ def e2feature(graph, e, scale, e_id):
 	transport = root[TRANSPORT][r]
 	ubiquitous = root[UBIQUITOUS][e]
 	props = {WIDTH: get_e_size(root, e).getW() / 4, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
-	         MIN_ZOOM: level_min, MAX_ZOOM: level_max, COLOR: get_edge_color(ubiquitous, generalized, transport)}
+	         COLOR: get_edge_color(ubiquitous, generalized, transport)}
 	if not transport:
 		props["c_id"] = root[COMPARTMENT_ID][r]
 	else:
@@ -69,7 +67,7 @@ def e2feature(graph, e, scale, e_id):
 	return geojson.Feature(geometry=geom, properties=props) #, id=e_id)
 
 
-def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id):
+def n2feature(graph, n, scale, c_id2info, scale_coefficient, n_id):
 	root = graph.getRoot()
 
 	geom = geojson.Point(scale(root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()))
@@ -77,8 +75,7 @@ def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id)
 	w, h = root[VIEW_SIZE][n].getW() * scale_coefficient / 2, root[VIEW_SIZE][n].getH() * scale_coefficient / 2
 	node_type = root[TYPE][n]
 	generalized = graph.isMetaNode(n)
-	props = {WIDTH: w, TYPE: node_type, MIN_ZOOM: root[MIN_ZOOM][n], MAX_ZOOM: root[MAX_ZOOM][n],
-	         COMPARTMENT_ID: c_id, ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
+	props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
 	if TYPE_REACTION == node_type:
 		ins, outs = get_formula(graph, n)
 		transport = root[TRANSPORT][n]
@@ -122,8 +119,7 @@ def n2feature(graph, n, scale, max_bg_level, c_id2info, scale_coefficient, n_id)
 	if generalized:
 		node_type = TYPE_2_BG_TYPE[node_type]
 		transport = TRANSPORT in props
-		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type,
-		            MIN_ZOOM: root[MAX_ZOOM][n] + 1, MAX_ZOOM: max_bg_level, COLOR: get_bg_color(node_type, transport)}
+		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport)}
 		if transport:
 			# let's not store unneeded False
 			bg_props[TRANSPORT] = True

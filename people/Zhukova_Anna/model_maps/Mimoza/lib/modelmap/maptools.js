@@ -65,12 +65,13 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
         ubLayer = L.layerGroup(),
         tiles = getTiles("lib/modelmap/white.jpg"),
         gray_tiles =  getTiles("lib/modelmap/gray.jpg"),
-        overlays = {};
+        overlays = {},
+        cId;
     layers.push(ubLayer);
     layers.push(gray_tiles);
     adjustMapSize(mapId);
     cIds[TRANSPORT] = "<i>Transport reactions</i>";
-    for (var cId in cIds) {
+    for (cId in cIds) {
         var cLayer = L.layerGroup();
         layers.push(cLayer);
         overlays[cIds[cId]] = cLayer;
@@ -83,7 +84,7 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
         layers: layers,
         crs: L.CRS.Simple
     });
-    if (jsonData == null) {
+    if (typeof jsonData === 'undefined' && jsonData.length <= 0) {
         return map;
     }
     var southWest = map.unproject([0 - MARGIN, MAP_DIMENSION_SIZE + MARGIN], 1),
@@ -94,32 +95,20 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
     window.onresize = function (event) {
         adjustMapSize(mapId);
     };
-    var zMin = -1,
-        zMax = -1,
-        name2popup = {},
-        name2zoom = {};
-    for (var z = 0; z <= maxZoom; z++) {
+    var name2popup = {},
+        name2zoom = {},
+        compLayer,
+        json,
+        z;
+    for (z = 0; z <= maxZoom; z++) {
+        json = jsonData[z];
         for (cId in cIds) {
-            var compLayer = overlays[cIds[cId]];
-            if (getGeoJson(map, jsonData, z, ubLayer, compLayer, mapId, cId, zMin, name2popup, name2zoom)) {
-                if (-1 == zMin) {
-                    zMin = z;
-                } else {
-                    zMax = z;
-                }
-            }
+            compLayer = overlays[cIds[cId]];
+            getGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
         }
     }
     initializeAutocomplete(name2popup, name2zoom, map);
-    if (zMin > 0 || zMax < maxZoom) {
-        map.on('zoomend', function (e) {
-            var zoom = map.getZoom();
-            if (zoom > zMax - zMin) {
-                map.setZoom(zMax - zMin);
-            }
-        });
-    }
-    map.setView([0, 0], zMin);
+    map.setView([0, 0], 0);
     var baseLayers = {
         "White background": tiles,
         "Gray background": gray_tiles

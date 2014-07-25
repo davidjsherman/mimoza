@@ -80,7 +80,7 @@ function i(text) {
     return "<span class='explanation'>" + text + "</span>";
 }
 
-function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom, realZoom) {
+function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom) {
     "use strict";
     if (EDGE == feature.properties.type) {
         return;
@@ -145,8 +145,8 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
             name2popup[key] = popup;
             if (!name2zoom.hasOwnProperty(key)) {
                 name2zoom[key] = [zoom];
-            } else if (name2zoom[key].indexOf(realZoom) === -1){
-                name2zoom[key].push(realZoom);
+            } else if (name2zoom[key].indexOf(zoom) === -1){
+                name2zoom[key].push(zoom);
             }
         }
     });

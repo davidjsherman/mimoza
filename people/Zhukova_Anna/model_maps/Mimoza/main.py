@@ -11,16 +11,12 @@ from shutil import copytree
 
 from libsbml import SBMLReader
 
-from tulip import tlp
-
 from mimoza.mimoza import JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, MIMOZA_URL
 from sbml_vis.converter.sbml2tlp import import_sbml
 from sbml_vis.file.md5_checker import check_md5
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
-from sbml_vis.graph.graph_properties import TYPE_REACTION, TYPE, NAME, ID
 import mimoza.mimoza
-
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
 from sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
@@ -90,14 +86,14 @@ def main(argv=None):
 		copytree(get_lib(), '%s/lib' % directory)
 
 	if verbose:
-		log_file = None
-		try:
-			log_file = '%s/log.log' % directory
-			with open(log_file, "w+"):
-				pass
-		except:
-			pass
-		logging.basicConfig(level=logging.INFO, filename=log_file)
+		# log_file = None
+		# try:
+		# 	log_file = '%s/log.log' % directory
+		# 	with open(log_file, "w+"):
+		# 		pass
+		# except:
+		# 	pass
+		logging.basicConfig(level=logging.INFO) #, filename=log_file)
 
 	groups_sbml = '%s%s_with_groups.xml' % (directory, model_id)
 	if check_for_groups(sbml, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
@@ -115,7 +111,7 @@ def main(argv=None):
 	root, c_id2info = import_sbml(input_model, groups_sbml, True)
 
 	fc, max_zoom = graph2geojson(c_id2info, root, True)
-	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, features=fc, groups_sbml=groups_sbml,
+	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, level2features=fc, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose,
 	          max_zoom=max_zoom)
 

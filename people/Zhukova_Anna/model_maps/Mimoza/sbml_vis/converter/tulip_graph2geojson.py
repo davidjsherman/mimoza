@@ -1,3 +1,4 @@
+from collections import defaultdict
 from tulip import tlp
 
 import geojson
@@ -5,12 +6,12 @@ import geojson
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, FAKE, \
-	ID, CLONE_ID, NAME
+	ID, CLONE_ID
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges
 from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
 from sbml_generalization.utils.logger import log
-from sbml_generalization.utils.obo_ontology import parse, get_chebi
+
 
 DIMENSION = 512
 
@@ -52,31 +53,38 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 
 	scale, scale_coefficient = get_scale_coefficients(meta_graph)
 
-	features = []
+	level2features = defaultdict(list)
 	processed = set()
 	level = min_zooming_level
 	get_id = lambda nd: "%s_%d" % (root[ID][nd], root[CLONE_ID][nd])
 	while level <= max_comp_level:
 		# if level < max_comp_level:
-			# node wasn't yet serialised => we can change its position
-			# filter_nd = lambda nd: root[MIN_ZOOM][nd] >= level
-			# layout_outer_reactions(meta_graph, filter_nd)
+		# node wasn't yet serialised => we can change its position
+		# filter_nd = lambda nd: root[MIN_ZOOM][nd] >= level
+		# layout_outer_reactions(meta_graph, filter_nd)
 		bend_edges(meta_graph)
 
 		for e in meta_graph.getEdges():
 			e_id = "%s-%s" % (get_id(meta_graph.source(e)), get_id(meta_graph.target(e)))
 			if not e_id in processed:
-				features.append(e2feature(meta_graph, e, scale, e_id))
+				s, t = meta_graph.source(e), meta_graph.target(e)
+				level_min, level_max = max(root[MIN_ZOOM][t], root[MIN_ZOOM][s]), min(root[MAX_ZOOM][t], root[MAX_ZOOM][s])
+				for z in xrange(level_min, level_max + 1):
+					level2features[z].append(e2feature(meta_graph, e, scale, e_id))
 				processed.add(e_id)
 
 		for n in meta_graph.getNodes():
 			n_id = get_id(n)
 			if not n_id in processed:
-				f, bg = n2feature(meta_graph, n, scale, max_zooming_level, c_id2info, scale_coefficient, n_id)
-				features.append(f)
+				f, bg = n2feature(meta_graph, n, scale, c_id2info, scale_coefficient, n_id)
+				level_min, level_max = root[MIN_ZOOM][n], root[MAX_ZOOM][n]
+				for z in xrange(level_min, level_max + 1):
+					level2features[z].append(f)
 				processed.add(n_id)
 				if bg:
-					features.append(bg)
+					level_min, level_max = root[MAX_ZOOM][n] + 1, max_zooming_level
+					for z in xrange(level_min, level_max + 1):
+						level2features[z].append(bg)
 
 		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and level == root[MAX_ZOOM][n]]
 
@@ -88,7 +96,7 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 			bend_ubiquitous_edges(meta_graph, metas)
 
 		open_meta_ns(meta_graph, metas)
-	return features
+	return level2features
 
 
 def graph2geojson(c_id2info, graph, verbose):
@@ -107,11 +115,12 @@ def graph2geojson(c_id2info, graph, verbose):
 	process_compartments(c_id2info, max_comp_level - 1, meta_graph, min_zooming_level)
 
 	log(verbose, 'tlp nodes -> geojson features')
-	features = meta_graph2features(c_id2info, max_comp_level, max_zooming_level,
-	                               meta_graph, min_zooming_level)
+	level2features = meta_graph2features(c_id2info, max_comp_level, max_zooming_level,
+	                                     meta_graph, min_zooming_level)
 
-	return geojson.FeatureCollection(features, geometry=geojson.Polygon(
-		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])), max_zooming_level
+	return {lev: geojson.FeatureCollection(features, geometry=geojson.Polygon(
+		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])) for (lev, features) in
+	        level2features.iteritems()}, max_zooming_level
 
 
 def process_generalized_entities(graph, max_level, min_level):
