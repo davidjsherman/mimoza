@@ -99,15 +99,29 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
         name2zoom = {},
         compLayer,
         json,
-        z;
-    for (z = 0; z <= maxZoom; z++) {
+        z = 0,
+        maxLoadedZoom = Math.min(1, maxZoom);
+    for (z = 0; z <= maxLoadedZoom; z++) {
         json = jsonData[z];
         for (cId in cIds) {
             compLayer = overlays[cIds[cId]];
-            getGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+            loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
         }
     }
     initializeAutocomplete(name2popup, name2zoom, map);
+    map.on('zoomend', function (e) {
+        var zoom = map.getZoom() + 1;
+        // if we are about to zoom in/out to this geojson
+        if (zoom > maxLoadedZoom) {
+            json = jsonData[zoom];
+            for (cId in cIds) {
+                compLayer = overlays[cIds[cId]];
+                loadGeoJson(map, json, zoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+                initializeAutocomplete(name2popup, name2zoom, map);
+                maxLoadedZoom = zoom;
+            }
+        }
+    });
     map.setView([0, 0], 0);
     var baseLayers = {
         "White background": tiles,

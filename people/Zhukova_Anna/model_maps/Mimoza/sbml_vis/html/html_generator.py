@@ -101,11 +101,13 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(page, json_vars, map_id, max_zoom, comps):
+def add_js(page, json_files, json_vars, map_id, max_zoom, comps):
+	for json in json_files:
+		page.script(src=json, type="text/javascript")
+		page.script.close()
 	page.script('''
         initializeMap([%s], "%s", %d, %s);
-    ''' % (", ".join(json_vars), map_id, max_zoom, comps)
-	)
+    ''' % (", ".join(json_vars), map_id, max_zoom, comps), type="text/javascript")
 
 
 def add_embed_button(page):
@@ -141,7 +143,6 @@ def create_html(model, directory, embed_url, redirect_url, json_files, json_vars
 	page = markup.page()
 	if not scripts:
 		scripts = []
-	scripts.extend(json_files)
 
 	if not css:
 		css = []
@@ -173,7 +174,7 @@ def create_html(model, directory, embed_url, redirect_url, json_files, json_vars
 
 	page.div.close()
 
-	add_js(page, json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
+	add_js(page, json_files, json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -185,7 +186,6 @@ def create_embedded_html(model, directory, json_files, json_vars, scripts, css, 
 	page = markup.page()
 	if not scripts:
 		scripts = []
-	scripts.extend(json_files)
 
 	if not css:
 		css = []
@@ -195,7 +195,7 @@ def create_embedded_html(model, directory, json_files, json_vars, scripts, css, 
 
 	add_map(page, map_id)
 
-	add_js(page, json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
+	add_js(page, json_files, json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
 
 	with open('%s/comp_min.html' % directory, 'w+') as f:
 		f.write(str(page))

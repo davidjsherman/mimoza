@@ -140,14 +140,11 @@ function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, filterFun
     });
 }
 
-function getGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom) {
+function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom) {
     "use strict";
-    console.log(cId);
-    console.log(z);
     var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId,
             function (feature) {
                 var result = (typeof feature.properties.ub === 'undefined' || !feature.properties.ub) && matchesCompartment(cId, feature);
-                console.log(result + " " + feature.properties.name);
                 return  result;
             }
         ),
