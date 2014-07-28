@@ -14,9 +14,12 @@ __author__ = 'anna'
 
 def serialize(directory, m_dir_id, input_model, level2features, groups_sbml, main_url, scripts, css, fav, verbose,
               max_zoom, map_id=None):
+	if not map_id:
+		map_id = m_dir_id
+
 	geojson_files, geojson_names = [], []
 	for level, features in level2features.iteritems():
-		json_name = "level%d" % level
+		json_name = "level_%s_%d" % (map_id, level)
 		json_file = '%s/%s.json' % (directory, json_name)
 		with open(json_file, 'w+') as f:
 			f.write("var %s = %s" % (json_name, geojson.dumps(features).replace('"id": null', '')))
@@ -30,9 +33,6 @@ def serialize(directory, m_dir_id, input_model, level2features, groups_sbml, mai
 	embed_url = '%s/%s/comp_min.html' % (main_url, m_dir_id)
 	redirect_url = 'comp.html'
 	archive_url = "%s.zip" % m_dir_id
-
-	if not map_id:
-		map_id = m_dir_id
 
 	create_html(input_model, directory, embed_url, redirect_url, geojson_files, geojson_names, groups_sbml_url, archive_url, scripts,
 	            css, fav, map_id, max_zoom)
