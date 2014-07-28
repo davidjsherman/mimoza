@@ -137,9 +137,9 @@ def import_sbml(input_model, sbml_file, verbose=False):
 	check_compartments(input_model)
 
 	log(verbose, 'annotating with GO')
-	onto = parse(get_go())
-	comp2go_term = get_comp2go(input_model, onto)
-	c_id2level = comp2level(input_model)
+	go = parse(get_go())
+	comp2go_term = get_comp2go(input_model, go)
+	c_id2level = comp2level(input_model, go)
 	c_id2info, c_id2outs = compute_c_id2info(c_id2level, comp2go_term, input_model)
 
 	def get_r_comp(all_comp_ids):

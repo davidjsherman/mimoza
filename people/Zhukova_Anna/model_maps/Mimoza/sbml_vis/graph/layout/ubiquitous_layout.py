@@ -40,6 +40,9 @@ def layout_outer_elements(graph):
 		for r in rs:
 			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
 			ss = [s for s in root.getInOutNodes(r) if comp_mg.isElement(s)]
+			if not ss and root.isMetaNode(r):
+				for rr in root[VIEW_META_GRAPH][r].getNodes():
+					ss.extend([s for s in root.getInOutNodes(rr) if comp_mg.isElement(s)])
 			ss_not_ub = [s for s in ss if not ub_or_single(s, comp_mg)]
 			if ss_not_ub:
 				ss = ss_not_ub

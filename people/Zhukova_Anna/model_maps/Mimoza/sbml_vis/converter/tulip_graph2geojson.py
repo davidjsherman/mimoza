@@ -3,10 +3,10 @@ from tulip import tlp
 
 import geojson
 
-from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node
+from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, merge_ubs_for_similar_reactions
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, FAKE, \
-	ID, CLONE_ID
+	ID, CLONE_ID, COMPARTMENT_ID, NAME
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges
 from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
@@ -48,7 +48,7 @@ def get_scale_coefficients(meta_graph):
 	return scale, scale_coefficient
 
 
-def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph, min_zooming_level):
+def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_level):
 	root = meta_graph.getRoot()
 
 	scale, scale_coefficient = get_scale_coefficients(meta_graph)
@@ -57,7 +57,10 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 	processed = set()
 	level = min_zooming_level
 	get_id = lambda nd: "%s_%d" % (root[ID][nd], root[CLONE_ID][nd])
-	while level <= max_comp_level:
+	while level <= max_zooming_level:
+		align_generalized_ns(meta_graph)
+		rotate_generalized_ns(meta_graph)
+
 		# if level < max_comp_level:
 		# node wasn't yet serialised => we can change its position
 		# filter_nd = lambda nd: root[MIN_ZOOM][nd] >= level
@@ -86,14 +89,14 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 					for z in xrange(level_min, level_max + 1):
 						level2features[z].append(bg)
 
-		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and level == root[MAX_ZOOM][n]]
+		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)] # and level == root[MAX_ZOOM][n]]
 
 		level += 1
 
-		if level == max_comp_level:
-			align_generalized_ns(meta_graph)
-			rotate_generalized_ns(meta_graph)
-			bend_ubiquitous_edges(meta_graph, metas)
+		# if level == max_comp_level:
+		# align_generalized_ns(meta_graph)
+		# rotate_generalized_ns(meta_graph)
+		bend_ubiquitous_edges(meta_graph, metas)
 
 		open_meta_ns(meta_graph, metas)
 	return level2features
@@ -102,20 +105,22 @@ def meta_graph2features(c_id2info, max_comp_level, max_zooming_level, meta_graph
 def graph2geojson(c_id2info, graph, verbose):
 	root = graph.getRoot()
 
-	max_comp_level = max({info[2][0] for info in c_id2info.itervalues()}) + 1
+	max_comp_level = max({info[2][0] for info in c_id2info.itervalues()})
 	min_zooming_level = 0  # max_comp_level - 1
-	max_zooming_level = max_comp_level + 3
-
-	initialize_zoom(root, max_zooming_level, min_zooming_level)
+	max_zooming_level = max_comp_level + 1
 
 	log(verbose, 'generalized species/reactions -> metanodes')
-	meta_graph = process_generalized_entities(graph, max_comp_level, min_zooming_level)
+	merge_ubs_for_similar_reactions(root)
+
+	initialize_zoom(root, max_zooming_level, min_zooming_level)
+	meta_graph = graph.inducedSubGraph([n for n in graph.getNodes()])
+	# process_generalized_entities(meta_graph, max_comp_level, min_zooming_level)
 
 	log(verbose, 'compartments -> metanodes')
-	process_compartments(c_id2info, max_comp_level - 1, meta_graph, min_zooming_level)
+	process_compartments(c_id2info, max_comp_level, meta_graph, min_zooming_level)
 
 	log(verbose, 'tlp nodes -> geojson features')
-	level2features = meta_graph2features(c_id2info, max_comp_level, max_zooming_level,
+	level2features = meta_graph2features(c_id2info, max_zooming_level,
 	                                     meta_graph, min_zooming_level)
 
 	return {lev: geojson.FeatureCollection(features, geometry=geojson.Polygon(
@@ -123,10 +128,9 @@ def graph2geojson(c_id2info, graph, verbose):
 	        level2features.iteritems()}, max_zooming_level
 
 
-def process_generalized_entities(graph, max_level, min_level):
-	root = graph.getRoot()
+def process_generalized_entities(meta_graph, max_level, min_level):
+	root = meta_graph.getRoot()
 
-	meta_graph = graph.inducedSubGraph([n for n in graph.getNodes()])
 	factor_nodes(meta_graph)
 
 	for n in (n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)):
@@ -146,6 +150,15 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 			(name, go, (l, out_c_id)) = c_id2info[c_id]
 			if current_zoom_level != l:
 				continue
+			ns = (n for n in meta_graph.getNodes() if root[COMPARTMENT_ID][n] == c_id)
+			meta_ns = factor_nodes(meta_graph, ns)
+
+			for n in meta_ns:
+				root[MIN_ZOOM][n] = root[MAX_ZOOM][n] = current_zoom_level
+				mg = root[VIEW_META_GRAPH][n]
+				for m in mg.getNodes():
+					root[MIN_ZOOM][m] = current_zoom_level + 1
+
 			comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id)
 			if not comp_n:
 				continue
@@ -153,8 +166,14 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 			comp_graph = root[VIEW_META_GRAPH][comp_n]
 			for m in comp_graph.getNodes():
 				root[MIN_ZOOM][m] = current_zoom_level
-				if root[FAKE][m]:
-					for n in root[VIEW_META_GRAPH][m].getNodes():
-						root[MIN_ZOOM][n] = current_zoom_level
 		current_zoom_level -= 1
 		layout(meta_graph)
+
+	meta_ns = factor_nodes(meta_graph)
+
+	for n in meta_ns:
+		root[MIN_ZOOM][n] = root[MAX_ZOOM][n] = current_zoom_level
+		mg = root[VIEW_META_GRAPH][n]
+		for m in mg.getNodes():
+			root[MIN_ZOOM][m] = current_zoom_level + 1
+	layout(meta_graph)

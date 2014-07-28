@@ -22,7 +22,7 @@ def normalize_alpha(alpha):
 def align_generalized_ns(graph):
 	root = graph.getRoot()
 
-	meta_ns = {n for n in graph.getNodes() if graph.isMetaNode(n)}
+	meta_ns = {n for n in graph.getNodes() if graph.isMetaNode(n) and root[TYPE][n] in [TYPE_SPECIES, TYPE_REACTION]}
 	meta_sps = {n for n in meta_ns if TYPE_SPECIES == root[TYPE][n]}
 	meta_rs = {n for n in meta_ns - meta_sps if TYPE_REACTION == root[TYPE][n]}
 
@@ -72,7 +72,7 @@ def align_generalized_ns(graph):
 def rotate_generalized_ns(graph):
 	root = graph.getRoot()
 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
-	for n in (n for n in graph.getNodes() if graph.isMetaNode(n)):
+	for n in (n for n in graph.getNodes() if graph.isMetaNode(n) and root[TYPE][n] in [TYPE_REACTION, TYPE_SPECIES]):
 		lo = view_layout[n]
 		meta_neighbours = lambda nodes: sorted((t for t in nodes if root.isMetaNode(t)),
 		                                       key=lambda t: -root[VIEW_META_GRAPH][t].numberOfNodes())

@@ -110,16 +110,19 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
     }
     initializeAutocomplete(name2popup, name2zoom, map);
     map.on('zoomend', function (e) {
-        var zoom = map.getZoom() + 1;
+        var zoom = map.getZoom(),
+            mZoom = Math.min(zoom + 1, maxZoom);
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
-            json = jsonData[zoom];
-            for (cId in cIds) {
-                compLayer = overlays[cIds[cId]];
-                loadGeoJson(map, json, zoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-                initializeAutocomplete(name2popup, name2zoom, map);
-                maxLoadedZoom = zoom;
-            }
+	        for (z = maxLoadedZoom + 1; z <= mZoom; z++) {
+	            json = jsonData[z];
+	            for (cId in cIds) {
+	                compLayer = overlays[cIds[cId]];
+	                loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+	            }
+	        }
+	        maxLoadedZoom = mZoom;
+	        initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
     map.setView([0, 0], 0);

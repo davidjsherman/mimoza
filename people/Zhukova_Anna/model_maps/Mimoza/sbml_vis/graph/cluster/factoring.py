@@ -29,17 +29,19 @@ def merge_ubs_for_similar_reactions(graph):
 			merge_nodes(root, ubs)
 
 
-def factor_nodes(graph):
+def factor_nodes(graph, ns=None):
 	root = graph.getRoot()
-	merge_ubs_for_similar_reactions(root)
+	if not ns:
+		ns = graph.getNodes()
 
 	ancestor2nodes = defaultdict(list)
-	for node in graph.getNodes():
+	for node in ns:
 		ancestor = root[ANCESTOR_ID][node]
 		if ancestor:
 			ancestor = ancestor, root[TYPE][node], root[COMPARTMENT_ID][node]
 			ancestor2nodes[ancestor].append(node)
 
+	meta_ns = []
 	for (ancestor, type_, comp), nodes in ((k, ns) for (k, ns) in ancestor2nodes.iteritems() if len(ns) > 1):
 		sample_n = nodes[0]
 		meta_n = graph.createMetaNode(nodes, False)
@@ -68,10 +70,13 @@ def factor_nodes(graph):
 			root[NAME][meta_n] = "%s (%d)" % (root[ANCESTOR_NAME][sample_n], len(nodes))
 			root[TERM][meta_n] = root[ANCESTOR_TERM][sample_n]
 
+		meta_ns.append(meta_n)
+	return meta_ns
+
 
 def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp):
 	root = meta_graph.getRoot()
-	ns = filter(lambda n: root[COMPARTMENT_ID][n] == c_id, meta_graph.getNodes())
+	ns = [n for n in meta_graph.getNodes() if root[COMPARTMENT_ID][n] == c_id]
 	if not ns:
 		return None
 	comp_n = meta_graph.createMetaNode(ns, False)
