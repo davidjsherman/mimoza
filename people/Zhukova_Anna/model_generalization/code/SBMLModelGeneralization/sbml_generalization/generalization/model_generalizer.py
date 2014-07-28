@@ -177,8 +177,8 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 			for s_id in s_set:
 				s_id2clu[s_id] = (c_id, term)
 	log(verbose, "  generalizing by simplified key...")
-	vks = get_reaction_ids_to_factor(model, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
-	simplified_key_generalization(model, s_id2clu, ubiquitous_chebi_ids, vks, onto)
+	vk2r_ids = get_reaction_ids_to_factor(model, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
+	simplified_key_generalization(model, s_id2clu, ubiquitous_chebi_ids, vk2r_ids, onto)
 	log_clusters(s_id2clu, onto, verbose, True)
 
 	return s_id2clu
@@ -239,15 +239,15 @@ def no_conflicts(elements, reactions, c_id, s_id2clu, onto):
 
 
 def simplified_key_generalization(input_model, s_id2clu, ub_sps, vks, onto):
-	sk2vks = defaultdict(set)
+	simple_key2vks = defaultdict(set)
 	for ((ub_rs, ub_ps, rs, ps), comps) in vks.keys():
-		if ub_rs or ub_ps:
+		if ub_rs or ub_ps or (len(rs) + len(ps)) > 2:
 			simple_key = ((ub_rs, ub_ps, len(rs), len(ps)), comps)
-			sk2vks[simple_key].add(((ub_rs, ub_ps, rs, ps), comps))
+			simple_key2vks[simple_key].add(((ub_rs, ub_ps, rs, ps), comps))
 	reactions = list(input_model.getListOfReactions())
 	i = 0
-	for ((ub_rs, ub_ps, _, _), _), vks in sk2vks.iteritems():
-		if len(vks) > 1 and (ub_ps or ub_rs):
+	for ((ub_rs, ub_ps, _, _), _), vks in simple_key2vks.iteritems():
+		if len(vks) > 1: #and (ub_ps or ub_rs):
 			r_counter, p_counter = Counter(), Counter()
 			for ((_, _, rs, ps), _) in vks:
 				r_counter.update(rs)
@@ -263,8 +263,8 @@ def simplified_key_generalization(input_model, s_id2clu, ub_sps, vks, onto):
 				r_sps, p_sps = set(), set()
 				common_rs = set(to_merge[0][0][2]) & set(to_merge[1][0][2])
 				common_ps = set(to_merge[0][0][3]) & set(to_merge[1][0][3])
-				# if there are less that 2 common elements, it's not enough evidence
-				if len(ub_rs) + len(ub_sps) + len(common_rs) & len(common_ps) < 2:
+				# if there are less that 1 common elements, it's not enough evidence
+				if len(ub_rs) + len(ub_sps) + len(common_rs) & len(common_ps) < 1:
 					continue
 				stop = False
 				for vk in to_merge:

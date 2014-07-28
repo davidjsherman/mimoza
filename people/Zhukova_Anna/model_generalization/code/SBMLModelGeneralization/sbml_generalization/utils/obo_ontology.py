@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 from collections import defaultdict
+import sys
 from misc import remove_from_map
 import misc
 
@@ -14,11 +15,11 @@ import os
 
 
 def get_chebi():
-	return "{0}/../data/chebi.obo".format(os.path.dirname(os.path.abspath(misc.__file__)))
+	return "%s/../data/chebi.obo" % os.path.dirname(os.path.abspath(misc.__file__))
 
 
 def get_go():
-	return "{0}/../data/gene_ontology_ext.obo".format(os.path.dirname(os.path.abspath(misc.__file__)))
+	return "%s/../data/gene_ontology_ext.obo" % os.path.dirname(os.path.abspath(misc.__file__))
 
 
 def miriam_to_term_id(urn):
@@ -213,6 +214,8 @@ def parse(obo_file, relationships=None):
 				value = value[0:comment].strip()
 			if prefix == "id":
 				term.setId(value)
+			elif prefix == "is_obsolete" and value == "true":
+				term = None
 			elif prefix == "alt_id":
 				term.addAltId(value)
 			elif prefix == "name":

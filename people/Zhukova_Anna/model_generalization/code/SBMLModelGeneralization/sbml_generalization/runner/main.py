@@ -30,8 +30,10 @@ def main(argv=None):
 	try:
 		chebi, in_sbml, out_sbml, groups_sbml, sh_chains, verbose, log_file = process_args(argv)
 		# log(verbose, "parsing ChEBI...")
+		if verbose:
+			logging.basicConfig(level=logging.INFO)
 		ontology = parse(chebi, EQUIVALENT_TERM_RELATIONSHIPS | {'has_role'})
-		generalize_model(groups_sbml, out_sbml, in_sbml, ontology, None, verbose, log_file)
+		generalize_model(groups_sbml, None, in_sbml, ontology, None, verbose, log_file)
 	except Usage, err:
 		logging.error(sys.argv[0].split("/")[-1] + ": " + str(err.msg))
 		logging.error(sys.stderr, "\t for help use --help")

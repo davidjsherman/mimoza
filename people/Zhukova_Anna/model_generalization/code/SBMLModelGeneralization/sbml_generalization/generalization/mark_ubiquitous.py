@@ -16,7 +16,7 @@ COMMON_UB_IDS = {'chebi:37568', 'chebi:57783', 'chebi:17625', 'chebi:37563', 'ch
                  'chebi:15918', 'chebi:246422', 'chebi:28850', 'chebi:16240', 'chebi:58245', 'chebi:16908',
                  'chebi:13534', 'chebi:456216', 'chebi:456215', 'chebi:15351', 'chebi:30089', 'chebi:15422',
                  'chebi:57299', 'chebi:25805', 'chebi:26689', 'chebi:13390', 'chebi:57540', 'chebi:25524',
-                 'chebi:13389', 'chebi:13392', 'chebi:28971', 'chebi:17984'}
+                 'chebi:13389', 'chebi:13392', 'chebi:28971', 'chebi:17984', 'chebi:29888'}
 
 
 ## The function returns a set of identifiers of ubiquitous species participating in given reactions.
