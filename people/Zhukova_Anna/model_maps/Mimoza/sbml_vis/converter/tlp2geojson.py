@@ -33,6 +33,18 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 		return transformation(x, other_x), transformation(y, other_y)
 
 
+def get_reaction_by_edge(e, graph):
+	root = graph.getRoot()
+	s, t = graph.source(e), graph.target(e)
+	options = {t}
+	r = s
+	while not TYPE_REACTION == root[TYPE][r]:
+		if root.isMetaNode(r):
+			options |= {nd for nd in root[VIEW_META_GRAPH][r].getNodes()}
+		r = options.pop()
+	return r
+
+
 def e2feature(graph, e, scale, e_id):
 	root = graph.getRoot()
 	layout = root[VIEW_LAYOUT]
@@ -46,13 +58,7 @@ def e2feature(graph, e, scale, e_id):
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 
-	options = {t}
-	r = s
-	while not TYPE_REACTION == root[TYPE][r]:
-		if root.isMetaNode(r):
-			options |= {nd for nd in root[VIEW_META_GRAPH][r].getNodes()}
-		r = options.pop()
-
+	r = get_reaction_by_edge(e, graph)
 	transport = root[TRANSPORT][r]
 	ubiquitous = root[UBIQUITOUS][e]
 	props = {WIDTH: get_e_size(root, e).getW() / 4, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
