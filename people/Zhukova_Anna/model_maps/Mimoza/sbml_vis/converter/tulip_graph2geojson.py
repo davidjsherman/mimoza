@@ -48,9 +48,8 @@ def get_scale_coefficients(meta_graph):
 	return scale, scale_coefficient
 
 
-def update_level2features(feature, c_id2level2features, level_max, level_min, c_id):
-	c_id = 0
-	for z in xrange(level_min, level_max + 1):
+def update_level2features(feature, c_id2level2features, level_max, level_min, c_id, level_0):
+	for z in xrange(level_min - level_0, min(1, level_max - level_0) + 1):
 		if not c_id in c_id2level2features:
 			c_id2level2features[c_id] = defaultdict(list)
 		c_id2level2features[c_id][z].append(feature)
@@ -64,6 +63,7 @@ def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_le
 	c_id2level2features = {}
 	processed = set()
 	get_id = lambda nd: "%s_%d" % (root[ID][nd], root[CLONE_ID][nd])
+	cur_min_zoom = min_zooming_level
 	for level in xrange(min_zooming_level, 1 + max_zooming_level):
 		align_generalized_ns(meta_graph)
 		rotate_generalized_ns(meta_graph)
@@ -74,11 +74,12 @@ def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_le
 			if not e_id in processed:
 				s, t = meta_graph.source(e), meta_graph.target(e)
 				c_id = root[COMPARTMENT_ID][s]
-				# if c_id != root[COMPARTMENT_ID][t]:
-				# 	continue
-				level_min, level_max = max(root[MIN_ZOOM][t], root[MIN_ZOOM][s]), min(root[MAX_ZOOM][t], root[MAX_ZOOM][s])
+				if c_id != root[COMPARTMENT_ID][t]:
+					continue
+				level_min, level_max = max(root[MIN_ZOOM][t], root[MIN_ZOOM][s]), min(root[MAX_ZOOM][t],
+				                                                                      root[MAX_ZOOM][s])
 				f = e2feature(meta_graph, e, scale, e_id)
-				update_level2features(f, c_id2level2features, level_max, level_min, c_id)
+				update_level2features(f, c_id2level2features, level_max, level_min, c_id, cur_min_zoom)
 				processed.add(e_id)
 
 		for n in meta_graph.getNodes():
@@ -86,16 +87,18 @@ def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_le
 			if not n_id in processed:
 				f, bg = n2feature(meta_graph, n, scale, c_id2info, scale_coefficient, n_id)
 				level_min, level_max = root[MIN_ZOOM][n], root[MAX_ZOOM][n]
-				update_level2features(f, c_id2level2features, level_max, level_min, root[COMPARTMENT_ID][n])
+				update_level2features(f, c_id2level2features, level_max, level_min, root[COMPARTMENT_ID][n],
+				                      cur_min_zoom)
 				processed.add(n_id)
 				if bg:
 					level_min, level_max = root[MAX_ZOOM][n] + 1, max_zooming_level
-					update_level2features(bg, c_id2level2features, level_max, level_min, root[COMPARTMENT_ID][n])
+					update_level2features(bg, c_id2level2features, level_max, level_min, root[COMPARTMENT_ID][n],
+					                      cur_min_zoom)
 		if level % 2:
 			metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and TYPE_COMPARTMENT == root[TYPE][n]]
+			cur_min_zoom += 2
 		else:
 			metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and TYPE_COMPARTMENT != root[TYPE][n]]
-		print [root[NAME][n] for n in metas], "\n"
 		bend_ubiquitous_edges(meta_graph, metas)
 
 		open_meta_ns(meta_graph, metas)
@@ -121,11 +124,11 @@ def graph2geojson(c_id2info, graph, verbose):
 
 	log(verbose, 'tlp nodes -> geojson features')
 	c_id2level2features = meta_graph2features(c_id2info, max_zooming_level,
-	                                     meta_graph, min_zooming_level)
+	                                          meta_graph, min_zooming_level)
 
-	return {lev: geojson.FeatureCollection(features, geometry=geojson.Polygon(
-		[[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])) for (lev, features) in
-	        c_id2level2features[next(c_id2level2features.iterkeys())].iteritems()}, max_zooming_level
+	geometry = geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])
+	get_l2fs = lambda l2fs: {lev: geojson.FeatureCollection(features, geometry=geometry) for (lev, features) in l2fs.iteritems()}
+	return {c_id: get_l2fs(l2fs) for (c_id, l2fs) in c_id2level2features.iteritems()}, max_zooming_level
 
 
 def process_generalized_entities(meta_graph, max_level, min_level):

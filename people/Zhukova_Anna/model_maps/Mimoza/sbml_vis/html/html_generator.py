@@ -101,13 +101,17 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(page, json_files, json_vars, map_id, max_zoom, comps):
+def add_js(page, json_files, c_id2json_vars, map_id, max_zoom, comps):
+	# todo: max_zoom
+	max_zoom = 1
+
 	for json in json_files:
 		page.script(src=json, type="text/javascript")
 		page.script.close()
 	page.script('''
-        initializeMap([%s], "%s", %d, %s);
-    ''' % (", ".join(json_vars), map_id, max_zoom, comps), type="text/javascript")
+        initializeMap({%s}, "%s", %d, %s);
+    ''' % (", ".join(("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems())),
+	       map_id, max_zoom, comps), type="text/javascript")
 
 
 def add_embed_button(page):
@@ -138,7 +142,7 @@ def add_embedding_dialog(page, url):
 	page.div.close()
 
 
-def create_html(model, directory, embed_url, redirect_url, json_files, json_vars, groups_sbml_url, archive_url, scripts, css,
+def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json_vars, groups_sbml_url, archive_url, scripts, css,
                 fav, map_id, max_zoom):
 	page = markup.page()
 	if not scripts:
@@ -174,7 +178,7 @@ def create_html(model, directory, embed_url, redirect_url, json_files, json_vars
 
 	page.div.close()
 
-	add_js(page, json_files, json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
+	add_js(page, json_files, c_id2json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))

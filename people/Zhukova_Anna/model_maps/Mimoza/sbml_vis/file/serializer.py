@@ -1,3 +1,4 @@
+from collections import defaultdict
 import os
 from shutil import copytree
 import shutil
@@ -12,19 +13,20 @@ from sbml_generalization.utils.logger import log
 __author__ = 'anna'
 
 
-def serialize(directory, m_dir_id, input_model, level2features, groups_sbml, main_url, scripts, css, fav, verbose,
+def serialize(directory, m_dir_id, input_model, c_id2level2features, groups_sbml, main_url, scripts, css, fav, verbose,
               max_zoom, map_id=None):
 	if not map_id:
 		map_id = m_dir_id
 
-	geojson_files, geojson_names = [], []
-	for level, features in level2features.iteritems():
-		json_name = "level_%s_%d" % (map_id, level)
-		json_file = '%s/%s.json' % (directory, json_name)
-		with open(json_file, 'w+') as f:
-			f.write("var %s = %s" % (json_name, geojson.dumps(features).replace('"id": null', '')))
-		geojson_files.append(json_file)
-		geojson_names.append(json_name)
+	geojson_files, c_id2geojson_names = [], defaultdict(list)
+	for c_id, level2features in c_id2level2features.iteritems():
+		for level, features in level2features.iteritems():
+			json_name = "level_%s_%s_%d" % (map_id, c_id, level)
+			json_file = '%s/%s.json' % (directory, json_name)
+			with open(json_file, 'w+') as f:
+				f.write("var %s = %s" % (json_name, geojson.dumps(features).replace('"id": null', '')))
+			geojson_files.append(json_file)
+			c_id2geojson_names[c_id].append(json_name)
 
 
 	log(verbose, 'create html')
@@ -34,10 +36,10 @@ def serialize(directory, m_dir_id, input_model, level2features, groups_sbml, mai
 	redirect_url = 'comp.html'
 	archive_url = "%s.zip" % m_dir_id
 
-	create_html(input_model, directory, embed_url, redirect_url, geojson_files, geojson_names, groups_sbml_url, archive_url, scripts,
+	create_html(input_model, directory, embed_url, redirect_url, geojson_files, c_id2geojson_names, groups_sbml_url, archive_url, scripts,
 	            css, fav, map_id, max_zoom)
 
-	create_embedded_html(input_model, directory, geojson_files, geojson_names, scripts, css, fav, map_id, max_zoom)
+	create_embedded_html(input_model, directory, geojson_files, c_id2geojson_names, scripts, css, fav, map_id, max_zoom)
 
 	temp_copy = '%s/%s' % (directory, m_dir_id)
 	archive_path = "%s/%s.zip" % (directory, m_dir_id)

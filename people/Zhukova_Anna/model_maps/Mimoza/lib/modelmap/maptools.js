@@ -59,18 +59,27 @@ function handlePopUpClosing(map) {
     });
 }
 
-function initializeMap(jsonData, mapId, maxZoom, cIds) {
+function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
     "use strict";
     var layers = [],
         ubLayer = L.layerGroup(),
         tiles = getTiles("lib/modelmap/white.jpg"),
         gray_tiles =  getTiles("lib/modelmap/gray.jpg"),
         overlays = {},
-        cId;
+        cIds = {},
+        cId = gup(),
+        jsonData;
     layers.push(ubLayer);
     layers.push(gray_tiles);
     adjustMapSize(mapId);
     cIds[TRANSPORT] = "<i>Transport reactions</i>";
+    if (cId == null && compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0) {
+        cId = Object.keys(compIds)[0];
+    }
+    if (cId != null) {
+        cIds[cId] = compIds[cId];
+        jsonData = cId2jsonData[cId];
+    }
     for (cId in cIds) {
         var cLayer = L.layerGroup();
         layers.push(cLayer);
@@ -84,7 +93,7 @@ function initializeMap(jsonData, mapId, maxZoom, cIds) {
         layers: layers,
         crs: L.CRS.Simple
     });
-    if (typeof jsonData === 'undefined' && jsonData.length <= 0) {
+    if (typeof jsonData === 'undefined' || jsonData.length <= 0) {
         return map;
     }
     var southWest = map.unproject([0 - MARGIN, MAP_DIMENSION_SIZE + MARGIN], 1),
@@ -206,6 +215,18 @@ function overlay() {
         $(this).select();
     });
 }
+
+
+function gup(){
+  var regexS = "[\\?&]name=([^&#]*)";
+  var regex = new RegExp(regexS);
+  var results = regex.exec(window.location.href);
+  if(results == null)
+    return null;
+  else
+    return results[1];
+}
+
 
 function update_embed_value(w, h) {
     "use strict";

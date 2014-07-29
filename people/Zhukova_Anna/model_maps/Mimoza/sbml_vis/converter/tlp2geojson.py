@@ -18,7 +18,6 @@ LOWERCASE, UPPERCASE = 'x', 'X'
 
 def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 	if n_type in [TYPE_REACTION, TYPE_COMPARTMENT]:
-		# todo: why could these coordinates be the same?
 		edge_angle = degrees(atan2(other_y - y, other_x - x)) if other_y != y or other_x != x else 0
 		diag_angle = degrees(atan2(h, w))
 		abs_edge_angle = abs(edge_angle)
@@ -122,7 +121,8 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, n_id):
 		props.update({COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
 
 	bg_feature = None
-	if generalized:
+	# if generalized:
+	if generalized and TYPE_COMPARTMENT != node_type:
 		node_type = TYPE_2_BG_TYPE[node_type]
 		transport = TRANSPORT in props
 		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport)}
