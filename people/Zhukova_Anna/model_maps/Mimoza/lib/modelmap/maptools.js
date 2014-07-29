@@ -79,6 +79,7 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
     if (cId != null) {
         cIds[cId] = compIds[cId];
         jsonData = cId2jsonData[cId];
+        $("#comp").html(compIds[cId]);
     }
     for (cId in cIds) {
         var cLayer = L.layerGroup();
@@ -218,7 +219,7 @@ function overlay() {
 
 
 function gup(){
-  var regexS = "[\\?&]name=([^&#]*)";
+  var regexS = "[\\?&]id=([^&#]*)";
   var regex = new RegExp(regexS);
   var results = regex.exec(window.location.href);
   if(results == null)

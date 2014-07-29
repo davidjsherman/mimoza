@@ -39,12 +39,11 @@ def get_scale_coefficients(meta_graph):
 		max_y += (w - h) / 2
 	elif h > w:
 		min_x -= (h - w) / 2
+	scale_coefficient = DIMENSION / max(w, h)
 
 	def scale(x, y):
 		x, y = (x - min_x) * scale_coefficient, (max_y - y) * scale_coefficient
 		return [float(x), float(y)]
-
-	scale_coefficient = DIMENSION / max(w, h)
 	return scale, scale_coefficient
 
 
@@ -92,8 +91,10 @@ def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_le
 				processed.add(n_id)
 				if bg:
 					level_min, level_max = root[MAX_ZOOM][n] + 1, max_zooming_level
-					update_level2features(bg, c_id2level2features, level_max, level_min, root[COMPARTMENT_ID][n],
-					                      cur_min_zoom)
+					is_compartment_bg = root[TYPE][n] == TYPE_COMPARTMENT
+					update_level2features(bg, c_id2level2features, level_max, level_min,
+					                      root[ID if is_compartment_bg else COMPARTMENT_ID][n],
+					                      (cur_min_zoom + 2) if is_compartment_bg else cur_min_zoom)
 		if level % 2:
 			metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and TYPE_COMPARTMENT == root[TYPE][n]]
 			cur_min_zoom += 2

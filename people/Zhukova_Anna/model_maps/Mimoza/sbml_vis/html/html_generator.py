@@ -22,12 +22,11 @@ def add_header(model_id, model_name, page):
 	page.h1.close()
 
 
-def add_compartment_menu(page, c_id2info):
+def add_compartment_menu(page, c_id2name):
 	page.ul(class_='menu margin centre')
-	for c_id in c_id2info.iterkeys():
-		c_name, _, _ = c_id2info[c_id]
+	for c_id, c_name in c_id2name.iteritems():
 		page.li()
-		page.a(c_name, href='?name=%s' % c_id)
+		page.a(c_name, href='?id=%s' % c_id)
 		page.li.close()
 	page.ul.close()
 
@@ -155,12 +154,13 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
 	model_name = model.getName()
 	if not model_name:
 		model_name = model_id
+	c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments()}
 	page.init(title=model_name, css=css, script=scripts, fav=fav)
 
 	add_header(model_id, model_name, page)
 
 	page.div(class_='centre', id='all')
-	# add_compartment_menu(page, c_id2info)
+	add_compartment_menu(page, c_id2name)
 
 	add_download_link(groups_sbml_url, archive_url, page)
 
@@ -178,7 +178,7 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
 
 	page.div.close()
 
-	add_js(page, json_files, c_id2json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
+	add_js(page, json_files, c_id2json_vars, map_id, max_zoom, c_id2name)
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))

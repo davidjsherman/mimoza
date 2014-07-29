@@ -122,7 +122,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, n_id):
 
 	bg_feature = None
 	# if generalized:
-	if generalized and TYPE_COMPARTMENT != node_type:
+	if generalized:
 		node_type = TYPE_2_BG_TYPE[node_type]
 		transport = TRANSPORT in props
 		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport)}
@@ -133,6 +133,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, n_id):
 			bg_props[COMPARTMENT_ID] = c_id
 		if TYPE_BG_COMPARTMENT == node_type:
 			bg_props[HEIGHT] = h
+			bg_props[COMPARTMENT_ID] = root[ID][n]
 		bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
 	return geojson.Feature(geometry=geom, properties=props), bg_feature #, id=n_id)
 

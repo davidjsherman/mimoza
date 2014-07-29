@@ -70,6 +70,14 @@ function formatGo(term) {
     return "";
 }
 
+function formatLink(id) {
+    "use strict";
+    if (id) {
+        return "<a href=\'?id=" + id + "\' target=\'_blank\'>Zoom inside</a>";
+    }
+    return "";
+}
+
 function p(text) {
     "use strict";
     return "<p class='popup centre'>" + text + "</p>";
@@ -104,7 +112,7 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
         content += compartment + ch + transported;
         label += compartment + transported;
     } else if (COMPARTMENT == feature.properties.type) {
-        content += p(formatGo(feature.properties.term)); // + link;
+        content += p(formatGo(feature.properties.term)) + p(formatLink(feature.properties.id)); // + link;
     }
     var size = $('#' + mapId).height(),
         e = feature.geometry.coordinates,
