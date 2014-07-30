@@ -165,13 +165,12 @@ div.margin {
     vertical-align: middle;
 }
 
-#map {
-    border: 1px solid #ac3131;
-}
 
 div.map {
     width: inherit;
     height: inherit;
+    border: 1px solid #ac3131;
+    margin: 10px;
 }
 
 span.pant {

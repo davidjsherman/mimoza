@@ -7,8 +7,8 @@ function adjustMapSize(mapId) {
     var VIEWPORT_MARGIN = 50,
         MIN_DIMENTION_SIZE = 256,
         LEAFLET_POPUP_MARGIN = 10,
-        width = Math.max(MIN_DIMENTION_SIZE, $(window).width() - VIEWPORT_MARGIN),
-        height = Math.max(MIN_DIMENTION_SIZE, $(window).height() - VIEWPORT_MARGIN),
+        width = Math.max(MIN_DIMENTION_SIZE, ($(window).width() - VIEWPORT_MARGIN)),
+        height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() - VIEWPORT_MARGIN) * 0.7)),
         $map_div = $("#" + mapId),
         old_height = $map_div.height(),
         old_width = $map_div.width();
@@ -26,6 +26,7 @@ function adjustMapSize(mapId) {
             'maxWidth': width - LEAFLET_POPUP_MARGIN
         });
     }
+    return Math.min(width, height);
 }
 
 function getTiles(img, minZoom, maxZoom) {
@@ -61,8 +62,9 @@ function handlePopUpClosing(map) {
 
 function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
     "use strict";
-    var layers = [],
-        minZoom = Math.round(Math.min($(window).width(), $(window).height()) / MAP_DIMENSION_SIZE),
+    var size = adjustMapSize(mapId),
+        layers = [],
+        minZoom = size == MAP_DIMENSION_SIZE / 2 ? 0 : Math.round(size / MAP_DIMENSION_SIZE),
         ubLayer = L.layerGroup(),
         tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom + minZoom),
         grayTiles =  getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom + minZoom),
@@ -78,7 +80,6 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
     layers.push(grayTiles);
     layers.push(compLayer);
     layers.push(transportLayer);
-    adjustMapSize(mapId);
 //    cIds[TRANSPORT] = "<i>Transport reactions</i>";
     if (cId == null && compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0) {
         cId = Object.keys(compIds)[0];
