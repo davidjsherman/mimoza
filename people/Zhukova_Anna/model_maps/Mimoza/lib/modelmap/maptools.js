@@ -72,6 +72,7 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
         jsonData,
         transportLayer = L.layerGroup(),
         compLayer = L.layerGroup();
+    maxZoom = (maxZoom + 1) * 2 - 1;
     maxZoom += minZoom;
     layers.push(ubLayer);
     layers.push(grayTiles);
@@ -116,12 +117,14 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
         json,
         z = minZoom,
         maxLoadedZoom = Math.min(1 + minZoom, maxZoom);
-    for (z = minZoom; z <= maxLoadedZoom; z++) {
-        json = jsonData[z - minZoom];
+    for (z = minZoom; z <= maxLoadedZoom; z += 2) {
+        json = jsonData[(z - minZoom) / 2];
         if (cId) {
             loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+            loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
         }
         loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
+        loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
 //        for (cId in cIds) {
 //            compLayer = overlays[cIds[cId]];
 //            loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
@@ -133,12 +136,14 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
             mZoom = Math.min(zoom + 1, maxZoom);
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
-	        for (z = maxLoadedZoom + 1; z <= mZoom; z++) {
-	            json = jsonData[z - minZoom];
+	        for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
+	            json = jsonData[(z - minZoom) / 2];
                 if (cId) {
                     loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+                    loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
                 }
                 loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
+                loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
 //	            for (cId in cIds) {
 //	                compLayer = overlays[cIds[cId]];
 //	                loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
