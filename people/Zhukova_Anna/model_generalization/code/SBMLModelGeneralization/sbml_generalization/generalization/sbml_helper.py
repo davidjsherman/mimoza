@@ -453,7 +453,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 		log(verbose, "creating reaction groups...")
 		for clu, r_ids in clu2r_ids.iteritems():
 			representative = input_model.getReaction(list(r_ids)[0])
-			r_name = "generalized %s (%d)" % (representative.getName(), len(r_ids))
+			r_name = "generalized %s" % representative.getName()
 			if out_sbml:
 				reactants = getReactants(representative)
 				products = getProducts(representative)
@@ -582,14 +582,14 @@ def parse_group_sbml(groups_sbml, chebi):
 				# el
 				if GROUP_TYPE_EQUIV == gr_type:
 					for r_id in gr_members:
-						r_id2g_id[r_id] = gr_id, gr_name
+						r_id2g_id[r_id] = gr_id, gr_name, len(gr_members)
 			elif SBO_CHEMICAL_MACROMOLECULE == gr_sbo:
 				if GROUP_TYPE_UBIQUITOUS == gr_type:
 					ub_sps = set(gr_members)
 				elif GROUP_TYPE_EQUIV == gr_type:
 					for s_id in gr_members:
 						term = get_term(group, chebi)
-						s_id2gr_id[s_id] = gr_id, term if term else gr_name
+						s_id2gr_id[s_id] = gr_id, term if term else gr_name, len(gr_members)
 	else:
 		raise GrPlError("groups plugin not installed")
 	# return r_id2g_id, r_id2ch_id, s_id2gr_id, ub_sps
