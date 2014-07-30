@@ -166,7 +166,7 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 			if current_zoom_level / 2 != l:
 				continue
 			ns = (n for n in meta_graph.getNodes() if root[COMPARTMENT_ID][n] == c_id)
-			meta_ns = factor_nodes(meta_graph, ns)
+			meta_ns = factor_nodes(meta_graph, c_id2info, ns)
 
 			for n in meta_ns:
 				root[MIN_ZOOM][n] = root[MAX_ZOOM][n] = current_zoom_level
@@ -185,7 +185,7 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 		current_zoom_level -= 2
 		layout(meta_graph)
 
-	meta_ns = factor_nodes(meta_graph)
+	meta_ns = factor_nodes(meta_graph, c_id2info)
 
 	for n in meta_ns:
 		root[MIN_ZOOM][n] = root[MAX_ZOOM][n] = current_zoom_level

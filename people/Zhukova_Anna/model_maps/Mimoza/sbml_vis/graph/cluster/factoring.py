@@ -29,7 +29,7 @@ def merge_ubs_for_similar_reactions(graph):
 			merge_nodes(root, ubs)
 
 
-def factor_nodes(graph, ns=None):
+def factor_nodes(graph, c_id2info, ns=None):
 	root = graph.getRoot()
 	if not ns:
 		ns = graph.getNodes()
@@ -42,7 +42,7 @@ def factor_nodes(graph, ns=None):
 			ancestor2nodes[ancestor].append(node)
 
 	meta_ns = []
-	for (ancestor, type_, comp), nodes in ((k, ns) for (k, ns) in ancestor2nodes.iteritems() if len(ns) > 1):
+	for (ancestor, type_, c_id), nodes in ((k, ns) for (k, ns) in ancestor2nodes.iteritems() if len(ns) > 1):
 		sample_n = nodes[0]
 		meta_n = graph.createMetaNode(nodes, False)
 
@@ -67,7 +67,8 @@ def factor_nodes(graph, ns=None):
 					root[TRANSPORT][meta_n] = True
 			root[TERM][meta_n] = "\nor\n".join({root[TERM][it] for it in nodes})
 		else:
-			root[NAME][meta_n] = "%s (%d)" % (root[ANCESTOR_NAME][sample_n], len(nodes))
+			c_name, _, _ = c_id2info[c_id]
+			root[NAME][meta_n] = "%s (%d) [%s]" % (root[ANCESTOR_NAME][sample_n], len(nodes), c_name)
 			root[TERM][meta_n] = root[ANCESTOR_TERM][sample_n]
 
 		meta_ns.append(meta_n)
