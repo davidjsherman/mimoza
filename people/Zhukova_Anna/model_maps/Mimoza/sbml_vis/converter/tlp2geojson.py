@@ -122,7 +122,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, n_id):
 
 	bg_feature = None
 	# if generalized:
-	if generalized:
+	if generalized and TYPE_COMPARTMENT != node_type:
 		node_type = TYPE_2_BG_TYPE[node_type]
 		transport = TRANSPORT in props
 		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport)}

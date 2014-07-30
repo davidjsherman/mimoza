@@ -29,8 +29,9 @@ def initialize_zoom(graph, max_zooming_level, min_zooming_level=0):
 	max_zoom.setAllNodeValue(max_zooming_level)
 
 
-def get_scale_coefficients(meta_graph):
-	bb = tlp.computeBoundingBox(meta_graph)
+def get_scale_coefficients(meta_graph, c_id):
+	mg = meta_graph.inducedSubGraph([n for n in meta_graph.getNodes() if c_id == meta_graph.getRoot()[COMPARTMENT_ID][n]])
+	bb = tlp.computeBoundingBox(mg)
 	c_x, c_y = bb.center()[0], bb.center()[1]
 	bb_w, bb_h = bb.width() / 2, bb.height() / 2
 	min_x, min_y, max_x, max_y = c_x - bb_w, c_y - bb_h, c_x + bb_w, c_y + bb_h
@@ -44,6 +45,7 @@ def get_scale_coefficients(meta_graph):
 	def scale(x, y):
 		x, y = (x - min_x) * scale_coefficient, (max_y - y) * scale_coefficient
 		return [float(x), float(y)]
+	meta_graph.delAllSubGraphs(mg)
 	return scale, scale_coefficient
 
 
@@ -57,7 +59,7 @@ def update_level2features(feature, c_id2level2features, level_max, level_min, c_
 def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_level):
 	root = meta_graph.getRoot()
 
-	scale, scale_coefficient = get_scale_coefficients(meta_graph)
+	c_id2scales = {}
 
 	c_id2level2features = {}
 	processed = set()
@@ -75,6 +77,10 @@ def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_le
 				c_id = root[COMPARTMENT_ID][s]
 				if c_id != root[COMPARTMENT_ID][t]:
 					continue
+				if not c_id in c_id2scales:
+					c_id2scales[c_id] = get_scale_coefficients(meta_graph, c_id)
+				scale, _ = c_id2scales[c_id]
+
 				level_min, level_max = max(root[MIN_ZOOM][t], root[MIN_ZOOM][s]), min(root[MAX_ZOOM][t],
 				                                                                      root[MAX_ZOOM][s])
 				f = e2feature(meta_graph, e, scale, e_id)
@@ -84,6 +90,11 @@ def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_le
 		for n in meta_graph.getNodes():
 			n_id = get_id(n)
 			if not n_id in processed:
+				c_id = root[COMPARTMENT_ID][n]
+				if not c_id in c_id2scales:
+					c_id2scales[c_id] = get_scale_coefficients(meta_graph, c_id)
+				scale, scale_coefficient = c_id2scales[c_id]
+
 				f, bg = n2feature(meta_graph, n, scale, c_id2info, scale_coefficient, n_id)
 				level_min, level_max = root[MIN_ZOOM][n], root[MAX_ZOOM][n]
 				update_level2features(f, c_id2level2features, level_max, level_min, root[COMPARTMENT_ID][n],
