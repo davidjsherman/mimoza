@@ -170,7 +170,7 @@ def import_sbml(input_model, sbml_file, verbose=False):
 	duplicate_nodes(graph)
 
 	log(verbose, 'marking species/reaction groups')
-	mark_ancestors(graph, r_id2g_id, s_id2gr_id)
+	mark_ancestors(graph, r_id2g_id, s_id2gr_id, c_id2info)
 	return graph, c_id2info
 
 
@@ -215,7 +215,7 @@ def clean(graph):
 		graph.delNode(n)
 
 
-def mark_ancestors(graph, r_eq2clu, s2clu):
+def mark_ancestors(graph, r_eq2clu, s2clu, c_id2info):
 	root = graph.getRoot()
 	id_ = root.getStringProperty(ID)
 	anc_id = root.getStringProperty(ANCESTOR_ID)
@@ -226,15 +226,18 @@ def mark_ancestors(graph, r_eq2clu, s2clu):
 		gr_id, gr_name, term = None, None, None
 		if TYPE_REACTION == type_[n]:
 			if id_[n] in r_eq2clu:
-				gr_id, gr_name = r_eq2clu[id_[n]]
+				gr_id, gr_name, el_num = r_eq2clu[id_[n]]
+				gr_name = "%s (%d)" % (gr_name, el_num)
 		elif id_[n] in s2clu:
-			gr_id, term = s2clu[id_[n]]
+			gr_id, term, el_num = s2clu[id_[n]]
 			if term:
 				if isinstance(term, Term):
 					gr_name = term.getName()
 				else:
 					gr_name = term
 					term = None
+				c_name, _, _ = c_id2info[root[COMPARTMENT_ID][n]]
+				gr_name = "%s (%d) [%s]" % (gr_name, el_num, c_name)
 		if gr_name:
 			anc_name[n] = gr_name
 		if gr_id:

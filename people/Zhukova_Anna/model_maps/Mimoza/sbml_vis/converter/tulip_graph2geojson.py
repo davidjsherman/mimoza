@@ -6,7 +6,7 @@ import geojson
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, merge_ubs_for_similar_reactions
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, ID, CLONE_ID, COMPARTMENT_ID, \
-	TYPE_COMPARTMENT, TYPE
+	TYPE_COMPARTMENT, TYPE, TYPE_REACTION, STOICHIOMETRY
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges
 from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
@@ -56,7 +56,7 @@ def update_level2features(feature, c_id2level2features, level_max, level_min, c_
 		c_id2level2features[c_id][z].append(feature)
 
 
-def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_level):
+def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_level, r2rs_ps):
 	root = meta_graph.getRoot()
 
 	c_id2scales = {}
@@ -95,7 +95,7 @@ def meta_graph2features(c_id2info, max_zooming_level, meta_graph, min_zooming_le
 					c_id2scales[c_id] = get_scale_coefficients(meta_graph, c_id)
 				scale, scale_coefficient = c_id2scales[c_id]
 
-				f, bg = n2feature(meta_graph, n, scale, c_id2info, scale_coefficient, n_id)
+				f, bg = n2feature(meta_graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, n_id)
 				level_min, level_max = root[MIN_ZOOM][n], root[MAX_ZOOM][n]
 				update_level2features(f, c_id2level2features, level_max, level_min, root[COMPARTMENT_ID][n],
 				                      cur_min_zoom)
@@ -127,6 +127,12 @@ def graph2geojson(c_id2info, graph, verbose):
 	log(verbose, 'generalized species/reactions -> metanodes')
 	merge_ubs_for_similar_reactions(root)
 
+	r2rs_ps = {}
+	for r in (r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]):
+		rs = [(root[STOICHIOMETRY][e], root.source(e)) for e in root.getInEdges(r)]
+		ps = [(root[STOICHIOMETRY][e], root.target(e)) for e in root.getOutEdges(r)]
+		r2rs_ps[r] = rs, ps
+
 	initialize_zoom(root, max_zooming_level, min_zooming_level)
 	meta_graph = graph.inducedSubGraph([n for n in graph.getNodes()])
 	# process_generalized_entities(meta_graph, max_comp_level, min_zooming_level)
@@ -136,7 +142,7 @@ def graph2geojson(c_id2info, graph, verbose):
 
 	log(verbose, 'tlp nodes -> geojson features')
 	c_id2level2features = meta_graph2features(c_id2info, max_zooming_level,
-	                                          meta_graph, min_zooming_level)
+	                                          meta_graph, min_zooming_level, r2rs_ps)
 
 	geometry = geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])
 	get_l2fs = lambda l2fs: {lev: geojson.FeatureCollection(features, geometry=geometry) for (lev, features) in l2fs.iteritems()}
@@ -166,7 +172,7 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 			if current_zoom_level / 2 != l:
 				continue
 			ns = (n for n in meta_graph.getNodes() if root[COMPARTMENT_ID][n] == c_id)
-			meta_ns = factor_nodes(meta_graph, c_id2info, ns)
+			meta_ns = factor_nodes(meta_graph, ns)
 
 			for n in meta_ns:
 				root[MIN_ZOOM][n] = root[MAX_ZOOM][n] = current_zoom_level
@@ -185,7 +191,7 @@ def process_compartments(c_id2info, current_zoom_level, meta_graph, min_zoom_lev
 		current_zoom_level -= 2
 		layout(meta_graph)
 
-	meta_ns = factor_nodes(meta_graph, c_id2info)
+	meta_ns = factor_nodes(meta_graph)
 
 	for n in meta_ns:
 		root[MIN_ZOOM][n] = root[MAX_ZOOM][n] = current_zoom_level

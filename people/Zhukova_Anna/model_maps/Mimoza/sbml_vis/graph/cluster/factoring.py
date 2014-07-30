@@ -29,7 +29,7 @@ def merge_ubs_for_similar_reactions(graph):
 			merge_nodes(root, ubs)
 
 
-def factor_nodes(graph, c_id2info, ns=None):
+def factor_nodes(graph, ns=None):
 	root = graph.getRoot()
 	if not ns:
 		ns = graph.getNodes()
@@ -50,6 +50,7 @@ def factor_nodes(graph, c_id2info, ns=None):
 			root[prop][meta_n] = root[prop][sample_n]
 		root[ID][meta_n] = root[ANCESTOR_ID][sample_n]
 		root[VIEW_SIZE][meta_n] = get_n_size(root, meta_n)
+		root[NAME][meta_n] = root[ANCESTOR_NAME][sample_n]
 
 		for meta_e in root.getInOutEdges(meta_n):
 			sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
@@ -57,7 +58,6 @@ def factor_nodes(graph, c_id2info, ns=None):
 			root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
 
 		if TYPE_REACTION == type_:
-			root[NAME][meta_n] = "generalized %s (%d)" % (root[NAME][sample_n], len(nodes))
 			root[REVERSIBLE][meta_n] = True
 			root[TRANSPORT][meta_n] = False
 			for sample_n in nodes:
@@ -67,8 +67,6 @@ def factor_nodes(graph, c_id2info, ns=None):
 					root[TRANSPORT][meta_n] = True
 			root[TERM][meta_n] = "\nor\n".join({root[TERM][it] for it in nodes})
 		else:
-			c_name, _, _ = c_id2info[c_id]
-			root[NAME][meta_n] = "%s (%d) [%s]" % (root[ANCESTOR_NAME][sample_n], len(nodes), c_name)
 			root[TERM][meta_n] = root[ANCESTOR_TERM][sample_n]
 
 		meta_ns.append(meta_n)

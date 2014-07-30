@@ -72,7 +72,7 @@ def e2feature(graph, e, scale, e_id):
 	return geojson.Feature(geometry=geom, properties=props) #, id=e_id)
 
 
-def n2feature(graph, n, scale, c_id2info, scale_coefficient, n_id):
+def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, n_id):
 	root = graph.getRoot()
 
 	geom = geojson.Point(scale(root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()))
@@ -82,7 +82,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, n_id):
 	generalized = graph.isMetaNode(n)
 	props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
 	if TYPE_REACTION == node_type:
-		ins, outs = get_formula(graph, n)
+		ins, outs = get_formula(graph, n, r2rs_ps)
 		transport = root[TRANSPORT][n]
 		genes = get_gene_association_list(root[TERM][n])
 		if genes:
@@ -162,16 +162,15 @@ def get_reaction_participants_inside_compartment(n, r, root):
 		return {s for s in root[VIEW_META_GRAPH][n].getNodes()}
 
 
-def get_formula(graph, r):
+def get_formula(graph, r, r2rs_ps):
 	root = graph.getRoot()
-	ins, outs = set(), set()
-	stoich_formatter = lambda edge, node: (root[NAME][node], int(root[STOICHIOMETRY][edge]))
-	for s_or_c in graph.getInOutNodes(r):
-		for s in get_reaction_participants_inside_compartment(s_or_c, r, root):
-			e = root.existEdge(s, r, False)
-			if root.isElement(e):
-				(ins if s == root.source(e) else outs).add(stoich_formatter(e, s))
-	return [[name, st] for (name, st) in sorted(ins)], [[name, st] for (name, st) in sorted(outs)]
+	name_prop = NAME
+	formatter = lambda (st, n), prop: [root[prop if root[prop][n] else NAME][n], int(st)]
+	if graph.isMetaNode(r):
+		r = root[VIEW_META_GRAPH][r].getOneNode()
+		name_prop = ANCESTOR_NAME
+	rs, ps = r2rs_ps[r]
+	return sorted(formatter(it, name_prop) for it in rs), sorted(formatter(it, name_prop) for it in ps)
 
 
 def rgb(rrggbb):
