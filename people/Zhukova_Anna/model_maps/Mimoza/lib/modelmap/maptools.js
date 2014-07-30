@@ -28,14 +28,14 @@ function adjustMapSize(mapId) {
     }
 }
 
-function getTiles(img) {
+function getTiles(img, minZoom, maxZoom) {
     "use strict";
     return L.tileLayer(img, {
         continuousWorld: true,
         noWrap: true,
         tileSize: 256,
-        maxZoom: 5,
-        minZoom: 0,
+        maxZoom: maxZoom,
+        minZoom: minZoom,
         tms: true,
         updateWhenIdle: true,
         reuseTiles: true
@@ -62,14 +62,14 @@ function handlePopUpClosing(map) {
 function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
     "use strict";
     var layers = [],
+        minZoom = Math.round(Math.min($(window).width(), $(window).height()) / MAP_DIMENSION_SIZE),
         ubLayer = L.layerGroup(),
-        tiles = getTiles("lib/modelmap/white.jpg"),
-        grayTiles =  getTiles("lib/modelmap/gray.jpg"),
+        tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom + minZoom),
+        grayTiles =  getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom + minZoom),
         overlays = {},
         cIds = {},
         cId = gup(),
         jsonData,
-        minZoom = 2,
         transportLayer = L.layerGroup(),
         compLayer = L.layerGroup();
     maxZoom += minZoom;
@@ -148,7 +148,7 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
 	        initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
-    map.setView([0, 0], minZoom);
+    map.setView([MAP_DIMENSION_SIZE / 4 * (minZoom + 1), MAP_DIMENSION_SIZE / 4 * (minZoom + 1)], minZoom);
     var baseLayers = {
         "White background": tiles,
         "Gray background": grayTiles
