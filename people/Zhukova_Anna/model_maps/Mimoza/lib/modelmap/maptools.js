@@ -64,15 +64,21 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
     var layers = [],
         ubLayer = L.layerGroup(),
         tiles = getTiles("lib/modelmap/white.jpg"),
-        gray_tiles =  getTiles("lib/modelmap/gray.jpg"),
+        grayTiles =  getTiles("lib/modelmap/gray.jpg"),
         overlays = {},
         cIds = {},
         cId = gup(),
-        jsonData;
+        jsonData,
+        minZoom = 2,
+        transportLayer = L.layerGroup(),
+        compLayer = L.layerGroup();
+    maxZoom += minZoom;
     layers.push(ubLayer);
-    layers.push(gray_tiles);
+    layers.push(grayTiles);
+    layers.push(compLayer);
+    layers.push(transportLayer);
     adjustMapSize(mapId);
-    cIds[TRANSPORT] = "<i>Transport reactions</i>";
+//    cIds[TRANSPORT] = "<i>Transport reactions</i>";
     if (cId == null && compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0) {
         cId = Object.keys(compIds)[0];
     }
@@ -81,14 +87,14 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
         jsonData = cId2jsonData[cId];
         $("#comp").html(compIds[cId]);
     }
-    for (cId in cIds) {
-        var cLayer = L.layerGroup();
-        layers.push(cLayer);
-        overlays[cIds[cId]] = cLayer;
-    }
+//    for (cId in cIds) {
+//        var cLayer = L.layerGroup();
+//        layers.push(cLayer);
+//        overlays[cIds[cId]] = cLayer;
+//    }
     var map = L.map(mapId, {
         maxZoom: maxZoom,
-        minZoom: 0,
+        minZoom: minZoom,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
         layers: layers,
@@ -107,16 +113,19 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
     };
     var name2popup = {},
         name2zoom = {},
-        compLayer,
         json,
-        z = 0,
-        maxLoadedZoom = Math.min(1, maxZoom);
-    for (z = 0; z <= maxLoadedZoom; z++) {
-        json = jsonData[z];
-        for (cId in cIds) {
-            compLayer = overlays[cIds[cId]];
+        z = minZoom,
+        maxLoadedZoom = Math.min(1 + minZoom, maxZoom);
+    for (z = minZoom; z <= maxLoadedZoom; z++) {
+        json = jsonData[z - minZoom];
+        if (cId) {
             loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
         }
+        loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
+//        for (cId in cIds) {
+//            compLayer = overlays[cIds[cId]];
+//            loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+//        }
     }
     initializeAutocomplete(name2popup, name2zoom, map);
     map.on('zoomend', function (e) {
@@ -125,22 +134,27 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
 	        for (z = maxLoadedZoom + 1; z <= mZoom; z++) {
-	            json = jsonData[z];
-	            for (cId in cIds) {
-	                compLayer = overlays[cIds[cId]];
-	                loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-	            }
+	            json = jsonData[z - minZoom];
+                if (cId) {
+                    loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+                }
+                loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
+//	            for (cId in cIds) {
+//	                compLayer = overlays[cIds[cId]];
+//	                loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+//	            }
 	        }
 	        maxLoadedZoom = mZoom;
 	        initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
-    map.setView([0, 0], 0);
+    map.setView([0, 0], minZoom);
     var baseLayers = {
         "White background": tiles,
-        "Gray background": gray_tiles
+        "Gray background": grayTiles
     };
     overlays["<i>Ubiquitous species</i>"] = ubLayer;
+    overlays["<i>Transport reactions</i>"] = transportLayer;
     L.control.layers(baseLayers, overlays).addTo(map);
     return map;
 }

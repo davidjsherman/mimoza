@@ -5,8 +5,8 @@ import geojson
 
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, merge_ubs_for_similar_reactions
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
-from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, FAKE, \
-	ID, CLONE_ID, COMPARTMENT_ID, NAME, TYPE_COMPARTMENT, TYPE
+from sbml_vis.graph.graph_properties import VIEW_META_GRAPH, MAX_ZOOM, MIN_ZOOM, ID, CLONE_ID, COMPARTMENT_ID, \
+	TYPE_COMPARTMENT, TYPE
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges
 from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
