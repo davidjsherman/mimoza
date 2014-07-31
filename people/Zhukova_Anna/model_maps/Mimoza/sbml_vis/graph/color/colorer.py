@@ -4,19 +4,19 @@ from sbml_vis.graph.graph_properties import TYPE_BG_SPECIES, TYPE_BG_REACTION, T
 
 GREY = "#B4B4B4"
 
-ORANGE = "#FDB462"
+ORANGE = "#EDB337"
 
-YELLOW = "#FFFFB3"
+YELLOW = "#F0DA78"
 
-RED = "#FB8072"
+RED = "#E37B6F"
 
-BLUE = "#80B1D3"
+BLUE = "#79A8C9"
 
-GREEN = "#B3DE69"
+GREEN = "#B1C95B"
 
-VIOLET = "#BEBADA"
+VIOLET = "#A595BF"
 
-TURQUOISE = "#8DD3C7"
+TURQUOISE = "#76C29B"
 
 WHITE = 'white'
 

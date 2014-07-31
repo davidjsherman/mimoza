@@ -138,6 +138,7 @@ print '''Content-Type: text/html;charset=utf-8
           <p class="centre indent">We are checking your model now...</p>
           <img class="img-centre" src="../%s" id="img" />
           <div id="hidden" style="visibility:hidden;height:0px;">''' % (MIMOZA_CSS, MIMOZA_FAVICON, scripts, LOADER_ICON)
+sys.stdout.flush()
 
 result, args = upload_file()
 url = MIMOZA_UPLOAD_ERROR_URL

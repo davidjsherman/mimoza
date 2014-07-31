@@ -60,27 +60,16 @@ function handlePopUpClosing(map) {
     });
 }
 
-function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
+function initializeMap(cId2jsonData, mapId, compIds) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
         minZoom = size == MAP_DIMENSION_SIZE / 2 ? 0 : Math.round(size / MAP_DIMENSION_SIZE),
         ubLayer = L.layerGroup(),
-        tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom + minZoom),
-        grayTiles =  getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom + minZoom),
         overlays = {},
         cIds = {},
         cId = gup(),
-        jsonData,
-        transportLayer = L.layerGroup(),
-        compLayer = L.layerGroup();
-    maxZoom = (maxZoom + 1) * 2 - 1;
-    maxZoom += minZoom;
-    layers.push(ubLayer);
-    layers.push(grayTiles);
-    layers.push(compLayer);
-    layers.push(transportLayer);
-//    cIds[TRANSPORT] = "<i>Transport reactions</i>";
+        jsonData;
     if (cId == null && compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0) {
         cId = Object.keys(compIds)[0];
     }
@@ -89,11 +78,19 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
         jsonData = cId2jsonData[cId];
         $("#comp").html(compIds[cId]);
     }
-//    for (cId in cIds) {
-//        var cLayer = L.layerGroup();
-//        layers.push(cLayer);
-//        overlays[cIds[cId]] = cLayer;
-//    }
+    if (typeof jsonData === 'undefined' || jsonData.length <= 0) {
+        return null;
+    }
+//    var maxZoom = jsonData.length * 2 - 1 + minZoom;
+    var maxZoom = jsonData.length - 1 + minZoom,
+        tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom + minZoom),
+        grayTiles =  getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom + minZoom),
+        transportLayer = L.layerGroup(),
+        compLayer = L.layerGroup();
+    layers.push(ubLayer);
+    layers.push(tiles);
+    layers.push(compLayer);
+    layers.push(transportLayer);
     var map = L.map(mapId, {
         maxZoom: maxZoom,
         minZoom: minZoom,
@@ -102,9 +99,6 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
         layers: layers,
         crs: L.CRS.Simple
     });
-    if (typeof jsonData === 'undefined' || jsonData.length <= 0) {
-        return map;
-    }
     var southWest = map.unproject([0 - MARGIN, MAP_DIMENSION_SIZE + MARGIN], 1),
         northEast = map.unproject([MAP_DIMENSION_SIZE + MARGIN, 0 - MARGIN], 1),
         bounds = new L.LatLngBounds(southWest, northEast);
@@ -118,18 +112,16 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
         json,
         z = minZoom,
         maxLoadedZoom = Math.min(1 + minZoom, maxZoom);
-    for (z = minZoom; z <= maxLoadedZoom; z += 2) {
-        json = jsonData[(z - minZoom) / 2];
+//    for (z = minZoom; z <= maxLoadedZoom; z += 2) {
+    for (z = minZoom; z <= maxLoadedZoom; z += 1) {
+//        json = jsonData[(z - minZoom) / 2];
+        json = jsonData[z - minZoom];
         if (cId) {
             loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-            loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+//            loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
         }
         loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
-        loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
-//        for (cId in cIds) {
-//            compLayer = overlays[cIds[cId]];
-//            loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-//        }
+//        loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
     }
     initializeAutocomplete(name2popup, name2zoom, map);
     map.on('zoomend', function (e) {
@@ -137,19 +129,17 @@ function initializeMap(cId2jsonData, mapId, maxZoom, compIds) {
             mZoom = Math.min(zoom + 1, maxZoom);
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
-	        for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
-	            json = jsonData[(z - minZoom) / 2];
+//	        for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
+	        for (z = maxLoadedZoom + 1; z <= mZoom; z += 1) {
+//	            json = jsonData[(z - minZoom) / 2];
+	            json = jsonData[z - minZoom];
                 if (cId) {
                     loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-                    loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
+//                    loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
                 }
                 loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
-                loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
-//	            for (cId in cIds) {
-//	                compLayer = overlays[cIds[cId]];
-//	                loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-//	            }
-	        }
+//                loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
+            }
 	        maxLoadedZoom = mZoom;
 	        initializeAutocomplete(name2popup, name2zoom, map);
         }

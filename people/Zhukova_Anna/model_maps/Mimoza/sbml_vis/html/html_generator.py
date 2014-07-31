@@ -1,3 +1,4 @@
+from sbml_vis.graph.color.colorer import *
 from sbml_vis.html import markup
 
 __author__ = 'anna'
@@ -75,18 +76,15 @@ def add_explanations(page):
 	page.p.close()
 
 	page.p(
-		'''%s - compartments; %s/%s/%s - generalised/specific/ubiquitous species; %s/%s/%s/%s - generalised transport/transport/generalised/other reactions.''' % (
-			format_color(255, 255, 179),
-			format_color(253, 180, 98), format_color(251, 128, 114),
-			format_color(180, 180, 180),
-			format_color(141, 211, 199), format_color(190, 186, 218),
-			format_color(179, 222, 105), format_color(128, 177, 211)))
+		"%s - compartments; %s/%s/%s - generalised/specific/ubiquitous species; %s/%s/%s/%s - generalised transport/transport/generalised/other reactions." % (
+			format_color(YELLOW),
+			format_color(ORANGE), format_color(RED), format_color(GREY),
+			format_color(TURQUOISE), format_color(VIOLET), format_color(GREEN), format_color(BLUE)))
 
 	page.div.close()
 
-
-def format_color(r, g, b, a=0.8):
-	return '<span style="background-color:rgba(%d, %d, %d, %.2f)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' % (r, g, b, a)
+def format_color(color):
+	return '<span style="background-color:%s">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' % color
 
 
 def add_map(page, map_id):
@@ -100,7 +98,7 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(page, json_files, c_id2json_vars, map_id, max_zoom, comps):
+def add_js(page, json_files, c_id2json_vars, map_id, comps):
 	# todo: max_zoom
 	max_zoom = 1
 
@@ -108,9 +106,9 @@ def add_js(page, json_files, c_id2json_vars, map_id, max_zoom, comps):
 		page.script(src=json, type="text/javascript")
 		page.script.close()
 	page.script('''
-        initializeMap({%s}, "%s", %d, %s);
+        initializeMap({%s}, "%s", %s);
     ''' % (", ".join(("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems())),
-	       map_id, max_zoom, comps), type="text/javascript")
+	       map_id, comps), type="text/javascript")
 
 
 def add_embed_button(page):
@@ -141,8 +139,9 @@ def add_embedding_dialog(page, url):
 	page.div.close()
 
 
-def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json_vars, groups_sbml_url, archive_url, scripts, css,
-                fav, map_id, max_zoom):
+def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
+                scripts, css,
+                fav, map_id):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -178,7 +177,7 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
 
 	page.div.close()
 
-	add_js(page, json_files, c_id2json_vars, map_id, max_zoom, c_id2name)
+	add_js(page, json_files, c_id2json_vars, map_id, c_id2name)
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -186,7 +185,7 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
 		f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
 
 
-def create_embedded_html(model, directory, json_files, json_vars, scripts, css, fav, map_id, max_zoom):
+def create_embedded_html(model, directory, json_files, json_vars, scripts, css, fav, map_id):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -199,7 +198,7 @@ def create_embedded_html(model, directory, json_files, json_vars, scripts, css, 
 
 	add_map(page, map_id)
 
-	add_js(page, json_files, json_vars, map_id, max_zoom, {c.getId(): c.getName() for c in model.getListOfCompartments()})
+	add_js(page, json_files, json_vars, map_id, {c.getId(): c.getName() for c in model.getListOfCompartments()})
 
 	with open('%s/comp_min.html' % directory, 'w+') as f:
 		f.write(str(page))

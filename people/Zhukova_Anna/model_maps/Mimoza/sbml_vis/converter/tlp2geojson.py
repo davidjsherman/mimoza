@@ -44,7 +44,7 @@ def get_reaction_by_edge(e, graph):
 	return r
 
 
-def e2feature(graph, e, scale, e_id):
+def e2feature(graph, e, scale):
 	root = graph.getRoot()
 	layout = root[VIEW_LAYOUT]
 	s, t = graph.source(e), graph.target(e)
@@ -69,10 +69,10 @@ def e2feature(graph, e, scale, e_id):
 		props[TRANSPORT] = True
 	if ubiquitous:
 		props[UBIQUITOUS] = True
-	return geojson.Feature(geometry=geom, properties=props) #, id=e_id)
+	return geojson.Feature(geometry=geom, properties=props)
 
 
-def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, n_id):
+def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps):
 	root = graph.getRoot()
 
 	geom = geojson.Point(scale(root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()))
@@ -135,7 +135,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, n_id):
 			bg_props[HEIGHT] = h
 			bg_props[COMPARTMENT_ID] = root[ID][n]
 		bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
-	return geojson.Feature(geometry=geom, properties=props), bg_feature #, id=n_id)
+	return geojson.Feature(geometry=geom, properties=props), bg_feature
 
 
 def get_gene_association_list(ga):
