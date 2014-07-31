@@ -23,9 +23,6 @@ TRANSPORT = "tr"
 
 VIEW_META_GRAPH = 'viewMetaGraph'
 
-MAX_ZOOM = "max_z"
-MIN_ZOOM = "min_z"
-
 FAKE = "fake"
 
 CLONE_ID = "clone_id"

@@ -3,8 +3,8 @@ from tulip import tlp
 from sbml_vis.graph.resize import get_n_size
 
 from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, TYPE_SPECIES, \
-	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, STOICHIOMETRY, COMPARTMENT_ID, VIEW_SHAPE, TERM, MAX_ZOOM, \
-	MIN_ZOOM, TRANSPORT, REVERSIBLE, CIRCLE_SHAPE
+	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, STOICHIOMETRY, COMPARTMENT_ID, VIEW_SHAPE, TERM,\
+	TRANSPORT, REVERSIBLE, CIRCLE_SHAPE
 
 
 OVERLAP_REMOVAL = "Fast Overlap Removal"
@@ -68,7 +68,7 @@ def layout_outer_elements(graph):
 def open_compartment(c, graph):
 	root = graph.getRoot()
 	prop2value = {prop: root[prop][c] for prop in
-	              [NAME, COMPARTMENT_ID, TYPE, VIEW_SHAPE, ID, TERM, VIEW_SIZE, MAX_ZOOM, MIN_ZOOM]}
+	              [NAME, COMPARTMENT_ID, TYPE, VIEW_SHAPE, ID, TERM, VIEW_SIZE]}
 	graph.openMetaNode(c)
 	return prop2value
 
@@ -305,8 +305,6 @@ def create_fake_rs(meta_graph):
 		r_n = r_to_meta_node(meta_graph, r)
 		if r_n:
 			mg = root[VIEW_META_GRAPH][r_n]
-			root[MAX_ZOOM][r_n] = max(root[MAX_ZOOM][n] for n in mg.getNodes())
-			root[MIN_ZOOM][r_n] = min(root[MIN_ZOOM][n] for n in mg.getNodes())
 
 
 def r_to_meta_node(meta_graph, r):
