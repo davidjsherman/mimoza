@@ -274,5 +274,5 @@ a.boxclose{
 }
 
 .boxclose:before {
-    content: "×";
+    content: "x";
 }
