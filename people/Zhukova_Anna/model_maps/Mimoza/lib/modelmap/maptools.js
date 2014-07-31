@@ -195,9 +195,10 @@ function centerMap() {
 function overlay() {
     "use strict";
     var el = document.getElementById("overlay");
-    el.style.visibility = (el.style.visibility === "visible") ? "hidden" : "visible";
     var $embed_w = $("#embed-size-width"),
         $embed_h = $("#embed-size-height");
+    update_embed_value($embed_w.val(), $embed_h.val());
+    el.style.visibility = (el.style.visibility === "visible") ? "hidden" : "visible";
     $embed_w.focusout(function() {
         var w = 800;
         if ($embed_w.val()) {
@@ -251,6 +252,11 @@ function gup(){
 
 function update_embed_value(w, h) {
     "use strict";
-    $("#embed-html-snippet").val("<iframe src=\"" + $("#embed-url").val()
-        + "\" width=\"" + w + "\" height=\"" + h + "\" frameborder=\"0\" style=\"border:0\"></iframe>");
+    var cId = gup(),
+        url = $("#embed-url").val();
+    if (cId) {
+        url += "?id=" + cId;
+    }
+    $("#embed-html-snippet").val("<iframe src=\"" + url + "\" width=\"" + w + "\" height=\"" + h
+        + "\" frameborder=\"0\" style=\"border:0\"></iframe>");
 }
