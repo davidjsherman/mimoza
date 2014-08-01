@@ -46,7 +46,7 @@ def e2feature(graph, e, scale, transport):
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 
 	ubiquitous = root[UBIQUITOUS][e]
-	props = {WIDTH: get_e_size(root, e).getW() / 4, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
+	props = {WIDTH: get_e_size(root, e).getW() / 2, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
 	         COLOR: get_edge_color(ubiquitous, generalized, transport)}
 	if not transport:
 		props["c_id"] = root[COMPARTMENT_ID][s]
