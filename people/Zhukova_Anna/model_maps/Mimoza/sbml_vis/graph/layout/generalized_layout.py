@@ -102,11 +102,11 @@ def rotate_generalized_ns(graph):
 			r = root[VIEW_SIZE][n].getW() / sqrt(2)
 			root[VIEW_SIZE][n] = tlp.Size(r, r)
 
-		o_n_1.extend(o_n_2)
-		for m in o_n_1:
-			beta = get_alpha(view_layout[m], view_layout[n])
-			if beta % 180 == 0:
-				view_layout.rotateZ(-5, mg)
+		# o_n_1.extend(o_n_2)
+		# for m in o_n_1:
+		# 	beta = get_alpha(view_layout[m], view_layout[n])
+		# 	if beta % 180 == 0:
+		# 		view_layout.rotateZ(-5, mg)
 
 
 def rotate_ub_ns(graph):

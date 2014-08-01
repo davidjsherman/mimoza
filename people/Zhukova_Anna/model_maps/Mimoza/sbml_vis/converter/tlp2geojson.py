@@ -32,19 +32,7 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 		return transformation(x, other_x), transformation(y, other_y)
 
 
-def get_reaction_by_edge(e, graph):
-	root = graph.getRoot()
-	s, t = graph.source(e), graph.target(e)
-	options = {t}
-	r = s
-	while not TYPE_REACTION == root[TYPE][r]:
-		if root.isMetaNode(r):
-			options |= {nd for nd in root[VIEW_META_GRAPH][r].getNodes()}
-		r = options.pop()
-	return r
-
-
-def e2feature(graph, e, scale):
+def e2feature(graph, e, scale, transport):
 	root = graph.getRoot()
 	layout = root[VIEW_LAYOUT]
 	s, t = graph.source(e), graph.target(e)
@@ -57,13 +45,11 @@ def e2feature(graph, e, scale):
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 
-	r = get_reaction_by_edge(e, graph)
-	transport = root[TRANSPORT][r]
 	ubiquitous = root[UBIQUITOUS][e]
 	props = {WIDTH: get_e_size(root, e).getW() / 4, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
 	         COLOR: get_edge_color(ubiquitous, generalized, transport)}
 	if not transport:
-		props["c_id"] = root[COMPARTMENT_ID][r]
+		props["c_id"] = root[COMPARTMENT_ID][s]
 	else:
 	# let's not store unneeded False
 		props[TRANSPORT] = True
@@ -72,7 +58,7 @@ def e2feature(graph, e, scale):
 	return geojson.Feature(geometry=geom, properties=props)
 
 
-def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps):
+def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport):
 	root = graph.getRoot()
 
 	geom = geojson.Point(scale(root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()))
@@ -83,7 +69,6 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps):
 	props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
 	if TYPE_REACTION == node_type:
 		ins, outs = get_formula(graph, n, r2rs_ps)
-		transport = root[TRANSPORT][n]
 		genes = get_gene_association_list(root[TERM][n])
 		if genes:
 			props[TERM] = genes
@@ -102,17 +87,14 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps):
 		term = root[TERM][n]
 		if term:
 			props[TERM] = term
-		props.update({HEIGHT: h, TRANSPORT: True, COLOR: get_compartment_color()})
+		props.update({HEIGHT: h, COLOR: get_compartment_color()})
 	elif TYPE_SPECIES == node_type:
 		ubiquitous = root[UBIQUITOUS][n]
 		if ubiquitous:
 			# let's not store unneeded False
 			props[UBIQUITOUS] = True
-		s_id = root[ID][n]
-		for rs in (root.getInOutNodes(m) for m in root.getNodes() if s_id == root[ID][m]):
-			if next((r for r in rs if root[TRANSPORT][r]), False) is not False:
+		if transport:
 				props[TRANSPORT] = True
-				break
 		# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
 		comp_name = c_id2info[c_id][0]
 		term = root[TERM][n]
@@ -122,7 +104,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps):
 
 	bg_feature = None
 	# if generalized:
-	if generalized and TYPE_COMPARTMENT != node_type:
+	if generalized:
 		node_type = TYPE_2_BG_TYPE[node_type]
 		transport = TRANSPORT in props
 		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport)}

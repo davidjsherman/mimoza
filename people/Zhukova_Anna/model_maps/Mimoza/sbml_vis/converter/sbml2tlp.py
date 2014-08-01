@@ -195,13 +195,14 @@ def create_props(graph):
 	graph.getBooleanProperty(UBIQUITOUS)
 
 	graph.getLayoutProperty(VIEW_LAYOUT)
-	# graph.getColorProperty(VIEW_COLOR)
 	graph.getIntegerProperty(VIEW_SHAPE)
 	graph.getSizeProperty(VIEW_SIZE)
 
 	graph.getBooleanProperty(FAKE)
 
 	graph.getIntegerProperty(CLONE_ID)
+
+	graph.getStringVectorProperty(RELATED_COMPARTMENT_IDS)
 
 
 def duplicate_nodes(graph):

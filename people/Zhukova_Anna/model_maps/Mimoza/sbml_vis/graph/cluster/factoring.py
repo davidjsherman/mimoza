@@ -46,7 +46,7 @@ def factor_nodes(graph, ns=None):
 		sample_n = nodes[0]
 		meta_n = graph.createMetaNode(nodes, False)
 
-		for prop in [COMPARTMENT_ID, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_SHAPE]:
+		for prop in [COMPARTMENT_ID, TYPE, REVERSIBLE, UBIQUITOUS, VIEW_SHAPE, RELATED_COMPARTMENT_IDS]:
 			root[prop][meta_n] = root[prop][sample_n]
 		root[ID][meta_n] = root[ANCESTOR_ID][sample_n]
 		root[VIEW_SIZE][meta_n] = get_n_size(root, meta_n)

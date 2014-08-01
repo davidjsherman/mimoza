@@ -8,6 +8,7 @@ ANCESTOR_NAME = "anc_name"
 
 COMPARTMENT_ID = "c_id"
 COMPARTMENT_NAME = "c_name"
+RELATED_COMPARTMENT_IDS = "rel_c_ids"
 
 VIEW_COLOR = "viewColor"
 
