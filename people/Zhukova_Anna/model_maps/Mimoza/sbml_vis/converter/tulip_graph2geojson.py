@@ -116,6 +116,11 @@ def meta_graph2features(c_id2info, meta_graph, r2rs_ps):
 								update_level2features(f, c_id2level2features, z, s_c_id)
 					# 1.1.2. between a reaction and a species
 					else:
+						# let's check that if one of the species/reaction pair is simple but generalizable,
+						# then the other one is also simple
+						# (if one is generalized and the other is not it's an intermediate state not to be exported)
+						if (root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]) and (meta_graph.isMetaNode(s) or meta_graph.isMetaNode(t)):
+							continue
 						f = e2feature(meta_graph, e, scale, root[TRANSPORT][s] or root[TRANSPORT][t])
 						# 1.1.2.a. between a generalized reaction/species and some reaction/species
 						if meta_graph.isMetaNode(s) or meta_graph.isMetaNode(t):
@@ -148,12 +153,22 @@ def meta_graph2features(c_id2info, meta_graph, r2rs_ps):
 			comp_id = root[ID][s] if TYPE_COMPARTMENT == s_type else (root[ID][t] if TYPE_COMPARTMENT == t_type else None)
 			# 3. between our closed compartment and something outside
 			if comp_id:
+				# then this something outside shouldn't be an opened generalizable reaction/species
+				# (not for our compartment's feature list)
+				element = s if TYPE_COMPARTMENT != s_type else t
+				if root[ANCESTOR_ID][element]:
+					continue
 				scale, _ = c_id2scales[comp_id]
 				f = e2feature(meta_graph, e, scale, True)
 				update_level2features(f, c_id2level2features, 0, comp_id)
 			# 4. between some reaction and some species,
-			# at least one of which is outside our compartment
+			# at least one of which is outside of our compartment
 			else:
+				# let's check that if one of the species/reaction pair is simple but generalizable,
+				# then the other one is also simple
+				# (if one is generalized and the other is not it's an intermediate state not to be exported)
+				if (root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]) and (meta_graph.isMetaNode(s) or meta_graph.isMetaNode(t)):
+					continue
 				# the reaction
 				r = s if TYPE_REACTION == s_type else t
 				related_c_ids = set(root[RELATED_COMPARTMENT_IDS][r])
