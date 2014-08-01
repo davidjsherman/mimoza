@@ -171,7 +171,7 @@ def import_sbml(input_model, sbml_file, verbose=False):
 
 	log(verbose, 'marking species/reaction groups')
 	mark_ancestors(graph, r_id2g_id, s_id2gr_id, c_id2info)
-	return graph, c_id2info
+	return graph, c_id2info, c_id2outs
 
 
 def create_props(graph):
