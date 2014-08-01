@@ -112,7 +112,10 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
         content += compartment + ch + transported;
         label += compartment + transported;
     } else if (COMPARTMENT == feature.properties.type) {
-        content += p(formatGo(feature.properties.term)) + p(formatLink(feature.properties.id)); // + link;
+        content += p(formatGo(feature.properties.term));
+        if (zoom > map.getMinZoom()) {
+            content += p(formatLink(feature.properties.id));
+        }
     }
     var size = $('#' + mapId).height(),
         e = feature.geometry.coordinates,
