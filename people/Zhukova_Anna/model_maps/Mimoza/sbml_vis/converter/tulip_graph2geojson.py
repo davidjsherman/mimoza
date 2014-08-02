@@ -24,19 +24,10 @@ __author__ = 'anna'
 
 def get_scales_by_metagraph(mg):
 	bb = tlp.computeBoundingBox(mg)
-	c_x, c_y = bb.center()[0], bb.center()[1]
-	bb_w, bb_h = bb.width() / 2, bb.height() / 2
-	min_x, min_y, max_x, max_y = c_x - bb_w, c_y - bb_h, c_x + bb_w, c_y + bb_h
-	w, h = max_x - min_x, max_y - min_y
-	if w > h:
-		max_y += (w - h) / 2
-	elif h > w:
-		min_x -= (h - w) / 2
-	scale_coefficient = DIMENSION / max(w, h)
+	scale_coefficient = DIMENSION / max(bb.width(), bb.height())
 
 	def scale(x, y):
-		x, y = (x - min_x) * scale_coefficient, (max_y - y) * scale_coefficient
-		return [float(x), float(y)]
+		return [float(x * scale_coefficient), float(y * scale_coefficient)]
 
 	return scale, scale_coefficient
 

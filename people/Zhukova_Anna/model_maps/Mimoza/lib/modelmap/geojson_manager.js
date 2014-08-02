@@ -20,7 +20,7 @@ var TRANSPORT = "transport";
 
 var MIN_CLICKABLE_R = 4;
 
-function pnt2layer(map, feature, zoom) {
+function pnt2layer(map, feature, zoom, coords) {
     "use strict";
     var e = feature.geometry.coordinates,
         scaleFactor = Math.pow(2, zoom),
@@ -62,7 +62,7 @@ function pnt2layer(map, feature, zoom) {
         centre;
     var node = null;
     if (BG_REACTION == feature.properties.type) {
-        h = feature.properties.w;
+        h = w;
         bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
         return L.rectangle(bounds, props);
     }
@@ -78,7 +78,7 @@ function pnt2layer(map, feature, zoom) {
         return node;
     }
     if (REACTION == feature.properties.type) {
-        h = feature.properties.w;
+        h = w;
         bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
         node = L.rectangle(bounds, props);
     } else if (COMPARTMENT == feature.properties.type) {
@@ -92,6 +92,13 @@ function pnt2layer(map, feature, zoom) {
     } else {
         return null;
     }
+    var ne = node.getBounds().getNorthEast(),
+        sw = node.getBounds().getSouthWest();
+    coords[0][0] = coords[0][0] == null ? sw.lat : Math.min(coords[0][0], sw.lat);
+    coords[0][1] = coords[0][1] == null ? sw.lng : Math.max(coords[0][1], sw.lng);
+    coords[1][0] = coords[1][0] == null ? ne.lat : Math.max(coords[1][0], ne.lat);
+    coords[1][1] = coords[1][1] == null ? ne.lng : Math.min(coords[1][1], ne.lng);
+
     node = L.featureGroup([node]);
     w *= scaleFactor;
     if (COMPARTMENT == feature.properties.type){
@@ -124,12 +131,12 @@ function matchesCompartment(cId, feature) {
     return cId === feature.properties.c_id || cId === feature.properties.id;
 }
 
-function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, filterFunction) {
+function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, filterFunction) {
     "use strict";
     var name2selection = {};
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, zoom);
+            return pnt2layer(map, feature, zoom, coords);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom);
@@ -140,15 +147,14 @@ function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, filterFun
     });
 }
 
-function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom) {
+function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords) {
     "use strict";
-    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId,
+    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords,
             function (feature) {
-                var result = (typeof feature.properties.ub === 'undefined' || !feature.properties.ub) && matchesCompartment(cId, feature);
-                return  result;
+                return (typeof feature.properties.ub === 'undefined' || !feature.properties.ub) && matchesCompartment(cId, feature);
             }
         ),
-        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId,
+        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords,
             function (feature) {
                 return (typeof feature.properties.ub !== 'undefined' && feature.properties.ub) && matchesCompartment(cId, feature);
             }

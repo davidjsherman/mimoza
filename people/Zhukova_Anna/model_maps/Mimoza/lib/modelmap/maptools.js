@@ -85,7 +85,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom),
         grayTiles =  getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom),
         transportLayer = L.layerGroup(),
-        compLayer = L.layerGroup();
+        compLayer = L.featureGroup();
     layers.push(ubLayer);
     layers.push(tiles);
     layers.push(compLayer);
@@ -98,10 +98,6 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         layers: layers,
         crs: L.CRS.Simple
     });
-    var southWest = map.unproject([0 - MARGIN, MAP_DIMENSION_SIZE + MARGIN], 1),
-        northEast = map.unproject([MAP_DIMENSION_SIZE + MARGIN, 0 - MARGIN], 1),
-        bounds = new L.LatLngBounds(southWest, northEast);
-    map.setMaxBounds(bounds);
     handlePopUpClosing(map);
     window.onresize = function (event) {
         adjustMapSize(mapId);
@@ -110,10 +106,19 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         name2zoom = {},
         json,
         z = minZoom,
-        maxLoadedZoom = minZoom;
+        maxLoadedZoom = minZoom,
+        coords = [[null, null], [null, null]];
     json = jsonData[0];
-    loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-    loadGeoJson(map, json, minZoom, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
+    loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+    loadGeoJson(map, json, minZoom, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+
+    var margin = Math.max(coords[1][0] - coords[0][0], coords[0][1] - coords[1][1]) * 0.1;
+    coords[0][0] -= margin;
+    coords[0][1] += margin;
+    coords[1][0] += margin;
+    coords[1][1] -= margin;
+    map.setMaxBounds(coords);
+    map.fitBounds(coords);
 
     initializeAutocomplete(name2popup, name2zoom, map);
     map.on('zoomend', function (e) {
@@ -125,16 +130,15 @@ function initializeMap(cId2jsonData, mapId, compIds) {
 //	        for (z = maxLoadedZoom + 1; z <= mZoom; z += 1) {
 	            json = jsonData[(z + 1 - minZoom) / 2];
 //	            json = jsonData[z - minZoom];
-                loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-                loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom);
-                loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
-                loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom);
+                loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+                loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+                loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+                loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
             }
 	        maxLoadedZoom = mZoom;
 	        initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
-    map.setView([MAP_DIMENSION_SIZE / 4 * (minZoom + 1), MAP_DIMENSION_SIZE / 4 * (minZoom + 1)], minZoom);
     var baseLayers = {
         "White background": tiles,
         "Gray background": grayTiles
