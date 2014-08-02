@@ -7,7 +7,7 @@ from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, me
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import ID, COMPARTMENT_ID, \
 	TYPE_COMPARTMENT, TYPE, TYPE_REACTION, STOICHIOMETRY, RELATED_COMPARTMENT_IDS, TYPE_SPECIES, ANCESTOR_ID, TRANSPORT, \
-	CLONE_ID, NAME
+	CLONE_ID
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges
 from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
@@ -15,9 +15,6 @@ from sbml_generalization.utils.logger import log
 
 
 DIMENSION = 512
-
-CELL_GO_ID = 'go:0005623'
-CELL = 'cell'
 
 __author__ = 'anna'
 
@@ -59,7 +56,7 @@ def export_edges(c_id2level2features, c_id2scales, c_id2outs, meta_graph, proces
 	# we are about to add the feature
 	for e in meta_graph.getEdges():
 		s, t = meta_graph.source(e), meta_graph.target(e)
-		e_id = "%s-%s" % (get_id(s), get_id(t))
+		e_id = "-".join(sorted([get_id(s), get_id(t)]))
 		if e_id in processed:
 			continue
 		processed.add(e_id)

@@ -302,9 +302,7 @@ def create_fake_rs(meta_graph):
 	root = meta_graph.getRoot()
 	r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
 	for r in r_ns:
-		r_n = r_to_meta_node(meta_graph, r)
-		if r_n:
-			mg = root[VIEW_META_GRAPH][r_n]
+		r_to_meta_node(meta_graph, r)
 
 
 def r_to_meta_node(meta_graph, r):
