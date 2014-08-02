@@ -341,6 +341,13 @@ To avoid clutter we duplicate all the ubiquitous metabolites before applying the
 
 \subsubsection*{Generalization-based full model layout}
 The layout for the full model is based on the corresponding generalized model's layout. To allow for zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model.
+
+\subsubsection*{Relative positions of the compartments}
+Metabolic models may include several compartments, nested into each other. For example, the \emph{peroxisome} compartment is surrounded by its \emph{membrane}, and contained in \emph{cytoplasm}; the \emph{cytoplasm} is part of the \emph{cell}, which is surrounded by the \emph{cell envelope}.
+
+SBML allows to represent relative positions of the compartments in the model with an optional \emph{outside} tag. However, it is not widely used.
+
+To be able to visualise the compartments correctly even for the models lacking this information, we infer their relative positions from the Gene Ontology (GO)\cite{Ashburner2000}. We associate each compartment with a term from the \emph{cellular component} branch of GO by using annotations in the model if they are present, or matching the compartments' names otherwise. We then use the \emph{part\_of} and \emph{is\_a} relationships between the terms in GO to infer relative compartment positions. If no term for a compartment could be found, it is placed on the outer-most level. 
  
 \subsection*{ZUI}
 
