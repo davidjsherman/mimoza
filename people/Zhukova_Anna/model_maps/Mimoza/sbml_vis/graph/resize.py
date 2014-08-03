@@ -6,8 +6,9 @@ UBIQUITOUS_SPECIES_SIZE = 2
 
 REACTION_SIZE = 1.5
 
-UBIQUITOUS_EDGE_SIZE = 0.2
-EDGE_SIZE = 0.3
+UBIQUITOUS_EDGE_SIZE = 0.5
+EDGE_SIZE = 1
+GENERALIZED_EDGE_SIZE = 2
 COMP_EDGE_SIZE = 4
 
 
@@ -54,8 +55,12 @@ def get_e_size(graph, e):
 	root = graph.getRoot()
 	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 	if ubiquitous[e]:
-		return tlp.Size(UBIQUITOUS_EDGE_SIZE, UBIQUITOUS_EDGE_SIZE)
+		sz = UBIQUITOUS_EDGE_SIZE
+	elif graph.isMetaEdge(e) and len(graph.getRoot()[VIEW_META_GRAPH][e]) > 1:
+		sz = EDGE_SIZE
+	else:
+		sz = GENERALIZED_EDGE_SIZE
 	# l = get_e_length(graph, e)
 	# sz = EDGE_SIZE * l if l else COMP_EDGE_SIZE
-	sz = get_e_length(graph, e) * EDGE_SIZE
+	# sz = get_e_length(graph, e) * EDGE_SIZE
 	return tlp.Size(sz, sz)

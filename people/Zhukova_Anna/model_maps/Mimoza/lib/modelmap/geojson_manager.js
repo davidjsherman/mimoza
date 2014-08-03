@@ -32,7 +32,7 @@ function pnt2layer(map, feature, zoom, coords) {
         }), {
             color: feature.properties.color,
             opacity: 1,
-            weight: w * scaleFactor,
+            weight: w,
             lineCap: 'round',
             lineJoin: 'round',
             clickable: false,
