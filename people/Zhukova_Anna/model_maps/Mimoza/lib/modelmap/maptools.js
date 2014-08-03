@@ -60,11 +60,22 @@ function handlePopUpClosing(map) {
     });
 }
 
+function updateMapBounds(coords, map) {
+    var mapW = coords[1][0] - coords[0][0],
+        mapH = coords[0][1] - coords[1][1],
+        margin = Math.max(mapW, mapH) * 0.1;
+    coords[0][0] -= margin;
+    coords[0][1] += margin;
+    coords[1][0] += margin;
+    coords[1][1] -= margin;
+    map.setMaxBounds(coords);
+}
+
 function initializeMap(cId2jsonData, mapId, compIds) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
-        minZoom = size == MAP_DIMENSION_SIZE / 2 ? 0 : Math.round(size / MAP_DIMENSION_SIZE),
+        minZoom = size == MAP_DIMENSION_SIZE / 2 ? 0 : Math.max(0, Math.round(size / MAP_DIMENSION_SIZE) - 1),
         ubLayer = L.layerGroup(),
         overlays = {},
         cIds = {},
@@ -81,9 +92,9 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     if (typeof jsonData === 'undefined' || jsonData.length <= 0) {
         return null;
     }
-    var maxZoom = 4 + minZoom,//jsonData.length - 1 + minZoom,
+    var maxZoom = 4 + minZoom,
         tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom),
-        grayTiles =  getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom),
+        grayTiles = getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom),
         transportLayer = L.layerGroup(),
         compLayer = L.layerGroup();
     layers.push(ubLayer);
@@ -107,18 +118,18 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         json,
         z = minZoom,
         maxLoadedZoom = minZoom,
-        coords = [[null, null], [null, null]];
+        coords = [
+            [null, null],
+            [null, null]
+        ];
     json = jsonData[0];
     loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
     loadGeoJson(map, json, minZoom, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
 
-    var margin = Math.max(coords[1][0] - coords[0][0], coords[0][1] - coords[1][1]) * 0.1;
-    coords[0][0] -= margin;
-    coords[0][1] += margin;
-    coords[1][0] += margin;
-    coords[1][1] -= margin;
-    map.setMaxBounds(coords);
-    map.fitBounds(coords, {maxZoom: minZoom});
+    updateMapBounds(coords, map);
+    var mapW = coords[1][0] - coords[0][0],
+        mapH = coords[0][1] - coords[1][1];
+    map.setView([coords[0][0] + mapW / 2, coords[1][1] + mapH / 2], minZoom);
 
     initializeAutocomplete(name2popup, name2zoom, map);
     map.on('zoomend', function (e) {
@@ -126,17 +137,16 @@ function initializeMap(cId2jsonData, mapId, compIds) {
             mZoom = Math.min(zoom + 1, maxZoom);
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
-	        for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
-//	        for (z = maxLoadedZoom + 1; z <= mZoom; z += 1) {
-	            json = jsonData[(z + 1 - minZoom) / 2];
-//	            json = jsonData[z - minZoom];
+            for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
+                json = jsonData[(z + 1 - minZoom) / 2];
                 loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
                 loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
                 loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
                 loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
             }
-	        maxLoadedZoom = mZoom;
-	        initializeAutocomplete(name2popup, name2zoom, map);
+            updateMapBounds(coords, map);
+            maxLoadedZoom = mZoom;
+            initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
     var baseLayers = {
