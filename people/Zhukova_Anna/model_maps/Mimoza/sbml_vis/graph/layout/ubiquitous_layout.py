@@ -1,6 +1,6 @@
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
-from sbml_vis.graph.resize import get_n_size
+from sbml_vis.graph.resize import get_n_size, UBIQUITOUS_SPECIES_SIZE, REACTION_SIZE
 
 from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, TYPE_SPECIES, \
 	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, STOICHIOMETRY, COMPARTMENT_ID, VIEW_SHAPE, TERM,\
@@ -191,12 +191,13 @@ def get_reaction_r(r, root):
 def bend_ubiquitous_edges(graph, nodes):
 	root = graph.getRoot()
 	for r in (r for r in nodes if TYPE_REACTION == root[TYPE][r]):
-		r_lo = root[VIEW_LAYOUT][r]
-		r_r = get_reaction_r(r, root) * 1.5
+		r_x, r_y = root[VIEW_LAYOUT][r].getX(), root[VIEW_LAYOUT][r].getY()
+		# r_r = get_reaction_r(r, root) + UBIQUITOUS_SPECIES_SIZE
+		r_r = REACTION_SIZE * sqrt(2) / 2 + UBIQUITOUS_SPECIES_SIZE
 		for s in (s for s in graph.getInOutNodes(r) if root[UBIQUITOUS][s] or not graph.isMetaNode(s)):
-			s_lo = root[VIEW_LAYOUT][s]
-			alpha = atan2(s_lo.getY() - r_lo.getY(), s_lo.getX() - r_lo.getX())
-			x0, y0 = r_lo.getX() + r_r * cos(alpha), r_lo.getY() + r_r * sin(alpha)
+			s_x, s_y = root[VIEW_LAYOUT][s].getX(), root[VIEW_LAYOUT][s].getY()
+			alpha = atan2(s_y - r_y, s_x - r_x)
+			x0, y0 = r_x + r_r * cos(alpha), r_y + r_r * sin(alpha)
 			for m in root[VIEW_META_GRAPH][r].getNodes():
 				for e in root.getInOutEdges(m):
 					if s == root.target(e) or s == root.source(e):
@@ -207,7 +208,7 @@ def bend_edges(graph):
 	root = graph.getRoot()
 	for r in (r for r in graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
 		r_x, r_y = root[VIEW_LAYOUT][r].getX(), root[VIEW_LAYOUT][r].getY()
-		r_r = get_reaction_r(r, root) * 2
+		r_r = get_reaction_r(r, root) + UBIQUITOUS_SPECIES_SIZE / 2
 		reactants, products = list(graph.getInNodes(r)), list(graph.getOutNodes(r))
 
 		def get_bend_coord(species):
@@ -219,19 +220,17 @@ def bend_edges(graph):
 				             [root[VIEW_LAYOUT][s].getY() for s in species]
 				s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
 			r_species_angle = atan2(s_y - r_y, s_x - r_x)
-			return tlp.Coord(r_x + r_r * cos(r_species_angle), r_y + r_r * sin(r_species_angle)), sample_species
+			return tlp.Coord(r_x + r_r * cos(r_species_angle), r_y + r_r * sin(r_species_angle))
 
 		if len(products) > 1:
-			product_lo, sample_product = get_bend_coord(products)
+			product_lo = get_bend_coord(products)
 			for e in graph.getOutEdges(r):
-				# if graph.target(e) != sample_product:
-					root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
+				root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
 
 		if len(reactants) > 1:
-			reactant_lo, sample_reactant = get_bend_coord(reactants)
+			reactant_lo = get_bend_coord(reactants)
 			for e in graph.getInEdges(r):
-				# if graph.source(e) != sample_reactant:
-					root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
+				root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
 
 
 def layout_ub_reaction(r_graph, r):
@@ -248,47 +247,30 @@ def layout_ub_reaction(r_graph, r):
 			participants_len = len(participants)
 			if not participants_len:
 				continue
-			if participants_len % 2 == 1:
+			even_num_of_participants = participants_len % 2 == 1
+			if even_num_of_participants:
 				participants_len += 1
-			max_participant_w = max(root[VIEW_SIZE][nd].getW() for nd in participants)
 
-			edge_len = r_radius + max_participant_w * (participants_len / 2) * 0.7
-
-			angle_from_top_to_bottom = 2 * min(100, max(60, participants_len * 20))
+			angle_from_top_to_bottom = 2 * min(90, max(40, participants_len * 20))
 			d_angle = radians(angle_from_top_to_bottom / (participants_len - 1))
 			angle_top = radians(angle_from_top_to_bottom / 2)
+			towards_edge = -1
+
 			angle = angle_top
 
-			from_r_centre_till_edge_bend = r_radius + max_participant_w / 2
-			# edge-after-bend length
-			from_edge_bend_till_end = edge_len - from_r_centre_till_edge_bend
-			from_edge_bend_till_end_current = min(max_participant_w / 2 + r_radius, from_edge_bend_till_end)
-			d_edge = (from_edge_bend_till_end - from_edge_bend_till_end_current) / (participants_len / 2)
-
-			towards_edge = -1
-			x0, y0 = r_x + (r_radius + from_r_centre_till_edge_bend) * direction, r_y
 			for ub in participants:
-				e = next(r_graph.getInOutEdges(ub), None)
-				if not e:
-					continue
-				# it is the only edge as ubiquitous species are duplicated
-				# view_layout[e] = [tlp.Coord(x0, y0)]
-				if r_graph.isMetaEdge(e):
-					for inner_e in root[VIEW_META_GRAPH][e]:
-						view_layout[inner_e] = [tlp.Coord(x0, y0)]
-
-				end_x, end_y = x0 + from_edge_bend_till_end_current * direction * cos(
-					angle), y0 + from_edge_bend_till_end_current * direction * sin(
-					angle)
+				edge = (r_radius + root[VIEW_SIZE][ub].getW() * 1.5) * direction
+				end_x = r_x + edge * cos(angle)
+				end_y = r_y + edge * sin(angle)
 				view_layout[ub] = tlp.Coord(end_x, end_y)
 
 				if degrees(angle) * degrees(angle + towards_edge * d_angle) < 0:
 					angle = -angle_top
-					from_edge_bend_till_end_current = min(max_participant_w / 2 + r_radius, from_edge_bend_till_end)
 					towards_edge = 1
+					if even_num_of_participants:
+						angle += towards_edge * d_angle
 				else:
 					angle += towards_edge * d_angle
-					from_edge_bend_till_end_current += d_edge
 	else:
 		x, y = 0, 0
 		for m in sorted(nodes_of_interest, key=lambda nd: (root.isElement(root.existEdge(nd, r, True)), root[ID][nd])):

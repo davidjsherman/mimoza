@@ -124,7 +124,7 @@ def rotate_ub_ns(graph):
 		sp_reactants, sp_products = sorted(reactants - ub_reactants, key=order), \
 		                            sorted(products - ub_products, key=order)
 
-		reactant_angle, product_angle = 0, 0
+		reactant_angle, product_angle = None, None
 		if sp_reactants:
 			sample_reactant = sp_reactants[0]
 			s_x, s_y = view_layout[sample_reactant].getX(), view_layout[sample_reactant].getY()
@@ -136,13 +136,19 @@ def rotate_ub_ns(graph):
 			s_x, s_y = view_layout[sample_product].getX(), view_layout[sample_product].getY()
 			product_angle = degrees(atan2(s_y - r_y, s_x - r_x))
 			if not sp_reactants:
-				reactant_angle = product_angle + 180
+				reactant_angle = product_angle - 180
 
 		if not (reactant_angle is None) and ub_reactants:
 			cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in ub_reactants], \
 			             [root[VIEW_LAYOUT][s].getY() for s in ub_reactants]
 			s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
-			reactant_angle -= degrees(atan2(s_y - r_y, s_x - r_x))
+			current_angle = degrees(atan2(s_y - r_y, s_x - r_x))
+			if len(ub_reactants) == 1:
+				current_angle -= 20
+			reactant_angle -= current_angle
+
+			if root[ID][r] == "r_0532":
+				print reactant_angle
 
 			mg = graph.inducedSubGraph(ub_reactants)
 			view_layout.translate(tlp.Coord(-r_x, -r_y))
@@ -154,7 +160,13 @@ def rotate_ub_ns(graph):
 			cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in ub_products],\
 			             [root[VIEW_LAYOUT][s].getY() for s in ub_products]
 			s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
-			product_angle -= degrees(atan2(s_y - r_y, s_x - r_x))
+			current_angle = (degrees(atan2(s_y - r_y, s_x - r_x)))
+			if len(ub_products) == 1:
+				current_angle -= 20
+			product_angle -= current_angle
+
+			if root[ID][r] == "r_0532":
+				print product_angle
 
 			mg = graph.inducedSubGraph(ub_products)
 			view_layout.translate(tlp.Coord(-r_x, -r_y))

@@ -85,7 +85,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom),
         grayTiles =  getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom),
         transportLayer = L.layerGroup(),
-        compLayer = L.featureGroup();
+        compLayer = L.layerGroup();
     layers.push(ubLayer);
     layers.push(tiles);
     layers.push(compLayer);
@@ -118,7 +118,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     coords[1][0] += margin;
     coords[1][1] -= margin;
     map.setMaxBounds(coords);
-    map.fitBounds(coords);
+    map.fitBounds(coords, {maxZoom: minZoom});
 
     initializeAutocomplete(name2popup, name2zoom, map);
     map.on('zoomend', function (e) {
