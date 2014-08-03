@@ -1,9 +1,9 @@
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
-from sbml_vis.graph.resize import get_n_size, UBIQUITOUS_SPECIES_SIZE, REACTION_SIZE
 
+from sbml_vis.graph.resize import get_n_size, UBIQUITOUS_SPECIES_SIZE, REACTION_SIZE
 from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, TYPE_SPECIES, \
-	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, STOICHIOMETRY, COMPARTMENT_ID, VIEW_SHAPE, TERM,\
+	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, COMPARTMENT_ID, VIEW_SHAPE, TERM,\
 	TRANSPORT, REVERSIBLE, CIRCLE_SHAPE
 
 
@@ -31,10 +31,8 @@ def layout_outer_elements(graph):
 
 	comps = [c for c in graph.getNodes() if TYPE_COMPARTMENT == root[TYPE][c]]
 	for c in comps:
-		c_w, c_h = root[VIEW_SIZE][c].getW() / 2, root[VIEW_SIZE][c].getH() / 2
-		c_x, c_y = root[VIEW_LAYOUT][c].getX(), root[VIEW_LAYOUT][c].getY()
-		c_bottom_x, c_bottom_y = c_x - c_w, c_y - c_h
-		c_top_x, c_top_y = c_x + c_w, c_y + c_h
+		c_bottom_x, c_bottom_y, c_top_x, c_top_y = get_comp_borders(c, root)
+		c_w, c_h = (c_top_x - c_bottom_x) / 2, (c_top_y - c_bottom_y) / 2
 		rs = [r for r in graph.getInOutNodes(c) if graph.deg(r) == 1]
 		comp_mg = root[VIEW_META_GRAPH][c]
 		for r in rs:
@@ -65,123 +63,74 @@ def layout_outer_elements(graph):
 		root.delAllSubGraphs(rs_graph)
 
 
-def open_compartment(c, graph):
-	root = graph.getRoot()
-	prop2value = {prop: root[prop][c] for prop in
-	              [NAME, COMPARTMENT_ID, TYPE, VIEW_SHAPE, ID, TERM, VIEW_SIZE]}
-	graph.openMetaNode(c)
-	return prop2value
-
-
-def close_compartment(comp_mg, graph, prop2value):
-	root = graph.getRoot()
-
-	new_c = graph.createMetaNode(comp_mg, False)
-	for prop, value in prop2value.iteritems():
-		root[prop][new_c] = value
-	for meta_e in root.getInOutEdges(new_c):
-		sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
-		root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
-		root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
-	return new_c
-
-
-def layout_inner_elements(graph):
-	root = graph.getRoot()
-
-	comps = [c for c in graph.getNodes() if TYPE_COMPARTMENT == root[TYPE][c]]
-	for c in comps:
-		c_w, c_h = root[VIEW_SIZE][c].getW() / 2, root[VIEW_SIZE][c].getH() / 2
-		c_x, c_y = root[VIEW_LAYOUT][c].getX(), root[VIEW_LAYOUT][c].getY()
-		c_bottom_x, c_bottom_y = c_x - c_w, c_y - c_h
-		c_top_x, c_top_y = c_x + c_w, c_y + c_h
-		comp_mg = root[VIEW_META_GRAPH][c]
-		prop2value = open_compartment(c, graph)
-
-		create_fake_rs(comp_mg)
-
-		def get_neighbour_nodes(r):
-			result = [s for s in root.getInOutNodes(r) if graph.isElement(s)]
-			if root[FAKE][r]:
-				for inner_r in root[VIEW_META_GRAPH][r].getNodes():
-					result.extend([s for s in root.getInOutNodes(inner_r) if graph.isElement(s)])
-			return result
-
-		rs = [r for r in comp_mg.getNodes() if comp_mg.deg(r) == 0]
-		for r in rs:
-			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
-			ss = get_neighbour_nodes(r)
-			if not ss:
-				continue
-			ss_not_ub = [s for s in ss if not ub_or_single(s, graph)]
-			if ss_not_ub:
-				ss = ss_not_ub
-			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() for s in ss) / len(ss), sum(
-				root[VIEW_LAYOUT][s].getY() for s in ss) / len(ss)
-
-			if min(abs(s_x - c_bottom_x), abs(s_x - c_top_x)) > min(abs(s_y - c_bottom_y), abs(s_y - c_top_y)):
-				r_x = s_x
-				r_y = c_bottom_y - r_h if abs(s_y - c_bottom_y) < abs(s_y - c_top_y) else c_top_y + r_h
-			else:
-				r_y = s_y
-				r_x = c_bottom_x - r_w if abs(s_x - c_bottom_x) < abs(s_x - c_top_x) else c_top_x + r_w
-			root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
-		rs_graph = root.inducedSubGraph(rs)
-		remove_overlaps(rs_graph)
-		root.delAllSubGraphs(rs_graph)
-
-		for r in rs:
-			fit_into_rectangle(c_h, c_w, c_x, c_y, r, root)
-
-		# rotate_fake_ns(comp_mg)
-		open_meta_ns(comp_mg, (r for r in comp_mg.getNodes() if root[FAKE][r]))
-
-		close_compartment(comp_mg, graph, prop2value)
-
-
-def fit_into_rectangle(c_h, c_w, c_x, c_y, n, root):
-	c_bottom_x, c_bottom_y = c_x - c_w, c_y - c_h
-	c_top_x, c_top_y = c_x + c_w, c_y + c_h
-	old_x, old_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
-	n_x, n_y = old_x, old_y
-	n_w, n_h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
-	n_x, n_y = min(max(n_x, c_bottom_x + n_w), c_top_x - n_w), min(max(n_y, c_bottom_y + n_h), c_top_y - n_h)
-	root[VIEW_LAYOUT][n] = tlp.Coord(n_x, n_y)
-	shift_edges(n, root)
-
-
-def shift_edges(n, root):
-	nodes = [n]
-	mg = None
-	if root[FAKE][n]:
-		mg = root[VIEW_META_GRAPH][n]
-		nodes.extend(list(mg.getNodes()))
-	for nd in nodes:
-		for e in (e for e in root.getInOutEdges(nd) if not mg or not mg.isElement(e)):
-			root[VIEW_LAYOUT][e] = []
-
-
-def fit_out_of_compartment(n, c, root):
+def get_comp_borders(c, root):
 	c_w, c_h = root[VIEW_SIZE][c].getW() / 2, root[VIEW_SIZE][c].getH() / 2
 	c_x, c_y = root[VIEW_LAYOUT][c].getX(), root[VIEW_LAYOUT][c].getY()
-	c_bottom_x, c_bottom_y = c_x - c_w, c_y - c_h
-	c_top_x, c_top_y = c_x + c_w, c_y + c_h
+	return c_x - c_w, c_y - c_h, c_x + c_w, c_y + c_h
 
-	old_x, old_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
-	n_x, n_y = old_x, old_y
-	n_w, n_h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
 
-	c_bottom_x -= n_w
-	c_top_x += n_w
-	c_bottom_y -= n_h
-	c_top_y += n_h
-	if c_bottom_x < n_x < c_top_x and c_bottom_y < n_y < c_top_y:
-		if min(n_x - c_bottom_x, c_top_x - n_x) < min(n_y - c_bottom_y, c_top_y - n_y):
-			n_x = c_bottom_x if n_x - c_bottom_x < c_top_x - n_x else c_top_x
+def layout_inner_elements(graph, c_id, (c_bottom_x, c_bottom_y, c_top_x, c_top_y)):
+	root = graph.getRoot()
+
+	neighbours_outside_comp = lambda r: [n for n in graph.getInOutNodes(r) if root[COMPARTMENT_ID][n] != c_id]
+	neighbours_inside_comp = lambda r: [n for n in graph.getInOutNodes(r) if root[COMPARTMENT_ID][n] == c_id]
+
+	rs = [r for r in graph.getNodes() if root[TYPE][r] == TYPE_REACTION
+	      and not next((n for n in neighbours_inside_comp(r) if not ub_or_single(n, root)), None)
+	      and (c_id != root[COMPARTMENT_ID][r] or neighbours_outside_comp(r))]
+	create_fake_rs(graph, c_id, rs, False)
+
+	rs = [r for r in graph.getNodes() if root[COMPARTMENT_ID][r] == c_id and not neighbours_inside_comp(r)
+	      and neighbours_outside_comp(r)]
+
+	coords = set()
+	for r in rs:
+		r_w, r_h = root[VIEW_SIZE][r].getW(), root[VIEW_SIZE][r].getH()
+		ss = neighbours_outside_comp(r)
+		ss_not_ub = [s for s in ss if not ub_or_single(s, graph)]
+		if ss_not_ub:
+			ss = ss_not_ub
+		s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() for s in ss) / len(ss), sum(
+			root[VIEW_LAYOUT][s].getY() for s in ss) / len(ss)
+
+		inside_y = c_bottom_y + r_h <= s_y <= c_top_y - r_h
+		inside_x = c_bottom_x + r_w <= s_x <= c_top_x - r_w
+
+		if inside_x:
+			r_x = s_x
+			i = 1
+			while True:
+				r_y = c_bottom_y + i * r_h if abs(s_y - c_bottom_y) < abs(s_y - c_top_y) else c_top_y - i * r_h
+				if (r_x, r_y) in coords:
+					i += 1
+				else:
+					coords.add((r_x, r_y))
+					break
+		elif inside_y:
+			r_y = s_y
+			i = 1
+			while True:
+				r_x = c_bottom_x + i * r_w if abs(s_x - c_bottom_x) < abs(s_x - c_top_x) else c_top_x - i * r_w
+				if (r_x, r_y) in coords:
+					i += 1
+				else:
+					coords.add((r_x, r_y))
+					break
 		else:
-			n_y = c_bottom_y if n_y - c_bottom_y < c_top_y - n_y else c_top_y
-	root[VIEW_LAYOUT][n] = tlp.Coord(n_x, n_y)
-	shift_edges(n, root)
+			i = 1
+			while True:
+				r_x = max(c_bottom_x + i * r_w, min(s_x, c_top_x - i * r_w))
+				r_y = max(c_bottom_y + i * r_h, min(s_y, c_top_y - i * r_h))
+				if (r_x, r_y) in coords:
+					i += 1
+				else:
+					coords.add((r_x, r_y))
+					break
+
+		root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
+
+	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
+	root[VIEW_LAYOUT].setAllEdgeValue([])
 
 
 def get_reaction_r(r, root):
@@ -280,22 +229,23 @@ def layout_ub_reaction(r_graph, r):
 			y += m_h
 
 
-def create_fake_rs(meta_graph):
+def create_fake_rs(meta_graph, c_id=None, r_ns=None, do_lo=True):
 	root = meta_graph.getRoot()
-	r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
+	if r_ns is None:
+		r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
 	for r in r_ns:
-		r_to_meta_node(meta_graph, r)
+		r_to_meta_node(meta_graph, r, c_id, do_lo)
 
 
-def r_to_meta_node(meta_graph, r):
+def r_to_meta_node(meta_graph, r, c_id, do_lo):
 	root = meta_graph.getRoot()
 
 	ubs = []
 	for s in root.getInOutNodes(r):
-		if ub_or_single(s, root) and meta_graph.isElement(s):
+		if ub_or_single(s, root) and meta_graph.isElement(s) and (not c_id or root[COMPARTMENT_ID][s] == c_id):
 			ubs.append(s)
 
-	if meta_graph.isElement(r):
+	if meta_graph.isElement(r) and (not c_id or root[COMPARTMENT_ID][r] == c_id):
 		ubs.append(r)
 
 	if len(ubs) <= 1:
@@ -304,7 +254,8 @@ def r_to_meta_node(meta_graph, r):
 	r_n = meta_graph.createMetaNode(ubs, False)
 	r_graph = root[VIEW_META_GRAPH][r_n]
 	# layout_hierarchically(r_graph)
-	layout_ub_reaction(r_graph, r)
+	if do_lo:
+		layout_ub_reaction(r_graph, r)
 
 	for prop in [NAME, ID, TYPE, TERM, TRANSPORT, REVERSIBLE]:
 		root[prop][r_n] = root[prop][r]

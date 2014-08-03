@@ -9,7 +9,8 @@ from sbml_vis.graph.graph_properties import ID, COMPARTMENT_ID, \
 	TYPE_COMPARTMENT, TYPE, TYPE_REACTION, STOICHIOMETRY, RELATED_COMPARTMENT_IDS, TYPE_SPECIES, ANCESTOR_ID, TRANSPORT, \
 	CLONE_ID
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
-from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges
+from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges, layout_inner_elements, \
+	get_comp_borders
 from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
 from sbml_generalization.utils.logger import log
 
@@ -255,19 +256,26 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps):
 	c_id2scales = get_scale_coefficients(root, c_id2outs)
 	c_id2level2features = {}
 	processed = set()
+	c_id2c_borders = {}
 	while True:
+		for c_id, sizes in c_id2c_borders.iteritems():
+			layout_inner_elements(meta_graph, c_id, sizes)
+
 		bend_edges(meta_graph)
 
 		export_elements(c_id2info, c_id2outs, c_id2level2features, c_id2scales, meta_graph, processed, r2rs_ps)
 
 		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and TYPE_COMPARTMENT == root[TYPE][n]]
 		if not metas:
+			c_id2c_borders = {}
 			metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n)]
 			if not metas:
 				break
 			align_generalized_ns(meta_graph)
 			rotate_generalized_ns(meta_graph)
 			bend_ubiquitous_edges(meta_graph, metas)
+		else:
+			c_id2c_borders = {root[ID][c]: get_comp_borders(c, root) for c in metas}
 		open_meta_ns(meta_graph, metas)
 
 	for c_id in c_id2info.iterkeys():
