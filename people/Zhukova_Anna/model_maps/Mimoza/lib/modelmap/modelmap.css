@@ -131,18 +131,24 @@ td a, p.popup a {
 }
 p.popup {
     width: auto;
-    max-width: 1020px;
+    max-width: 100%;
     font-weight: 400;
 }
 p.popup table {
     width:auto;
-    max-width: 1020px;
+    max-width: 90%;
     font-size: 13px;
-    display: inline-block;
+}
+
+p.popup table td.main {
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 p.popup table td {
-    max-width: 50%;
+    max-width: 10%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

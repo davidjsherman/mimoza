@@ -9,7 +9,7 @@ function formatGA(or_closes) {
         j,
         genes;
     if (typeof or_closes !== 'undefined' && or_closes.length > 0) {
-        result = '<table border="0"><tr class="centre"><th colspan="' + (2 * or_closes.length - 1) + '"  class="centre">Gene association</th></tr><tr>';
+        result = '<table border="0" width="100%"><tr class="centre"><th colspan="' + (2 * or_closes.length - 1) + '"  class="centre">Gene association</th></tr><tr>';
         for (i = 0; i < or_closes.length; i += 1) {
             genes = or_closes[i];
             result += '<td><table border="0">';
@@ -17,7 +17,7 @@ function formatGA(or_closes) {
                 result += "<tr></tr><td class='centre'><i>(or)</i></td></tr>";
             }
             for (j = 0; j < genes.length; j += 1) {
-                result += "<tr><td><a href=\'http://www.ncbi.nlm.nih.gov/gene/?term=" + genes[j] + "[sym]\' target=\'_blank\'>" + genes[j] + '</a></td></tr>';
+                result += "<tr><td class='main'><a href=\'http://www.ncbi.nlm.nih.gov/gene/?term=" + genes[j] + "[sym]\' target=\'_blank\'>" + genes[j] + '</a></td></tr>';
             }
             result += '</table></td>';
             if (i < or_closes.length - 1) {
@@ -31,23 +31,27 @@ function formatGA(or_closes) {
 
 function formatFormula(reversible, reactants, products) {
     "use strict";
-    var res = '<table border="0"><tr><td><table border="0">',
+    var res = '<table border="0" width="100%"><tr><td width="45%"><table border="0">',
         i;
     if (typeof reactants !== 'undefined' && reactants.length > 0) {
         for (i = 0; i < reactants.length; i += 1) {
-            res += '<tr><td>' + reactants[i][1] + '&nbsp;</td><td>' + reactants[i][0] + '</td></tr>';
+            res += '<tr><td class="main">' + reactants[i][1]
+                + '&nbsp;</td><td>'
+                + reactants[i][0] + '</td></tr>';
         }
     }
     res += '</table></td>';
     if (reversible) {
-        res += '<th class="centre">&#8596;</th>';
+        res += '<th class="centre" width="10%">&#8596;</th>';
     } else {
-        res += '<th class="centre">&#65515;</th>';
+        res += '<th class="centre" width="10%">&#65515;</th>';
     }
-    res += '<td><table border="0">';
+    res += '<td  width="45%"><table border="0">';
     if (typeof products !== 'undefined' && products.length > 0) {
         for (i = 0; i < products.length; i += 1) {
-            res += '<tr><td>' + products[i][1] + '&nbsp;</td><td>' + products[i][0] + '</td></tr>';
+            res += '<tr><td>' + products[i][1]
+                + '&nbsp;</td><td class="main">'
+                + products[i][0] + '</td></tr>';
         }
     }
     res += '</table></td></tr></table>';
@@ -117,13 +121,13 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
             content += p(formatLink(feature.properties.id));
         }
     }
-    var size = $('#' + mapId).height(),
+    var $map = $('#' + mapId),
         e = feature.geometry.coordinates,
         popup = L.popup({
             autoPan: true,
             keepInView: true,
-            maxWidth: size - 2,
-            maxHeight: size - 2,
+            maxWidth: $map.width() - 2,
+            maxHeight: $map.height() - 2,
             autoPanPadding: [1, 1]
         }).setContent(content).setLatLng(map.unproject([e[0], e[1]], 1));
     if (feature.properties.ub) {
