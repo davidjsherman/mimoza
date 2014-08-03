@@ -16,7 +16,8 @@ var BG_REACTION = 5;
 var BG_COMPARTMENT = 6;
 var BG = [BG_SPECIES, BG_REACTION, BG_COMPARTMENT];
 
-var TRANSPORT = "transport";
+var TRANSPORT = "transport to outside";
+var INNER_TRANSPORT = "inside transport";
 
 var MIN_CLICKABLE_R = 4;
 
@@ -126,7 +127,12 @@ function pnt2layer(map, feature, zoom, coords) {
 function matchesCompartment(cId, feature) {
     "use strict";
     if (TRANSPORT === cId) {
-        return typeof feature.properties.tr !== 'undefined' && feature.properties.tr;
+        return typeof feature.properties.tr !== 'undefined' && feature.properties.tr
+            && (typeof feature.properties.inner === 'undefined' || !feature.properties.inner);
+    }
+    if (INNER_TRANSPORT === cId) {
+        return typeof feature.properties.tr !== 'undefined' && feature.properties.tr
+            && (typeof feature.properties.inner !== 'undefined' && feature.properties.inner);
     }
     return cId === feature.properties.c_id || cId === feature.properties.id;
 }
@@ -192,4 +198,5 @@ function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, n
             compLayer.removeLayer(ubiquitousJson);
         }
     });
+    return [specificJson.getLayers().length > 0, ubiquitousJson.getLayers().length > 0];
 }

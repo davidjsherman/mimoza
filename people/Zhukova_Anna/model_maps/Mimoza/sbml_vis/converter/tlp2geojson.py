@@ -32,7 +32,7 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 		return transformation(x, other_x), transformation(y, other_y)
 
 
-def e2feature(graph, e, scale, transport):
+def e2feature(graph, e, scale, transport, inner):
 	root = graph.getRoot()
 	layout = root[VIEW_LAYOUT]
 	s, t = graph.source(e), graph.target(e)
@@ -53,12 +53,14 @@ def e2feature(graph, e, scale, transport):
 	else:
 	# let's not store unneeded False
 		props[TRANSPORT] = True
+		if inner:
+			props[INNER] = True
 	if ubiquitous:
 		props[UBIQUITOUS] = True
 	return geojson.Feature(geometry=geom, properties=props)
 
 
-def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport):
+def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport, inner):
 	root = graph.getRoot()
 
 	geom = geojson.Point(scale(root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()))
@@ -81,6 +83,8 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport)
 			del props[COMPARTMENT_ID]
 			# let's not store unneeded False
 			props[TRANSPORT] = True
+			if inner:
+				props[INNER] = True
 		if root[REVERSIBLE][n]:
 			props[REVERSIBLE] = True
 	elif TYPE_COMPARTMENT == node_type:
@@ -94,7 +98,9 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport)
 			# let's not store unneeded False
 			props[UBIQUITOUS] = True
 		if transport:
-				props[TRANSPORT] = True
+			props[TRANSPORT] = True
+			if inner:
+				props[INNER] = True
 		# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
 		comp_name = c_id2info[c_id][0]
 		term = root[TERM][n]
@@ -111,6 +117,8 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport)
 		if transport:
 			# let's not store unneeded False
 			bg_props[TRANSPORT] = True
+			if inner:
+				props[INNER] = True
 		if COMPARTMENT_ID in props:
 			bg_props[COMPARTMENT_ID] = c_id
 		if TYPE_BG_COMPARTMENT == node_type:

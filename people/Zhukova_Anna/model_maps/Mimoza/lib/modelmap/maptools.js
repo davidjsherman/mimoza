@@ -2,6 +2,10 @@
  * Created by anna on 12/12/13.
  */
 
+var UB_LAYER_NAME = "<i>Ubiquitous species</i>",
+    OUT_TR_LAYER_NAME = "<i>Transport to outside</i>",
+    IN_TR_LAYER_NAME = "<i>Inner transport</i>";
+
 function adjustMapSize(mapId) {
     "use strict";
     var VIEWPORT_MARGIN = 50,
@@ -95,12 +99,14 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     var maxZoom = 4 + minZoom,
         tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom),
         grayTiles = getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom),
-        transportLayer = L.layerGroup(),
+        outTransportLayer = L.layerGroup(),
+        inTransportLayer = L.layerGroup(),
         compLayer = L.layerGroup();
     layers.push(ubLayer);
     layers.push(tiles);
     layers.push(compLayer);
-    layers.push(transportLayer);
+    layers.push(outTransportLayer);
+    layers.push(inTransportLayer);
     var map = L.map(mapId, {
         maxZoom: maxZoom,
         minZoom: minZoom,
@@ -121,15 +127,42 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         coords = [
             [null, null],
             [null, null]
-        ];
+        ],
+        ubJSON = false,
+        inJSON = false,
+        outJSON = false,
+        jsonArray;
     json = jsonData[0];
-    loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
-    loadGeoJson(map, json, minZoom, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+    ubJSON |= jsonArray[1];
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+    ubJSON |= jsonArray[1];
+    outJSON |= jsonArray[0] || jsonArray[1];
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
+    ubJSON |= jsonArray[1];
+    inJSON |= jsonArray[0] || jsonArray[1];
 
     updateMapBounds(coords, map);
     var mapW = coords[1][0] - coords[0][0],
         mapH = coords[0][1] - coords[1][1];
     map.setView([coords[0][0] + mapW / 2, coords[1][1] + mapH / 2], minZoom);
+
+    console.log(ubLayer.getLayers());
+    if (ubJSON) {
+        overlays[UB_LAYER_NAME] = ubLayer;
+    }
+    if (outJSON) {
+        overlays[OUT_TR_LAYER_NAME] = outTransportLayer;
+    }
+    if (inJSON) {
+        overlays[IN_TR_LAYER_NAME] = inTransportLayer;
+    }
+    var baseLayers = {
+        "White background": tiles,
+        "Gray background": grayTiles
+        },
+        control = L.control.layers(baseLayers, overlays);
+    control.addTo(map);
 
     initializeAutocomplete(name2popup, name2zoom, map);
     map.on('zoomend', function (e) {
@@ -140,22 +173,44 @@ function initializeMap(cId2jsonData, mapId, compIds) {
             for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
                 json = jsonData[(z + 1 - minZoom) / 2];
                 loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
-                loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
-                loadGeoJson(map, json, z, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
-                loadGeoJson(map, json, z + 1, ubLayer, transportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+                ubJSON |= jsonArray[1];
+
+                loadGeoJson(map, json, z, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z + 1, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+                ubJSON |= jsonArray[1];
+                // outside transport should already be visible on the min zoom level
+//                outJSON |= jsonArray[0] || jsonArray[1];
+
+                loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z + 1, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
+                ubJSON |= jsonArray[1];
+                inJSON |= jsonArray[0] || jsonArray[1];
             }
             updateMapBounds(coords, map);
+            var updateControl = false;
+            if (!overlays.hasOwnProperty(UB_LAYER_NAME) && ubJSON) {
+                overlays[UB_LAYER_NAME] = ubLayer;
+                updateControl = true;
+            }
+            // outside transport should already be visible on the min zoom level
+//            if (!overlays.hasOwnProperty(OUT_TR_LAYER_NAME) && outJSON) {
+//                overlays[OUT_TR_LAYER_NAME] = outTransportLayer;
+//                updateControl = true;
+//            }
+            if (!overlays.hasOwnProperty(IN_TR_LAYER_NAME) && inJSON) {
+                overlays[IN_TR_LAYER_NAME] = inTransportLayer;
+                updateControl = true;
+            }
+            if (updateControl) {
+                control.removeFrom(map);
+                control = L.control.layers(baseLayers, overlays);
+                control.addTo(map);
+            }
             maxLoadedZoom = mZoom;
             initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
-    var baseLayers = {
-        "White background": tiles,
-        "Gray background": grayTiles
-    };
-    overlays["<i>Ubiquitous species</i>"] = ubLayer;
-    overlays["<i>Transport reactions</i>"] = transportLayer;
-    L.control.layers(baseLayers, overlays).addTo(map);
     return map;
 }
 

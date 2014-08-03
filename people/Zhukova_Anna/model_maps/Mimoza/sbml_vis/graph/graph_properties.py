@@ -21,6 +21,7 @@ UBIQUITOUS = 'ub'
 STOICHIOMETRY = 'stoich'
 REVERSIBLE = "rev"
 TRANSPORT = "tr"
+INNER = "inner"
 
 VIEW_META_GRAPH = 'viewMetaGraph'
 
