@@ -182,6 +182,85 @@ def bend_edges(graph):
 				root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
 
 
+def bend_edges_around_compartments(graph, es):
+	root = graph.getRoot()
+	comps = sorted((c for c in graph.getNodes() if TYPE_COMPARTMENT == root[TYPE][c]),
+	               key=lambda c: max(root[VIEW_SIZE][c].getW(), root[VIEW_SIZE][c].getH()))
+	for e in es:
+		s, t = graph.source(e), graph.target(e)
+		s_x, s_y = root[VIEW_LAYOUT][s].getX(), root[VIEW_LAYOUT][s].getY()
+		t_x, t_y = root[VIEW_LAYOUT][t].getX(), root[VIEW_LAYOUT][t].getY()
+		max_x = max(s_x, t_x)
+		min_x = min(s_x, t_x)
+		max_y = max(s_y, t_y)
+		min_y = min(s_y, t_y)
+		w = max(root[VIEW_SIZE][s].getW(), root[VIEW_SIZE][t].getW())
+		h = max(root[VIEW_SIZE][s].getH(), root[VIEW_SIZE][t].getH())
+		for c in comps:
+			if s == c or t == c:
+				continue
+			c_bottom_x, c_bottom_y, c_top_x, c_top_y = get_comp_borders(c, root)
+			if max_x <= c_bottom_x + w or min_x >= c_top_x - w \
+					or max_y <= c_bottom_y + h or min_y >= c_top_y - h:
+				continue
+			alpha = atan2(t_y - s_y, t_x - s_x)
+			c_alphas = [atan2(c_y - s_y, c_x - s_x) for (c_x, c_y) in \
+			            [(c_bottom_x + w, c_bottom_y + h), (c_bottom_x + w, c_top_y - h),
+			             (c_top_x - w, c_top_y - h), (c_top_x - w, c_bottom_y + h)]]
+			if min(c_alphas) < alpha < max(c_alphas):
+				bends = []
+				if c_bottom_x < min_x <= max_x < c_top_x:
+					if (min_x - c_bottom_x) < (c_top_x - max_x):
+						min_x = c_bottom_x - w * 2
+					else:
+						max_x = c_top_x + w * 2
+				elif c_bottom_y < min_y <= max_y < c_top_y:
+					if (min_y - c_bottom_y) < (c_top_y - max_y):
+						min_y = c_bottom_y - h * 2
+					else:
+						max_y = c_top_y + h * 2
+
+				for (x, y) in [(min_x, min_y), (min_x, max_y), (max_x, max_y), (max_x, min_y)]:
+					if (x < c_bottom_x or x > c_top_x) and (y < c_bottom_y or y > c_top_y):
+						if (x, y) != (s_x, s_y) and (x, y) != (t_x, t_y):
+							bends.append((x, y))
+				if len(bends) == 2:
+					bends = sorted(bends, key=lambda (x, y): 0 if (s_x == x or s_y == y) else 1)
+				if bends:
+					root[VIEW_LAYOUT][e] = [tlp.Coord(x, y) for (x, y) in bends]
+				break
+
+
+
+
+
+	for r in (r for r in graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
+		r_x, r_y = root[VIEW_LAYOUT][r].getX(), root[VIEW_LAYOUT][r].getY()
+		r_r = get_reaction_r(r, root) + UBIQUITOUS_SPECIES_SIZE / 2
+		reactants, products = list(graph.getInNodes(r)), list(graph.getOutNodes(r))
+
+		def get_bend_coord(species):
+			sample_species = next((s for s in species if not ub_or_single(s, graph)), None)
+			if sample_species:
+				s_x, s_y = root[VIEW_LAYOUT][sample_species].getX(), root[VIEW_LAYOUT][sample_species].getY()
+			else:
+				cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in species], \
+				             [root[VIEW_LAYOUT][s].getY() for s in species]
+				s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
+			r_species_angle = atan2(s_y - r_y, s_x - r_x)
+			return tlp.Coord(r_x + r_r * cos(r_species_angle), r_y + r_r * sin(r_species_angle))
+
+		if len(products) > 1:
+			product_lo = get_bend_coord(products)
+			for e in graph.getOutEdges(r):
+				root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
+
+		if len(reactants) > 1:
+			reactant_lo = get_bend_coord(reactants)
+			for e in graph.getInEdges(r):
+				root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
+
+
 def layout_ub_reaction(r_graph, r):
 	root = r_graph.getRoot()
 	view_layout = root[VIEW_LAYOUT]

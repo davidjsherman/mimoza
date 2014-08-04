@@ -10,7 +10,7 @@ from sbml_vis.graph.graph_properties import ID, COMPARTMENT_ID, \
 	CLONE_ID
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges, layout_inner_elements, \
-	get_comp_borders
+	get_comp_borders, bend_edges_around_compartments
 from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
 from sbml_generalization.utils.logger import log
 
@@ -273,10 +273,14 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps):
 	c_id2level2features = {}
 	processed = set()
 	c_id2c_borders = {}
+	get_id = lambda n: "%s_%d" % (root[ID][n], root[CLONE_ID][n])
+	get_e_id = lambda e: "-".join(sorted([get_id(meta_graph.source(e)), get_id(meta_graph.target(e))]))
+
 	while True:
 		for c_id, sizes in c_id2c_borders.iteritems():
 			layout_inner_elements(meta_graph, c_id, sizes)
 
+		bend_edges_around_compartments(meta_graph, (e for e in meta_graph.getEdges() if not get_e_id(e) in processed))
 		bend_edges(meta_graph)
 
 		export_elements(c_id2info, c_id2outs, c_id2level2features, c_id2scales, meta_graph, processed, r2rs_ps)

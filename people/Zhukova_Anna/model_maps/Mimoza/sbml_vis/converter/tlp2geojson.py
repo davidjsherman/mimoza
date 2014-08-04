@@ -17,7 +17,7 @@ LOWERCASE, UPPERCASE = 'x', 'X'
 
 
 def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
-	if n_type in [TYPE_REACTION, TYPE_COMPARTMENT]:
+	if n_type == TYPE_REACTION:
 		edge_angle = degrees(atan2(other_y - y, other_x - x)) if other_y != y or other_x != x else 0
 		diag_angle = degrees(atan2(h, w))
 		abs_edge_angle = abs(edge_angle)
@@ -26,6 +26,17 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 		else:
 			x += w if abs_edge_angle <= 90 else -w
 		return x, y
+	elif n_type == TYPE_COMPARTMENT:
+		c_bottom_x, c_bottom_y, c_top_x, c_top_y = x - w, y - h, x + w, y + h
+		inside_y = c_bottom_y <= other_y <= c_top_y
+		inside_x = c_bottom_x <= other_x <= c_top_x
+
+		if inside_x:
+			return other_x, c_bottom_y if abs(other_y - c_bottom_y) < abs(other_y - c_top_y) else c_top_y
+		elif inside_y:
+			return c_bottom_x if abs(other_x - c_bottom_x) < abs(other_x - c_top_x) else c_top_x, other_y
+		else:
+			return max(c_bottom_x, min(other_x, c_top_x)), max(c_bottom_y, min(other_y, c_top_y))
 	else:
 		diag = pow(pow(x - other_x, 2) + pow(y - other_y, 2), 0.5)
 		transformation = lambda z, other_z: (w * (((other_z - z) / diag) if diag else 1)) + z
