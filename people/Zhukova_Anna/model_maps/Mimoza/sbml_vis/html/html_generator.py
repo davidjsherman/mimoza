@@ -73,10 +73,12 @@ def add_explanations(page):
 	page.span(' to see the generalized model. ')
 	page.span('Click', class_='pant')
 	page.span(' on elements to see their annotations. ')
+	page.span('Adjust', class_='pant')
+	page.span(' map settings <span class="explanation">(top right corner of the map view)</span> to show/hide ubiquitous metabolites and transport reactions.')
 	page.p.close()
 
 	page.p(
-		"%s - compartments; %s/%s/%s - generalised/specific/ubiquitous species; %s/%s/%s/%s - generalised transport/transport/generalised/other reactions." % (
+		"%s - compartments; %s/%s/%s - generalised/specific/ubiquitous metabolites; %s/%s/%s/%s - generalised transport/transport/generalised/other reactions." % (
 			format_color(YELLOW),
 			format_color(ORANGE), format_color(RED), format_color(GREY),
 			format_color(TURQUOISE), format_color(VIOLET), format_color(GREEN), format_color(BLUE)))
@@ -99,9 +101,6 @@ def add_model_description(model, page):
 
 
 def add_js(page, json_files, c_id2json_vars, map_id, comps):
-	# todo: max_zoom
-	max_zoom = 1
-
 	for json in json_files:
 		page.script(src=json, type="text/javascript")
 		page.script.close()

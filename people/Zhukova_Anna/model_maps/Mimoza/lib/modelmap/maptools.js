@@ -79,7 +79,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
-        minZoom = size == MAP_DIMENSION_SIZE / 2 ? 0 : Math.max(0, Math.round(size / MAP_DIMENSION_SIZE) - 1),
+        minZoom = size == MAP_DIMENSION_SIZE / 2 ? 0 : Math.round(size / MAP_DIMENSION_SIZE),
         ubLayer = L.layerGroup(),
         overlays = {},
         cIds = {},
@@ -105,7 +105,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     layers.push(ubLayer);
     layers.push(tiles);
     layers.push(compLayer);
-    layers.push(outTransportLayer);
+    // layers.push(outTransportLayer);
     layers.push(inTransportLayer);
     var map = L.map(mapId, {
         maxZoom: maxZoom,
@@ -147,7 +147,6 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         mapH = coords[0][1] - coords[1][1];
     map.setView([coords[0][0] + mapW / 2, coords[1][1] + mapH / 2], minZoom);
 
-    console.log(ubLayer.getLayers());
     if (ubJSON) {
         overlays[UB_LAYER_NAME] = ubLayer;
     }
