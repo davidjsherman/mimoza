@@ -277,7 +277,7 @@ There are several existing web-based tools providing a zoomable representation o
 
 Another web-based tool, the Cellular Overview\cite{Latendresse2011} creates interactive diagrams for metabolic maps of organisms in the BioCyc database\cite{Caspi2012}. It is pathway-oriented, and does not contain intermediate levels in the sense that zooming in increases, but does not change or add, the elements in the map. Another drawback is that it does not show the compartmentalization.
 
-As the examples of NaviCell and the Cellular Overview show, not only zoomable interfaces but also model decomposition are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast consensus model\cite{Heavner12} containing 230 reactions), a further decomposition is required. We address these issues below by combining model generalization with a ZUI.
+As the examples of NaviCell and the Cellular Overview show, not only zoomable interfaces but also model decomposition are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast consensus model\cite{Herrgard2008} containing 230 reactions), a further decomposition is required. We address these issues below by combining model generalization with a ZUI.
 
 
 \section*{Implementation}
@@ -387,8 +387,8 @@ The overall Mimoza pipeline  contains of 5 steps:
 
 \section*{Results and Discussion}
 %The Results and Discussion may be combined into a single section or presented separately. They may also be broken into subsections with short, informative headings. In any case what should be described is the functionality of the software together with data on how its performance and functionality compare with and improve on functionally similar existing software. There should then be a discussion of the intended use of the software, and the benefits that are envisioned together, if possible, with an outline for the planned future development of new features.
-To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network, version 5\cite{Heavner12}. The result can be found at http://mimoza.bordeaux.inria.fr/smth. 
-Three zoom levels (compartment view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{zoom_levels}. The most general level shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids\cite{Metzler01}); the most detailed level represents the complete model, placing semantically similar metabolites and reactions next to each other.
+To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network\cite{Herrgard2008}. The result can be found at \url{http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8}. 
+Three zoom levels (cytoplasm view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{zoom_levels}. The first level shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids\cite{Metzler01}); the most detailed level represents the complete model, placing semantically similar metabolites and reactions next to each other.
 
 We visualized the same model using MetDraw with no manual adjustments. The resulting SVG file\footnote{MetDraw -- http://www.metdraw.com/metdraw/bc7df60221ba314c383b1bf6e7dad4c3056f92bb} has only one zoom level with lots of clutter, that does not allow one to see the structure of the model.
 
@@ -481,7 +481,7 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
   \includegraphics[scale=0.5]{figure1.png}
   \caption{\csentence{Three zoom levels}
   \label{zoom_levels}
-      Compartments, generalized peroxisome, zoomed in reaction.}
+      The bottom level represents the cytoplasm compartment containing organelle compartments and transport reactions between them. The intermediate zoom shows the generalized processes in the peroxisome compartment. The most detailed view reveals the metabolites that were generalized into a \emph{straight-chain saturated fatty acid} on the previous level, e.g. \textit{dodecanoate}, and reactions they participate in.}
       \end{figure}
       
 \begin{figure}[h!]
