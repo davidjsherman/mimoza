@@ -166,7 +166,7 @@ def import_sbml(input_model, sbml_file, verbose=False):
 	log(verbose, 'adding reaction nodes')
 	reactions2nodes(get_r_comp, graph, id2n, input_model)
 
-	for n in (n for n in graph.getNodes() if TYPE_SPECIES == graph[TYPE][n] and graph.deg(n) >= 5 \
+	for n in (n for n in graph.getNodes() if TYPE_SPECIES == graph[TYPE][n] and graph.deg(n) > 5 \
 			and not graph[ID][n] in s_id2gr_id):
 		graph[UBIQUITOUS][n] = True
 

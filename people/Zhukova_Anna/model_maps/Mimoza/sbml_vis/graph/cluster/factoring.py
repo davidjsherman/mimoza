@@ -3,7 +3,7 @@ from collections import defaultdict
 from sbml_vis.graph.node_cloner import merge_nodes
 from sbml_vis.graph.resize import get_n_size
 from sbml_vis.graph.graph_properties import *
-from sbml_vis.graph.layout.layout_utils import layout
+from sbml_vis.graph.layout.ubiquitous_layout import layout
 
 
 __author__ = 'anna'

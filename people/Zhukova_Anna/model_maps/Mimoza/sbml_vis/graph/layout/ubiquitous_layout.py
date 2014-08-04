@@ -1,10 +1,11 @@
+from collections import defaultdict
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
 
-from sbml_vis.graph.resize import get_n_size, UBIQUITOUS_SPECIES_SIZE, REACTION_SIZE
-from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, ID, TYPE_SPECIES, \
-	TYPE_COMPARTMENT, VIEW_META_GRAPH, NAME, FAKE, COMPARTMENT_ID, VIEW_SHAPE, TERM,\
-	TRANSPORT, REVERSIBLE, CIRCLE_SHAPE
+from sbml_vis.graph.layout.layout_utils import layout_hierarchically, detect_components, layout_circle, layout_force, pack_cc
+from sbml_vis.graph.resize import get_n_size, UBIQUITOUS_SPECIES_SIZE, REACTION_SIZE, get_n_length
+from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, TYPE_SPECIES, \
+	TYPE_COMPARTMENT, VIEW_META_GRAPH, COMPARTMENT_ID
 
 
 OVERLAP_REMOVAL = "Fast Overlap Removal"
@@ -22,8 +23,7 @@ def remove_overlaps(graph, margin=1):
 
 def ub_or_single(nd, graph):
 	root = graph.getRoot()
-	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
-	return (ubiquitous[nd] or 1 == graph.deg(nd)) and TYPE_SPECIES == root[TYPE][nd]
+	return (root[UBIQUITOUS][nd] or 1 >= graph.deg(nd)) and TYPE_SPECIES == root[TYPE][nd]
 
 
 def layout_outer_elements(graph):
@@ -33,19 +33,23 @@ def layout_outer_elements(graph):
 	for c in comps:
 		c_bottom_x, c_bottom_y, c_top_x, c_top_y = get_comp_borders(c, root)
 		c_w, c_h = (c_top_x - c_bottom_x) / 2, (c_top_y - c_bottom_y) / 2
-		rs = [r for r in graph.getInOutNodes(c) if graph.deg(r) == 1]
+		rs = sorted([r for r in graph.getInOutNodes(c)
+		             if len([s for s in graph.getInOutNodes(r) if not ub_or_single(s, graph)]) == 1],
+		            key=lambda r: -get_n_length(root, r))
 		comp_mg = root[VIEW_META_GRAPH][c]
+		m_x = min(root[VIEW_LAYOUT][s].getX() - root[VIEW_SIZE][s].getW() / 2 for s in comp_mg.getNodes())
+		m_y = min(root[VIEW_LAYOUT][s].getY() - root[VIEW_SIZE][s].getH() / 2 for s in comp_mg.getNodes())
+		coords = set()
 		for r in rs:
 			r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
 			ss = [s for s in root.getInOutNodes(r) if comp_mg.isElement(s)]
-			if not ss and root.isMetaNode(r):
-				for rr in root[VIEW_META_GRAPH][r].getNodes():
-					ss.extend([s for s in root.getInOutNodes(rr) if comp_mg.isElement(s)])
 			ss_not_ub = [s for s in ss if not ub_or_single(s, comp_mg)]
 			if ss_not_ub:
 				ss = ss_not_ub
-			m_x = min(root[VIEW_LAYOUT][s].getX() - root[VIEW_SIZE][s].getW() / 2 for s in comp_mg.getNodes())
-			m_y = min(root[VIEW_LAYOUT][s].getY() - root[VIEW_SIZE][s].getH() / 2 for s in comp_mg.getNodes())
+			else:
+				ss_not_ub = [s for s in ss if not root[UBIQUITOUS][s]]
+				if ss_not_ub:
+					ss = ss_not_ub
 			s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() - m_x for s in ss) / len(ss), sum(
 				root[VIEW_LAYOUT][s].getY() - m_y for s in ss) / len(ss)
 			x = c_bottom_x - r_w if s_x < c_w else c_top_x + r_h
@@ -54,13 +58,16 @@ def layout_outer_elements(graph):
 			if abs(c_bottom_x + s_x - x) > abs(c_bottom_y + s_y - y):
 				r_x = c_bottom_x + s_x
 				r_y = y
+				while (r_x, r_y) in coords:
+					r_x += r_w if s_x < c_w else -r_w
+				coords.add((r_x, r_y))
 			else:
 				r_y = c_bottom_y + s_y
 				r_x = x
+				while (r_x, r_y) in coords:
+					r_y += r_h if s_y < c_h else -r_h
+				coords.add((r_x, r_y))
 			root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
-		rs_graph = root.inducedSubGraph(rs)
-		remove_overlaps(rs_graph)
-		root.delAllSubGraphs(rs_graph)
 
 
 def get_comp_borders(c, root):
@@ -72,16 +79,17 @@ def get_comp_borders(c, root):
 def layout_inner_elements(graph, c_id, (c_bottom_x, c_bottom_y, c_top_x, c_top_y)):
 	root = graph.getRoot()
 
+	# rs = [r for r in graph.getNodes() if root[TYPE][r] == TYPE_REACTION
+	#       and not next((n for n in neighbours_inside_comp(r) if not ub_or_single(n, root)), None)
+	#       and (c_id != root[COMPARTMENT_ID][r] or neighbours_outside_comp(r))]
+	# create_fake_rs(graph, c_id, rs, False)
+
 	neighbours_outside_comp = lambda r: [n for n in graph.getInOutNodes(r) if root[COMPARTMENT_ID][n] != c_id]
-	neighbours_inside_comp = lambda r: [n for n in graph.getInOutNodes(r) if root[COMPARTMENT_ID][n] == c_id]
+	neighbours_inside_comp = lambda r: [n for n in graph.getInOutNodes(r) if root[COMPARTMENT_ID][n] == c_id
+	                                    and not ub_or_single(n, graph)]
 
-	rs = [r for r in graph.getNodes() if root[TYPE][r] == TYPE_REACTION
-	      and not next((n for n in neighbours_inside_comp(r) if not ub_or_single(n, root)), None)
-	      and (c_id != root[COMPARTMENT_ID][r] or neighbours_outside_comp(r))]
-	create_fake_rs(graph, c_id, rs, False)
-
-	rs = [r for r in graph.getNodes() if root[COMPARTMENT_ID][r] == c_id and not neighbours_inside_comp(r)
-	      and neighbours_outside_comp(r)]
+	rs = sorted([r for r in graph.getNodes() if root[COMPARTMENT_ID][r] == c_id and not neighbours_inside_comp(r)
+	      and neighbours_outside_comp(r)], key=lambda r: -get_n_length(root, r))
 
 	coords = set()
 	for r in rs:
@@ -98,24 +106,24 @@ def layout_inner_elements(graph, c_id, (c_bottom_x, c_bottom_y, c_top_x, c_top_y
 
 		if inside_x:
 			r_x = s_x
-			i = 1
-			while True:
-				r_y = c_bottom_y + i * r_h if abs(s_y - c_bottom_y) < abs(s_y - c_top_y) else c_top_y - i * r_h
-				if (r_x, r_y) in coords:
-					i += 1
+			r_y = c_bottom_y + r_h if abs(s_y - c_bottom_y) < abs(s_y - c_top_y) else c_top_y - r_h
+			right = abs(s_x - c_bottom_x) < abs(s_x - c_top_x)
+			while (r_x, r_y) in coords:
+				if right:
+					r_x += 3 * r_w
 				else:
-					coords.add((r_x, r_y))
-					break
+					r_x -= 3 * r_w
+			coords.add((r_x, r_y))
 		elif inside_y:
 			r_y = s_y
-			i = 1
-			while True:
-				r_x = c_bottom_x + i * r_w if abs(s_x - c_bottom_x) < abs(s_x - c_top_x) else c_top_x - i * r_w
-				if (r_x, r_y) in coords:
-					i += 1
+			r_x = c_bottom_x + r_w if abs(s_x - c_bottom_x) < abs(s_x - c_top_x) else c_top_x - r_w
+			top = abs(s_y - c_bottom_y) < abs(s_y - c_top_y)
+			while (r_x, r_y) in coords:
+				if top:
+					r_y += 3 * r_h
 				else:
-					coords.add((r_x, r_y))
-					break
+					r_y -= 3 * r_h
+			coords.add((r_x, r_y))
 		else:
 			i = 1
 			while True:
@@ -129,7 +137,9 @@ def layout_inner_elements(graph, c_id, (c_bottom_x, c_bottom_y, c_top_x, c_top_y
 
 		root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
 
-	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
+	layout_ub_sps(graph, rs, c_id)
+
+	# open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
 	root[VIEW_LAYOUT].setAllEdgeValue([])
 
 
@@ -151,6 +161,29 @@ def bend_ubiquitous_edges(graph, nodes):
 				for e in root.getInOutEdges(m):
 					if s == root.target(e) or s == root.source(e):
 						root[VIEW_LAYOUT][e] = [tlp.Coord(x0, y0)]
+
+
+def bend_species_edges(graph):
+	root = graph.getRoot()
+	for s in (s for s in graph.getNodes() if TYPE_SPECIES == root[TYPE][s] and root.deg(s) > 5):
+		s_x, s_y = root[VIEW_LAYOUT][s].getX(), root[VIEW_LAYOUT][s].getY()
+		alpha2rs = defaultdict(list)
+		for r in graph.getInOutNodes(s):
+			r_x, r_y = root[VIEW_LAYOUT][r].getX(), root[VIEW_LAYOUT][r].getY()
+			alpha = degrees(atan2(s_y - r_y, s_x - r_x))
+			alpha -= alpha % 45
+			alpha2rs[radians(alpha)].append(r)
+		for alpha, rs in alpha2rs.iteritems():
+			if len(rs) <= 1:
+				continue
+			closest_r = min(rs, key=lambda r: sqrt(pow(s_y - root[VIEW_LAYOUT][r].getY(), 2) + pow(s_x - root[VIEW_LAYOUT][r].getX(), 2)))
+			r_x, r_y = root[VIEW_LAYOUT][closest_r].getX(), root[VIEW_LAYOUT][closest_r].getY()
+			diag = sqrt(pow(s_y - r_y, 2) + pow(s_x - r_x, 2)) - get_reaction_r(closest_r, root) * 2
+			x, y = s_x - diag * cos(alpha), s_y - diag * sin(alpha)
+			for r in rs:
+				e = graph.existEdge(r, s, False)
+				root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [tlp.Coord(x, y)] if r == graph.source(e) \
+					else [tlp.Coord(x, y)] + root[VIEW_LAYOUT][e]
 
 
 def bend_edges(graph):
@@ -190,6 +223,7 @@ def bend_edges_around_compartments(graph, es):
 		s, t = graph.source(e), graph.target(e)
 		s_x, s_y = root[VIEW_LAYOUT][s].getX(), root[VIEW_LAYOUT][s].getY()
 		t_x, t_y = root[VIEW_LAYOUT][t].getX(), root[VIEW_LAYOUT][t].getY()
+
 		max_x = max(s_x, t_x)
 		min_x = min(s_x, t_x)
 		max_y = max(s_y, t_y)
@@ -230,10 +264,6 @@ def bend_edges_around_compartments(graph, es):
 					root[VIEW_LAYOUT][e] = [tlp.Coord(x, y) for (x, y) in bends]
 				break
 
-
-
-
-
 	for r in (r for r in graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
 		r_x, r_y = root[VIEW_LAYOUT][r].getX(), root[VIEW_LAYOUT][r].getY()
 		r_r = get_reaction_r(r, root) + UBIQUITOUS_SPECIES_SIZE / 2
@@ -261,92 +291,91 @@ def bend_edges_around_compartments(graph, es):
 				root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
 
 
-def layout_ub_reaction(r_graph, r):
-	root = r_graph.getRoot()
-	view_layout = root[VIEW_LAYOUT]
-	view_size = root[VIEW_SIZE]
-
-	nodes_of_interest = set(r_graph.getNodes())
-	if r in nodes_of_interest:
-		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
-		r_radius = view_size[r].getW() * sqrt(2) / 2
-		for (participants, direction) in [(root.getInNodes(r), 1), (root.getOutNodes(r), -1)]:
-			participants = sorted(set(participants) & nodes_of_interest, key=lambda nd: root[ID][nd])
-			participants_len = len(participants)
-			if not participants_len:
-				continue
-			even_num_of_participants = participants_len % 2 == 1
-			if even_num_of_participants:
-				participants_len += 1
-
-			angle_from_top_to_bottom = 2 * min(90, max(40, participants_len * 20))
-			d_angle = radians(angle_from_top_to_bottom / (participants_len - 1))
-			angle_top = radians(angle_from_top_to_bottom / 2)
-			towards_edge = -1
-
-			angle = angle_top
-
-			for ub in participants:
-				edge = (r_radius + root[VIEW_SIZE][ub].getW() * 1.5) * direction
-				end_x = r_x + edge * cos(angle)
-				end_y = r_y + edge * sin(angle)
-				view_layout[ub] = tlp.Coord(end_x, end_y)
-
-				if degrees(angle) * degrees(angle + towards_edge * d_angle) < 0:
-					angle = -angle_top
-					towards_edge = 1
-					if even_num_of_participants:
-						angle += towards_edge * d_angle
-				else:
-					angle += towards_edge * d_angle
-	else:
-		x, y = 0, 0
-		for m in sorted(nodes_of_interest, key=lambda nd: (root.isElement(root.existEdge(nd, r, True)), root[ID][nd])):
-			m_h = root[VIEW_SIZE][m].getH() / 2
-			y += m_h
-			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
-			y += m_h
-
-
-def create_fake_rs(meta_graph, c_id=None, r_ns=None, do_lo=True):
-	root = meta_graph.getRoot()
-	if r_ns is None:
-		r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
-	for r in r_ns:
-		r_to_meta_node(meta_graph, r, c_id, do_lo)
+# def layout_ub_reaction(r_graph, r):
+# 	root = r_graph.getRoot()
+# 	view_layout = root[VIEW_LAYOUT]
+#
+# 	nodes_of_interest = set(r_graph.getNodes())
+# 	if r in nodes_of_interest:
+# 		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
+# 		r_radius = get_reaction_r(r, root)
+# 		for (participants, direction) in [(r_graph.getInNodes(r), 1), (r_graph.getOutNodes(r), -1)]:
+# 			participants = sorted(participants, key=lambda nd: root[ID][nd])
+# 			participants_len = len(participants)
+# 			if not participants_len:
+# 				continue
+# 			even_num_of_participants = participants_len % 2 == 1
+# 			if even_num_of_participants:
+# 				participants_len += 1
+#
+# 			angle_from_top_to_bottom = 2 * min(90, max(40, participants_len * 20))
+# 			d_angle = radians(angle_from_top_to_bottom / (participants_len - 1))
+# 			angle_top = radians(angle_from_top_to_bottom / 2)
+# 			towards_edge = -1
+#
+# 			angle = angle_top
+#
+# 			for ub in participants:
+# 				edge = (r_radius + root[VIEW_SIZE][ub].getW() * 1.5) * direction
+# 				end_x = r_x + edge * cos(angle)
+# 				end_y = r_y + edge * sin(angle)
+# 				view_layout[ub] = tlp.Coord(end_x, end_y)
+#
+# 				if degrees(angle) * degrees(angle + towards_edge * d_angle) < 0:
+# 					angle = -angle_top
+# 					towards_edge = 1
+# 					if even_num_of_participants:
+# 						angle += towards_edge * d_angle
+# 				else:
+# 					angle += towards_edge * d_angle
+# 	else:
+# 		x, y = 0, 0
+# 		for m in sorted(nodes_of_interest, key=lambda nd: (root.isElement(root.existEdge(nd, r, True)), root[ID][nd])):
+# 			m_h = root[VIEW_SIZE][m].getH() / 2
+# 			y += m_h
+# 			root[VIEW_LAYOUT][m] = tlp.Coord(x, y)
+# 			y += m_h
 
 
-def r_to_meta_node(meta_graph, r, c_id, do_lo):
-	root = meta_graph.getRoot()
+# def create_fake_rs(meta_graph, c_id=None, r_ns=None, do_lo=True):
+# 	root = meta_graph.getRoot()
+# 	if r_ns is None:
+# 		r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
+# 	for r in r_ns:
+# 		r_to_meta_node(meta_graph, r, c_id, do_lo)
 
-	ubs = []
-	for s in root.getInOutNodes(r):
-		if ub_or_single(s, root) and meta_graph.isElement(s) and (not c_id or root[COMPARTMENT_ID][s] == c_id):
-			ubs.append(s)
 
-	if meta_graph.isElement(r) and (not c_id or root[COMPARTMENT_ID][r] == c_id):
-		ubs.append(r)
-
-	if len(ubs) <= 1:
-		return None
-
-	r_n = meta_graph.createMetaNode(ubs, False)
-	r_graph = root[VIEW_META_GRAPH][r_n]
-	# layout_hierarchically(r_graph)
-	if do_lo:
-		layout_ub_reaction(r_graph, r)
-
-	for prop in [NAME, ID, TYPE, TERM, TRANSPORT, REVERSIBLE]:
-		root[prop][r_n] = root[prop][r]
-
-	root[COMPARTMENT_ID][r_n] = root[COMPARTMENT_ID][ubs[0]]
-
-	root[FAKE][r_n] = True
-	root[VIEW_SHAPE][r_n] = CIRCLE_SHAPE
-
-	root[VIEW_SIZE][r_n] = get_n_size(meta_graph, r_n)
-
-	return r_n
+# def r_to_meta_node(meta_graph, r, c_id, do_lo):
+# 	root = meta_graph.getRoot()
+#
+# 	ubs = []
+# 	for s in root.getInOutNodes(r):
+# 		if ub_or_single(s, root) and meta_graph.isElement(s) and (not c_id or root[COMPARTMENT_ID][s] == c_id):
+# 			ubs.append(s)
+#
+# 	if meta_graph.isElement(r) and (not c_id or root[COMPARTMENT_ID][r] == c_id):
+# 		ubs.append(r)
+#
+# 	if len(ubs) <= 1:
+# 		return None
+#
+# 	r_n = meta_graph.createMetaNode(ubs, False)
+# 	r_graph = root[VIEW_META_GRAPH][r_n]
+# 	if do_lo:
+# 		layout_ub_reaction(r_graph, r)
+# 		# layout_hierarchically(r_graph)
+#
+# 	for prop in [NAME, ID, TYPE, TERM, TRANSPORT, REVERSIBLE]:
+# 		root[prop][r_n] = root[prop][r]
+#
+# 	root[COMPARTMENT_ID][r_n] = root[COMPARTMENT_ID][ubs[0]]
+#
+# 	root[FAKE][r_n] = True
+# 	root[VIEW_SHAPE][r_n] = CIRCLE_SHAPE
+#
+# 	root[VIEW_SIZE][r_n] = get_n_size(meta_graph, r_n)
+#
+# 	return r_n
 
 
 def open_meta_ns(meta_graph, ns):
@@ -356,3 +385,241 @@ def open_meta_ns(meta_graph, ns):
 		meta_graph.openMetaNode(n)
 		for inner_n in inner_ns:
 			root[VIEW_SIZE][inner_n] = get_n_size(meta_graph, inner_n)
+
+
+# def rotate_ub_ns(graph):
+# 	root = graph.getRoot()
+# 	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+# 	for r in (r for r in graph.getNodes() if TYPE_REACTION == root[TYPE][r]):
+# 		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
+#
+# 		c_id = root[COMPARTMENT_ID][r]
+# 		reactants, products = set(s for s in graph.getInNodes(r) if root[COMPARTMENT_ID][s] == c_id), \
+# 		                      set(s for s in graph.getOutNodes(r) if root[COMPARTMENT_ID][s] == c_id)
+# 		ub_reactants, ub_products = {s for s in reactants if ub_or_single(s, root)}, \
+# 		                            {s for s in products if ub_or_single(s, root)}
+# 		order = lambda s: (-root[VIEW_META_GRAPH][s].numberOfNodes() if graph.isMetaNode(s) else 1, -graph.deg(s))
+# 		sp_reactants, sp_products = sorted(reactants - ub_reactants, key=order), \
+# 		                            sorted(products - ub_products, key=order)
+#
+# 		reactant_angle, product_angle = None, None
+# 		if sp_reactants:
+# 			sample_reactant = sp_reactants[0]
+# 			s_x, s_y = view_layout[sample_reactant].getX(), view_layout[sample_reactant].getY()
+# 			reactant_angle = degrees(atan2(s_y - r_y, s_x - r_x))
+# 			if not sp_products:
+# 				product_angle = reactant_angle + 180
+# 		if sp_products:
+# 			sample_product = sp_products[0]
+# 			s_x, s_y = view_layout[sample_product].getX(), view_layout[sample_product].getY()
+# 			product_angle = degrees(atan2(s_y - r_y, s_x - r_x))
+# 			if not sp_reactants:
+# 				reactant_angle = product_angle - 180
+#
+# 		if not (reactant_angle is None) and ub_reactants:
+# 			cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in ub_reactants], \
+# 			             [root[VIEW_LAYOUT][s].getY() for s in ub_reactants]
+# 			s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
+# 			current_angle = degrees(atan2(s_y - r_y, s_x - r_x))
+# 			if len(ub_reactants) == 1:
+# 				current_angle -= 20
+# 			reactant_angle -= current_angle
+#
+# 			if root[ID][r] == "r_0532":
+# 				print reactant_angle
+#
+# 			mg = graph.inducedSubGraph(ub_reactants)
+# 			view_layout.translate(tlp.Coord(-r_x, -r_y))
+# 			view_layout.rotateZ(reactant_angle, mg)
+# 			view_layout.translate(tlp.Coord(r_x, r_y))
+# 			graph.delAllSubGraphs(mg)
+#
+# 		if not (product_angle is None) and ub_products:
+# 			cs_x, cs_y = [root[VIEW_LAYOUT][s].getX() for s in ub_products],\
+# 			             [root[VIEW_LAYOUT][s].getY() for s in ub_products]
+# 			s_x, s_y = (min(cs_x) + max(cs_x)) / 2, (min(cs_y) + max(cs_y)) / 2
+# 			current_angle = (degrees(atan2(s_y - r_y, s_x - r_x)))
+# 			if len(ub_products) == 1:
+# 				current_angle -= 20
+# 			product_angle -= current_angle
+#
+# 			if root[ID][r] == "r_0532":
+# 				print product_angle
+#
+# 			mg = graph.inducedSubGraph(ub_products)
+# 			view_layout.translate(tlp.Coord(-r_x, -r_y))
+# 			view_layout.rotateZ(product_angle, mg)
+# 			view_layout.translate(tlp.Coord(r_x, r_y))
+# 			graph.delAllSubGraphs(mg)
+
+
+# def layout_ub_nodes(graph, r_ns=None, c_id=None):
+# 	root = graph.getRoot()
+# 	view_layout = root[VIEW_LAYOUT]
+# 	if r_ns is None:
+# 		r_ns = [r for r in root.getNodes() if TYPE_REACTION == root[TYPE][r]]
+# 	for r in r_ns:
+# 		r_x, r_y = view_layout[r].getX(), view_layout[r].getY()
+# 		r_r = get_reaction_r(r, root)
+#
+# 		reactants, products = (s for s in root.getInNodes(r) if graph.isElement(s) and not ub_or_single(s, root)), \
+# 		                      (s for s in root.getOutNodes(r) if graph.isElement(s) and not ub_or_single(s, root))
+# 		order = lambda s: (-root[VIEW_META_GRAPH][s].numberOfNodes() if graph.isMetaNode(s) else 1, -graph.deg(s))
+# 		sp_reactants, sp_products = sorted(reactants, key=order), sorted(products, key=order)
+#
+# 		reactant_angle, product_angle = None, None
+# 		if sp_reactants:
+# 			sample_reactant = sp_reactants[0]
+# 			s_x, s_y = view_layout[sample_reactant].getX(), view_layout[sample_reactant].getY()
+# 			reactant_angle = degrees(atan2(s_y - r_y, s_x - r_x))
+# 			if not sp_products:
+# 				product_angle = reactant_angle + 180
+# 		if sp_products:
+# 			sample_product = sp_products[0]
+# 			s_x, s_y = view_layout[sample_product].getX(), view_layout[sample_product].getY()
+# 			product_angle = degrees(atan2(s_y - r_y, s_x - r_x))
+# 			if not sp_reactants:
+# 				reactant_angle = product_angle - 180
+#
+# 		ubs = [s for s in root.getInNodes(r) if ub_or_single(s, root) and graph.isElement(s) and (not c_id or root[COMPARTMENT_ID][s] == c_id)]
+# 		if ubs:
+# 			w = max(root[VIEW_SIZE][m].getW() for m in ubs)
+# 			gr = graph.inducedSubGraph(ubs)
+# 			x, y = r_r + w, 0
+# 			for m in sorted(ubs, key=lambda nd: root[ID][nd]):
+# 				m_h = root[VIEW_SIZE][m].getH() / 2
+# 				y += m_h
+# 				view_layout[m] = tlp.Coord(x, y)
+# 				y += m_h
+# 			if not (reactant_angle is None):
+# 				view_layout.translate(tlp.Coord(-r_x, -r_y))
+# 				view_layout.rotateZ(reactant_angle, gr)
+# 				view_layout.translate(tlp.Coord(r_x, r_y))
+# 			graph.delAllSubGraphs(gr)
+#
+# 		ubs = [s for s in root.getOutNodes(r) if ub_or_single(s, root) and graph.isElement(s) and (not c_id or root[COMPARTMENT_ID][s] == c_id)]
+# 		if ubs:
+# 			w = max(root[VIEW_SIZE][m].getW() for m in ubs)
+# 			gr = graph.inducedSubGraph(ubs)
+# 			x, y = r_r + w, 0
+# 			for m in sorted(ubs, key=lambda nd: root[ID][nd]):
+# 				m_h = root[VIEW_SIZE][m].getH() / 2
+# 				y += m_h
+# 				view_layout[m] = tlp.Coord(x, y)
+# 				y += m_h
+# 			if not (product_angle is None):
+# 				view_layout.translate(tlp.Coord(-r_x, -r_y))
+# 				view_layout.rotateZ(product_angle, gr)
+# 				view_layout.translate(tlp.Coord(r_x, r_y))
+# 			graph.delAllSubGraphs(gr)
+
+
+def layout_ub_sps(graph, r_ns=None, c_id=None):
+	root = graph.getRoot()
+	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+	view_size = root.getSizeProperty(VIEW_SIZE)
+
+	if not r_ns:
+		r_ns = (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n])
+
+	for r in r_ns:
+		x1, y1 = view_layout[r].getX(), view_layout[r].getY()
+		# c = min(view_size[r].getW() * 1.8, 3.5)  # edge-after-bent length
+		for (get_reactants, get_reaction_edges, get_products, direction) in [
+			(graph.getInNodes, graph.getOutEdges, graph.getOutNodes, 1),
+			(graph.getOutNodes, graph.getInEdges, graph.getInNodes, -1)]:
+
+			ubiquitous_reactants = [n for n in get_reactants(r) if ub_or_single(n, graph)
+			                        and (not c_id or root[COMPARTMENT_ID][n] == c_id)]
+			ub_reactants_len = len(ubiquitous_reactants)
+			if not ub_reactants_len:
+				continue
+			if ub_reactants_len % 2 == 1:
+				ub_reactants_len += 1
+
+			specific_reactants = [n for n in get_reactants(r) if not ub_or_single(n, graph)]
+			r_radius = get_reaction_r(r, root)
+			size = sum(root[VIEW_SIZE][ub].getW() for ub in ubiquitous_reactants) / len(ubiquitous_reactants)
+			edge_len = size * max(ub_reactants_len / 2, 3)
+			if specific_reactants:
+				specific_reactant_example = specific_reactants[0]
+				x2, y2 = view_layout[specific_reactant_example].getX(), view_layout[specific_reactant_example].getY()
+				species_size = view_size[specific_reactant_example].getW() / 2
+				edge_len = (sqrt(pow(x1 - x2, 2) + pow(y2 - y1, 2)) - r_radius - species_size)
+			else:
+				specific_products = [n for n in get_products(r) if not ub_or_single(n, graph)]
+				if specific_products:
+					specific_product_example = specific_products[0]
+					x3, y3 = view_layout[specific_product_example].getX(), view_layout[specific_product_example].getY()
+					x2, y2 = x1 - (x3 - x1), y1 - (y3 - y1)
+				else:
+					x2, y2 = x1 + view_size[r].getW() + size * ub_reactants_len * direction, y1
+
+			# beta is the max angle between the ubiquitous and the specific edges
+			gap = 2 * min(100, max(60, ub_reactants_len * 20))
+			beta0 = radians(gap / 2)
+			beta = beta0
+			d_beta = radians(gap/(ub_reactants_len - 1))
+
+			# distance from reaction to the edge bent
+			bent = min(size / 2, edge_len / 2)
+			s0 = r_radius + bent
+			s = s0
+			ds = min(2 * (edge_len - bent - size / 2) / ub_reactants_len, size)
+			# s += ds * ub_reactants_len / 2
+
+			# angle between the horizontal line and the reaction-specific-species edge
+			alpha = atan2(y2 - y1, x2 - x1)
+
+			dc = 0
+			towards_edge = -1
+			for ub in ubiquitous_reactants:
+				# it is the only edge as ubiquitous species are duplicated
+				e = get_reaction_edges(ub).next()
+				x0, y0 = x1 + s * cos(alpha), y1 + s * sin(alpha)
+				view_layout[e] = [tlp.Coord(x0, y0)]
+
+				gamma = alpha + beta
+				# edge-after-bent length
+				c = min(edge_len - s0 + dc + r_radius - size, 2 * size)
+
+				x3, y3 = x0 + c * cos(gamma), y0 + c * sin(gamma)
+				view_layout[ub] = tlp.Coord(x3, y3)
+				# if degrees(beta) > 0:
+				# 	s += ds
+				if degrees(beta) * degrees(beta + towards_edge * d_beta) < 0:
+					beta = -beta0
+					towards_edge = 1
+					s = s0
+					dc = 0
+				else:
+					beta += towards_edge * d_beta
+					s += ds / 3
+					dc += ds
+				# if degrees(beta) < 0:
+				# 	s -= ds
+
+
+def layout(graph, margin=1):
+	root = graph.getRoot()
+	# create_fake_rs(graph)
+	gr = graph.inducedSubGraph([n for n in graph.getNodes() if not ub_or_single(n, graph)])
+	simples, cycles, mess = detect_components(gr)
+	for qo in simples:
+		layout_hierarchically(qo, margin)
+	for qo in cycles:
+		layout_circle(qo, margin)
+	for qo in mess:
+		layout_force(qo, margin)
+		remove_overlaps(qo, margin)
+	pack_cc(gr)
+	graph.delAllSubGraphs(gr)
+	layout_ub_sps(graph)
+	pack_cc(graph)
+	# layout_inner_elements(graph)
+	layout_outer_elements(graph)
+	layout_ub_sps(graph)
+	# open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
+	# rotate_ub_ns(graph)
+	root[VIEW_LAYOUT].setAllEdgeValue([])
+# apply_layout(graph, onto)

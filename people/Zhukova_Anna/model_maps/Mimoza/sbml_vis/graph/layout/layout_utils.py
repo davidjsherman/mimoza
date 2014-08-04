@@ -1,8 +1,6 @@
 from tulip import tlp
 
-from sbml_vis.graph.layout.generalized_layout import rotate_ub_ns
 from sbml_vis.graph.graph_properties import *
-from sbml_vis.graph.layout.ubiquitous_layout import remove_overlaps, layout_outer_elements, create_fake_rs, open_meta_ns
 
 
 COMPONENT_PACKING = "Connected Component Packing"
@@ -61,30 +59,6 @@ def pack_cc(graph):
 	graph.computeLayoutProperty(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
 
 
-def layout(graph, margin=1):
-	root = graph.getRoot()
-	create_fake_rs(graph)
-	gr = graph.inducedSubGraph([n for n in graph.getNodes()])
-	simples, cycles, mess = detect_components(gr)
-	for qo in simples:
-		layout_hierarchically(qo, margin)
-	for qo in cycles:
-		layout_circle(qo, margin)
-	for qo in mess:
-		layout_force(qo, margin)
-		remove_overlaps(qo, margin)
-	graph.delAllSubGraphs(gr)
-	pack_cc(graph)
-	layout_outer_elements(graph)
-	# layout_inner_elements(graph)
-	open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
-	rotate_ub_ns(graph)
-	root[VIEW_LAYOUT].setAllEdgeValue([])
-
-
-# apply_layout(graph, onto)
-
-
 def detect_components(graph, cycle_number_threshold=3, node_number_threshold=50):
 	comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
 	cycles, simples, mess = [], [], []
@@ -98,7 +72,7 @@ def detect_components(graph, cycle_number_threshold=3, node_number_threshold=50)
 		elif cycles_num == 0:
 			gr.setName("acyclic")
 			simples.append(gr)
-		elif cycles_num < cycle_number_threshold * 2 and len(ns) < node_number_threshold:
+		elif cycles_num <= cycle_number_threshold * 2 and len(ns) < node_number_threshold or cycles_num <= 1 * 2:
 			gr.setName("cycle")
 			cycles.append(gr)
 		else:

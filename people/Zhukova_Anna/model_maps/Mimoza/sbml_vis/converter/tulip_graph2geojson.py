@@ -10,8 +10,7 @@ from sbml_vis.graph.graph_properties import ID, COMPARTMENT_ID, \
 	CLONE_ID
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges, layout_inner_elements, \
-	get_comp_borders, bend_edges_around_compartments
-from sbml_vis.graph.layout.layout_utils import open_meta_ns, layout
+	get_comp_borders, bend_edges_around_compartments, layout, open_meta_ns
 from sbml_generalization.utils.logger import log
 
 
@@ -282,6 +281,7 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps):
 
 		bend_edges_around_compartments(meta_graph, (e for e in meta_graph.getEdges() if not get_e_id(e) in processed))
 		bend_edges(meta_graph)
+		# bend_species_edges(meta_graph)
 
 		export_elements(c_id2info, c_id2outs, c_id2level2features, c_id2scales, meta_graph, processed, r2rs_ps)
 
