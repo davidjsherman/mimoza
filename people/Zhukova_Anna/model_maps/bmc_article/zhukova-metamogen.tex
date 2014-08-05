@@ -51,7 +51,7 @@
 %\RequirePackage{natbib}
 \RequirePackage{hyperref}
 \usepackage[utf8]{inputenc} %unicode support
-\usepackage{graphicx}
+%\usepackage{graphicx}
 \usepackage{setspace}
 \usepackage[T1]{fontenc}
 %\usepackage[applemac]{inputenc} %applemac support if unicode package fails
@@ -74,8 +74,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%\def\includegraphic{}
-%\def\includegraphics{}
+\def\includegraphic{}
+\def\includegraphics{}
 
 
 
@@ -478,21 +478,21 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
 
 \section*{Figures}
   \begin{figure}[h!]
-  \includegraphics[scale=0.5]{figure1.png}
+% \includegraphics[scale=0.5]{figure1.png}
   \caption{\csentence{Three zoom levels}
   \label{zoom_levels}
       The bottom level represents the cytoplasm compartment containing organelle compartments and transport reactions between them. The intermediate zoom shows the generalized processes in the peroxisome compartment. The most detailed view reveals the metabolites that were generalized into a \emph{straight-chain saturated fatty acid} on the previous level, e.g. \textit{dodecanoate}, and reactions they participate in.}
       \end{figure}
       
 \begin{figure}[h!]
-\includegraphics[scale=0.5]{figure2.png}
+%\includegraphics[scale=0.5]{figure2.png}
   \caption{\csentence{GeoJSON representation of a reaction}
   \label{geojson}
       An SBML reaction is stored as a GeoJSON Point feature, with its layout coordinates encoded in the geometry section. The identifiers, labels and annotations, as well as the information on the reactant and product metabolites are stored as properties. The ``type'' property value specifies that this GeoJSON feature is a reaction.}
       \end{figure}
       
 \begin{figure}[h!]
-\includegraphics[scale=0.54]{figure3.png}
+%\includegraphics[scale=0.54]{figure3.png}
   \caption{\csentence{A reaction pop-up}
   \label{pop_up}
       (right part) An example of a pop-up that opens when a user clicks on a reaction: It contains the information on the reaction name, identifier, reactant and product metabolites and their stoichiometries, as well as gene associations. (left part) Gene names are hyperlinks redirecting to the NCBI Gene database\cite{NCBI}.}
