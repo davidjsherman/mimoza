@@ -140,6 +140,15 @@ p.popup table {
     font-size: 13px;
 }
 
+.example {
+    display:block;
+    max-width:100%;
+    overflow:hidden;
+    white-space:nowrap;
+    margin:0;
+    padding:0;
+}
+
 p.popup table td.main {
     max-width: 45%;
     overflow: hidden;

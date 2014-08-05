@@ -1,86 +1,110 @@
 <!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>
 <html lang="en">
 <head>
-<link media="all" href="./lib/modelmap//modelmap.css" type="text/css" rel="stylesheet" />
-<link media="all" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" type="text/css" rel="stylesheet" />
-<title>Mimoza</title>
-<link href="./lib/modelmap//fav.ico" type="image/x-icon" rel="shortcut icon" />
+    <link media="all" href="./lib/modelmap//modelmap.css" type="text/css" rel="stylesheet"/>
+    <link media="all" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" type="text/css"
+          rel="stylesheet"/>
+    <title>Mimoza</title>
+    <link href="./lib/modelmap//fav.ico" type="image/x-icon" rel="shortcut icon"/>
 </head>
 <body>
 <h1>Welcome to Mimoza</h1>
+
 <div class="indent" id="all">
 
-<div>
-  <p><span class="pant">Mimoza</span> is a navigation system that allows to explore metabolic models in a semantically zoomable manner:
-</p>
-<ul>
-<li><span class="pant">The general views</span> represent the compartments of the model and
-  the transport reactions between them; 
-<li><span class="pant">the intermediate view</span> shows the <a href="http://metamogen.gforge.inria.fr/" target="_blank">generalized</a> versions of reactions and metabolites in each compartment;
-<li><span class="pant">the most detailed view</span> represents the initial model with the generalization-based layout (where similar metabolites and reactions are placed next to each other).
-</ul>
-</div>
-
-<div id="expl">
-	<p>Try <span class="pant">Mimoza</span> now by submitting your
-      model (in <a href="http://sbml.org/" target="_blank">SBML</a>
-	format) in the form below. <i>(Available for the models of a
-	modest size (hundreds of reactions). For large ones either install <span
-	class="pant">Mimoza</span> locally, or upload a <a href="http://metamogen.gforge.inria.fr/" target="_blank">generalized</a> model.)</i></p>
-<div class="centre margin" id="input">
-  <form name="input_form" enctype="multipart/form-data" action="/cgi-bin/upload.py"  method="POST">
-    <input type="file" name="file_input" id="model_file"
-  accept="text/xml, text/sbml"/>
-    <input class="ui-button" type="submit" value="Submit" onclick="progress()">  
-  </form>
-</div>
-<p>You can also <a href="Mimoza.zip" download>download the Mimoza's
-	code</a> to
-	install it locally, or as a <a
-	href="https://wiki.galaxyproject.org/"
-	target="_blank">Galaxy</a> tool (<a href="Mimoza.xml" download>download the config file</a>).</p>
-</div>
-<div id="img" style="visibility:hidden;height:0">
-<p>We are currently uploading your model...</p>
-<img
-	src="http://mimoza.bordeaux.inria.fr/lib/modelmap/loader.gif" class="centre margin" alt="Loading..."/>
-</div>
-
-<script type="text/javascript">
-	function progress() {
-var img = document.getElementById("img");
-		img.style.visibility="visible";
-img.style.height = "auto";
-var expl = document.getElementById("expl");
-expl.style.visibility="hidden";
-expl.style.height="0px";
-	}
-</script>
-
-<div>
-        <p><span class="pant">Mimoza</span> is developed by the <a href="https://team.inria.fr/magnome/" target="_blank">MAGNOME</a> team at the <a href="http://www.inria.fr/en/centre/bordeaux" target="_blank">Inria Bordeaux</a>
-            research center. For any questions and comments please contact <a href="mailto:anna.zhukova@inria.fr" target="_blank">anna.zhukova@inria.fr</a>.</p>
+    <div>
+        <p><span class="pant">Mimoza</span> is a navigation system that allows to explore metabolic models in a
+            semantically zoomable manner:
+        </p>
+        <ul>
+            <li><span class="pant">The general views</span> represent the compartments of the model and
+                the transport reactions between them;
+            <li><span class="pant">the intermediate view</span> shows the <a href="http://metamogen.gforge.inria.fr/"
+                                                                             target="_blank">generalized</a> versions of
+                reactions and metabolites in each compartment;
+            <li><span class="pant">the most detailed view</span> represents the initial model with the
+                generalization-based layout (where similar metabolites and reactions are placed next to each other).
+        </ul>
     </div>
-<div>
-<p>
-<span class="pant">Mimoza</span> is powered by <a href="http://leafletjs.com/" target="_blank">Leaflet</a>, 
-<a href="http://metamogen.gforge.inria.fr/" target="_blank">Model generalization library</a>, 
-<a href="http://www.ebi.ac.uk/chebi/" target="_blank">ChEBI</a>,
-<a href="http://tulip.labri.fr/" target="_blank">Tulip</a>, 
-<a href="http://geojson.org/" target="_blank">GeoJSON</a>, 
-<a href="http://jquery.com/" target="_blank">jQuery</a>, 
-<a href="http://www.python.org/" target="_blank">Python</a>, 
-and <a href="http://www.jetbrains.com/pycharm/" target="_blank">PyCharm</a>.</p>
-</div>
-<table width="100%" height="50%">
-  <tr width="100%"><th width="50%" class="centre"><p>Peroxisome of <a
-        href="http://mimoza.bordeaux.inria.fr/yali/comp.html?id=c_14"
-        target="blank"><i>Y. lipolytica</i> model</a></p></th>
-	<th width="50%" class="centre"><p>Peroxisome of <a
-        href="http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8"
-        target="blank"><i>S. cerevisiae</i>  model</a></p></th></tr>
-  <tr  width="100%" height="90%"><td width="50%"><iframe src="http://mimoza.bordeaux.inria.fr/a07d2622e93fe7c436a2bb8af69c7cea/comp_min.html?id=c_14" width="100%" height="100%" frameborder="0" style="border:0"></iframe></td><td width="50%"><iframe src="http://mimoza.bordeaux.inria.fr/3e6ca2a0c5cb5de80562e3693430ba80/comp_min.html?id=C_8" width="100%" height="100%" frameborder="0" style="border:0"></iframe></td></tr>
-</table>
+
+    <div id="expl">
+        <p>Try <span class="pant">Mimoza</span> now by submitting your
+            model (in <a href="http://sbml.org/" target="_blank">SBML</a>
+            format) in the form below. <i>(Available for the models of a
+                modest size (hundreds of reactions). For large ones either install <span
+                        class="pant">Mimoza</span> locally, or upload a <a href="http://metamogen.gforge.inria.fr/"
+                                                                           target="_blank">generalized</a> model.)</i>
+        </p>
+        <div class="centre margin" id="input">
+            <form name="input_form" enctype="multipart/form-data" action="/cgi-bin/upload.py" method="POST">
+                <input type="file" name="file_input" id="model_file"
+                       accept="text/xml, text/sbml"/>
+                <input class="ui-button" type="submit" value="Submit" onclick="progress()">
+            </form>
+        </div>
+        <p>You can also <a href="Mimoza.zip" download>download the Mimoza's
+            code</a> to
+            install it locally, or as a <a
+                    href="https://wiki.galaxyproject.org/"
+                    target="_blank">Galaxy</a> tool (<a href="Mimoza.xml" download>download the config file</a>).</p>
+    </div>
+    <div id="img" style="visibility:hidden;height:0">
+        <p>We are currently uploading your model...</p>
+        <img
+                src="http://mimoza.bordeaux.inria.fr/lib/modelmap/loader.gif" class="centre margin" alt="Loading..."/>
+    </div>
+    <script type="text/javascript">
+        function progress() {
+            var img = document.getElementById("img");
+            img.style.visibility = "visible";
+            img.style.height = "auto";
+            var expl = document.getElementById("expl");
+            expl.style.visibility = "hidden";
+            expl.style.height = "0px";
+        }
+    </script>
+    <table width="100%" height="50%">
+        <tr width="100%"  height="10%">
+            <th width="50%"><p>Peroxisome of <a
+                    href="http://mimoza.bordeaux.inria.fr/yali/comp.html?id=c_14"
+                    target="blank"><i>Y. lipolytica</i> model</a></p></th>
+            <th width="50%"><p>Peroxisome of <a
+                    href="http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8"
+                    target="blank"><i>S. cerevisiae</i> model</a></p></th>
+        </tr>
+        <tr width="100%" height="90%">
+            <td width="50%" height="100%" class="centre example">
+                <iframe src="http://mimoza.bordeaux.inria.fr/a07d2622e93fe7c436a2bb8af69c7cea/comp_min.html?id=c_14"
+                        width="100%" height="100%" frameborder="0" style="border:0"></iframe>
+            </td>
+            <td width="50%" height="100%" class="centre example">
+                <iframe src="http://mimoza.bordeaux.inria.fr/3e6ca2a0c5cb5de80562e3693430ba80/comp_min.html?id=C_8"
+                        width="100%" height="100%" frameborder="0" style="border:0"></iframe>
+            </td>
+        </tr>
+    </table>
+    <p class="centre">
+        <iframe src="http://player.vimeo.com/video/102616835?byline=0&amp;portrait=0&amp;color=ffffff" width="500" height="375" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+    </p>
+    <div>
+        <p><span class="pant">Mimoza</span> is developed by the <a href="https://team.inria.fr/magnome/"
+                                                                   target="_blank">MAGNOME</a> team at the <a
+                href="http://www.inria.fr/en/centre/bordeaux" target="_blank">Inria Bordeaux</a>
+            research center. For any questions and comments please contact <a href="mailto:anna.zhukova@inria.fr"
+                                                                              target="_blank">anna.zhukova@inria.fr</a>.
+        </p>
+    </div>
+    <div>
+        <p>
+            <span class="pant">Mimoza</span> is powered by <a href="http://leafletjs.com/" target="_blank">Leaflet</a>,
+            <a href="http://metamogen.gforge.inria.fr/" target="_blank">Model generalization library</a>,
+            <a href="http://www.ebi.ac.uk/chebi/" target="_blank">ChEBI</a>,
+            <a href="http://tulip.labri.fr/" target="_blank">Tulip</a>,
+            <a href="http://geojson.org/" target="_blank">GeoJSON</a>,
+            <a href="http://jquery.com/" target="_blank">jQuery</a>,
+            <a href="http://www.python.org/" target="_blank">Python</a>,
+            and <a href="http://www.jetbrains.com/pycharm/" target="_blank">PyCharm</a>.</p>
+    </div>
 </div>
 </body>
 </html>
