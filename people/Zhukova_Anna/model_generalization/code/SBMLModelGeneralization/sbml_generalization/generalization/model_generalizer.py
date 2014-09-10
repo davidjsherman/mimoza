@@ -1,8 +1,10 @@
 from collections import defaultdict, Counter
+from math import sqrt
 from sbml_generalization.generalization.MaximizingThread import MaximizingThread
 from sbml_generalization.generalization.StoichiometryFixingThread import StoichiometryFixingThread
-from sbml_generalization.generalization.reaction_filters import get_reactions_by_species, getReactants, getProducts
-from sbml_generalization.generalization.vertical_key import get_vertical_key
+from sbml_generalization.generalization.reaction_filters import get_reactions_by_species, getReactants, getProducts, \
+	get_reactions_by_term
+from sbml_generalization.generalization.vertical_key import get_vertical_key, is_reactant
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.utils.logger import log_clusters, log
 from sbml_generalization.utils.misc import invert_map
@@ -59,6 +61,102 @@ def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 	for th in thrds:
 		th.join()  # This waits until the thread has completed
 	return term_id2clu
+
+
+def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
+	clu2term_ids = invert_map(term_id2clu)
+	term_id2s_ids = defaultdict(set)
+	s_id2clu = {}
+	for s_id, t_id in species_id2term_id.iteritems():
+		c_id = model.getSpecies(s_id).getCompartment()
+		term_id2s_ids[t_id, c_id].add(s_id)
+		if (t_id, c_id) in term_id2clu:
+			s_id2clu[s_id] = term_id2clu[t_id, c_id]
+
+	r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)
+	rs = list(model.getListOfReactions())
+
+	for clu, t_ids in clu2term_ids.iteritems():
+		r2t_ids = defaultdict(set)
+		for t_id in t_ids:
+			for r in get_reactions_by_term(t_id, rs, term_id2s_ids):
+				r2t_ids[r.getId()].add(t_id)
+
+		t_id2r_clus = {}
+		all_clus = set()
+		for t_id in t_ids:
+			clus = {(r_id2clu[r.getId()], "in" if is_reactant(t_id, r, s_id2clu, species_id2term_id, ubiquitous_chebi_ids, model) else "out") for r in get_reactions_by_term(t_id, rs, term_id2s_ids)}
+			t_id2r_clus[t_id] = clus
+			all_clus |= {clu[0] for clu in clus}
+		clu2binary = dict(zip(all_clus, xrange(0, len(all_clus))))
+		bin2t_ids = defaultdict(list)
+		for t_id in t_id2r_clus.iterkeys():
+			cls = []
+			for clu in t_id2r_clus[t_id]:
+				cls.append((clu2binary[clu[0]], clu[1]))
+			bin = tuple([1 if (it, "in") in cls else (-1 if (it, "out") in cls else 0) for it in xrange(0, len(all_clus))])
+			bin2t_ids[bin].append(model.getSpecies(term_id2s_ids[t_id].pop()).getName())
+
+		bins = bin2t_ids.keys()
+		conflicts = [i for i in xrange(0, len(all_clus)) if next((t for t in bins if 1 == t[i]), None) and next((t for t in bins if -1 == t[i]), None)]
+		if not conflicts:
+			continue
+		in_conflict = lambda bin1, bin2: next((True for j in conflicts if bin1[j] * bin2[j] == -1), False)
+		median_bin = lambda bin_list: [median(bin_list, j, bin2t_ids) for j in xrange(0, len(all_clus))]
+		i = max(conflicts, key=lambda i: len([t for t in bins if 0 != t[i]]))
+		current_bins = []
+		for bin in sorted((bin for bin in bins if bin[i] != 0), key=lambda bin: -len(bin2t_ids[bin])):
+			good_bins = sorted(((c_bins, tot) for (c_bins, tot) in current_bins if not in_conflict(bin, tot)),
+			                              key=lambda (c_bins, tot): distance(bin, median_bin(c_bins)))
+			if good_bins:
+				c_bins, tot = good_bins[0]
+				c_bins.append(bin)
+				for j in xrange(0, len(all_clus)):
+					if bin[j] != 0:
+						tot[j] = bin[j]
+			else:
+				current_bins.append(([bin], list(bin)))
+
+		neutral_bins = [bin for bin in bins if bin[i] == 0]
+		while neutral_bins:
+			bad_bins = [bin for bin in neutral_bins
+			            if not next(((c_bins, tot) for (c_bins, tot) in current_bins if not in_conflict(bin, tot)), None)]
+			if not bad_bins:
+				bin = min(neutral_bins, key=lambda bin: min(distance(bin, median_bin(c_bins))
+				                                                 for (c_bins, tot) in current_bins if not in_conflict(bin, tot)))
+				c_bins, tot = min(((c_bins, tot) for (c_bins, tot) in current_bins if not in_conflict(bin, tot)),
+				                  key=lambda (c_bins, _): (-len([j for j in xrange(0, len(all_clus)) if bin[j] != 0 and bin[j] == median_bin(c_bins)[j]]),
+				                                           distance(bin, median_bin(c_bins))))
+				c_bins.append(bin)
+				for j in xrange(0, len(all_clus)):
+					if bin[j] != 0:
+						tot[j] = bin[j]
+			else:
+				bin = max(bad_bins, key=lambda bin: len(bin2t_ids[bin]))
+				current_bins.append(([bin], list(bin)))
+			neutral_bins.remove(bin)
+
+		i = 0
+		for (c_bins, _) in current_bins:
+			n_clu = clu + (i,)
+			i += 1
+			for bin in c_bins:
+				for t in bin2t_ids[bin]:
+					term_id2clu[t] = n_clu
+
+
+def median(arrays, j, array2num):
+	total, length = 0, 0
+	for array in arrays:
+		l = len(array2num[array])
+		total += array[j] * l
+		length += l
+
+	return int(round(float(total) / length))
+
+
+def distance(a, b):
+	return sqrt(sum(pow(a[i] - b[i], 2) for i in xrange(0, len(a))))
 
 
 def compute_eq0(interesting_term_ids, comp_ids, onto):
@@ -145,6 +243,7 @@ def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids
 	filter_clu_to_terms(term_id2clu)
 	# log_clusters(term_id2clu, onto, verbose, True)
 	log(verbose, "  preserving stoichiometry...")
+	update_binary_vectors(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
 	term_id2clu = fix_stoichiometry(model, term_id2clu, species_id2chebi_id, onto)
 	filter_clu_to_terms(term_id2clu)
 	# log_clusters(term_id2clu, onto, verbose, True)

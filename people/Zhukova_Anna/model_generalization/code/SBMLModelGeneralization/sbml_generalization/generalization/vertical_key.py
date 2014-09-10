@@ -20,6 +20,16 @@ def need_to_reverse((ubiquitous_reactants, ubiquitous_products, specific_reactan
 					specific_product_classes) and specific_reactant_classes > specific_product_classes)))
 
 
+def is_reactant(t_id, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, model):
+	ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes = \
+		get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
+	if r.getReversible() and need_to_reverse(
+			(ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes,)):
+		return t_id in {(s_id2term_id[s_id] if s_id in s_id2term_id else s_id, model.getSpecies(s_id).getCompartment()) for s_id in getProducts(r)}
+	else:
+		return t_id in {(s_id2term_id[s_id] if s_id in s_id2term_id else s_id, model.getSpecies(s_id).getCompartment()) for s_id in getReactants(r)}
+
+
 def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	reactants, products = getReactants(r), getProducts(r)
 
