@@ -1,7 +1,6 @@
 from collections import defaultdict
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
-from graph.layout.predefined_layout import apply_layout
 
 from sbml_vis.graph.layout.layout_utils import layout_hierarchically, detect_components, layout_circle, layout_force, pack_cc
 from sbml_vis.graph.resize import get_n_size, UBIQUITOUS_SPECIES_SIZE, REACTION_SIZE, get_n_length

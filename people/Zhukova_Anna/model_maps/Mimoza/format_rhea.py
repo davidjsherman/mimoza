@@ -1,9 +1,11 @@
 from os import walk
-import sys
+
 from libsbml import *
+
 from obo_ontology import to_identifiers_org_format, get_chebi, parse
 from rdf_annotation_helper import add_annotation
 from sbml_helper import create_compartment, create_species, create_reaction, save_as_sbml
+
 
 RHEA_IN_DIR = "/Users/anna/Downloads/rd/"
 RHEA_OUT_FILE = "/Users/anna/Downloads/rhea.txt"
