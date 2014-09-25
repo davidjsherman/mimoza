@@ -4,7 +4,7 @@ from sbml_generalization.utils.logger import log
 from sbml_generalization.generalization.sbml_helper import check_names, check_compartments, parse_group_sbml, GrPlError
 from sbml_generalization.utils.compartment_positioner import get_comp2go, comp2level
 from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Term
-from sbml_generalization.generalization.reaction_filters import getGeneAssociation
+from sbml_generalization.generalization.reaction_filters import get_gene_association
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 
 from sbml_vis.graph.node_cloner import clone_node
@@ -76,7 +76,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		# 	continue
 
 		n = graph.addNode()
-		graph[TERM][n] = getGeneAssociation(r)
+		graph[TERM][n] = get_gene_association(r)
 		graph[ID][n] = r.getId()
 		graph[NAME][n] = name
 		graph[TYPE][n] = TYPE_REACTION
@@ -166,16 +166,16 @@ def import_sbml(input_model, sbml_file, verbose=False):
 	log(verbose, 'adding reaction nodes')
 	reactions2nodes(get_r_comp, graph, id2n, input_model)
 
-	for n in (n for n in graph.getNodes() if TYPE_SPECIES == graph[TYPE][n] and graph.deg(n) > 5 \
-			and not graph[ID][n] in s_id2gr_id):
-		graph[UBIQUITOUS][n] = True
+	# for n in (n for n in graph.getNodes() if TYPE_SPECIES == graph[TYPE][n] and graph.deg(n) > 5 \
+	# 		and not graph[ID][n] in s_id2gr_id):
+	# 	graph[UBIQUITOUS][n] = True
 
 	log(verbose, 'duplicating nodes')
 	duplicate_nodes(graph)
 
 	log(verbose, 'marking species/reaction groups')
 	mark_ancestors(graph, r_id2g_id, s_id2gr_id, c_id2info)
-	return graph, c_id2info, c_id2outs
+	return graph, c_id2info, c_id2outs, chebi
 
 
 def create_props(graph):
@@ -237,7 +237,7 @@ def mark_ancestors(graph, r_eq2clu, s2clu, c_id2info):
 			gr_id, term, el_num = s2clu[id_[n]]
 			if term:
 				if isinstance(term, Term):
-					gr_name = term.getName()
+					gr_name = term.get_name()
 				else:
 					gr_name = term
 					term = None
@@ -248,5 +248,5 @@ def mark_ancestors(graph, r_eq2clu, s2clu, c_id2info):
 		if gr_id:
 			anc_id[n] = gr_id
 		if term:
-			anc_ch_id[n] = term.getId()
+			anc_ch_id[n] = term.get_id()
 

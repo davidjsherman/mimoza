@@ -73,7 +73,7 @@ def factor_nodes(graph, ns=None):
 	return meta_ns
 
 
-def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=True):
+def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=True, onto=None):
 	root = meta_graph.getRoot()
 	ns = [n for n in meta_graph.getNodes() if root[COMPARTMENT_ID][n] == c_id]
 	if not ns:
@@ -81,7 +81,7 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=Tru
 	comp_n = meta_graph.createMetaNode(ns, False)
 	comp_graph = root[VIEW_META_GRAPH][comp_n]
 	if do_layout:
-		layout(comp_graph)
+		layout(comp_graph, 1, onto)
 	root[NAME][comp_n] = c_name
 	root[COMPARTMENT_ID][comp_n] = out_comp
 	root[TYPE][comp_n] = TYPE_COMPARTMENT

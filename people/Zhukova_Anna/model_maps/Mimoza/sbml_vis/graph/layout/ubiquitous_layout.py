@@ -1,6 +1,7 @@
 from collections import defaultdict
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
+from graph.layout.predefined_layout import apply_layout
 
 from sbml_vis.graph.layout.layout_utils import layout_hierarchically, detect_components, layout_circle, layout_force, pack_cc
 from sbml_vis.graph.resize import get_n_size, UBIQUITOUS_SPECIES_SIZE, REACTION_SIZE, get_n_length
@@ -600,7 +601,7 @@ def layout_ub_sps(graph, r_ns=None, c_id=None):
 				# 	s -= ds
 
 
-def layout(graph, margin=1):
+def layout(graph, margin=1, onto=None):
 	root = graph.getRoot()
 	# create_fake_rs(graph)
 	gr = graph.inducedSubGraph([n for n in graph.getNodes() if not ub_or_single(n, graph)])
@@ -614,6 +615,8 @@ def layout(graph, margin=1):
 		remove_overlaps(qo, margin)
 	pack_cc(gr)
 	graph.delAllSubGraphs(gr)
+	# if onto:
+	# 	apply_layout(graph, onto)
 	layout_ub_sps(graph)
 	pack_cc(graph)
 	# layout_inner_elements(graph)
@@ -622,4 +625,3 @@ def layout(graph, margin=1):
 	# open_meta_ns(graph, (r for r in graph.getNodes() if root[FAKE][r]))
 	# rotate_ub_ns(graph)
 	root[VIEW_LAYOUT].setAllEdgeValue([])
-# apply_layout(graph, onto)

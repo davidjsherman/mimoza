@@ -59,7 +59,7 @@ def pack_cc(graph):
 	graph.computeLayoutProperty(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
 
 
-def detect_components(graph, cycle_number_threshold=3, node_number_threshold=50):
+def detect_components(graph, cycle_number_threshold=4, node_number_threshold=75):
 	comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
 	cycles, simples, mess = [], [], []
 	for ns in comp_list:
@@ -72,7 +72,7 @@ def detect_components(graph, cycle_number_threshold=3, node_number_threshold=50)
 		elif cycles_num == 0:
 			gr.setName("acyclic")
 			simples.append(gr)
-		elif cycles_num <= cycle_number_threshold * 2 and len(ns) < node_number_threshold or cycles_num <= 1 * 2:
+		elif cycles_num <= cycle_number_threshold * 2 and len(ns) < node_number_threshold or cycles_num <= 2 * 2:
 			gr.setName("cycle")
 			cycles.append(gr)
 		else:

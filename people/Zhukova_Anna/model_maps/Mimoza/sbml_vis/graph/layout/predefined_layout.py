@@ -1,3 +1,4 @@
+from tulip import tlp
 from sbml_vis.graph.color.color_keys import key2coord
 from sbml_vis.graph.graph_properties import *
 
@@ -33,18 +34,19 @@ def apply_layout(graph, onto):
 	# before = len(key2coord)
 	for n in graph.getNodes():
 		if ubiquitous[n]:
-			if not graph.deg(n):
-				continue
-			r = graph.getInOutNodes(n).next()
-			k = get_keys(n, graph, onto, True)[0]
-			keys = ["{0}+{1}".format(k, l) for l in get_keys(r, graph, onto, True)]
+			continue
+			# if not graph.deg(n):
+			# 	continue
+			# r = graph.getInOutNodes(n).next()
+			# k = get_keys(n, graph, onto, True)[0]
+			# keys = ["{0}+{1}".format(k, l) for l in get_keys(r, graph, onto, True)]
 		else:
 			keys = get_keys(n, graph, onto, True)
 		if not keys:
 			continue
 		coord = next((key2coord[key] for key in keys if key in key2coord), None)
 		if coord:
-			view_layout[n] = coord
+			view_layout[n] = tlp.Coord(coord[0], coord[1])
 		else:
 			for key in keys:
 				key2coord[key] = view_layout[n]
@@ -69,12 +71,12 @@ def get_keys(n, graph, onto, primary=False):
 			key = chebi_id[n]
 		if not key:
 			return [name[n]]
-		t = onto.getTerm(key)
+		t = onto.get_term(key)
 		if t:
 			key = get_primary_id(t, onto)
 		return [key]
 
 
 def get_primary_id(term, onto):
-	terms = {term} | onto.getEquivalentTerms(term, None, 0, {CONJUGATE_BASE_OF, CONJUGATE_ACID_OF})
-	return sorted([t.getId() for t in terms])[0]
+	terms = {term} | onto.get_equivalents(term, None, 0, {CONJUGATE_BASE_OF, CONJUGATE_ACID_OF})
+	return sorted([t.get_id() for t in terms])[0]

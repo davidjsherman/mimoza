@@ -22,6 +22,11 @@ GREEN = tlp.Color(179, 222, 105) # B3DE69
 VIOLET = tlp.Color(190, 186, 218) # BEBADA
 TURQUOISE = tlp.Color(141, 211, 199) # 8DD3C7
 
+RED_RGB = 251, 128, 114
+BLUE_RGB = 128, 177, 211
+
+NOT_GENERALIZED = 'ng'
+
 
 def get_key(n, graph):
 	root = graph.getRoot()
@@ -30,7 +35,10 @@ def get_key(n, graph):
 		an_id = root[ANCESTOR_ID][n]
 		if an_id:
 			return an_id
-		return root[ID][n]
+		elif root.isMetaNode(n):
+			return root[ID][n]
+		return NOT_GENERALIZED, TYPE_REACTION
+		# return root[ID][n]
 	if TYPE_SPECIES == type_:
 		an_ch = root[ANCESTOR_TERM][n]
 		if an_ch:
@@ -38,10 +46,16 @@ def get_key(n, graph):
 		an_id = root[ANCESTOR_ID][n]
 		if an_id:
 			return an_id
-		ch = root[TERM][n]
-		if ch:
-			return ch
-		return root[ID][n]
+		elif root.isMetaNode(n):
+			ch = root[TERM][n]
+			if ch:
+				return ch
+			return root[ID][n]
+		return NOT_GENERALIZED, TYPE_SPECIES
+		# ch = root[TERM][n]
+		# if ch:
+		# 	return ch
+		# return root[ID][n]
 	return None
 
 
@@ -49,35 +63,35 @@ def color(graph):
 	root = graph.getRoot()
 	view_color = root.getColorProperty(VIEW_COLOR)
 
-	keys = {get_key(n, graph) for n in graph.getNodes() if root[TYPE][n] == TYPE_REACTION}
-	i = len(keys)
+	s_keys = {get_key(n, graph) for n in graph.getNodes() if root[TYPE][n] == TYPE_REACTION}
+	s_keys -= {(NOT_GENERALIZED, TYPE_SPECIES)}
+
+	r_keys = {get_key(n, graph) for n in graph.getNodes() if root[TYPE][n] == TYPE_SPECIES}
+	r_keys -= {(NOT_GENERALIZED, TYPE_REACTION)}
+	i = max(len(s_keys), len(r_keys))
 
 	colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
 	colors = [(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
-	key2color = dict(zip(keys, colors))
 
-	keys = {get_key(n, graph) for n in graph.getNodes() if root[TYPE][n] == TYPE_SPECIES}
-	i = len(keys)
+	key2color = dict(zip(s_keys, colors))
+	key2color.update(dict(zip(r_keys, colors)))
 
-	colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
-	colors = [(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
+	key2color[(NOT_GENERALIZED, TYPE_SPECIES)] = RED_RGB
+	key2color[(NOT_GENERALIZED, TYPE_REACTION)] = BLUE_RGB
 
-	key2color.update(dict(zip(keys, colors)))
-
-	root = graph.getRoot()
-	organelles = root.getAttribute(ORGANELLES).split(";")
-	cyto = root.getAttribute(CYTOPLASM)
-	i = len(organelles) + 2
-	colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
-	colors = [tlp.Color(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
-	key2comp_color = dict(zip(organelles + [cyto], colors[1:]))
-
+	# root = graph.getRoot()
+	# organelles = root.getAttribute(ORGANELLES).split(";")
+	# cyto = root.getAttribute(CYTOPLASM)
+	# i = len(organelles) + 2
+	# colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
+	# colors = [tlp.Color(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
+	# key2comp_color = dict(zip(organelles + [cyto], colors[1:]))
 
 	for n in graph.getNodes():
 		type_ = root[TYPE][n]
 
 		if TYPE_COMPARTMENT == type_:
-			view_color[n] = key2comp_color[root[NAME][n]] if root[NAME][n] in key2comp_color else TRANSPARENT_GRAY
+			# view_color[n] = key2comp_color[root[NAME][n]] if root[NAME][n] in key2comp_color else TRANSPARENT_GRAY
 			continue
 		a = 255
 		if TYPE_REACTION == type_:
@@ -85,11 +99,6 @@ def color(graph):
 			if graph.isMetaNode(n):
 				a = 100
 			view_color[n] = tlp.Color(r, g, b, a)
-			for e in graph.getInOutEdges(n):
-				if root[UBIQUITOUS][graph.target(e)] or root[UBIQUITOUS][graph.source(e)]:
-					view_color[e] = GRAY
-				else:
-					view_color[e] = tlp.Color(r, g, b, 100 if graph.isMetaEdge(e) else 255)
 		if TYPE_SPECIES == type_:
 			if root[UBIQUITOUS][n]:
 				r, g, b = 180, 180, 180
@@ -98,6 +107,21 @@ def color(graph):
 				if graph.isMetaNode(n):
 					a = 100
 			view_color[n] = tlp.Color(r, g, b, a)
+
+
+def color_edges(graph):
+	root = graph.getRoot()
+	view_color = root.getColorProperty(VIEW_COLOR)
+	for n in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n]):
+		color = view_color[n]
+		for e in graph.getInOutEdges(n):
+			real_e = e
+			while root.isMetaEdge(real_e):
+				real_e = list(root[VIEW_META_GRAPH][real_e])[0]
+			if root[UBIQUITOUS][real_e] or root[UBIQUITOUS][graph.target(e)] or root[UBIQUITOUS][graph.source(e)]:
+				view_color[e] = GRAY
+			else:
+				view_color[e] = color
 
 
 def simple_color(graph):

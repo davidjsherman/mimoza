@@ -13,12 +13,12 @@ def get_short_name(graph, n, onto):
 	# if it is shorter 
 	ch_id = graph[TERM][n]
 	if ch_id:
-		term = onto.getTerm(ch_id)
+		term = onto.get_term(ch_id)
 		if term:
-			alts = [term.getName()]
-			alts.extend(term.getSynonyms())
+			alts = [term.get_name()]
+			alts.extend(term.get_synonyms())
 			if not short_name: 
-				short_name = term.getName()
+				short_name = term.get_name()
 			for alt in alts:
 				if alt and len(alt) < len(short_name):
 					short_name = alt

@@ -108,9 +108,9 @@ def main(argv=None):
 	input_document = reader.readSBML(groups_sbml)
 	input_model = input_document.getModel()
 
-	root, c_id2info, c_id2outs = import_sbml(input_model, groups_sbml, True)
+	root, c_id2info, c_id2outs, chebi = import_sbml(input_model, groups_sbml, True)
 
-	fc = graph2geojson(c_id2info, c_id2outs, root, True)
+	fc = graph2geojson(c_id2info, c_id2outs, root, True, chebi)
 	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose)
 

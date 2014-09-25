@@ -78,10 +78,10 @@ def add_explanations(page):
 	page.p.close()
 
 	page.p(
-		"%s - compartments; %s/%s/%s - generalised/specific/ubiquitous metabolites; %s/%s/%s/%s - generalised transport/transport/generalised/other reactions." % (
+		"%s - compartments; %s/%s - specific, but not generalised/ubiquitous metabolites; %s - specific, but not generalised reactions." % (
 			format_color(YELLOW),
-			format_color(ORANGE), format_color(RED), format_color(GREY),
-			format_color(TURQUOISE), format_color(VIOLET), format_color(GREEN), format_color(BLUE)))
+			format_color(RED), format_color(GREY),
+			format_color(BLUE)))
 
 	page.div.close()
 

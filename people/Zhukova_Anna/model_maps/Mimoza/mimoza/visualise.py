@@ -9,8 +9,6 @@ import sys
 
 from libsbml import SBMLReader
 
-from tulip import tlp
-
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.sbml2tlp import import_sbml
 from mimoza.mimoza import *
@@ -70,8 +68,8 @@ try:
 
 		# sbml -> tulip graph
 		log(True, 'sbml -> tlp')
-		graph, c_id2info, c_id2outs = import_sbml(input_model, groups_sbml, True)
-		features = graph2geojson(c_id2info, c_id2outs, graph, True)
+		graph, c_id2info, c_id2outs, chebi = import_sbml(input_model, groups_sbml, True)
+		features = graph2geojson(c_id2info, c_id2outs, graph, True, chebi)
 		serialize(directory, m_dir_id, input_model, features, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
 		          MIMOZA_FAVICON, True)
 

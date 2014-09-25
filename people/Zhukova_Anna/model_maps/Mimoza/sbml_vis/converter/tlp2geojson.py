@@ -56,9 +56,13 @@ def e2feature(graph, e, scale, transport, inner):
 	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 
-	ubiquitous = root[UBIQUITOUS][e]
+	real_e = e
+	while root.isMetaEdge(real_e):
+		real_e = list(root[VIEW_META_GRAPH][real_e])[0]
+	ubiquitous = root[UBIQUITOUS][real_e]
+	color = triplet(root[VIEW_COLOR][e])
 	props = {WIDTH: get_e_size(root, e).getW() / 2, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
-	         COLOR: get_edge_color(ubiquitous, generalized, transport)}
+	         COLOR: get_edge_color(ubiquitous, generalized, transport, color)}
 	if not transport:
 		props["c_id"] = root[COMPARTMENT_ID][s]
 	else:
@@ -80,6 +84,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport,
 	node_type = root[TYPE][n]
 	generalized = graph.isMetaNode(n)
 	props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
+	color = triplet(root[VIEW_COLOR][n])
 	if TYPE_REACTION == node_type:
 		ins, outs = get_formula(graph, n, r2rs_ps)
 		genes = get_gene_association_list(root[TERM][n])
@@ -89,7 +94,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport,
 			props[REACTANTS] = ins
 		if outs:
 			props[PRODUCTS] = outs
-		props[COLOR] = get_reaction_color(generalized, transport)
+		props[COLOR] = get_reaction_color(generalized, transport, color)
 		if transport:
 			del props[COMPARTMENT_ID]
 			# let's not store unneeded False
@@ -117,14 +122,14 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport,
 		term = root[TERM][n]
 		if term:
 			props[TERM] = term
-		props.update({COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized)})
+		props.update({COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized, color)})
 
 	bg_feature = None
 	# if generalized:
 	if generalized:
 		node_type = TYPE_2_BG_TYPE[node_type]
 		transport = TRANSPORT in props
-		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport)}
+		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport, color)}
 		if transport:
 			# let's not store unneeded False
 			bg_props[TRANSPORT] = True
