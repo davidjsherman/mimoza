@@ -53,27 +53,27 @@ class StoichiometryFixingThread(threading.Thread):
 
 	def get_common_roots(self):
 		# the least common ancestors, or roots if there are none
-		common_ancestor_terms = self.onto.commonPts({self.onto.getTerm(t) for t in self.term_ids}, 3)
+		common_ancestor_terms = self.onto.common_points({self.onto.get_term(t) for t in self.term_ids}, 3)
 		if not common_ancestor_terms:
 			common_ancestor_terms = set()
 			for t in self.term_ids:
-				term = self.onto.getTerm(t)
+				term = self.onto.get_term(t)
 				# then it's a fake term
 				if not term:
 					continue
-				common_ancestor_terms |= self.onto.getAnyParentsOfLevel(term, set(), None, 3)
+				common_ancestor_terms |= self.onto.get_generalized_ancestors_of_level(term, set(), None, 3)
 		return common_ancestor_terms
 
 	def get_covered_term_ids(self, term, term_ids):
 		result = set()
 		for sub_t in self.onto.get_sub_tree(term):
-			sub_t_id = sub_t.getId()
+			sub_t_id = sub_t.get_id()
 			if sub_t_id in term_ids:
 				result.add(sub_t_id)
 		return result
 
 	def get_level(self, t):
-		level = self.onto.getLevel(t)
+		level = self.onto.get_level(t)
 		return sum(level) / len(level)
 
 	def get_psi_set(self, conflicts):
@@ -98,7 +98,7 @@ class StoichiometryFixingThread(threading.Thread):
 			T_covered_term_ids = self.get_covered_term_ids(T, self.term_ids)
 			T_level = self.get_level(T)
 			process(T_covered_term_ids, (3, T_level), basics)
-			for t in self.onto.getAnyChildren(T, False, set()):
+			for t in self.onto.get_generalized_descendants(T, False, set()):
 				if t in processed:
 					continue
 				processed.add(t)

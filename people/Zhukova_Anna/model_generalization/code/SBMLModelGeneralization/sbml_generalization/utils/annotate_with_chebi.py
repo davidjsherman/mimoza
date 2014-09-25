@@ -1,27 +1,27 @@
 from collections import defaultdict
 from libsbml import Species
 from obo_ontology import miriam_to_term_id, to_identifiers_org_format
-from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues, addAnnotation, \
+from sbml_generalization.generalization.rdf_annotation_helper import get_qualifier_values, add_annotation, \
     get_is_qualifier, get_is_vo_qualifier
 
 __author__ = 'anna'
 
 
 def get_is_annotations(entity):
-    return (miriam_to_term_id(it) for it in getAllQualifierValues(entity.getAnnotation(), get_is_qualifier()))
+    return (miriam_to_term_id(it) for it in get_qualifier_values(entity.getAnnotation(), get_is_qualifier()))
 
 
 def get_is_vo_annotations(entity):
-    return (miriam_to_term_id(it) for it in getAllQualifierValues(entity.getAnnotation(), get_is_vo_qualifier()))
+    return (miriam_to_term_id(it) for it in get_qualifier_values(entity.getAnnotation(), get_is_vo_qualifier()))
 
 
 def get_term(entity, chebi):
     for is_annotation in get_is_annotations(entity):
-        term = chebi.getTerm(is_annotation)
+        term = chebi.get_term(is_annotation)
         if term:
             return term
     for is_vo_annotation in get_is_vo_annotations(entity):
-        term = chebi.getTerm(is_vo_annotation)
+        term = chebi.get_term(is_vo_annotation)
         if term:
             return term
     return None
@@ -70,7 +70,7 @@ def get_species_to_chebi(model, chebi):
                     entity = s_type
                     term = get_term(s_type, chebi)
         if term:
-            species2chebi[species.getId()] = term.getId()
+            species2chebi[species.getId()] = term.get_id()
             used_terms.add(term)
             continue
         else:
@@ -82,16 +82,16 @@ def get_species_to_chebi(model, chebi):
             index = name.find("[{0}]".format(model.getCompartment(entity.getCompartment()).getName()))
             if -1 != index:
                 name = name[:index].strip()
-        possibilities = chebi.getIdsByName(name)
+        possibilities = chebi.get_ids_by_name(name)
         if not possibilities:
-            possibilities = chebi.getIdsByName(name_bis)
+            possibilities = chebi.get_ids_by_name(name_bis)
         if not possibilities:
             continue
-        possibilities = {chebi.getTerm(it) for it in possibilities}
+        possibilities = {chebi.get_term(it) for it in possibilities}
         intersection = possibilities & used_terms
         term = intersection.pop() if intersection else possibilities.pop()
         for species in species_set:
-            species2chebi[species.getId()] = term.getId()
-        addAnnotation(entity, get_is_qualifier(), to_identifiers_org_format(term.getId()))
+            species2chebi[species.getId()] = term.get_id()
+        add_annotation(entity, get_is_qualifier(), to_identifiers_org_format(term.get_id()))
         used_terms.add(term)
     return species2chebi

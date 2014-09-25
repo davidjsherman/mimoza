@@ -2,7 +2,7 @@ from libsbml import SBMLReader
 from sbml_generalization.generalization.sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, \
 	remove_unused_elements
 from sbml_generalization.utils.logger import log
-from mark_ubiquitous import getCofactors
+from mark_ubiquitous import get_cofactors
 from model_generalizer import map2chebi, generalize_species, generalize_reactions
 
 
@@ -19,32 +19,13 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, verbo
 
 	log(verbose, "mapping species to ChEBI...")
 	if not cofactors:
-		cofactors = getCofactors(onto)
+		cofactors = get_cofactors(onto)
 	species_id2chebi_id, ubiquitous_chebi_ids = map2chebi(cofactors, input_model, onto)
 
 	r_id2g_eq, r_id2ch_id, s_id2gr_id = {}, {}, {}
 
 	ub_sps = {s.getId() for s in input_model.getListOfSpecies() if
 	          s.getId() in species_id2chebi_id and species_id2chebi_id[s.getId()] in ubiquitous_chebi_ids}
-	# annotate_ubiquitous(groups_sbml, ub_sps, verbose)
-	#if sh_chains:
-	#    # shorten chains
-	#    log(verbose, "chain shortening...")
-	#    chains = shorten_chains(reactions, species_id2chebi_id, ubiquitous_chebi_ids, ontology, verbose)
-	#    if chains:
-	#        # save
-	#        r_id2ch_id = save_as_chain_shortened_sbml(chains, input_model, out_sbml, groups_sbml, verbose)
-	#        doc = SBMLReader().readSBML(out_sbml)
-	#        input_model = doc.getModel()
-	#
-	#        # update species_id2chebi_id
-	#        s_ids = set(species_id2chebi_id.keys())
-	#        for s_id in s_ids:
-	#            if not input_model.getSpecies(s_id):
-	#                del species_id2chebi_id[s_id]
-	#                # update reactions, go only for reactions inside organelles
-	#                #reactions = [rn for rn in input_model.getListOfReactions() \
-	# if filterReactionByNotTransport(rn, input_model)]
 
 	# generalize
 	s_id2clu = generalize_species(input_model, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose)

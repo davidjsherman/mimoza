@@ -1,4 +1,4 @@
-from sbml_generalization.generalization.reaction_filters import getReactants, getProducts
+from sbml_generalization.generalization.reaction_filters import get_reactants, get_products
 
 __author__ = 'anna'
 
@@ -25,13 +25,13 @@ def is_reactant(t_id, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, model):
 		get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
 	if r.getReversible() and need_to_reverse(
 			(ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes,)):
-		return t_id in {(s_id2term_id[s_id] if s_id in s_id2term_id else s_id, model.getSpecies(s_id).getCompartment()) for s_id in getProducts(r)}
+		return t_id in {(s_id2term_id[s_id] if s_id in s_id2term_id else s_id, model.getSpecies(s_id).getCompartment()) for s_id in get_products(r)}
 	else:
-		return t_id in {(s_id2term_id[s_id] if s_id in s_id2term_id else s_id, model.getSpecies(s_id).getCompartment()) for s_id in getReactants(r)}
+		return t_id in {(s_id2term_id[s_id] if s_id in s_id2term_id else s_id, model.getSpecies(s_id).getCompartment()) for s_id in get_reactants(r)}
 
 
 def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
-	reactants, products = getReactants(r), getProducts(r)
+	reactants, products = get_reactants(r), get_products(r)
 
 	def classify(s_ids):
 		specific, ubiquitous = [], []

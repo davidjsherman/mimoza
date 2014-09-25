@@ -1,7 +1,7 @@
-from libsbml import BQB_IS, BQB_IS_VERSION_OF, SBMLReader
-import sys
-from obo_ontology import parse, get_go, miriam_to_term_id
-from sbml_generalization.generalization.rdf_annotation_helper import getAllQualifierValues
+from libsbml import BQB_IS, BQB_IS_VERSION_OF
+
+from obo_ontology import miriam_to_term_id
+from sbml_generalization.generalization.rdf_annotation_helper import get_qualifier_values
 from sbml_generalization.generalization.sbml_helper import create_compartment
 
 
@@ -20,20 +20,20 @@ GO_LIPID_PARTICLE = 'go:0005811'
 
 __author__ = 'anna'
 
-partOfCheck = lambda it, t_id, onto: onto.partOf(it, [t_id])
-partOf = lambda t_id, onto, candidates: {it for it in candidates if partOfCheck(it.getId(), t_id, onto)}
-isACheck = lambda it, t_id, onto: onto.isA(it, onto.getTerm(t_id)) or (t_id.lower() == it.getId().lower())
+partOfCheck = lambda it, t_id, onto: onto.part_of(it, [t_id])
+partOf = lambda t_id, onto, candidates: {it for it in candidates if partOfCheck(it.get_id(), t_id, onto)}
+isACheck = lambda it, t_id, onto: onto.is_a(it, onto.get_term(t_id)) or (t_id.lower() == it.get_id().lower())
 isA = lambda t_id, onto, candidates: {it for it in candidates if isACheck(it, t_id, onto)}
 isAorPartOf = lambda t_id, onto, candidates: {it for it in candidates if
-                                              isACheck(it, t_id, onto) or partOfCheck(it.getId(), t_id, onto)}
+                                              isACheck(it, t_id, onto) or partOfCheck(it.get_id(), t_id, onto)}
 
 
 def get_go_term(annotation, qualifier, onto):
 	if not annotation:
 		return None
-	for go_id in getAllQualifierValues(annotation, qualifier):
+	for go_id in get_qualifier_values(annotation, qualifier):
 		go_id = miriam_to_term_id(go_id)
-		term = onto.getTerm(go_id)
+		term = onto.get_term(go_id)
 		if term:
 			return term
 	return None
@@ -47,49 +47,13 @@ def get_comp2go(model, onto):
 		if not term:
 			term = get_go_term(annotation, BQB_IS_VERSION_OF, onto)
 		if not term:
-			term_ids = onto.getIdsByName(comp.getName())
+			term_ids = onto.get_ids_by_name(comp.getName())
 			if term_ids:
-				term = onto.getTerm(term_ids.pop())
+				term = onto.get_term(term_ids.pop())
 			else:
 				term = None
-		comp2go[comp.getId()] = term.getId() if term else ''
+		comp2go[comp.getId()] = term.get_id() if term else ''
 	return comp2go
-
-
-def sort_comps(onto, comp2go):
-	terms = {onto.getTerm(it) for it in comp2go.itervalues() if it and onto.getTerm(it)}
-	term2comp_id = {}
-	for comp_id, go_id in comp2go.iteritems():
-		if go_id:
-			term2comp_id[go_id] = comp_id
-
-	# cell
-	inside_cell = isAorPartOf(GO_CELL, onto, terms)
-
-	# organelle
-	organelle_parts = partOf(GO_ORGANELLE, onto, terms) | partOf(GO_NUCLEUS, onto, terms) | partOf(GO_LIPID_PARTICLE,
-	                                                                                               onto, terms)
-	not_org_parts = terms - organelle_parts
-	organelles = isA(GO_ORGANELLE, onto, not_org_parts) | isA(GO_NUCLEUS, onto, not_org_parts) | isA(GO_LIPID_PARTICLE,
-	                                                                                                 onto,
-	                                                                                                 not_org_parts)
-	organelle_parts |= organelles
-	organelle_part2organelle = {term2comp_id[it.getId()]: term2comp_id[it.getId()] for it in organelles}
-	organelle_ids = {it.getId() for it in organelles}
-	for it in organelle_parts:
-		orgs = onto.partOf(it.getId(), organelle_ids)
-		if orgs:
-			organelle_part2organelle[term2comp_id[it.getId()]] = term2comp_id[orgs.pop()]
-
-	cytoplasms = {term2comp_id[it.getId()] for it in isA(GO_CYTOPLASM, onto, inside_cell)}
-
-	inside_cell = {term2comp_id[it.getId()] for it in inside_cell}
-	# outside_cell = terms - inside_cell
-	#
-	# # extracellular
-	#extracellulars = isAorPartOf(GO_EXTRACELLULAR, onto, outside_cell)
-
-	return organelle_part2organelle, cytoplasms, inside_cell
 
 
 def comp2level(model, onto):
@@ -111,10 +75,10 @@ def comp2level(model, onto):
 				if term:
 					term2comp[term] = comp
 					continue
-			term_ids = onto.getIdsByName(comp.getName())
+			term_ids = onto.get_ids_by_name(comp.getName())
 			if term_ids:
-				term2comp[onto.getTerm(set(term_ids).pop())] = comp
-		in2out = nest_compartments_with_gene_ontology({it.getId() for it in term2comp.iterkeys()}, onto)
+				term2comp[onto.get_term(set(term_ids).pop())] = comp
+		in2out = nest_compartments_with_gene_ontology({it.get_id() for it in term2comp.iterkeys()}, onto)
 		for in_term, out_term in in2out.iteritems():
 			if out_term:
 				term2comp[in_term].setOutside(term2comp[out_term].getId())
@@ -145,62 +109,17 @@ def comp2level(model, onto):
 	return c_id2level
 
 
-def nest_compartments(model):
-	outs_set = False
-	for comp in model.getListOfCompartments():
-		out = comp.getOutside()
-		if out:
-			out = model.getCompartment(out)
-			if out:
-				outs_set = True
-	if not outs_set:
-		onto = parse(get_go())
-		term2comp = {}
-		for comp in model.getListOfCompartments():
-			annotation = comp.getAnnotation()
-			if annotation:
-				term = get_go_term(annotation, BQB_IS, onto)
-				if not term:
-					term = get_go_term(annotation, BQB_IS_VERSION_OF, onto)
-				if term:
-					term2comp[term] = comp
-					continue
-			term_ids = onto.getIdsByName(comp.getName())
-			if term_ids:
-				term2comp[onto.getTerm(set(term_ids).pop())] = comp
-		in2out = nest_compartments_with_gene_ontology({it.getId() for it in term2comp.iterkeys()}, onto)
-		for in_term, out_term in in2out.iteritems():
-			if out_term:
-				term2comp[in_term].setOutside(term2comp[out_term].getId())
-	roots = {comp for comp in model.getListOfCompartments() if not comp.isSetOutside()}
-	outsides = {model.getCompartment(comp.getOutside()) for comp in model.getListOfCompartments() if
-	            comp.isSetOutside()}
-	if len(roots) > 1:
-		the_root = None
-		for it in roots:
-			if not (it in outsides):
-				the_root = it
-				break
-		if not the_root:
-			the_root = create_compartment(model, FAKE_ROOT_COMP)
-		for root in roots:
-			if not root == the_root:
-				root.setOutside(the_root.getId())
-	return {comp.getName(): model.getCompartment(comp.getOutside()).getName() if comp.isSetOutside() else '' for comp in
-	        model.getListOfCompartments()}
-
-
 # Update compartment hierarchy using the Gene Ontology
 def nest_compartments_with_gene_ontology(t_ids, onto):
 	comp2out = {}
 	# Look for missing outside compartments in the Gene Ontology
 	for t_id in t_ids:
-		term = onto.getTerm(t_id)
+		term = onto.get_term(t_id)
 		if not term:
 			continue
 		out = get_outside_comp_id(t_id, onto, t_ids)
 		if out:
-			out = onto.getTerm(out)
+			out = onto.get_term(out)
 		comp2out[term] = out
 
 	comps = set(comp2out.iterkeys())
@@ -222,37 +141,37 @@ def nest_compartments_with_gene_ontology(t_ids, onto):
 
 	# extracellular
 	extracellulars = isAorPartOf(GO_EXTRACELLULAR, onto, outside_cell)
-	extracellular_ids = {c.getId() for c in extracellulars}
+	extracellular_ids = {c.get_id() for c in extracellulars}
 	extracellular_comp = None
 	if extracellular_ids:
 		extracellular_comp, eo = correct_membranes(None, extracellulars, comp2out, onto)
 
-	outer = onto.getTerm(get_outer_most(onto, [it.getId() for it in inside_cell - organelle_parts]))
+	outer = onto.get_term(get_outer_most(onto, [it.get_id() for it in inside_cell - organelle_parts]))
 	cell_inner, cell_outer = correct_membranes(outer, (inside_cell - organelle_parts) - {outer}, comp2out, onto)
 
 	organelle2parts = {it: set() for it in organelles}
-	organelle_ids = {it.getId() for it in organelles}
+	organelle_ids = {it.get_id() for it in organelles}
 	no_organelle_parts = []
 	for it in organelle_parts:
-		orgs = onto.partOf(it.getId(), organelle_ids)
+		orgs = onto.part_of(it.get_id(), organelle_ids)
 		if orgs:
-			organelle2parts[onto.getTerm(orgs.pop())].add(it)
+			organelle2parts[onto.get_term(orgs.pop())].add(it)
 		else:
 			no_organelle_parts.append(it)
 
 	populated = {org for org in organelle2parts.iterkeys() if lambda org: organelle2parts[org]}
 	# organelle
-	organelle = onto.getTerm(GO_ORGANELLE)
-	organelle_ids = {it.getId() for it in organelle.getChildren(False)} | {GO_ORGANELLE.lower()}
+	organelle = onto.get_term(GO_ORGANELLE)
+	organelle_ids = {it.get_id() for it in organelle.get_ancestors(False)} | {GO_ORGANELLE.lower()}
 	for it in no_organelle_parts:
 		if it in organelles:
 			if it in populated:
 				continue
-			parents = set(onto.getParents(it, False)) & populated
+			parents = set(onto.get_ancestors(it, False)) & populated
 			if parents:
 				organelle2parts[parents.pop()].add(it)
 				continue
-		organelle = get_outside_comp_id(it.getId(), onto, organelle_ids)
+		organelle = get_outside_comp_id(it.get_id(), onto, organelle_ids)
 		if organelle:
 			if organelle in organelle2parts:
 				organelle2parts[organelle].add(it)
@@ -260,7 +179,7 @@ def nest_compartments_with_gene_ontology(t_ids, onto):
 				organelle2parts[organelle] = {it}
 				out = get_outside_comp_id(organelle, onto, t_ids)
 				if out:
-					out = onto.getTerm(out)
+					out = onto.get_term(out)
 				comp2out[organelle] = out
 
 	# surround those that are not surrounded, by extracellular
@@ -386,13 +305,13 @@ def get_outside_comp_id(comp_id, onto, variants):
 	# => not part of the cytoplasm according to the Gene Ontology
 	# nucleus, cytoplasm
 	variants = {it.lower() for it in variants}
-	if isACheck(onto.getTerm(comp_id), GO_NUCLEUS, onto) and (GO_CYTOPLASM in variants):
+	if isACheck(onto.get_term(comp_id), GO_NUCLEUS, onto) and (GO_CYTOPLASM in variants):
 		return GO_CYTOPLASM
-	if isACheck(onto.getTerm(comp_id), GO_LIPID_PARTICLE, onto) and (GO_CYTOPLASM in variants):
+	if isACheck(onto.get_term(comp_id), GO_LIPID_PARTICLE, onto) and (GO_CYTOPLASM in variants):
 		return GO_CYTOPLASM
 	candidates = set(variants)
 	candidates -= {comp_id}
-	matches = onto.partOf(comp_id, candidates)
+	matches = onto.part_of(comp_id, candidates)
 	return get_inner_most(onto, matches)
 
 
@@ -406,7 +325,7 @@ def get_inner_most(onto, matches):
 		it = matches.pop()
 		no_better_candidate = True
 		for m in matches:
-			if onto.isA(onto.getTerm(m), onto.getTerm(it)) or onto.partOf(m, [it]):
+			if onto.is_a(onto.get_term(m), onto.get_term(it)) or onto.part_of(m, [it]):
 				no_better_candidate = False
 				break
 		if no_better_candidate:
@@ -424,7 +343,7 @@ def get_outer_most(onto, matches):
 		it = matches.pop()
 		no_better_candidate = True
 		for m in matches:
-			if onto.isA(onto.getTerm(it), onto.getTerm(m)) or onto.partOf(it, [m]):
+			if onto.is_a(onto.get_term(it), onto.get_term(m)) or onto.part_of(it, [m]):
 				no_better_candidate = False
 				break
 		if no_better_candidate:

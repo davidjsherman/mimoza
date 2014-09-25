@@ -33,8 +33,8 @@ def log_clusters(term_id2clu, onto, verbose, blueprint_only=False):
 				continue
 			blueprint.append(len(term_ids))
 			if not blueprint_only:
-				msg += "   %s (%s) <-> %s\n" % ((onto.getTerm(clu[1]).getName(), clu[0]) if isinstance(clu[1], str)
-				                                else clu, len(term_ids), [onto.getTerm(it[0]).getName() for it in term_ids])
+				msg += "   %s (%s) <-> %s\n" % ((onto.get_term(clu[1]).get_name(), clu[0]) if isinstance(clu[1], str)
+				                                else clu, len(term_ids), [onto.get_term(it[0]).get_name() for it in term_ids])
 		logging.info("quotient species sets:   %s\n" % sorted(blueprint))
 		if not blueprint_only:
 			logging.info("   %s\n" % msg)

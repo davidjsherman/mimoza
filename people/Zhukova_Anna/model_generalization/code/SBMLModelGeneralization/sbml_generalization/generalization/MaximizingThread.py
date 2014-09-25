@@ -1,7 +1,7 @@
 from collections import defaultdict
 import threading
 from sbml_generalization.generalization.reaction_filters import get_reactions_by_term
-from sbml_generalization.generalization.vertical_key import get_vertical_key, is_reactant
+from sbml_generalization.generalization.vertical_key import is_reactant
 
 __author__ = 'anna'
 

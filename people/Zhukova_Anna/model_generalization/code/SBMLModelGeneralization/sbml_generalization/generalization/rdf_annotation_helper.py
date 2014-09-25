@@ -12,72 +12,30 @@ def get_is_vo_qualifier():
     return BQB_IS_VERSION_OF
 
 
-def getQualifierValue(annotation, qualifierType):
-    if not annotation:
-        return None
-    cvTerms = CVTermList()
-    RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
-    for i in xrange(cvTerms.getSize()):
-        term = cvTerms.get(i)
-        if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifierType == term.getBiologicalQualifierType():
-            return term.getResourceURI(0).replace("%3A", ":")
-    return None
-
-
-def getAllQualifierValues(annotation, qualifierType):
+def get_qualifier_values(annotation, qualifier_type):
     if not annotation:
         return
-    cvTerms = CVTermList()
-    RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
-    for i in xrange(cvTerms.getSize()):
-        term = cvTerms.get(i)
-        if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifierType == term.getBiologicalQualifierType():
+    cv_terms = CVTermList()
+    RDFAnnotationParser.parseRDFAnnotation(annotation, cv_terms)
+    for i in xrange(cv_terms.getSize()):
+        term = cv_terms.get(i)
+        if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifier_type == term.getBiologicalQualifierType():
             yield term.getResourceURI(0).replace("%3A", ":")
 
 
-def getPrefixedQualifierValues(annotation, qualifierType, prefix):
-    if not annotation:
-        return None
-    cvTerms = CVTermList()
-    RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
-    result = set()
-    for i in xrange(cvTerms.getSize()):
-        term = cvTerms.get(i)
-        if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifierType == term.getBiologicalQualifierType():
-            value = term.getResourceURI(0).replace("%3A", ":")
-            if value.find(prefix) != -1:
-                result.add(value)
-    return result
-
-
-def addAnnotation(element, qualifierType, annotationValue):
+def add_annotation(element, qualifier, annotation):
     if not element.isSetMetaId():
         element.setMetaId("m_{0}".format(element.getId()))
     term = CVTerm()
     term.setQualifierType(BIOLOGICAL_QUALIFIER)
-    term.setBiologicalQualifierType(qualifierType)
-    term.addResource(annotationValue)
+    term.setBiologicalQualifierType(qualifier)
+    term.addResource(annotation)
     element.addCVTerm(term, True)
 
 
-def isAnnotationEmpty(element):
-    if not element or not element.isSetAnnotation():
-        return True
-    annotation = element.getAnnotation()
-    if not annotation:
-        return True
-    cvTerms = CVTermList()
-    RDFAnnotationParser.parseRDFAnnotation(annotation, cvTerms)
-    for i in xrange(cvTerms.getSize()):
-        term = cvTerms.get(i)
-        if term.getResources():
-            return False
-    return True
-
-
-def getTaxonomy(model):
-    occursIn = getAllQualifierValues(model.getAnnotation(), BQB_OCCURS_IN)
-    for it in occursIn:
+def get_taxonomy(model):
+    occurs_in = get_qualifier_values(model.getAnnotation(), BQB_OCCURS_IN)
+    for it in occurs_in:
         start = it.find("taxonomy")
         if start != -1:
             return it[start + len("taxonomy:"):].strip()
