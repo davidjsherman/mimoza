@@ -115,8 +115,10 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport,
 			props[UBIQUITOUS] = True
 		if transport:
 			props[TRANSPORT] = True
-			if inner:
-				props[INNER] = True
+			# even if a species participates in inner transport,
+			# we need to always show it inside its compartment
+			# if inner and ubiquitous:
+			# 	props[INNER] = True
 		# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
 		comp_name = c_id2info[c_id][0]
 		term = root[TERM][n]
@@ -133,7 +135,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport,
 		if transport:
 			# let's not store unneeded False
 			bg_props[TRANSPORT] = True
-			if inner:
+			if inner and TYPE_REACTION == node_type:
 				props[INNER] = True
 		if COMPARTMENT_ID in props:
 			bg_props[COMPARTMENT_ID] = c_id

@@ -139,19 +139,20 @@ def export_edges(c_id2level2features, c_id2scales, c_id2outs, meta_graph, proces
 		comp_id = root[ID][s] if TYPE_COMPARTMENT == s_type else (root[ID][t] if TYPE_COMPARTMENT == t_type else None)
 		# 3. between our closed compartment and something outside
 		if comp_id:
-			# Let's check that this "something outside" is not inside
-			other_c_id = t_c_id if comp_id == root[ID][s] else s_c_id
-			if other_c_id == comp_id or comp_id in c_id2outs[other_c_id]:
-				continue
-
-			# then this something outside shouldn't be an opened generalizable reaction/species
-			# (not for our compartment's feature list)
-			element = s if TYPE_COMPARTMENT != s_type else t
-			if root[ANCESTOR_ID][element]:
-				continue
-			scale, _ = c_id2scales[comp_id]
-			f = e2feature(meta_graph, e, scale, True, False)
-			update_level2features(f, c_id2level2features, 0, comp_id)
+			pass
+			# # Let's check that this "something outside" is not inside
+			# other_c_id = t_c_id if comp_id == root[ID][s] else s_c_id
+			# if other_c_id == comp_id or comp_id in c_id2outs[other_c_id]:
+			# 	continue
+			#
+			# # then this something outside shouldn't be an opened generalizable reaction/species
+			# # (not for our compartment's feature list)
+			# element = s if TYPE_COMPARTMENT != s_type else t
+			# if root[ANCESTOR_ID][element]:
+			# 	continue
+			# scale, _ = c_id2scales[comp_id]
+			# f = e2feature(meta_graph, e, scale, True, False)
+			# update_level2features(f, c_id2level2features, 0, comp_id)
 		# 4. between some reaction and some species,
 		# at least one of which is outside of our compartment
 		else:
@@ -177,7 +178,7 @@ def export_edges(c_id2level2features, c_id2scales, c_id2outs, meta_graph, proces
 				if meta_graph.isMetaEdge(e):
 					# 4.1.a. both the reaction and the species are outside our compartment
 					if t_c_id != c_id and s_c_id != c_id:
-						for z in [0, 1]:
+						for z in [1]:
 							update_level2features(f, c_id2level2features, z, c_id)
 					# 4.1.b. only one of them is outside
 					# (its ancestor on the previous zoom level was
@@ -190,7 +191,7 @@ def export_edges(c_id2level2features, c_id2scales, c_id2outs, meta_graph, proces
 					update_level2features(f, c_id2level2features, 2, c_id)
 				# 4.3. it's a simple edge between a non-generalizable reaction and a non-generalizable species
 				else:
-					for z in [0, 1, 2] if (c_id != s_c_id and c_id != t_c_id) else [1, 2]:
+					for z in [1, 2] if (c_id != s_c_id and c_id != t_c_id) else [1, 2]:
 						update_level2features(f, c_id2level2features, z, c_id)
 
 
@@ -221,7 +222,7 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, c_id2scales, meta_gr
 			c_id = root[ID][n]
 			scale, scale_coefficient = c_id2scales[c_id]
 			f, bg = n2feature(meta_graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, False, False)
-			update_level2features(f, c_id2level2features, 0, c_id)
+			# update_level2features(f, c_id2level2features, 0, c_id)
 			for z in [1, 2]:
 				update_level2features(bg, c_id2level2features, z, c_id)
 		# 2. it's a reaction or a species
@@ -243,7 +244,7 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, c_id2scales, meta_gr
 				for c_id in related_c_ids:
 					scale, scale_coefficient = c_id2scales[c_id]
 					f, bg = n2feature(meta_graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, True, False)
-					for z in [0, 1]:
+					for z in [1]:
 						update_level2features(f, c_id2level2features, z, c_id)
 					update_level2features(bg, c_id2level2features, 2, c_id)
 			# 2.1. it's simple
@@ -259,7 +260,7 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, c_id2scales, meta_gr
 				for c_id in related_c_ids:
 					scale, scale_coefficient = c_id2scales[c_id]
 					f, _ = n2feature(meta_graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, True, False)
-					for z in [2] if root[ANCESTOR_ID][n] else [0, 1, 2]:
+					for z in [2] if root[ANCESTOR_ID][n] else [1, 2]:
 						update_level2features(f, c_id2level2features, z, c_id)
 
 

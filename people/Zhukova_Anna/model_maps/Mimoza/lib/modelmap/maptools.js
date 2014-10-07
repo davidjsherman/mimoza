@@ -96,7 +96,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     if (typeof jsonData === 'undefined' || jsonData.length <= 0) {
         return null;
     }
-    var maxZoom = 4 + minZoom,
+    var maxZoom = 3 + minZoom,
         tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom),
         grayTiles = getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom),
         outTransportLayer = L.layerGroup(),
@@ -122,8 +122,8 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     var name2popup = {},
         name2zoom = {},
         json,
-        z = minZoom,
-        maxLoadedZoom = minZoom,
+        z,
+        maxLoadedZoom = minZoom + 1,
         coords = [
             [null, null],
             [null, null]
@@ -146,6 +146,10 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     var mapW = coords[1][0] - coords[0][0],
         mapH = coords[0][1] - coords[1][1];
     map.setView([coords[0][0] + mapW / 2, coords[1][1] + mapH / 2], minZoom);
+
+    loadGeoJson(map, json, minZoom + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+    loadGeoJson(map, json, minZoom + 1, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+    loadGeoJson(map, json, minZoom + 1, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
 
     if (ubJSON) {
         overlays[UB_LAYER_NAME] = ubLayer;
@@ -170,7 +174,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
             for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
-                json = jsonData[(z + 1 - minZoom) / 2];
+                json = jsonData[(z - minZoom) / 2];
                 loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
                 jsonArray = loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
                 ubJSON |= jsonArray[1];
@@ -179,7 +183,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
                 jsonArray = loadGeoJson(map, json, z + 1, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
                 ubJSON |= jsonArray[1];
                 // outside transport should already be visible on the min zoom level
-//                outJSON |= jsonArray[0] || jsonArray[1];
+                outJSON |= jsonArray[0] || jsonArray[1];
 
                 loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
                 jsonArray = loadGeoJson(map, json, z + 1, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
