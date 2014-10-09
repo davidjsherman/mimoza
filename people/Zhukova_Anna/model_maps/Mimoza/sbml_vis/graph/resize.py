@@ -16,17 +16,13 @@ def get_n_length(graph, n):
 	return graph.getRoot()[VIEW_META_GRAPH][n].numberOfNodes() if graph.isMetaNode(n) else 1
 
 
-def get_e_length(graph, e):
-	return len(graph.getRoot()[VIEW_META_GRAPH][e]) if graph.isMetaEdge(e) else 1
-	# s, t = graph.source(e), graph.target(e)
-	# r = None
-	# if TYPE_REACTION == graph.getRoot()[TYPE][s]:
-	# 	r = s
-	# elif TYPE_REACTION == graph.getRoot()[TYPE][t]:
-	# 	r = t
-	# if r:
-	# 	return graph.getRoot()[VIEW_SIZE][r].getW() / REACTION_SIZE
-	# return None
+def _get_e_size(root, e):
+	if root[UBIQUITOUS][e]:
+		return UBIQUITOUS_EDGE_SIZE
+	elif root.isMetaEdge(e):
+		return sum(_get_e_size(root, edg) for edg in root[VIEW_META_GRAPH][e])
+	else:
+		return EDGE_SIZE
 
 
 def get_mn_size(n, root):
@@ -52,15 +48,5 @@ def get_n_size(graph, n):
 
 
 def get_e_size(graph, e):
-	root = graph.getRoot()
-	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
-	if ubiquitous[e]:
-		sz = UBIQUITOUS_EDGE_SIZE
-	elif graph.isMetaEdge(e) and len(graph.getRoot()[VIEW_META_GRAPH][e]) > 1:
-		sz = EDGE_SIZE
-	else:
-		sz = GENERALIZED_EDGE_SIZE
-	# l = get_e_length(graph, e)
-	# sz = EDGE_SIZE * l if l else COMP_EDGE_SIZE
-	# sz = get_e_length(graph, e) * EDGE_SIZE
+	sz = _get_e_size(graph.getRoot(), e)
 	return tlp.Size(sz, sz)

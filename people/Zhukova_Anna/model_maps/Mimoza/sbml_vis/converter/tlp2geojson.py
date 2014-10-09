@@ -64,7 +64,7 @@ def e2feature(graph, e, scale, transport, inner):
 	props = {WIDTH: get_e_size(root, e).getW() / 2, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
 	         COLOR: get_edge_color(ubiquitous, generalized, transport, color)}
 	if not transport:
-		props["c_id"] = root[COMPARTMENT_ID][s]
+		props[COMPARTMENT_ID] = root[COMPARTMENT_ID][s]
 	else:
 	# let's not store unneeded False
 		props[TRANSPORT] = True
