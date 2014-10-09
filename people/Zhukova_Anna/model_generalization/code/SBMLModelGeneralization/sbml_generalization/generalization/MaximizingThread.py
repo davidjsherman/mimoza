@@ -39,10 +39,10 @@ class MaximizingThread(threading.Thread):
 	def run(self):
 		neighbours2term_ids = defaultdict(set)
 		neighbourless_terms = set()
-		rs = list(self.model.getListOfReactions())
+		rs = [r for r in self.model.getListOfReactions() if r.getNumReactants() > 1 or r.getNumProducts() > 1]
 		for t_id in self.term_ids:
 			neighbours = {
-				("in" if is_reactant(t_id, r, self.s_id2clu, self.species_id2term_id, self.ubiquitous_chebi_ids, self.model) else "out",
+				("in" if is_reactant(t_id, r, self.s_id2clu, self.species_id2term_id, self.ubiquitous_chebi_ids) else "out",
 				 self.r_id2clu[r.getId()]) for r in get_reactions_by_term(t_id, rs, self.term_id2s_ids)}
 			if neighbours:
 				key = tuple(neighbours)

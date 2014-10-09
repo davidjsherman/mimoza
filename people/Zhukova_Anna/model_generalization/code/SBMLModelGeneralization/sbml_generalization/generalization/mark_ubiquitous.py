@@ -19,7 +19,7 @@ COMMON_UB_IDS = {'chebi:37568', 'chebi:57783', 'chebi:17625', 'chebi:37563', 'ch
                  'chebi:13534', 'chebi:456216', 'chebi:456215', 'chebi:15351', 'chebi:30089', 'chebi:15422',
                  'chebi:57299', 'chebi:25805', 'chebi:26689', 'chebi:13390', 'chebi:57540', 'chebi:25524',
                  'chebi:13389', 'chebi:13392', 'chebi:28971', 'chebi:17984', 'chebi:29888', 'chebi:26020',
-                 'chebi:73342'}
+                 'chebi:73342', 'chebi:35780', 'chebi:26078'}
 
 CONJUGATE_ACID_BASE_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of'}
 

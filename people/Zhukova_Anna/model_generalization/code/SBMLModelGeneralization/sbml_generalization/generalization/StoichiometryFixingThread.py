@@ -41,15 +41,14 @@ class StoichiometryFixingThread(threading.Thread):
 	def get_conflicts(self):
 		term_id2s_ids = defaultdict(set)
 		for s_id, t_id in self.species_id2term_id.iteritems():
-			c_id = self.model.getSpecies(s_id).getCompartment()
-			if (t_id, c_id) in self.term_ids:
-				term_id2s_ids[t_id, c_id].add(s_id)
+			if t_id in self.term_ids:
+				term_id2s_ids[t_id].add(s_id)
 		r2term_ids = defaultdict(set)
-		rs = list(self.model.getListOfReactions())
+		rs = [r for r in self.model.getListOfReactions()]
 		for t_id in self.term_ids:
 			for r in get_reactions_by_term(t_id, rs, term_id2s_ids):
 				r2term_ids[r.getId()].add(t_id)
-		return [{t_id for (t_id, _) in terms} for terms in r2term_ids.itervalues() if len(terms) > 1]
+		return [terms for terms in r2term_ids.itervalues() if len(terms) > 1]
 
 	def get_common_roots(self):
 		# the least common ancestors, or roots if there are none
@@ -146,7 +145,6 @@ class StoichiometryFixingThread(threading.Thread):
 		conflicts = self.get_conflicts()
 		if not conflicts:
 			return
-		self.term_ids = {t_id for (t_id, _) in self.term_ids}
 		psi, set2score = self.get_psi_set(conflicts)
 		i = 0
 		for ts in self.greedy(psi, set2score):
@@ -155,4 +153,4 @@ class StoichiometryFixingThread(threading.Thread):
 			with st_fix_lock:
 				for t in ts:
 					# clu[0] is a compartment_id
-					self.term_id2clu[(t, self.clu[0])] = n_clu
+					self.term_id2clu[t] = n_clu

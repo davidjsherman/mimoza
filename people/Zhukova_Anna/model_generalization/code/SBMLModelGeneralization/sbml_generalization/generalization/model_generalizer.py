@@ -39,15 +39,19 @@ def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	return r_id2clu
 
 
+def compute_s_id2clu(model, species_id2term_id, term_id2clu):
+	s_id2clu = {}
+	term_id2s_ids = defaultdict(set)
+	for s_id, t_id in species_id2term_id.iteritems():
+		term_id2s_ids[t_id].add(s_id)
+		if t_id in term_id2clu:
+			s_id2clu[s_id] = (term_id2clu[t_id], model.getSpecies(s_id).getCompartment())
+	return s_id2clu, term_id2s_ids
+
+
 def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 	clu2term_ids = invert_map(term_id2clu)
-	term_id2s_ids = defaultdict(set)
-	s_id2clu = {}
-	for s_id, t_id in species_id2term_id.iteritems():
-		c_id = model.getSpecies(s_id).getCompartment()
-		term_id2s_ids[t_id, c_id].add(s_id)
-		if (t_id, c_id) in term_id2clu:
-			s_id2clu[s_id] = term_id2clu[t_id, c_id]
+	s_id2clu, term_id2s_ids = compute_s_id2clu(model, species_id2term_id, term_id2clu)
 
 	r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)
 
@@ -56,7 +60,8 @@ def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 		if len(term_ids) <= 1:
 			continue
 
-		thread = MaximizingThread(model, term_ids, term_id2s_ids, species_id2term_id, clu, term_id2clu, s_id2clu,
+		thread = MaximizingThread(model, term_ids, term_id2s_ids, species_id2term_id, clu, term_id2clu,
+		                          s_id2clu,
 		                          ubiquitous_chebi_ids, r_id2clu)
 		thrds.append(thread)
 		thread.start()  # This actually causes the thread to run
@@ -67,16 +72,10 @@ def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 
 def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 	clu2term_ids = invert_map(term_id2clu)
-	term_id2s_ids = defaultdict(set)
-	s_id2clu = {}
-	for s_id, t_id in species_id2term_id.iteritems():
-		c_id = model.getSpecies(s_id).getCompartment()
-		term_id2s_ids[t_id, c_id].add(s_id)
-		if (t_id, c_id) in term_id2clu:
-			s_id2clu[s_id] = term_id2clu[t_id, c_id]
+	s_id2clu, term_id2s_ids = compute_s_id2clu(model, species_id2term_id, term_id2clu)
 
 	r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)
-	rs = list(model.getListOfReactions())
+	rs = [r for r in model.getListOfReactions() if r.getNumReactants() > 1 or r.getNumProducts() > 1]
 
 	for clu, t_ids in clu2term_ids.iteritems():
 		r2t_ids = defaultdict(set)
@@ -88,69 +87,78 @@ def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_che
 		all_clus = set()
 		for t_id in t_ids:
 			clus = {(r_id2clu[r.getId()],
-			         "in" if is_reactant(t_id, r, s_id2clu, species_id2term_id, ubiquitous_chebi_ids, model) else "out")
+			         "in" if is_reactant(t_id, r, s_id2clu, species_id2term_id, ubiquitous_chebi_ids) else "out")
 			        for r in get_reactions_by_term(t_id, rs, term_id2s_ids)}
 			t_id2r_clus[t_id] = clus
 			all_clus |= {clu[0] for clu in clus}
-		clu2binary = dict(zip(all_clus, xrange(0, len(all_clus))))
-		bin2t_ids = defaultdict(list)
+		clu2index = dict(zip(all_clus, xrange(0, len(all_clus))))
+		vector2t_ids = defaultdict(list)
 		for t_id in t_id2r_clus.iterkeys():
 			cls = []
-			for clu in t_id2r_clus[t_id]:
-				cls.append((clu2binary[clu[0]], clu[1]))
-			bin = tuple(
+			for r_clu in t_id2r_clus[t_id]:
+				cls.append((clu2index[r_clu[0]], r_clu[1]))
+			vector = tuple(
 				[1 if (it, "in") in cls else (-1 if (it, "out") in cls else 0) for it in xrange(0, len(all_clus))])
-			bin2t_ids[bin].append(model.getSpecies(term_id2s_ids[t_id].pop()).getName())
+			vector2t_ids[vector].append(t_id)
 
-		bins = bin2t_ids.keys()
+		vectors = vector2t_ids.keys()
 		conflicts = [i for i in xrange(0, len(all_clus)) if
-		             next((t for t in bins if 1 == t[i]), None) and next((t for t in bins if -1 == t[i]), None)]
+		             next((t for t in vectors if 1 == t[i]), None) and next((t for t in vectors if -1 == t[i]), None)]
 		if not conflicts:
 			continue
-		in_conflict = lambda bin1, bin2: next((True for j in conflicts if bin1[j] * bin2[j] == -1), False)
-		median_bin = lambda bin_list: [median(bin_list, j, bin2t_ids) for j in xrange(0, len(all_clus))]
-		i = max(conflicts, key=lambda i: len([t for t in bins if 0 != t[i]]))
-		current_bins = []
-		for bin in sorted((bin for bin in bins if bin[i] != 0), key=lambda bin: -len(bin2t_ids[bin])):
-			good_bins = sorted(((c_bins, tot) for (c_bins, tot) in current_bins if not in_conflict(bin, tot)),
-			                   key=lambda (c_bins, tot): distance(bin, median_bin(c_bins)))
-			if good_bins:
-				c_bins, tot = good_bins[0]
-				c_bins.append(bin)
+		in_conflict = lambda v1, v2: next((True for j in conflicts if v1[j] * v2[j] == -1), False)
+		median_vector = lambda vector_list: [median(vector_list, j, vector2t_ids) for j in xrange(0, len(all_clus))]
+		i = max(conflicts, key=lambda i: len([t for t in vectors if 0 != t[i]]))
+		current_vectors = []
+		for vector in sorted((vector for vector in vectors if vector[i] != 0),
+		                     key=lambda vector: -len(vector2t_ids[vector])):
+			good_vectors = sorted(
+				((c_vectors, tot) for (c_vectors, tot) in current_vectors if not in_conflict(vector, tot)),
+				key=lambda (c_vectors, tot): distance(vector, median_vector(c_vectors)))
+			if good_vectors:
+				c_vectors, tot = good_vectors[0]
+				c_vectors.append(vector)
 				for j in xrange(0, len(all_clus)):
-					if bin[j] != 0:
-						tot[j] = bin[j]
+					if vector[j] != 0:
+						tot[j] = vector[j]
 			else:
-				current_bins.append(([bin], list(bin)))
+				current_vectors.append(([vector], list(vector)))
 
-		neutral_bins = [bin for bin in bins if bin[i] == 0]
-		while neutral_bins:
-			bad_bins = [bin for bin in neutral_bins
-			            if
-			            not next(((c_bins, tot) for (c_bins, tot) in current_bins if not in_conflict(bin, tot)), None)]
-			if not bad_bins:
-				bin = min(neutral_bins, key=lambda bin: min(distance(bin, median_bin(c_bins))
-				                                            for (c_bins, tot) in current_bins if
-				                                            not in_conflict(bin, tot)))
-				c_bins, tot = min(((c_bins, tot) for (c_bins, tot) in current_bins if not in_conflict(bin, tot)),
-				                  key=lambda (c_bins, _): (-len([j for j in xrange(0, len(all_clus)) if
-				                                                 bin[j] != 0 and bin[j] == median_bin(c_bins)[j]]),
-				                                           distance(bin, median_bin(c_bins))))
-				c_bins.append(bin)
+		neutral_vectors = [vector for vector in vectors if vector[i] == 0]
+		while neutral_vectors:
+			bad_vectors = [vector for vector in neutral_vectors if
+			               not next(((c_vectors, tot) for (c_vectors, tot) in current_vectors if
+			                         not in_conflict(vector, tot)), None)]
+			if not bad_vectors:
+				vector = min(neutral_vectors, key=lambda vector: min(distance(vector, median_vector(c_vectors))
+				                                                     for (c_vectors, tot) in current_vectors if
+				                                                     not in_conflict(vector, tot)))
+
+				# if next((True for (c_vectors, tot) in current_vectors if not in_conflict(vector, tot) and next(
+				# 		(i for i in xrange(0, len(all_clus)) if vector[i] == median_vector(c_vectors)[i] != 0), False)),
+				#         False):
+				c_vectors, tot = min(
+					((c_vectors, tot) for (c_vectors, tot) in current_vectors if not in_conflict(vector, tot)),
+					key=lambda (c_vectors, _): (-len([j for j in xrange(0, len(all_clus)) if
+					                                  vector[j] != 0 and vector[j] == median_vector(c_vectors)[j]]),
+					                            distance(vector, median_vector(c_vectors))))
+				c_vectors.append(vector)
 				for j in xrange(0, len(all_clus)):
-					if bin[j] != 0:
-						tot[j] = bin[j]
+					if vector[j] != 0:
+						tot[j] = vector[j]
+				# else:
+				# 	current_vectors.append(([vector], list(vector)))
 			else:
-				bin = max(bad_bins, key=lambda bin: len(bin2t_ids[bin]))
-				current_bins.append(([bin], list(bin)))
-			neutral_bins.remove(bin)
+				vector = max(bad_vectors, key=lambda vector: len(vector2t_ids[vector]))
+				current_vectors.append(([vector], list(vector)))
+			neutral_vectors.remove(vector)
 
 		i = 0
-		for (c_bins, _) in current_bins:
+		for (c_vectors, _) in current_vectors:
 			n_clu = clu + (i,)
 			i += 1
-			for bin in c_bins:
-				for t in bin2t_ids[bin]:
+			for vector in c_vectors:
+				for t in vector2t_ids[vector]:
 					term_id2clu[t] = n_clu
 
 
@@ -168,9 +176,8 @@ def distance(a, b):
 	return sqrt(sum(pow(a[i] - b[i], 2) for i in xrange(0, len(a))))
 
 
-def compute_eq0(interesting_term_ids, comp_ids, onto):
+def compute_eq0(interesting_term_ids, onto):
 	term_id2clu = {}
-	i = 0
 	roots = set()
 	for t in interesting_term_ids:
 		term = onto.get_term(t)
@@ -179,10 +186,9 @@ def compute_eq0(interesting_term_ids, comp_ids, onto):
 			continue
 		roots |= onto.get_generalized_ancestors_of_level(term, set(), None, 3)
 	psi = [tuple(t.get_id() for t in onto.get_sub_tree(root)) for root in roots]
+	i = 0
 	for t_set in greedy(interesting_term_ids, psi, {it: 1 for it in psi}):
-		for c_id in comp_ids:
-			clu = (c_id, i)
-			term_id2clu.update({(t_id, c_id): clu for t_id in t_set})
+		term_id2clu.update({t_id: (i, ) for t_id in t_set})
 		i += 1
 	return term_id2clu
 
@@ -217,21 +223,20 @@ def update(term_id2clu, onto):
 	used = set()
 	i = 0
 	for clu, term_ids in clu2term_ids.iteritems():
-		c_id = list(term_ids)[0][1]
-		terms = {onto.get_term(t) for (t, _) in term_ids}
-		common_ancestors = {(t, c_id) for t in onto.common_points(terms)}
+		terms = {onto.get_term(t) for t in term_ids}
+		common_ancestors = {t for t in onto.common_points(terms)}
 		options = common_ancestors - used
 		if options:
-			common_ancestor_term = options.pop()[0]
+			common_ancestor_term = options.pop()
 		else:
-			name = common_ancestors.pop()[0].get_name() + " (another)" if common_ancestors else ' or '.join(
+			name = common_ancestors.pop().get_name() + " (another)" if common_ancestors else ' or '.join(
 				[t.get_name() for t in terms])
 			common_ancestor_term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
 			onto.add_term(common_ancestor_term)
 			i += 1
-		used.add((common_ancestor_term, c_id,))
+		used.add(common_ancestor_term)
 		for t in term_ids:
-			term_id2clu[t] = (c_id, common_ancestor_term.get_id())
+			term_id2clu[t] = common_ancestor_term.get_id()
 	return term_id2clu
 
 
@@ -274,7 +279,7 @@ def filter_clu_to_terms(term2clu):
 def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids, verbose):
 	interesting_term_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
 	log(verbose, "  computing eq 0...")
-	term_id2clu = compute_eq0(interesting_term_ids, {c.getId() for c in model.getListOfCompartments()}, onto)
+	term_id2clu = compute_eq0(interesting_term_ids, onto)
 	# log_clusters(term_id2clu, onto, verbose, True)
 	log(verbose, "  maximizing...")
 	term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
@@ -302,8 +307,8 @@ def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, v
 	t_c_id2species = defaultdict(set)
 	for (s_id, t) in species_id2chebi_id.iteritems():
 		c_id = model.getSpecies(s_id).getCompartment()
-		if (t, c_id) in term_id2clu:
-			s_id2clu[s_id] = (c_id, onto.get_term(term_id2clu[t, c_id][1]))
+		if t in term_id2clu:
+			s_id2clu[s_id] = (c_id, onto.get_term(term_id2clu[t]))
 		else:
 			t_c_id2species[(t, c_id)].add(s_id)
 	# If there were several species in the same compartment

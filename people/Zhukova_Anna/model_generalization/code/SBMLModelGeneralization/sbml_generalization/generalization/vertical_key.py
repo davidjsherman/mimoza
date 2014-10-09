@@ -20,14 +20,14 @@ def need_to_reverse((ubiquitous_reactants, ubiquitous_products, specific_reactan
 					specific_product_classes) and specific_reactant_classes > specific_product_classes)))
 
 
-def is_reactant(t_id, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, model):
+def is_reactant(t_id, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes = \
 		get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
 	if r.getReversible() and need_to_reverse(
 			(ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes,)):
-		return t_id in {(s_id2term_id[s_id] if s_id in s_id2term_id else s_id, model.getSpecies(s_id).getCompartment()) for s_id in get_products(r)}
+		return t_id in {s_id2term_id[s_id] if s_id in s_id2term_id else s_id for s_id in get_products(r)}
 	else:
-		return t_id in {(s_id2term_id[s_id] if s_id in s_id2term_id else s_id, model.getSpecies(s_id).getCompartment()) for s_id in get_reactants(r)}
+		return t_id in {s_id2term_id[s_id] if s_id in s_id2term_id else s_id for s_id in get_reactants(r)}
 
 
 def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
@@ -36,7 +36,7 @@ def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 	def classify(s_ids):
 		specific, ubiquitous = [], []
 		for s_id in s_ids:
-			if not s_id in s_id2term_id:
+			if s_id not in s_id2term_id:
 				specific.append(s_id)
 			else:
 				t_id = s_id2term_id[s_id]
