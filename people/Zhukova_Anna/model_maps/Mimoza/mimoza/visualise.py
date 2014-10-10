@@ -49,7 +49,7 @@ print '''Content-Type: text/html;charset=utf-8
           </head>
 
           <body>
-          <p class="centre indent">We are visualising your model now...</p>
+          <p class="centre indent">We are visualizing your model now...</p>
           <img class="img-centre" src="../%s" id="img" />
           <div id="hidden" style="visibility:hidden;height:0px;">''' % (
 	MIMOZA_CSS, MIMOZA_FAVICON, scripts, PROGRESS_ICON)

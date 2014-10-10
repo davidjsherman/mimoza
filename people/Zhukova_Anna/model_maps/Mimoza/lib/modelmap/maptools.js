@@ -79,7 +79,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
-        minZoom = size == MAP_DIMENSION_SIZE / 2 ? 0 : Math.max(0, Math.round(size / MAP_DIMENSION_SIZE) - 1),
+        minZoom = size <= MAP_DIMENSION_SIZE / 2 ? 0 : Math.max(1, Math.round(size / MAP_DIMENSION_SIZE)),
         ubLayer = L.layerGroup(),
         overlays = {},
         cIds = {},

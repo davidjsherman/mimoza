@@ -43,7 +43,7 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 		return transformation(x, other_x), transformation(y, other_y)
 
 
-def e2feature(graph, e, scale, transport, inner):
+def e2feature(graph, e, transport, inner):
 	root = graph.getRoot()
 	layout = root[VIEW_LAYOUT]
 	s, t = graph.source(e), graph.target(e)
@@ -53,7 +53,7 @@ def e2feature(graph, e, scale, transport, inner):
 	s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), wh(s), root[TYPE][s])
 	t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), wh(t),
 	                            root[TYPE][t])
-	geom = geojson.MultiPoint([scale(s_x, s_y)] + [scale(it[0], it[1]) for it in layout[e]] + [scale(t_x, t_y)])
+	geom = geojson.MultiPoint([[s_x, s_y]] + [[it[0], it[1]] for it in layout[e]] + [[t_x, t_y]])
 	generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 
 	real_e = e
@@ -75,12 +75,13 @@ def e2feature(graph, e, scale, transport, inner):
 	return geojson.Feature(geometry=geom, properties=props)
 
 
-def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport, inner):
+def n2feature(graph, n, c_id2info, r2rs_ps, transport, inner):
 	root = graph.getRoot()
 
-	geom = geojson.Point(scale(root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()))
+	x, y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+	geom = geojson.Point([x, y])
 	c_id = root[COMPARTMENT_ID][n]
-	w, h = root[VIEW_SIZE][n].getW() * scale_coefficient / 2, root[VIEW_SIZE][n].getH() * scale_coefficient / 2
+	w, h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
 	node_type = root[TYPE][n]
 	generalized = graph.isMetaNode(n)
 	props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
@@ -143,7 +144,7 @@ def n2feature(graph, n, scale, c_id2info, scale_coefficient, r2rs_ps, transport,
 			bg_props[HEIGHT] = h
 			bg_props[COMPARTMENT_ID] = root[ID][n]
 		bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
-	return geojson.Feature(geometry=geom, properties=props), bg_feature
+	return geojson.Feature(geometry=geojson.Point([x, y]), properties=props), bg_feature
 
 
 def get_gene_association_list(ga):

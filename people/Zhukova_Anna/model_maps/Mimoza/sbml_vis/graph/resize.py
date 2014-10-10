@@ -17,12 +17,9 @@ def get_n_length(graph, n):
 
 
 def _get_e_size(root, e):
-	if root[UBIQUITOUS][e]:
-		return UBIQUITOUS_EDGE_SIZE
-	elif root.isMetaEdge(e):
+	if root.isMetaEdge(e):
 		return sum(_get_e_size(root, edg) for edg in root[VIEW_META_GRAPH][e])
-	else:
-		return EDGE_SIZE
+	return UBIQUITOUS_EDGE_SIZE if root[UBIQUITOUS][e] else EDGE_SIZE
 
 
 def get_mn_size(n, root):
