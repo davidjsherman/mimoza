@@ -35,7 +35,7 @@ def add_compartment_menu(page, c_id2name):
 def add_download_link(groups_sbml, archive_url, page):
 	page.ul(class_='menu margin centre')
 	if groups_sbml:
-		page.li('Download the <a href=%s download>generalised model</a>.' % groups_sbml, id='download')
+		page.li('Download the <a href=%s download>generalized model</a>.' % groups_sbml, id='download')
 	if archive_url:
 		page.li('Download the <a href=%s download>COMBINE archive</a>.' % archive_url)
 	page.li('<a onclick="overlay()" href="#">Embed</a>')
@@ -78,7 +78,7 @@ def add_explanations(page):
 	page.p.close()
 
 	page.p(
-		"%s - compartments; %s/%s - specific, but not generalised/ubiquitous metabolites; %s - specific, but not generalised reactions." % (
+		"%s - compartments; %s/%s - specific, but not generalized/ubiquitous metabolites; %s - specific, but not generalized reactions." % (
 			format_color(YELLOW),
 			format_color(RED), format_color(GREY),
 			format_color(BLUE)))
@@ -278,26 +278,26 @@ def generate_exists_html(css, js, ico, model_id, existing_m_url, url, sbml, m_di
 
 
 def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
-	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to generalise!", '',
-	                           'Now let\'s generalise it: To start the generalisation press the button below.',
-	                           '''<br>When the generalisation is done, it will become available at <a href="%s">%s</a>.
-                               <br>It might take some time (up to 2-4 hours for genome-scale models), so, please, be patient and do not lose hope :)''' % (
+	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to generalize!", '',
+	                           'Now let\'s generalize it: To start the generalization press the button below.',
+	                           '''<br>When the generalization is done, it will become available at <a href="%s">%s</a>.
+                               <br>It might take some time (up to an hour for genome-scale models), so, please, be patient and do not lose hope :)''' % (
 		                           url, url),
 	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'generalize.py', False)
 
 
 def generate_uploaded_generalized_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
-	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualise!", '',
-	                           'Your model seems to be already generalised. Now let\'s visualise it: To start the visualisation press the button below.',
-	                           '''<br>When the visualisation is done, it will become available at <a href="%s">%s</a>.''' % (
+	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualize!", '',
+	                           'Your model seems to be already generalized. Now let\'s visualize it: To start the visualization press the button below.',
+	                           '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
 		                           url, url),
 	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
 
 def generate_generalized_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
-	return generate_model_html("%s Generalised" % model_id, "Generalised, time to visualise!", '',
-	                           'Your model is successfully generalised. Now let\'s visualise it: To start the visualisation press the button below.',
-	                           '''<br>When the visualisation is done, it will become available at <a href="%s">%s</a>.''' % (
+	return generate_model_html("%s Generalized" % model_id, "Generalized, time to visualize!", '',
+	                           'Your model is successfully generalized. Now let\'s visualize it: To start the visualization press the button below.',
+	                           '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
 		                           url, url),
 	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
