@@ -51,7 +51,7 @@
 %\RequirePackage{natbib}
 \RequirePackage{hyperref}
 \usepackage[utf8]{inputenc} %unicode support
-%\usepackage{graphicx}
+\usepackage{graphicx}
 \usepackage{setspace}
 \usepackage[T1]{fontenc}
 %\usepackage[applemac]{inputenc} %applemac support if unicode package fails
@@ -74,8 +74,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\def\includegraphic{}
-\def\includegraphics{}
+%\def\includegraphic{}
+%\def\includegraphics{}
 
 
 
@@ -240,51 +240,51 @@ Mimoza views can be embedded in web pages, or downloaded as COMBINE archives.
 \section*{Background}
 %The Background section should be written in a way that is accessible to researchers without specialist knowledge in that area and must clearly state - and, if helpful, illustrate - the background to the research and its aims. It should clearly described the relevant context and the specific issue which the software described is intended to address.
 
-Semantic generalization of metabolic models\cite{Zhukova2014} is a theoretical method designed to aid users in understanding complex networks. Generalization identifies and groups similar metabolites and similar reactions in the network.
+Semantic generalization of metabolic models~\cite{Zhukova2014} is a theoretical method designed to aid users in understanding complex networks. Generalization identifies and groups similar metabolites and similar reactions in the network.
 Applied to different models, it can bring them to the same level of abstraction so that they can be compared.
 To explore the opportunities of the method we implemented it as a practical tool.
 
-The \emph{zooming user interface} (ZUI)\cite{Bederson1998} paradigm has proven to be a powerful tool for representating data at different scales. It is being adopted for various domains of applications, including cartographic\cite{Nivala2008}, exploratory data visualization\cite{Roberts2005}, collaborative interfaces\cite{Laufer2011}, and biological data\cite{Hu2007}. The challenge is how to use ZUI-based visualization for semantic generalization of metabolic models.
+The \emph{zooming user interface} (ZUI)~\cite{Bederson1998} paradigm has proven to be a powerful tool for representation of data at different scales. It is being adopted for various domains of applications, including cartographic~\cite{Nivala2008}, exploratory data visualization~\cite{Roberts2005}, collaborative interfaces~\cite{Laufer2011}, and biological data~\cite{Hu2007}. The challenge is how to use ZUI-based visualization for semantic generalization of metabolic models.
 
 \subsection*{Metabolic network reconstruction and infrastructure}
 There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analyzed by a human curator: Genome-scale metabolic models include thousands of reactions that may participate in organism's metabolism, while a human can understand at best networks that have hundreds of reactions.
 
 %% Reconstruction
-The metabolic network reconstruction process is becoming more and more advanced, and there now exist various tools for semi-automatic model inference, e.g. PathwayTools\cite{Karp2002}, CoReCo\cite{Pitkanen2014}, SuBliMinaL\cite{Swainston2011} (see \cite{Hamilton2014} for a review).
+The metabolic network reconstruction process is becoming more and more advanced, and there now exist various tools for semi-automatic model inference, e.g. PathwayTools~\cite{Karp2002}, CoReCo~\cite{Pitkanen2014}, SuBliMinaL~\cite{Swainston2011} (see~\cite{Hamilton2014} for a review).
 
 %% Storage
-Starting from a model for a similar organism or a collection of pathways, and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database\cite{Li10}, BIGGs\cite{Schellenberger2010}, JWS online\cite{Snoep2003}. KEGG\cite{Kanehisa12} provides an extensive collection of pathways. 
+Starting from a model for a similar organism or a collection of pathways, and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database~\cite{Li10}, BIGG~\cite{Schellenberger2010}, JWS online~\cite{Snoep2003}. KEGG~\cite{Kanehisa12} provides an extensive collection of pathways. 
 
 %% Representation
-Models are stored and shared using established formats, such as SBML\cite{Hucka2003}, SBGN\cite{Moodie2011}, CEllML\cite{Lloyd2004}. A model representated in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI\cite{deMatos10}, Uniprot\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable such standardisation efforts as Identifiers.org\cite{Juty2012} emerge.
+Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN~\cite{Moodie2011}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable such standardization efforts as Identifiers.org~\cite{Juty2012} emerge.
 
 % Why do we need humans?
-Although  model inference tools are becoming more and more advanced, curation by a human expert in organism's metabolism remains crucial. This requires a means of splitting genome-scale models into smaller units that can be checked and analyzed independently by human experts. At a higher level, appropriate levels of abstraction need to be found to allow experts to compare whole genome networks. Good model visualisation tools are also required.
+Although  model inference tools are becoming more and more advanced, curation by a human expert in organism's metabolism remains crucial. This requires a means of splitting genome-scale models into smaller units that can be checked and analyzed independently by human experts. At a higher level, appropriate levels of abstraction need to be found to allow experts to compare whole genome networks. Good model visualization tools are also required.
 
-\subsection*{Existing visualisation approaches}
+\subsection*{Existing visualization approaches}
 % Desktop
-There exist various modeling tools for metabolic networks that also support visualisation. Desktop tools include CellDesigner\cite{Funahashi2008}, VANTED\cite{Rohn2012}, Cytoscape\cite{Smoot2011}. They produce reasonably good visualisations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualisation unreadable. For comparison, the winner of the best SBGN map competition\cite{SBGN}, the ER Stress response\cite{Groenendyk2010} map,  was created manually in CellDesigner.
+There exist various modeling tools for metabolic networks that also support visualization. Desktop tools include CellDesigner~\cite{Funahashi2008}, VANTED~\cite{Rohn2012}, Cytoscape~\cite{Smoot2011}. They produce reasonably good visualizations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualization unreadable. For comparison, the winner of the best SBGN map competition~\cite{SBGN}, the ER Stress response~\cite{Groenendyk2010} map,  was created manually in CellDesigner.
 
 % Web-based
-Web-based tools allowing for model visualisation are also emerging.  JWS online\cite{Snoep2003}, for example, provides a mechanism for model visualisation using a force-directed algorithm. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
+Web-based tools allowing for model visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for model visualization using a force-directed algorithm. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
 
-MetDraw\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information in present in the model as a SUBSYSTEM annotation of reactions) and duplication of minor metabolites. Metabolite duplication reduces clutter, but the huge number of reactions in the compartments of some models and missing subsystem annotations, makes the visualisation consume too much space and does not allow a user to grasp the essential structure of the network.
+MetDraw~\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information in present in the model as a \emph{subsystem} annotation of reactions) and duplication of minor metabolites. Metabolite duplication reduces clutter, but the huge number of reactions in the compartments of some models and missing \emph{subsystem} annotations, makes the visualization consume too much space and do not allow a user to grasp the essential structure of the network.
 
 % ZUI
-Due to the huge numbers of reactions and of metabolites participating in multiple reactions, we have an uncomfortable choice between either many edge crossings in an automatic visualization of a genome-scale model, or over-duplication of various metabolites making the essential parts of the model disconnected and the visualisation too large to grasp. An approach different to a simple graph layout algorithm is needed. ZUIs, which can change the nature of the content displayed at different zoom levels, provide a pertinent alternative.
+Due to the huge numbers of reactions and of metabolites participating in multiple reactions, we have an uncomfortable choice between either many edge crossings in an automatic visualization of a genome-scale model, or over-duplication of various metabolites making the essential parts of the model disconnected and the visualization too large to grasp. An approach different to a simple graph layout algorithm is needed. ZUIs, which can change the nature of the content displayed at different zoom levels, provide a pertinent alternative.
 
-There are several existing web-based tools providing a zoomable representation of biological data. For instance, NaviCell\cite{Kuperstein2013} is a web environment that permits exploiting large maps of molecular interactions (mostly signalling). Unfortunately, it does not provide a solution to the problem of huge network layout, nor does it produce  maps automatically: The user must create them in CellDesigner, export them as an image and manually edit it in a graphical designer to produce intermediate views.
+There are several existing web-based tools providing a zoomable representation of biological data. For instance, NaviCell~\cite{Kuperstein2013} is a web environment that permits exploiting large maps of molecular interactions (mostly signaling). Unfortunately, it does not provide a solution to the problem of huge network layout, nor does it produce  maps automatically: The user must create them in CellDesigner, export them as an image and manually edit it in a graphical designer to produce intermediate views.
 
-Another web-based tool, the Cellular Overview\cite{Latendresse2011} creates interactive diagrams for metabolic maps of organisms in the BioCyc database\cite{Caspi2012}. It is pathway-oriented, and does not contain intermediate levels in the sense that zooming in increases, but does not change or add, the elements in the map. Another drawback is that it does not show the compartmentalization.
+Another web-based tool, the Cellular Overview~\cite{Latendresse2011} creates interactive diagrams for metabolic maps of organisms in the BioCyc database~\cite{Caspi2012}. It is pathway-oriented, and does not contain intermediate levels in the sense that zooming in increases, but does not change or add, the elements in the map. Another drawback is that it does not show the compartmentalization.
 
-As the examples of NaviCell and the Cellular Overview show, not only zoomable interfaces but also model decomposition are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast consensus model\cite{Herrgard2008} containing 230 reactions), a further decomposition is required. We address these issues below by combining model generalization with a ZUI.
+As the examples of NaviCell and the Cellular Overview show, not only zoomable interfaces but also model decomposition are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast consensus model~\cite{Herrgard2008} containing 230 reactions), a further decomposition is required. We address these issues below by combining model generalization with a ZUI.
 
 
 \section*{Implementation}
 % This should include a description of the overall architecture of the software implementation, along with details of any critical issues and how they were addressed.
 
 \subsection*{Choosing zoom levels}
-We address the problem of large-scale metabolic model visualisation by combining meaningful decomposition into modules with automatic multi-level abstraction. Decomposition is performed by splitting the model into compartments and after with the metabolic model generalisation method, so the most appropriate is to adopt 3 levels of semantic zooming:
+We address the problem of large-scale metabolic model visualization by combining meaningful decomposition into modules with automatic multi-level abstraction. Decomposition is performed by splitting the model into compartments and after with the metabolic model generalization method, so the most appropriate is to adopt 3 levels of semantic zooming:
 
 \begin{enumerate}
 \item The most abstract level represents compartmentalization of the model, and focuses on such questions as: Are all the compartments present? Are they well connected by transport reactions?
@@ -293,16 +293,16 @@ This level shows the compartments of the model, the transport reactions between 
 
 \item The second level shows the modules inside each of the compartments. The questions to be addressed at this level include: Are all the essential processes present? Is the structure of each process correct? Are there organism-specific adaptations of the structure?
 
-We use our knowledge-based generalization method to identify the modules inside the compartments. It detects similar metabolites and reactions and clusters them together, representing them as generalized metabolites and reactions with the same structure (number of consumed and produced metabolites), and thus keeping the essential structure of the model while hiding the details.
+We use our knowledge-based generalization method to identify the modules inside the compartments. It detects similar metabolites and reactions and clusters them together to represent them as generalized metabolites and reactions with the same structure (numbers of consumed and produced metabolites). The generalized representation keeps the essential structure of the model while hiding the details.
 
-\item The most detailed level is intended for computer simulation and represents the inner structure of each of the modules with all the metabolites, reactions and their kinetics, stoichiometry and constraints.
+\item The most detailed level is intended for computer simulation and represents the inner structure of each of the modules with all the metabolites, reactions and their kinetics, stoichiometries and constraints.
 
 Our method places similar metabolites and reactions (detected at level 2) next to each other, thus simplifying the analysis of their presence.
 
 \end{enumerate}
 
-\subsection*{Model generalisation}
-The metabolic model generalization method\cite{Zhukova2014}, which we recall here, operates on models in \textit{SBML}\cite{Hucka08} format.
+\subsection*{Model generalization}
+The metabolic model generalization method~\cite{Zhukova2014}, which we recall here, operates on models in \textit{SBML}~\cite{Hucka08} format.
 
 % Factoring metabolites into appropriate eq. classes
 
@@ -319,14 +319,14 @@ For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-C
 Reactions that share the same generalized reactants and the same generalized products, are considered equivalent and are factored together into a generalized reaction. 
 
 % Ubiquitous metabolites are duplicated (to improve readability)
-We do not generalize ubiquitous (frequently occurring) metabolites, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping metabolites increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these metabolites are usually duplicated\cite{Rohn2012} to improve readability.
+We do not generalize ubiquitous (frequently occurring) metabolites, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping metabolites increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these metabolites are usually duplicated~\cite{Rohn2012} to improve readability.
 
 \subsection*{Layers Layout}
-While layout of large graphs is widely studied\cite{Unwin2006}, the correspondence between the layouts of different zoom levels remains a hard task. To compute the layout for different zoom levels we combine two different approaches.
+While layout of large graphs is widely studied~\cite{Unwin2006}, the correspondence between the layouts of different zoom levels remains a hard task. To compute the layout for different zoom levels we combine two different approaches.
 
 \subsubsection*{Generalized model layout}
 % General idea
-In order to lay out the sub-models corresponding to each of the compartments after the generalisation, we use a combination of standard layout algorithms provided by Tulip\cite{Auber04}. We divide the compartment graph into connected components and then apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm, which places the components close to each other while removing the overlaps between them.
+In order to lay out the sub-models corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by the Tulip graph visualization tool~\cite{Auber04}. We divide the compartment graph into connected components and then apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm, which places the components close to each other while removing the overlaps between them.
 
 % Laying out a connected component
 Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms:
@@ -337,25 +337,25 @@ Depending on the nature of the connected component subgraph, we choose one of th
 \end{itemize}
 
 % Ubiquitous metabolites hadling
-To avoid clutter we duplicate all the ubiquitous metabolites before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction it participates in. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions they participate in.
+To avoid clutter we duplicate all the ubiquitous metabolites before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions in which they participate.
 
 \subsubsection*{Generalization-based full model layout}
 The layout for the full model is based on the corresponding generalized model's layout. To allow for zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model.
 
-\subsubsection*{Relative positions of the compartments}
+\subsubsection*{Relative positions of compartments}
 Metabolic models may include several compartments, nested into each other. For example, the \emph{peroxisome} compartment is surrounded by its \emph{membrane}, and contained in \emph{cytoplasm}; the \emph{cytoplasm} is part of the \emph{cell}, which is surrounded by the \emph{cell envelope}.
 
 SBML allows to represent relative positions of the compartments in the model with an optional \emph{outside} tag. However, it is not widely used.
 
-To be able to visualise the compartments correctly even for the models lacking this information, we infer their relative positions from the Gene Ontology (GO)\cite{Ashburner2000}. We associate each compartment with a term from the \emph{cellular component} branch of GO by using annotations in the model if they are present, or matching the compartments' names otherwise. We then use the \emph{part\_of} and \emph{is\_a} relationships between the terms in GO to infer relative compartment positions. If no term for a compartment could be found, it is placed on the outer-most level. 
+To be able to visualize the compartments correctly even for the models lacking this information, we infer their relative positions from the Gene Ontology (GO)~\cite{Ashburner2000}. We associate each compartment with a term from the \emph{cellular component} branch of GO by using annotations in the model if they are present, or matching the compartments' names otherwise. We then use the \emph{part\_of} and \emph{is\_a} relationships between the terms in GO to infer relative compartment positions. If no term for a compartment could be found, it is placed on the outer-most level. 
  
 \subsection*{ZUI}
 
-The zoomable interactive representation is achieved using Leaflet\cite{Agafonkin}, a JavaScript library for interactive maps. 
+The zoomable interactive representation is achieved using Leaflet~\cite{Agafonkin}, a JavaScript library for interactive maps. 
 
-We export elements of the model (compartments, metabolites and reactions) as map features in GeoJSON format\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{geojson} shows an example of a reaction represented in GeoJSON format. 
+We export elements of the model (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{geojson} shows an example of a reaction represented in GeoJSON format. 
 
-The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Metabolites are represented as circles, and reactions as squares, following the SBGN standard\cite{Moodie2011}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{pop_up}) showing its name, identifier and additional information, e.g. gene associations, and formulas for reactions.
+The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Metabolites are represented as circles, and reactions as squares, following the SBGN standard~\cite{Moodie2011}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions.
  
 
 \subsection*{Embedding}
@@ -366,10 +366,10 @@ After the visualization with Mimoza is done, we provide a link for embedding the
 One can use Mimoza in three different ways:
 \begin{enumerate}
 \item As a standalone application.
-All Mimoza code is open-source and can be downloaded from the project web page\cite{Zhukovaa} and installed on a local server.
+All Mimoza code is open-source and can be downloaded from the project web page~\cite{Zhukovaa} and installed on a local server.
 \item On the Mimoza web server.
-Mimoza web server\cite{Zhukovaa} lets one test visualization for smaller models, with the possibility to download the result as a COMBINE archive\cite{LeNovere}, including the SBML file with the generalized model, GeoJSON files with the model elements coordinates, and the HTML, CSS and JavaScript files, needed to view the visualisation in a browser.
-\item As a Galaxy\cite{Blankenberg2010} project tool, so that generation of Mimoza views can be included in a Galaxy workflow.
+Mimoza web server~\cite{Zhukovaa} lets one test visualization for smaller models, with the possibility to download the result as a COMBINE archive~\cite{LeNovere}, including the SBML file with the generalized model, GeoJSON files with the coordinates of model elements, and the HTML, CSS and JavaScript files that are needed to view the visualization in a browser.
+\item As a Galaxy~\cite{Blankenberg2010} project tool, so that generation of Mimoza views can be included in a Galaxy workflow.
 The Galaxy wrapper for Mimoza is available for download from the project web page.
 \end{enumerate}
 
@@ -378,27 +378,27 @@ The Galaxy wrapper for Mimoza is available for download from the project web pag
 The overall Mimoza pipeline  contains of 5 steps:
 \begin{enumerate}
 \item The user submits a model in SBML format via a web form.
-\item If the model does not yet contain group annotations, it is generalized using model generalization method, and the resulting SBML file is made available to the user.
-\item The SBML file with the group annotation is converted into a Tulip graph: metabolite nodes are connected by edges to the nodes of the reactions they participate in. The generalized metabolites and reactions form quotient nodes. The Tulip graph is split into sub-graphs corresponding to different compartments, and layout algorithms are applied to them.
+\item If the model does not yet contain group annotations, it is generalized using the model generalization method, and the resulting SBML file is made available to the user.
+\item The SBML file with the group annotation is converted into a Tulip graph: metabolite nodes are connected by edges to the nodes of the reactions in which they participate. The generalized metabolites and reactions form quotient nodes. The Tulip graph is split into sub-graphs corresponding to different compartments, and layout algorithms are applied to them.
 \item The compartment sub-graphs are exported in GeoJSON format and rendered by the Leaflet library into an interactive map that is represented to the user.
-\item The result can either be browsed on the Mimoza web page directly, or downloaded as a COMBINE archive and embedded into a different web-cite.
+\item The result can either be browsed on the Mimoza web page directly, or downloaded as a COMBINE archive and embedded into a different web-site.
 \end{enumerate}
 
 
 \section*{Results and Discussion}
 %The Results and Discussion may be combined into a single section or presented separately. They may also be broken into subsections with short, informative headings. In any case what should be described is the functionality of the software together with data on how its performance and functionality compare with and improve on functionally similar existing software. There should then be a discussion of the intended use of the software, and the benefits that are envisioned together, if possible, with an outline for the planned future development of new features.
-To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network\cite{Herrgard2008}. The result can be found at \url{http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8}. 
-Three zoom levels (cytoplasm view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{zoom_levels}. The first level shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids\cite{Metzler01}); the most detailed level represents the complete model, placing semantically similar metabolites and reactions next to each other.
+To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network~\cite{Herrgard2008}. The result can be found at \url{http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8}. 
+Three zoom levels (cytoplasm view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{zoom_levels}. The first level shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids~\cite{Metzler01}); the most detailed level represents the complete model, placing semantically similar metabolites and reactions next to each other.
 
 We visualized the same model using MetDraw with no manual adjustments. The resulting SVG file\footnote{MetDraw -- http://www.metdraw.com/metdraw/bc7df60221ba314c383b1bf6e7dad4c3056f92bb} has only one zoom level with lots of clutter, that does not allow one to see the structure of the model.
 
-Cellular Overview does not allow one to visualize a model provided by a user, but has a map of metabolism of \emph{Saccharomyces cerevisiae}.\footnote{Cellular Overview -- http://biocyc.org/overviewsWeb/celOv.shtml} It has a clear non-overlapping representation of various pathways present in the model, but does not show the compartmentalisation. It is not automatic and is pathway-oriented, thus is not suitable for models having no pathway metadata. The zoom-in shows additional labels but all the metabolites and reactions are present at all the levels, making the elements at the most general level very small and hard to analyze.
+Cellular Overview does not allow one to visualize a model provided by a user, but has a map of metabolism of \emph{Saccharomyces cerevisiae}.\footnote{Cellular Overview -- http://biocyc.org/overviewsWeb/celOv.shtml} It has a clear non-overlapping representation of various pathways present in the model, but does not show the compartmentalization. It is not automatic and is pathway-oriented, thus is not suitable for models having no pathway metadata. The zoom-in shows additional labels but all the metabolites and reactions are present at all the levels, making the elements at the most general level very small and hard to analyze.
 
-Mimoza especially targets draft models during curation, allowing one to visualize them fully automatically and help to analyze them in a top-down manner, starting from the general structure and going down to the details. The generalized level differentiates it from other tools, since it shows both the overall model structure and fine-grain visualisation in the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on pathway information, automatically infers the relative compartment placement (e.g. places organelles inside the cytoplasm) and exploits a model in SBML format with ChEBI annotations for metabolites (it also tries to annotate them automatically if no annotations are present).
+Mimoza especially targets draft models during curation, allowing one to visualize them fully automatically and help to analyze them in a top-down manner, starting from the general structure and going down to the details. The generalized level differentiates it from other tools, since it shows both the overall model structure and fine-grain visualization in the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on pathway information, automatically infers the relative compartment placement (e.g. places organelles inside the cytoplasm) and exploits a model in SBML format with ChEBI annotations for metabolites (it also tries to annotate them automatically if no annotations are present).
 
 Using generalization to compare two models makes most sense if the models have equivalent generalized nodes that can be placed in corresponding positions in the two layouts. Mimoza currently handles this correspondence between zoom levels of the same model, but does not guarantee such correspondence when two models are laid out independently.
 To meet this challenge, three strategies can be explored.
-The first is to use constrained layout\cite{Karl-FriedrichBohringer}, to impose the positions of key features in one model on the corresponding features of the second model.
+The first is to use constrained layout~\cite{Karl-FriedrichBohringer}, to impose the positions of key features in one model on the corresponding features of the second model.
 The second is also to use constrained layout, with a catalog of standard positions for common motifs in generalized maps; for example, always lay out the generalized $\beta$-oxidation of fatty acids as a 4-step cycle, with standard positions for the generalized metabolites common for all the models that incorporate $\beta$-oxidation.
 The third strategy, which we are in the process of testing, is to learn a common layout by generalizing the union of the two models. The idea is to combine the reactions into one set, run the generalization procedure on the union to fix the positions of the common features, then to build each of the layouts using only its own set of nodes. Each model layout only contains its own nodes, but the common nodes of the two models will be in common positions.
 
@@ -478,24 +478,24 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
 
 \section*{Figures}
   \begin{figure}[h!]
-% \includegraphics[scale=0.5]{figure1.png}
+ \includegraphics[scale=0.5]{figure1.png}
   \caption{\csentence{Three zoom levels}
   \label{zoom_levels}
       The bottom level represents the cytoplasm compartment containing organelle compartments and transport reactions between them. The intermediate zoom shows the generalized processes in the peroxisome compartment. The most detailed view reveals the metabolites that were generalized into a \emph{straight-chain saturated fatty acid} on the previous level, e.g. \textit{dodecanoate}, and reactions they participate in.}
       \end{figure}
       
 \begin{figure}[h!]
-%\includegraphics[scale=0.5]{figure2.png}
+\includegraphics[scale=0.5]{figure2.png}
   \caption{\csentence{GeoJSON representation of a reaction}
   \label{geojson}
       An SBML reaction is stored as a GeoJSON Point feature, with its layout coordinates encoded in the geometry section. The identifiers, labels and annotations, as well as the information on the reactant and product metabolites are stored as properties. The ``type'' property value specifies that this GeoJSON feature is a reaction.}
       \end{figure}
       
 \begin{figure}[h!]
-%\includegraphics[scale=0.54]{figure3.png}
+\includegraphics[scale=0.54]{figure3.png}
   \caption{\csentence{A reaction pop-up}
   \label{pop_up}
-      (right part) An example of a pop-up that opens when a user clicks on a reaction: It contains the information on the reaction name, identifier, reactant and product metabolites and their stoichiometries, as well as gene associations. (left part) Gene names are hyperlinks redirecting to the NCBI Gene database\cite{NCBI}.}
+      (right part) An example of a pop-up that opens when a user clicks on a reaction: It contains the information on the reaction name, identifier, reactant and product metabolites and their stoichiometries, as well as gene associations. (left part) Gene names are hyperlinks redirecting to the NCBI Gene database~\cite{NCBI}.}
       \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -526,7 +526,7 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
 
 \section*{Additional Files}
   \subsection*{Additional file 1 --- A video tutorial for Mimoza.}
-  The video shows the main features of Mimoza, on the example of the map for the yeast consensus genome-scale metabolic network\cite{Herrgard2008}. .
+  The video shows the main features of Mimoza, on the example of the map for the yeast consensus genome-scale metabolic network~\cite{Herrgard2008}.
 
 
 \end{backmatter}
