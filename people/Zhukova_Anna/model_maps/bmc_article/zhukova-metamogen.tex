@@ -247,7 +247,7 @@ To explore the opportunities of the method we implemented it as a practical tool
 The \emph{zooming user interface} (ZUI)~\cite{Bederson1998} paradigm has proven to be a powerful tool for representation of data at different scales. It is being adopted for various domains of applications, including cartographic~\cite{Nivala2008}, exploratory data visualization~\cite{Roberts2005}, collaborative interfaces~\cite{Laufer2011}, and biological data~\cite{Hu2007}. The challenge is how to use ZUI-based visualization for semantic generalization of metabolic models.
 
 \subsection*{Metabolic network reconstruction and infrastructure}
-There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analyzed by a human curator: Genome-scale metabolic models include thousands of reactions that may participate in organism's metabolism, while a human can understand at best networks that have hundreds of reactions.
+There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analyzed by a human curator: Genome-scale metabolic networks include thousands of reactions that may participate in organism's metabolism, while human experts understand best small-sized networks, containing up to hundreds of nodes~\cite{VonLandesberger2011,Herman2000}.
 
 %% Reconstruction
 The metabolic network reconstruction process is becoming more and more advanced, and there now exist various tools for semi-automatic model inference, e.g. PathwayTools~\cite{Karp2002}, CoReCo~\cite{Pitkanen2014}, SuBliMinaL~\cite{Swainston2011} (see~\cite{Hamilton2014} for a review).
@@ -256,26 +256,26 @@ The metabolic network reconstruction process is becoming more and more advanced,
 Starting from a model for a similar organism or a collection of pathways, and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database~\cite{Li10}, BIGG~\cite{Schellenberger2010}, JWS online~\cite{Snoep2003}. KEGG~\cite{Kanehisa12} provides an extensive collection of pathways. 
 
 %% Representation
-Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN~\cite{Moodie2011}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable such standardization efforts as Identifiers.org~\cite{Juty2012} emerge.
+Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN~\cite{Moodie2011}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2013}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable, standardization efforts such as Identifiers.org~\cite{Juty2012} emerge.
 
 % Why do we need humans?
 Although  model inference tools are becoming more and more advanced, curation by a human expert in organism's metabolism remains crucial. This requires a means of splitting genome-scale models into smaller units that can be checked and analyzed independently by human experts. At a higher level, appropriate levels of abstraction need to be found to allow experts to compare whole genome networks. Good model visualization tools are also required.
 
 \subsection*{Existing visualization approaches}
 % Desktop
-There exist various modeling tools for metabolic networks that also support visualization. Desktop tools include CellDesigner~\cite{Funahashi2008}, VANTED~\cite{Rohn2012}, Cytoscape~\cite{Smoot2011}. They produce reasonably good visualizations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualization unreadable. For comparison, the winner of the best SBGN map competition~\cite{SBGN}, the ER Stress response~\cite{Groenendyk2010} map,  was created manually in CellDesigner.
+There exist various modeling tools for metabolic networks that also support visualization. Desktop tools include CellDesigner~\cite{Funahashi2008}, VANTED~\cite{Rohn2012}, and Cytoscape~\cite{Smoot2011}. They produce reasonably good visualizations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualization unreadable. For comparison, the winner of the best SBGN map competition~\cite{SBGN}, the ER Stress response~\cite{Groenendyk2010} map,  was created manually in CellDesigner.
 
 % Web-based
-Web-based tools allowing for model visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for model visualization using a force-directed algorithm. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
+Web-based tools allowing for model visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for model visualization using a force-directed layout algorithm. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
 
-MetDraw~\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information in present in the model as a \emph{subsystem} annotation of reactions) and duplication of minor metabolites. Metabolite duplication reduces clutter, but the huge number of reactions in the compartments of some models and missing \emph{subsystem} annotations, makes the visualization consume too much space and do not allow a user to grasp the essential structure of the network.
+MetDraw~\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information is present in the model as a \emph{subsystem} annotation of reactions) and duplication of minor metabolites. Metabolite duplication reduces clutter, but the huge number of reactions in the compartments of some models and missing \emph{subsystem} annotations, makes the visualization consume too much space and do not allow a user to grasp the essential structure of the network.
 
 % ZUI
-Due to the huge numbers of reactions and of metabolites participating in multiple reactions, we have an uncomfortable choice between either many edge crossings in an automatic visualization of a genome-scale model, or over-duplication of various metabolites making the essential parts of the model disconnected and the visualization too large to grasp. An approach different to a simple graph layout algorithm is needed. ZUIs, which can change the nature of the content displayed at different zoom levels, provide a pertinent alternative.
+Due to the huge numbers of reactions and of metabolites participating in multiple reactions, we have an uncomfortable choice between either many edge crossings in an automatic visualization of a genome-scale model, or over-duplication of various metabolites making the essential parts of the model disconnected and the visualization too large to grasp. Therefore an approach different to a simple graph layout algorithm is necessary. ZUIs, which can change the nature of the content displayed at different zoom levels, provide a pertinent alternative.
 
 There are several existing web-based tools providing a zoomable representation of biological data. For instance, NaviCell~\cite{Kuperstein2013} is a web environment that permits exploiting large maps of molecular interactions (mostly signaling). Unfortunately, it does not provide a solution to the problem of huge network layout, nor does it produce  maps automatically: The user must create them in CellDesigner, export them as an image and manually edit it in a graphical designer to produce intermediate views.
 
-Another web-based tool, the Cellular Overview~\cite{Latendresse2011} creates interactive diagrams for metabolic maps of organisms in the BioCyc database~\cite{Caspi2012}. It is pathway-oriented, and does not contain intermediate levels in the sense that zooming in increases, but does not change or add, the elements in the map. Another drawback is that it does not show the compartmentalization.
+Another web-based tool, the Cellular Overview~\cite{Latendresse2011} creates interactive diagrams for metabolic maps of organisms in the BioCyc database~\cite{Caspi2012}. It is pathway-oriented, and does not contain intermediate levels in the sense that zooming-in makes the elements of the map bigger but does not change them nor add new elements. Another drawback is that it does not show the compartmentalization.
 
 As the examples of NaviCell and the Cellular Overview show, not only zoomable interfaces but also model decomposition are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast consensus model~\cite{Herrgard2008} containing 230 reactions), a further decomposition is required. We address these issues below by combining model generalization with a ZUI.
 
@@ -284,7 +284,7 @@ As the examples of NaviCell and the Cellular Overview show, not only zoomable in
 % This should include a description of the overall architecture of the software implementation, along with details of any critical issues and how they were addressed.
 
 \subsection*{Choosing zoom levels}
-We address the problem of large-scale metabolic model visualization by combining meaningful decomposition into modules with automatic multi-level abstraction. Decomposition is performed by splitting the model into compartments and after with the metabolic model generalization method, so the most appropriate is to adopt 3 levels of semantic zooming:
+We address the problem of large-scale metabolic model visualization by combining meaningful decomposition into modules with automatic multi-level abstraction. Decomposition is performed in the following way: The network is first split into compartments; then the model generalization method is applied to each compartment to detect the generalized modules. Thereby, the most appropriate is to adopt 3 levels of semantic zooming:
 
 \begin{enumerate}
 \item The most abstract level represents compartmentalization of the model, and focuses on such questions as: Are all the compartments present? Are they well connected by transport reactions?
@@ -313,7 +313,7 @@ The method first groups the metabolites present in the network into semantically
 \end{itemize}
  % technical details, e.g. ChEBI
 To make metabolite grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical entities is used. Each metabolite group is generalized up to the least common ancestor of its elements in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for metabolite annotation in metabolic networks. %Possible groups for the metabolites are chosen based on hierarchical relationships in the \textit{ChEBI} ontology. 
-For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-CoA} and \textit{(S)-3-hydroxytetradecanoyl-CoA} have a common ancestor \textit{hydroxy fatty acyl-CoA} in \textit{ChEBI}. If there exist similar reactions operating with them in the network, e.g. \textit{3-hydroxyacyl-CoA dehydratase}, and no reaction whose stoichiometry would be broken by such a generalization, then they can be grouped and generalized into \textit{hydroxy fatty acyl-CoA}.
+For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-CoA} and \textit{(S)-3-hydroxytetradecanoyl-CoA} have a common ancestor \textit{hydroxy fatty acyl-CoA} in \textit{ChEBI}. If there exist similar reactions that consume or produce them in the network, e.g. \textit{3-hydroxyacyl-CoA dehydratase}, and no reaction whose stoichiometry would be changed by such a generalization, then they can be grouped and generalized into \textit{hydroxy fatty acyl-CoA}.
 
 % Once metabolites are factored, we can generalise the reactions
 Reactions that share the same generalized reactants and the same generalized products, are considered equivalent and are factored together into a generalized reaction. 
@@ -326,7 +326,7 @@ While layout of large graphs is widely studied~\cite{Unwin2006}, the corresponde
 
 \subsubsection*{Generalized model layout}
 % General idea
-In order to lay out the sub-models corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by the Tulip graph visualization tool~\cite{Auber04}. We divide the compartment graph into connected components and then apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm, which places the components close to each other while removing the overlaps between them.
+In order to lay out the sub-networks corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by the Tulip graph visualization tool~\cite{Auber04}. We divide the compartment graph into connected components, and apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm, which places the components close to each other while removing the overlaps between them.
 
 % Laying out a connected component
 Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms:
@@ -368,7 +368,7 @@ One can use Mimoza in three different ways:
 \item As a standalone application.
 All Mimoza code is open-source and can be downloaded from the project web page~\cite{Zhukovaa} and installed on a local server.
 \item On the Mimoza web server.
-Mimoza web server~\cite{Zhukovaa} lets one test visualization for smaller models, with the possibility to download the result as a COMBINE archive~\cite{LeNovere}, including the SBML file with the generalized model, GeoJSON files with the coordinates of model elements, and the HTML, CSS and JavaScript files that are needed to view the visualization in a browser.
+Mimoza web server~\cite{Zhukovaa} lets one test visualization for smaller models, with the possibility to download the result as a COMBINE archive~\cite{Bergmann2014}, including the SBML file with the generalized model, GeoJSON files with the coordinates of model elements, and the HTML, CSS and JavaScript files that are needed to view the visualization in a browser.
 \item As a Galaxy~\cite{Blankenberg2010} project tool, so that generation of Mimoza views can be included in a Galaxy workflow.
 The Galaxy wrapper for Mimoza is available for download from the project web page.
 \end{enumerate}
@@ -381,14 +381,14 @@ The overall Mimoza pipeline  contains of 5 steps:
 \item If the model does not yet contain group annotations, it is generalized using the model generalization method, and the resulting SBML file is made available to the user.
 \item The SBML file with the group annotation is converted into a Tulip graph: metabolite nodes are connected by edges to the nodes of the reactions in which they participate. The generalized metabolites and reactions form quotient nodes. The Tulip graph is split into sub-graphs corresponding to different compartments, and layout algorithms are applied to them.
 \item The compartment sub-graphs are exported in GeoJSON format and rendered by the Leaflet library into an interactive map that is represented to the user.
-\item The result can either be browsed on the Mimoza web page directly, or downloaded as a COMBINE archive and embedded into a different web-site.
+\item The result can either be browsed on the Mimoza web page directly, or downloaded as a COMBINE archive and embedded into a different website.
 \end{enumerate}
 
 
 \section*{Results and Discussion}
 %The Results and Discussion may be combined into a single section or presented separately. They may also be broken into subsections with short, informative headings. In any case what should be described is the functionality of the software together with data on how its performance and functionality compare with and improve on functionally similar existing software. There should then be a discussion of the intended use of the software, and the benefits that are envisioned together, if possible, with an outline for the planned future development of new features.
 To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network~\cite{Herrgard2008}. The result can be found at \url{http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8}. 
-Three zoom levels (cytoplasm view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{zoom_levels}. The first level shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids~\cite{Metzler01}); the most detailed level represents the complete model, placing semantically similar metabolites and reactions next to each other.
+Three zoom levels (cytoplasm view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{zoom_levels}. The first level (bottom) shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level (middle) shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids~\cite{Metzler01}); the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
 
 We visualized the same model using MetDraw with no manual adjustments. The resulting SVG file\footnote{MetDraw -- http://www.metdraw.com/metdraw/bc7df60221ba314c383b1bf6e7dad4c3056f92bb} has only one zoom level with lots of clutter, that does not allow one to see the structure of the model.
 
@@ -477,13 +477,7 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
 %% Do not use \listoffigures as most will included as separate files
 
 \section*{Figures}
-  \begin{figure}[h!]
- \includegraphics[scale=0.5]{figure1.png}
-  \caption{\csentence{Three zoom levels}
-  \label{zoom_levels}
-      The bottom level represents the cytoplasm compartment containing organelle compartments and transport reactions between them. The intermediate zoom shows the generalized processes in the peroxisome compartment. The most detailed view reveals the metabolites that were generalized into a \emph{straight-chain saturated fatty acid} on the previous level, e.g. \textit{dodecanoate}, and reactions they participate in.}
-      \end{figure}
-      
+
 \begin{figure}[h!]
 \includegraphics[scale=0.5]{figure2.png}
   \caption{\csentence{GeoJSON representation of a reaction}
@@ -496,6 +490,13 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
   \caption{\csentence{A reaction pop-up}
   \label{pop_up}
       (right part) An example of a pop-up that opens when a user clicks on a reaction: It contains the information on the reaction name, identifier, reactant and product metabolites and their stoichiometries, as well as gene associations. (left part) Gene names are hyperlinks redirecting to the NCBI Gene database~\cite{NCBI}.}
+      \end{figure}
+      
+  \begin{figure}[h!]
+ \includegraphics[scale=0.5]{figure1.png}
+  \caption{\csentence{Three zoom levels}
+  \label{zoom_levels}
+      The bottom level represents the cytoplasm compartment containing organelle compartments and transport reactions between them. The intermediate zoom shows the generalized processes in the peroxisome compartment. The most detailed view reveals the metabolites that were generalized into a \emph{straight-chain saturated fatty acid} on the previous level, e.g. \textit{dodecanoate}, and reactions they participate in.}
       \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
