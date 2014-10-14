@@ -175,8 +175,7 @@
 \begin{abstract} % abstract
 
 \parttitle{Motivation}
-The complexity of genome-scale metabolic models makes them quite difficult for human users to read, since they contain thousands of reactions that must be included for accurate computer simulation.
-Interestingly, hidden similarities between groups of reactions can be discovered, and generalized to reveal higher-level patterns.
+The complexity of genome-scale metabolic models makes them quite difficult for human users to read, since they contain thousands of reactions that must be included for accurate computer simulation. For example, the metabolic network of the bacterium \emph{E. coli} contains 2\,168 reactions, the \emph{yeast 7} metabolic network model of \emph{S.~cerevisiae} includes 2\,352 reactions, and \emph{recon 2}, a global human metabolism reconstruction, has 7\,440 reactions. Interestingly, hidden similarities between groups of reactions can be discovered, and generalized to reveal higher-level patterns.
 
 \parttitle{Results}
 The web-based navigation system Mimoza allows a human expert to explore metabolic models in a semantically zoomable manner: The most general view represents the compartments of the model; the next view shows the generalized versions of reactions and metabolites in each compartment; and the most detailed view represents the initial model with the generalization-based layout (where similar metabolites and reactions are placed next to each other). It allows a human expert to grasp the general structure of the model and analyze it in a top-down manner.
@@ -250,10 +249,10 @@ The \emph{zooming user interface} (ZUI)~\cite{Bederson1998} paradigm has proven 
 There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analyzed by a human curator: Genome-scale metabolic networks include thousands of reactions that may participate in organism's metabolism, while human experts understand best small-sized networks, containing up to hundreds of nodes~\cite{VonLandesberger2011,Herman2000}.
 
 %% Reconstruction
-The metabolic network reconstruction process is becoming more and more advanced, and there now exist various tools for semi-automatic model inference, e.g. PathwayTools~\cite{Karp2002}, CoReCo~\cite{Pitkanen2014}, SuBliMinaL~\cite{Swainston2011} (see~\cite{Hamilton2014} for a review).
+The metabolic network reconstruction process is becoming more advanced, and there now exist various tools for semi-automatic model inference, e.g. PathwayTools~\cite{Karp2002}, CoReCo~\cite{Pitkanen2014}, SuBliMinaL~\cite{Swainston2011} (see~\cite{Hamilton2014} for a review).
 
 %% Storage
-Starting from a model for a similar organism or a collection of pathways, and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database~\cite{Li10}, BIGG~\cite{Schellenberger2010}, JWS online~\cite{Snoep2003}. KEGG~\cite{Kanehisa12} provides an extensive collection of pathways. 
+Starting from a model for a similar organism or a collection of pathways, and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database~\cite{Li10}, BIGG~\cite{Schellenberger2010}, JWS online~\cite{Snoep2003}. KEGG~\cite{Kanehisa12} and Reactome~\cite{Milacic2012, Croft2013} provide an extensive collection of pathways. 
 
 %% Representation
 Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN~\cite{LeNovere2009}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2014}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable, standardization efforts such as Identifiers.org~\cite{Juty2012} emerge.
@@ -273,7 +272,7 @@ MetDraw~\cite{Jensen2014} is an online tool for genome-scale metabolic model vis
 % ZUI
 Due to the huge numbers of reactions and of metabolites participating in multiple reactions, we have an uncomfortable choice between either many edge crossings in an automatic visualization of a genome-scale model, or over-duplication of various metabolites making the essential parts of the model disconnected and the visualization too large to grasp. Therefore an approach different to a simple graph layout algorithm is necessary. ZUIs, which can change the nature of the content displayed at different zoom levels, provide a pertinent alternative.
 
-There are several existing web-based tools providing a zoomable representation of biological data. For instance, NaviCell~\cite{Kuperstein2013} is a web environment that permits exploiting large maps of molecular interactions (mostly signaling). Unfortunately, it does not provide a solution to the problem of huge network layout, nor does it produce  maps automatically: The user must create them in CellDesigner, export them as an image and manually edit it in a graphical designer to produce intermediate views.
+There are several existing web-based tools providing a zoomable representation of biological data. For instance, NaviCell~\cite{Kuperstein2013} is a web environment that permits exploiting large maps of molecular interactions (mostly signaling). Unfortunately, it does not provide a solution to the problem of huge network layout, nor does it produce  maps automatically: The user must create them in CellDesigner, export them as an image and partly manually edit it in a graphical designer to produce intermediate views.
 
 Another web-based tool, the Cellular Overview~\cite{Latendresse2011} creates interactive diagrams for metabolic maps of organisms in the BioCyc database~\cite{Caspi2012}. It is pathway-oriented, and does not contain intermediate levels in the sense that zooming-in makes the elements of the map bigger but does not change them nor add new elements. Another drawback is that it does not show the compartmentalization.
 
@@ -340,7 +339,7 @@ Depending on the nature of the connected component subgraph, we choose one of th
 To avoid clutter we duplicate all the ubiquitous metabolites before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions in which they participate.
 
 \subsubsection*{Generalization-based full model layout}
-The layout for the full model is based on the corresponding generalized model's layout. To allow for zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model.
+The layout for the full model is based on the corresponding generalized model's layout. To allow zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model.
 
 \subsubsection*{Relative positions of compartments}
 Metabolic models may include several compartments, nested into each other. For example, the \emph{peroxisome} compartment is surrounded by its \emph{membrane}, and contained in \emph{cytoplasm}; the \emph{cytoplasm} is part of the \emph{cell}, which is surrounded by the \emph{cell envelope}.
@@ -375,7 +374,7 @@ The Galaxy wrapper for Mimoza is available for download from the project web pag
 
  
 \subsection*{Pipeline}
-The overall Mimoza pipeline  contains of 5 steps:
+The overall Mimoza pipeline contains 5 steps:
 \begin{enumerate}
 \item The user submits a model in SBML format via a web form.
 \item If the model does not yet contain group annotations, it is generalized using the model generalization method, and the resulting SBML file is made available to the user.
