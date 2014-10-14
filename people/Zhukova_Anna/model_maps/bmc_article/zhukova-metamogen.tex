@@ -266,7 +266,7 @@ Although  model inference tools are becoming more and more advanced, curation by
 There exist various modeling tools for metabolic networks that also support visualization. Desktop tools include CellDesigner~\cite{Funahashi2008}, VANTED~\cite{Rohn2012}, and Cytoscape~\cite{Smoot2011}. They produce reasonably good visualizations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualization unreadable. For comparison, the winner of the best SBGN map competition~\cite{SBGN}, the ER Stress response~\cite{Groenendyk2010} map,  was created manually in CellDesigner.
 
 % Web-based
-Web-based tools allowing for model visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for model visualization using a force-directed layout algorithm~\cite{Tamassia:2007:HGD:1202383}. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
+Web-based tools allowing for model visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for model visualization using a force-directed layout algorithm~\cite{Fruchterman1991, Tamassia:2007:HGD:1202383}. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
 
 MetDraw~\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information is present in the model as a \emph{subsystem} annotation of reactions) and duplication of minor metabolites. Metabolite duplication reduces clutter, but the huge number of reactions in the compartments of some models and missing \emph{subsystem} annotations, makes the visualization consume too much space and do not allow a user to grasp the essential structure of the network.
 
@@ -329,11 +329,11 @@ While layout of large graphs is widely studied~\cite{Unwin2006}, the corresponde
 In order to lay out the sub-networks corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by the Tulip graph visualization tool~\cite{Auber04}. We divide the compartment graph into connected components, and apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm, which places the components close to each other while removing the overlaps between them.
 
 % Laying out a connected component
-Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms:
+Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms, provided by Tulip:
 \begin{itemize}
-\item \emph{Hierarchical Layout} for the components that contain no cycles,
-\item \emph{Circular Layout} for the components with less than 100 nodes and less than 3 cycles,
-\item \emph{Force-Directed Layout}~\cite{simonetto:inria-00605921} for all the other components. (Complexity of one iteration is $O(|V|^2 + |V ||E|)$. The number of iterations is determined by the user.)
+\item \emph{Hierarchical Layout} for the components that contain no cycles (\emph{Sugiyama (OGDF)}~\cite{Sugiyama1981} algorithm, that has the complexity of $O(|V||E|)$ in time and of $O(|V| + |E|)$ in space);
+\item \emph{Circular Layout} for the components with less than 100 nodes and less than 3 cycles (\emph{Circular (OGDF)}~\cite{Tamassia:2007:HGD:1202383}, with $O(|E|^2)$ time and space complexity);
+\item \emph{Force-Directed Layout} for all the other components (\emph{$FM^3$ (OGDF)}~\cite{Hachul2005}, that has the asymptotic worst-case running time of $O(|V|log|V|+|E|)$ with linear memory requirements).
 \end{itemize}
 
 % Ubiquitous metabolites hadling
