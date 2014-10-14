@@ -266,7 +266,7 @@ Although  model inference tools are becoming more and more advanced, curation by
 There exist various modeling tools for metabolic networks that also support visualization. Desktop tools include CellDesigner~\cite{Funahashi2008}, VANTED~\cite{Rohn2012}, and Cytoscape~\cite{Smoot2011}. They produce reasonably good visualizations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualization unreadable. For comparison, the winner of the best SBGN map competition~\cite{SBGN}, the ER Stress response~\cite{Groenendyk2010} map,  was created manually in CellDesigner.
 
 % Web-based
-Web-based tools allowing for model visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for model visualization using a force-directed layout algorithm. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
+Web-based tools allowing for model visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for model visualization using a force-directed layout algorithm~\cite{Tamassia:2007:HGD:1202383}. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
 
 MetDraw~\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information is present in the model as a \emph{subsystem} annotation of reactions) and duplication of minor metabolites. Metabolite duplication reduces clutter, but the huge number of reactions in the compartments of some models and missing \emph{subsystem} annotations, makes the visualization consume too much space and do not allow a user to grasp the essential structure of the network.
 
@@ -333,7 +333,7 @@ Depending on the nature of the connected component subgraph, we choose one of th
 \begin{itemize}
 \item \emph{Hierarchical Layout} for the components that contain no cycles,
 \item \emph{Circular Layout} for the components with less than 100 nodes and less than 3 cycles,
-\item \emph{Force-Directed Layout} for all the other components.
+\item \emph{Force-Directed Layout}~\cite{simonetto:inria-00605921} for all the other components. (Complexity of one iteration is $O(|V|^2 + |V ||E|)$. The number of iterations is determined by the user.)
 \end{itemize}
 
 % Ubiquitous metabolites hadling
