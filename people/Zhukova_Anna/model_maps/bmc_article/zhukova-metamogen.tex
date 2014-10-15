@@ -74,8 +74,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\def\includegraphic{}
-\def\includegraphics{}
+%\def\includegraphic{}
+%\def\includegraphics{}
 
 
 
@@ -301,24 +301,29 @@ Our method places similar metabolites and reactions (detected at level 2) next t
 \end{enumerate}
 
 \subsection*{Model generalization}
-The metabolic model generalization method~\cite{Zhukova2014}, which we recall here, operates on models in \textit{SBML}~\cite{Hucka08} format.
+The metabolic model generalization method~\cite{Zhukova2014}, which we recall here, groups similar metabolites and reactions in the network based on its structure and the knowledge extracted from metabolite ontologies. 
 
-% Factoring metabolites into appropriate eq. classes
+To make metabolite grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical entities is used. Each metabolite can be generalized up to one of its ancestors in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for metabolite annotation in metabolic networks. Reactions that share the same generalized reactants and the same generalized products, are considered equivalent and are factored together into a generalized reaction. 
 
-The method first groups the metabolites present in the network into semantically equivalent classes. The appropriate level of abstraction for those classes is defined by the network itself as the most general one that satisfies two restrictions: 
-\begin{itemize}
- \item metabolites that participate in the same reaction cannot be grouped together (to preserve the stoichiometry of the reactions in the network),
- \item metabolites that do not participate in any pair of similar reactions are not grouped together (as there is no evidence of their similarity in the network).
-\end{itemize}
- % technical details, e.g. ChEBI
-To make metabolite grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical entities is used. Each metabolite group is generalized up to the least common ancestor of its elements in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for metabolite annotation in metabolic networks. %Possible groups for the metabolites are chosen based on hierarchical relationships in the \textit{ChEBI} ontology. 
-For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-CoA} and \textit{(S)-3-hydroxytetradecanoyl-CoA} have a common ancestor \textit{hydroxy fatty acyl-CoA} in \textit{ChEBI}. If there exist similar reactions that consume or produce them in the network, e.g. \textit{3-hydroxyacyl-CoA dehydratase}, and no reaction whose stoichiometry would be changed by such a generalization, then they can be grouped and generalized into \textit{hydroxy fatty acyl-CoA}.
+The appropriate level of abstraction for metabolites and reactions is defined by the network itself as the most general one that satisfies two restrictions: 
+\begin{enumerate}
+ \item \emph{Stoichiometry preserving restriction}: metabolites that participate in the same reaction cannot be grouped together;
+ \item \emph{Metabolite diversity restriction}: metabolites that do not participate in any pair of similar reactions are not grouped together (as there is no evidence of their similarity in the network).
+\end{enumerate}
 
-% Once metabolites are factored, we can generalise the reactions
-Reactions that share the same generalized reactants and the same generalized products, are considered equivalent and are factored together into a generalized reaction. 
+Overall, the generalization method is composed of three modules: 
+\begin{enumerate}
+\item \emph{Aggressive reaction grouping} based on the most general metabolite grouping (defined by ChEBI), in order to generate reaction grouping candidates;
+\item \emph{Ungrouping of some metabolites and reactions} to correct for violation of the stoichiometry preserving restriction;
+\item \emph{Ungrouping of some metabolites} (while keeping the reaction grouping intact) to correct for violation of the metabolite diversity restriction.
+\end{enumerate} 
+
+For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-CoA} and \textit{(S)-3-hydroxytetradecanoyl-CoA} have a common ancestor \textit{hydroxy fatty acyl-CoA} in \textit{ChEBI}. They can be grouped and generalized into \textit{hydroxy fatty acyl-CoA}, if in the network there is no reaction whose stoichiometry would be changed by such a generalization (stoichiometry preserving restriction), and exist similar reactions that consume or produce them (metabolite diversity restriction).
+
+The method is available as a python library~\cite{Metamogen} that operates on models in \textit{SBML}~\cite{Hucka08} format. It takes an SBML file of level~2 or~3 (any version) and produces an SBML level~3 version~1 file with groups extension~\cite{Hucka2012} that contains the initial model plus groups for all non-trivial similar metabolite and reaction sets (see Figure~\ref{fig:groups}).
 
 % Ubiquitous metabolites are duplicated (to improve readability)
-We do not generalize ubiquitous (frequently occurring) metabolites, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping metabolites increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these metabolites are usually duplicated~\cite{Rohn2012} to improve readability.
+%We do not generalize ubiquitous (frequently occurring) metabolites, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping metabolites increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these metabolites are usually duplicated~\cite{Rohn2012} to improve readability.
 
 \subsection*{Layers Layout}
 While layout of large graphs is widely studied~\cite{Unwin2006}, the correspondence between the layouts of different zoom levels remains a hard task. To compute the layout for different zoom levels we combine two different approaches.
@@ -344,7 +349,7 @@ The layout for the full model is based on the corresponding generalized model's 
 \subsubsection*{Relative positions of compartments}
 Metabolic models may include several compartments, nested into each other. For example, the \emph{peroxisome} compartment is surrounded by its \emph{membrane}, and contained in \emph{cytoplasm}; the \emph{cytoplasm} is part of the \emph{cell}, which is surrounded by the \emph{cell envelope}.
 
-SBML allows to represent relative positions of the compartments in the model with an optional \emph{outside} tag. However, it is not widely used.
+SBML allows to represent relative positions of the compartments in the model with an optional \emph{outside} tag. However, it is not available in all SBML levels, nor is widely used.
 
 To be able to visualize the compartments correctly even for the models lacking this information, we infer their relative positions from the Gene Ontology (GO)~\cite{Ashburner2000}. We associate each compartment with a term from the \emph{cellular component} branch of GO by using annotations in the model if they are present, or matching the compartments' names otherwise. We then use the \emph{part\_of} and \emph{is\_a} relationships between the terms in GO to infer relative compartment positions. If no term for a compartment could be found, it is placed on the outer-most level. 
  
@@ -352,9 +357,9 @@ To be able to visualize the compartments correctly even for the models lacking t
 
 The zoomable interactive representation is achieved using Leaflet~\cite{Agafonkin}, a JavaScript library for interactive maps. 
 
-We export elements of the model (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{geojson} shows an example of a reaction represented in GeoJSON format. 
+We export elements of the model (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{fig:geojson} shows an example of a reaction represented in GeoJSON format. 
 
-The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Metabolites are represented as circles, and reactions as squares, following the SBGN standard~\cite{LeNovere2009}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions.
+The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Metabolites are represented as circles, and reactions as squares, following the SBGN standard~\cite{LeNovere2009}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions.
  
 
 \subsection*{Embedding}
@@ -376,9 +381,9 @@ The Galaxy wrapper for Mimoza is available for download from the project web pag
 \subsection*{Pipeline}
 The overall Mimoza pipeline contains 5 steps:
 \begin{enumerate}
-\item The user submits a model in SBML format via a web form.
-\item If the model does not yet contain group annotations, it is generalized using the model generalization method, and the resulting SBML file is made available to the user.
-\item The SBML file with the group annotation is converted into a Tulip graph: metabolite nodes are connected by edges to the nodes of the reactions in which they participate. The generalized metabolites and reactions form quotient nodes. The Tulip graph is split into sub-graphs corresponding to different compartments, and layout algorithms are applied to them.
+\item The user submits a model in SBML format (level~2 or~3, any version) via a web form.
+\item If the model does not yet contain groups, it is generalized using the model generalization method, and the resulting SBML file (level~3 version~1 with groups extension) is made available to the user.
+\item The SBML file with groups of similar metabolites and reactions is converted into a Tulip graph: metabolite nodes are connected by edges to the nodes of the reactions in which they participate. The generalized metabolites and reactions form quotient nodes. The Tulip graph is split into sub-graphs corresponding to different compartments, and layout algorithms are applied to them.
 \item The compartment sub-graphs are exported in GeoJSON format and rendered by the Leaflet library into an interactive map that is represented to the user.
 \item The result can either be browsed on the Mimoza web page directly, or downloaded as a COMBINE archive and embedded into a different website.
 \end{enumerate}
@@ -387,7 +392,7 @@ The overall Mimoza pipeline contains 5 steps:
 \section*{Results and Discussion}
 %The Results and Discussion may be combined into a single section or presented separately. They may also be broken into subsections with short, informative headings. In any case what should be described is the functionality of the software together with data on how its performance and functionality compare with and improve on functionally similar existing software. There should then be a discussion of the intended use of the software, and the benefits that are envisioned together, if possible, with an outline for the planned future development of new features.
 To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network~\cite{Herrgard2008}. The result can be found at \url{http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8}. 
-Three zoom levels (cytoplasm view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{zoom_levels}. The first level (bottom) shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level (middle) shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids~\cite{Metzler01}); the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
+Three zoom levels (cytoplasm view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{fig:zoom_levels}. The first level (bottom) shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level (middle) shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids~\cite{Metzler01}); the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
 
 We visualized the same model using MetDraw with no manual adjustments. The resulting SVG file\footnote{MetDraw -- http://www.metdraw.com/metdraw/bc7df60221ba314c383b1bf6e7dad4c3056f92bb} has only one zoom level with lots of clutter, that does not allow one to see the structure of the model.
 
@@ -476,25 +481,33 @@ We would like to thank Antoine Lambert for helpful discussions about using the T
 %% Do not use \listoffigures as most will included as separate files
 
 \section*{Figures}
+ 
+      \begin{figure}[h!]
+\centering
+\includegraphics[scale=0.4]{groups.png}
+\caption{\csentence{Representation of a generalized model in SBML level~3 version~1 format with groups extension.}
+\label{fig:groups}
+The output SBML file contains the initial model (including the lists of metabolites (called \emph{species} in SBML), reactions, etc.) plus the \emph{listOfGroups} section that represents non-trivial quotient metabolite and reaction sets. In the figure, a group representing a quotient metabolite set of \emph{hydroxy fatty acyl-CoAs} is shown; it includes \emph{(S)-3-hydroxydecanoyl-CoA} (s\_0045),  \emph{(S)-3-hydroxylauroyl-CoA} (s\_0051), etc. Each of those metabolites was previously declared in the \emph{listOfSpecies} section.}
+\end{figure}
 
 \begin{figure}[h!]
 \includegraphics[scale=0.5]{figure2.png}
   \caption{\csentence{GeoJSON representation of a reaction}
-  \label{geojson}
+  \label{fig:geojson}
       An SBML reaction is stored as a GeoJSON Point feature, with its layout coordinates encoded in the geometry section. The identifiers, labels and annotations, as well as the information on the reactant and product metabolites are stored as properties. The ``type'' property value specifies that this GeoJSON feature is a reaction.}
       \end{figure}
       
 \begin{figure}[h!]
 \includegraphics[scale=0.54]{figure3.png}
   \caption{\csentence{A reaction pop-up}
-  \label{pop_up}
+  \label{fig:pop_up}
       (right part) An example of a pop-up that opens when a user clicks on a reaction: It contains the information on the reaction name, identifier, reactant and product metabolites and their stoichiometries, as well as gene associations. (left part) Gene names are hyperlinks redirecting to the NCBI Gene database~\cite{NCBI}.}
       \end{figure}
       
   \begin{figure}[h!]
  \includegraphics[scale=0.5]{figure1.png}
   \caption{\csentence{Three zoom levels}
-  \label{zoom_levels}
+  \label{fig:zoom_levels}
       The bottom level represents the cytoplasm compartment containing organelle compartments and transport reactions between them. The intermediate zoom shows the generalized processes in the peroxisome compartment. The most detailed view reveals the metabolites that were generalized into a \emph{straight-chain saturated fatty acid} on the previous level, e.g. \textit{dodecanoate}, and reactions they participate in.}
       \end{figure}
 
