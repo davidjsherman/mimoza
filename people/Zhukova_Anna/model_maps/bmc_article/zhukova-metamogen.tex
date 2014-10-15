@@ -326,11 +326,13 @@ The method is available as a python library~\cite{Metamogen} that operates on mo
 %We do not generalize ubiquitous (frequently occurring) metabolites, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping metabolites increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these metabolites are usually duplicated~\cite{Rohn2012} to improve readability.
 
 \subsection*{Layers Layout}
+To visualize a metabolic network we first represent it as a bipartite graph~\cite{Diestel2012} with two disjoint sets of nodes (metabolites and reactions), and edges that connect the reactions to their substrate and product metabolites. To achieve such a representation, we implemented a converter from SBML to TLP format, that is used by the Tulip graph visualization tool~\cite{Auber04}. TLP format stores nodes and edges of the graph, and associates each node and edge to a list of named attributes: standard ones, such as shape, size, color; and user-defined ones, such as, in our case, element type (compartment, reaction or metabolite), ChEBI identifier, group number, gene association, etc. The SBML-to-TLP converter is implemented in python, using libSBML library~\cite{Bornstein2008}, and is available as a part of Mimoza software. 
+
 While layout of large graphs is widely studied~\cite{Unwin2006}, the correspondence between the layouts of different zoom levels remains a hard task. To compute the layout for different zoom levels we combine two different approaches.
 
 \subsubsection*{Generalized model layout}
 % General idea
-In order to lay out the sub-networks corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by the Tulip graph visualization tool~\cite{Auber04}. We divide the compartment graph into connected components, and apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm, which places the components close to each other while removing the overlaps between them.
+In order to lay out the sub-networks corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by Tulip. We divide the compartment graph into connected components, and apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm (provided by Tulip), which places the components close to each other while removing the overlaps between them.
 
 % Laying out a connected component
 Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms, provided by Tulip:
@@ -341,7 +343,7 @@ Depending on the nature of the connected component subgraph, we choose one of th
 \end{itemize}
 
 % Ubiquitous metabolites hadling
-To avoid clutter we duplicate all the ubiquitous metabolites before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions in which they participate.
+To avoid clutter we duplicate all the ubiquitous metabolites (\textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}, etc.) before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions in which they participate.
 
 \subsubsection*{Generalization-based full model layout}
 The layout for the full model is based on the corresponding generalized model's layout. To allow zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model.
@@ -357,9 +359,9 @@ To be able to visualize the compartments correctly even for the models lacking t
 
 The zoomable interactive representation is achieved using Leaflet~\cite{Agafonkin}, a JavaScript library for interactive maps. 
 
-We export elements of the model (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{fig:geojson} shows an example of a reaction represented in GeoJSON format. 
+We export elements of the network graph (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{fig:geojson} shows an example of a reaction represented in GeoJSON format. The TLP-to-GeoJSON converter is implemented in python and is available as a part of Mimoza software. 
 
-The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Metabolites are represented as circles, and reactions as squares, following the SBGN standard~\cite{LeNovere2009}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions.
+The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Metabolites are represented as circles, and reactions as squares, following the SBGN standard~\cite{LeNovere2009}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions. 
  
 
 \subsection*{Embedding}
