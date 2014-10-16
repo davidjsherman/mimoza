@@ -19,7 +19,7 @@ from sbml_vis.converter.tulip_graph2geojson import graph2geojson
 import mimoza.mimoza
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
+from sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS, save_as_layout_sbml
 
 
 __author__ = 'anna'
@@ -96,21 +96,30 @@ def main(argv=None):
 		logging.basicConfig(level=logging.INFO) #, filename=log_file)
 
 	groups_sbml = '%s%s_with_groups.xml' % (directory, model_id)
+	out_sbml = '%s%s_generalized.xml' % (directory, model_id)
+	layout_sbml = '%s%s_with_layout.xml' % (directory, model_id)
 	if check_for_groups(sbml, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
 		if sbml != groups_sbml:
 			if not writeSBMLToFile(doc, groups_sbml):
 				raise Exception("Could not write your model to %s" % groups_sbml)
 	else:
 		chebi = parse(get_chebi())
-		generalize_model(groups_sbml, None, sbml, chebi, cofactors=None, verbose=True)
+		generalize_model(groups_sbml, out_sbml, sbml, chebi, cofactors=None, verbose=True)
 
 	reader = SBMLReader()
 	input_document = reader.readSBML(groups_sbml)
 	input_model = input_document.getModel()
 
-	root, c_id2info, c_id2outs, chebi = import_sbml(input_model, groups_sbml, True)
+	root, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml, True)
 
 	fc = graph2geojson(c_id2info, c_id2outs, root, True, chebi)
+
+	groups_document = reader.readSBML(groups_sbml)
+	groups_model = groups_document.getModel()
+	out_document = reader.readSBML(out_sbml)
+	out_model = out_document.getModel()
+	save_as_layout_sbml(groups_model, out_model, layout_sbml, fc, 512, ub_sps, verbose)
+
 	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose)
 

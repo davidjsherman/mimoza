@@ -9,7 +9,7 @@ FM3 = "FM^3 (OGDF)"
 
 CIRCULAR = "Circular (OGDF)"
 
-HIERARCHICAL_GRAPH = "Hierarchical Graph"
+HIERARCHICAL_GRAPH = "Sugiyama (OGDF)"#"Hierarchical Graph"
 
 
 def get_distance(qo):
@@ -20,7 +20,7 @@ def get_distance(qo):
 		neighbour_sizes = {n2size[m] for m in qo.getOutNodes(n) if m in n2size}
 		return max(neighbour_sizes) if neighbour_sizes else 0
 
-	return max(n2size[n] + get_neighbour_size(n) for n in n2size.iterkeys()) / 4
+	return max(min(n2size[n], get_neighbour_size(n)) for n in n2size.iterkeys())
 
 
 def layout_hierarchically(qo, margin=1):
@@ -30,8 +30,10 @@ def layout_hierarchically(qo, margin=1):
 		# looks like there is a bug in Tulip and it uses the 'layer spacing' value
 		# instead of the 'node spacing' one and visa versa
 		d = get_distance(qo)
-		ds["layer spacing"] = d + margin
-		ds["node spacing"] = d + margin
+		# ds["layer spacing"] = d + margin
+		# ds["node spacing"] = d + margin
+		ds["layer distance"] = d + margin
+		ds["node distance"] = d + margin
 	qo.computeLayoutProperty(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
 
 
