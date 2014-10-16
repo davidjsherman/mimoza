@@ -78,6 +78,7 @@ def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_che
 	rs = [r for r in model.getListOfReactions() if r.getNumReactants() > 1 or r.getNumProducts() > 1]
 
 	for clu, t_ids in clu2term_ids.iteritems():
+		# print "\n--------------------------"
 		r2t_ids = defaultdict(set)
 		for t_id in t_ids:
 			for r in get_reactions_by_term(t_id, rs, term_id2s_ids):
@@ -106,6 +107,10 @@ def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_che
 		             next((t for t in vectors if 1 == t[i]), None) and next((t for t in vectors if -1 == t[i]), None)]
 		if not conflicts:
 			continue
+
+		# for vector, t_s in vector2t_ids.iteritems():
+		# 	print vector, [[model.getSpecies(s_id).getName() for s_id in term_id2s_ids[t_id]] for t_id in t_s]
+
 		in_conflict = lambda v1, v2: next((True for j in conflicts if v1[j] * v2[j] == -1), False)
 		median_vector = lambda vector_list: [median(vector_list, j, vector2t_ids) for j in xrange(0, len(all_clus))]
 		i = max(conflicts, key=lambda i: len([t for t in vectors if 0 != t[i]]))
@@ -124,7 +129,15 @@ def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_che
 			else:
 				current_vectors.append(([vector], list(vector)))
 
+		# print "CV: ", current_vectors
+
 		neutral_vectors = [vector for vector in vectors if vector[i] == 0]
+		# print "NV: ", neutral_vectors
+
+		intersect = lambda v1, v2: next((True for j in xrange(0, len(all_clus)) if v1[j] == v2[j] != 0), False)
+		compatible_clusters = lambda vector, vectors: [(vs, tot) for (vs, tot) in vectors if
+		                                               not in_conflict(vector, tot) and intersect(vector, tot)]
+
 		while neutral_vectors:
 			bad_vectors = [vector for vector in neutral_vectors if
 			               not next(((c_vectors, tot) for (c_vectors, tot) in current_vectors if
@@ -134,23 +147,26 @@ def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_che
 				                                                     for (c_vectors, tot) in current_vectors if
 				                                                     not in_conflict(vector, tot)))
 
-				# if next((True for (c_vectors, tot) in current_vectors if not in_conflict(vector, tot) and next(
-				# 		(i for i in xrange(0, len(all_clus)) if vector[i] == median_vector(c_vectors)[i] != 0), False)),
-				#         False):
-				c_vectors, tot = min(
-					((c_vectors, tot) for (c_vectors, tot) in current_vectors if not in_conflict(vector, tot)),
-					key=lambda (c_vectors, _): (-len([j for j in xrange(0, len(all_clus)) if
-					                                  vector[j] != 0 and vector[j] == median_vector(c_vectors)[j]]),
-					                            distance(vector, median_vector(c_vectors))))
-				c_vectors.append(vector)
-				for j in xrange(0, len(all_clus)):
-					if vector[j] != 0:
-						tot[j] = vector[j]
-				# else:
-				# 	current_vectors.append(([vector], list(vector)))
+				# print "? ", vector, [[model.getSpecies(s_id).getName() for s_id in term_id2s_ids[t_id]] for t_id in
+				#                      vector2t_ids[vector]]
+
+				comp_clus = compatible_clusters(vector, current_vectors)
+				if comp_clus:
+					c_vectors, tot = max(((c_vs, tot) for (c_vs, tot) in comp_clus), key=lambda (c_vs, tot):
+						sum((1 if vector[j] == tot[j] != 0 else 0 for j in xrange(0, len(all_clus)))))
+					# print "attached to ", c_vectors
+					c_vectors.append(vector)
+					for j in xrange(0, len(all_clus)):
+						if vector[j] != 0:
+							tot[j] = vector[j]
+				else:
+					# print "new"
+					current_vectors.append(([vector], list(vector)))
 			else:
 				vector = max(bad_vectors, key=lambda vector: len(vector2t_ids[vector]))
 				current_vectors.append(([vector], list(vector)))
+				# print "bad ", vector, [[model.getSpecies(s_id).getName() for s_id in term_id2s_ids[t_id]] for t_id in
+				#                        vector2t_ids[vector]]
 			neutral_vectors.remove(vector)
 
 		i = 0
@@ -378,6 +394,7 @@ def get_compatible_species(s_ids, reactions, c_id, s_id2clu, onto):
 			rs |= its_rs
 			sps.append(s_id)
 	return term, sps
+
 
 # TODO: should check if it breaks compatibility after (i.e., stoichiometry)
 def simplified_key_generalization(input_model, s_id2clu, ub_sps, keys, onto):

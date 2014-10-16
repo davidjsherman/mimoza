@@ -1,6 +1,6 @@
 from libsbml import SBMLReader
 from sbml_generalization.generalization.sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, \
-	remove_unused_elements
+	remove_unused_elements, save_as_layout_sbml
 from sbml_generalization.utils.logger import log
 from mark_ubiquitous import get_cofactors
 from model_generalizer import map2chebi, generalize_species, generalize_reactions

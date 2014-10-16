@@ -24,6 +24,18 @@ DIMENSIONLESS_UNIT = "dimensionless"
 
 SBO_MATERIAL_ENTITY = "SBO:0000240"
 
+TYPE = 'type'
+TYPE_SPECIES = 1
+TYPE_REACTION = 2
+TYPE_COMPARTMENT = 3
+
+ID = 'id'
+NAME = 'name'
+
+
+HEIGHT = "h"
+WIDTH = "w"
+
 __author__ = 'anna'
 
 
@@ -295,7 +307,8 @@ def convert_to_lev3_v1(model):
 	set_consistency_level(doc)
 	doc.checkL3v1Compatibility()
 	doc.setLevelAndVersion(3, 1, False)
-	doc.enablePackage("http://www.sbml.org/sbml/level3/version1/groups/version1", "groups", True)
+	doc.enablePackage(GroupsExtension.getXmlnsL3V1V1(), "groups", True)
+	doc.enablePackage(LayoutExtension.getXmlnsL3V1V1(), "layout", True)
 	# doc.getSBMLNamespaces().addPackageNamespace("groups", 1)
 	return doc
 
@@ -362,6 +375,23 @@ def add_species_types(model):
 # doc = convert_to_lev3_v1(Model(model))
 # # writeSBMLToFile(doc, sbml)
 
+def create_dimensions(width, height):
+	"Create a dimension object with given width and height"
+	dim = Dimensions()
+	dim.setWidth(width)
+	dim.setHeight(height)
+	return dim
+
+
+def create_bounding_box(id, x, y, width, height):
+	"Create a bounding box object with given coordinates and dimensions"
+	bb = BoundingBox()
+	bb.setX(x)
+	bb.setY(y)
+	bb.setWidth(width)
+	bb.setHeight(height)
+	return bb
+
 
 def annotate_ubiquitous(groups_sbml, ub_sps, verbose=False):
 	if groups_sbml:
@@ -380,6 +410,112 @@ def annotate_ubiquitous(groups_sbml, ub_sps, verbose=False):
 				member.setIdRef(s_id)
 			add_annotation(s_group, BQB_IS_DESCRIBED_BY, GROUP_TYPE_UBIQUITOUS)
 			save_as_sbml(groups_model, groups_sbml, verbose)
+
+
+def save_as_layout_sbml(groups_model, generalized_model, layout_sbml, feature_collection, dimension, ub_sps, verbose):
+	log(verbose, "serializing layout...")
+
+	doc = convert_to_lev3_v1(groups_model)
+	model = doc.getModel()
+	mplugin = model.getPlugin("layout")
+	if mplugin:
+		for c_id, level2fc in feature_collection.iteritems():
+			for level, fc in level2fc.iteritems():
+				layout = mplugin.createLayout()
+				layout.setId(generate_unique_id(model, "l_%s_%d" % (c_id, level)))
+				l_id = layout.getId()
+				layout.setDimensions(create_dimensions(dimension, dimension))
+				for f in fc.features:
+					f_type = f.properties[TYPE]
+					if TYPE_COMPARTMENT == f_type:
+						x, y = f.geometry.coordinates
+						w, h = f.properties[WIDTH], f.properties[HEIGHT]
+						comp_glyph = layout.createCompartmentGlyph()
+						comp_id = f.properties[ID]
+						comp_glyph.setId("cg_%s_%s" % (l_id, comp_id))
+						comp_glyph.setCompartmentId(comp_id)
+						comp_glyph.setBoundingBox(create_bounding_box("bb_%s" % comp_glyph.getId(), x, y, w * 2, h * 2))
+					elif TYPE_SPECIES == f_type:
+						x, y = f.geometry.coordinates
+						w, h = f.properties[WIDTH], f.properties[WIDTH]
+						s_id = f.properties[ID]
+
+						# if an ordinary species
+						if model.getSpecies(s_id):
+							s_glyph = layout.createSpeciesGlyph()
+							s_glyph.setId("sg_%s_%s" % (l_id, s_id))
+							s_glyph.setSpeciesId(s_id)
+							s_glyph.setBoundingBox(create_bounding_box("bb_%s" % s_glyph.getId(), x, y, w * 2, h * 2))
+
+							text_glyph = layout.createTextGlyph()
+							text_glyph.setId("tg_%s_%s" % (l_id, s_id))
+							text_glyph.setBoundingBox(create_bounding_box("bb_%s" % s_glyph.getId(), x, y, w * 1.8, h * 1.8))
+							text_glyph.setOriginOfTextId(s_glyph.getId())
+							text_glyph.setGraphicalObjectId(s_glyph.getId())
+						# a generalized one
+						else:
+							s_glyph = layout.createGeneralGlyph()
+							s_glyph.setId("sg_%s_%s" % (l_id, s_id))
+							s_glyph.setReferenceId(s_id)
+							s_glyph.setBoundingBox(create_bounding_box("bb_%s" % s_glyph.getId(), x, y, w * 2, h * 2))
+
+							text_glyph = layout.createTextGlyph()
+							text_glyph.setId("tg_%s_%s" % (l_id, s_id))
+							text_glyph.setBoundingBox(create_bounding_box("bb_%s" % s_glyph.getId(), x, y, w * 1.8, h * 1.8))
+							text_glyph.setOriginOfTextId(s_glyph.getId())
+							text_glyph.setGraphicalObjectId(s_glyph.getId())
+					elif TYPE_REACTION == f_type:
+						x, y = f.geometry.coordinates
+						w, h = f.properties[WIDTH], f.properties[WIDTH]
+						r_id = f.properties[ID]
+						
+						reaction = model.getReaction(r_id)
+						# if an ordinary species
+						if reaction:
+							r_glyph = layout.createReactionGlyph()
+							r_glyph.setId("rg_%s_%s" % (l_id, r_id))
+							r_glyph.setReactionId(r_id)
+							r_glyph.setBoundingBox(create_bounding_box("bb_%s" % r_glyph.getId(), x, y, w * 2, h * 2))
+							
+							for s_ref in reaction.getListOfReactants():
+								s_id = s_ref.getSpecies()
+								s_ref_glyph = r_glyph.createSpeciesReferenceGlyph()
+								s_ref_glyph.setId("srg_%s_%s_%s" % (l_id, r_id, s_id))
+								s_ref_glyph.setSpeciesGlyphId("sg_%s_%s" % (l_id, s_id))
+								s_ref_glyph.setSpeciesReferenceId(s_ref.getId())
+								s_ref_glyph.setRole(SPECIES_ROLE_SIDESUBSTRATE if s_id in ub_sps else SPECIES_ROLE_SUBSTRATE)
+							for s_ref in reaction.getListOfProducts():
+								s_id = s_ref.getSpecies()
+								s_ref_glyph = r_glyph.createSpeciesReferenceGlyph()
+								s_ref_glyph.setId("srg_%s_%s_%s" % (l_id, r_id, s_id))
+								s_ref_glyph.setSpeciesGlyphId("sg_%s_%s" % (l_id, s_id))
+								s_ref_glyph.setSpeciesReferenceId(s_ref.getId())
+								s_ref_glyph.setRole(SPECIES_ROLE_SIDEPRODUCT if s_id in ub_sps else SPECIES_ROLE_PRODUCT)
+						else:
+							r_glyph = layout.createGeneralGlyph()
+							r_glyph.setId("rg_%s_%s" % (l_id, r_id))
+							r_glyph.setReferenceId(r_id)
+							r_glyph.setBoundingBox(create_bounding_box("bb_%s" % r_glyph.getId(), x, y, w * 2, h * 2))
+							reaction = generalized_model.getReaction(r_id)
+
+							for s_ref in reaction.getListOfReactants():
+								s_id = s_ref.getSpecies()
+								s_ref_glyph = r_glyph.createReferenceGlyph()
+								s_ref_glyph.setId("srg_%s_%s_%s" % (l_id, r_id, s_id))
+								s_ref_glyph.setGlyphId("sg_%s_%s" % (l_id, s_id))
+								s_ref_glyph.setReferenceId(s_ref.getId())
+								s_ref_glyph.setRole("SPECIES_ROLE_SIDESUBSTRATE" if s_id in ub_sps else "SPECIES_ROLE_SUBSTRATE")
+							for s_ref in reaction.getListOfProducts():
+								s_id = s_ref.getSpecies()
+								s_ref_glyph = r_glyph.createReferenceGlyph()
+								s_ref_glyph.setId("srg_%s_%s_%s" % (l_id, r_id, s_id))
+								s_ref_glyph.setGlyphId("sg_%s_%s" % (l_id, s_id))
+								s_ref_glyph.setReferenceId(s_ref.getId())
+								s_ref_glyph.setRole("SPECIES_ROLE_SIDEPRODUCT" if s_id in ub_sps else "SPECIES_ROLE_PRODUCT")
+
+
+						
+		save_as_sbml(model, layout_sbml, verbose)
 
 
 def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, s_id2clu, ub_sps, verbose):
