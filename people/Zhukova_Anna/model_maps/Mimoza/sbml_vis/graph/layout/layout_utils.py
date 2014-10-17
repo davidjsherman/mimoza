@@ -41,10 +41,11 @@ def layout_circle(qo, margin=1):
 	root = qo.getRoot()
 	ds = tlp.getDefaultPluginParameters(CIRCULAR, qo)
 	if qo.numberOfNodes() > 1:
-		ds["minDistCircle"] = get_distance(qo) + margin
-		ds["minDistLevel"] = margin
+		dist = get_distance(qo) + margin
+		ds["minDistCircle"] = dist
+		ds["minDistLevel"] = dist
 		ds["minDistCC"] = 1
-		ds["minDistSibling"] = 0
+		ds["minDistSibling"] = dist
 	qo.computeLayoutProperty(CIRCULAR, root[VIEW_LAYOUT], ds)
 
 
