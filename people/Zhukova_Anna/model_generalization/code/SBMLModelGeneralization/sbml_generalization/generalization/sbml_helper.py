@@ -408,7 +408,7 @@ def add_label(label, layout, glyph, _id, w, h, x, y):
 	text_glyph.setGraphicalObjectId(glyph.getId())
 
 
-def create_layout((d_w, d_h), (n2lo, e2lo), layout_model, layout_plugin, ub_sps, model):
+def create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, model):
 	layout = layout_plugin.createLayout()
 	layout.setId(generate_unique_id(layout_model, "l_0"))
 	l_id = layout.getId()
@@ -449,14 +449,13 @@ def create_layout((d_w, d_h), (n2lo, e2lo), layout_model, layout_plugin, ub_sps,
 			r_glyph.setId("rg_%s_%s" % (l_id, r_id))
 			r_glyph.setBoundingBox(create_bounding_box(x, y, w, h))
 			add_label(r_name, layout, r_glyph, r_id, w, h, x, y)
-			link_reaction_to_species(reaction.getListOfReactants(), r_glyph, l_id, r_id, e2lo, n2lo, [x, y], -1,
-			                         lambda
-				                         s_id: SPECIES_ROLE_SIDESUBSTRATE if s_id in ub_sps else SPECIES_ROLE_SUBSTRATE)
-			link_reaction_to_species(reaction.getListOfProducts(), r_glyph, l_id, r_id, e2lo, n2lo, [x, y], 1,
+			link_reaction_to_species(reaction.getListOfReactants(), r_glyph, l_id, r_id, n2lo,
+			                         lambda s_id: SPECIES_ROLE_SIDESUBSTRATE if s_id in ub_sps else SPECIES_ROLE_SUBSTRATE)
+			link_reaction_to_species(reaction.getListOfProducts(), r_glyph, l_id, r_id, n2lo,
 			                         lambda s_id: SPECIES_ROLE_SIDEPRODUCT if s_id in ub_sps else SPECIES_ROLE_PRODUCT)
 
 
-def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, (n2lo, e2lo), (d_w, d_h), ub_sps,
+def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n2lo, (d_w, d_h), ub_sps,
                         verbose):
 	log(verbose, "serializing layout...")
 
@@ -465,18 +464,19 @@ def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, (
 	layout_plugin = layout_model.getPlugin("layout")
 
 	if layout_plugin:
-		create_layout((d_w, d_h), (n2lo, e2lo), layout_model, layout_plugin, ub_sps, groups_model)
+		create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, groups_model)
 		save_as_sbml(layout_model, layout_sbml, verbose)
 
-	doc = convert_to_lev3_v1(gen_model)
-	gen_layout_model = doc.getModel()
-	gen_layout_plugin = gen_layout_model.getPlugin("layout")
-	if gen_layout_plugin:
-		create_layout((d_w, d_h), (n2lo, e2lo), gen_layout_model, gen_layout_plugin, ub_sps, gen_model)
-		save_as_sbml(gen_layout_model, gen_layout_sbml, verbose)
+	if gen_model:
+		doc = convert_to_lev3_v1(gen_model)
+		gen_layout_model = doc.getModel()
+		gen_layout_plugin = gen_layout_model.getPlugin("layout")
+		if gen_layout_plugin:
+			create_layout((d_w, d_h), n2lo, gen_layout_model, gen_layout_plugin, ub_sps, gen_model)
+			save_as_sbml(gen_layout_model, gen_layout_sbml, verbose)
 
 
-def link_reaction_to_species(s_refs, r_glyph, l_id, r_id, e2lo, n2lo, r_xy, direction, role):
+def link_reaction_to_species(s_refs, r_glyph, l_id, r_id, n2lo, role):
 	for s_ref in s_refs:
 		s_id = s_ref.getSpecies()
 		s_ref_glyph = r_glyph.createSpeciesReferenceGlyph()
@@ -485,22 +485,6 @@ def link_reaction_to_species(s_refs, r_glyph, l_id, r_id, e2lo, n2lo, r_xy, dire
 		s_ref_glyph.setSpeciesGlyphId("sg_%s_%s" % (l_id, s_glyph_id_suffix))
 		s_ref_glyph.setSpeciesReferenceId(s_ref.getId())
 		s_ref_glyph.setRole(role(s_id))
-
-	# if (r_id, s_id) in e2lo:
-	# e_lo, w = e2lo[(r_id, s_id)]
-	# if len(e_lo) >= 2:
-	# 		s_lo = n2lo[s_id]
-	# 		if isinstance(s_lo, dict):
-	# 			s_lo = s_lo[r_id]
-	# 		s_xy = s_lo[0]
-	# 		bp1 = e_lo[1]
-	# 		bp2 = e_lo[-2]
-	# 		s_ref_curve = s_ref_glyph.getCurve()
-	# 		cb = s_ref_curve.createCubicBezier()
-	# 		cb.setStart(create_point(r_xy if 1 == direction else s_xy))
-	# 		cb.setBasePoint1(create_point(bp1))
-	# 		cb.setBasePoint2(create_point(bp2))
-	# 		cb.setEnd(create_point(r_xy if -1 == direction else s_xy))
 
 
 def create_point(coords):
@@ -663,8 +647,58 @@ def parse_group_sbml(groups_sbml, chebi):
 						term = get_term(group, chebi)
 						s_id2gr_id[s_id] = gr_id, term if term else gr_name, len(gr_members)
 	else:
-		raise GrPlError("groups plugin not installed")
+		raise GrPlError()
 	return r_id2g_id, s_id2gr_id, ub_sps
+
+
+def get_layout(glyph):
+	bb = glyph.getBoundingBox()
+	d = bb.getDimensions()
+	w = d.getWidth()
+	h = d.getHeight()
+	p = bb.getPosition()
+	x = p.getXOffset() + w / 2
+	y = p.getYOffset() + h / 2
+	return (x, y), (w, h)
+
+
+def parse_layout_sbml(layout_sbml):
+	doc = SBMLReader().readSBMLFromFile(layout_sbml)
+	model = doc.getModel()
+	layout_plugin = model.getPlugin("layout")
+	n2xy = {}
+	if layout_plugin:
+		for layout in layout_plugin.getListOfLayouts():
+			l_id = layout.getId()
+			for s_glyph in layout.getListOfSpeciesGlyphs():
+				s_id = s_glyph.getSpeciesId()
+				s_glyph_id = s_glyph.getId()
+				r_id = None
+				prefix = "sg_%s_%s" % (l_id, s_id)
+				suffix_start = s_glyph_id.find(prefix)
+				if suffix_start != -1:
+					s_glyph_id = s_glyph_id[suffix_start + len(prefix):]
+					if s_glyph_id and s_glyph_id[0] == '_':
+						r_id = s_glyph_id[1:]
+				(x, y), _ = get_layout(s_glyph)
+
+				if r_id and model.getReaction(r_id):
+					if s_id not in n2xy:
+						n2xy[s_id] = {}
+					n2xy[s_id][r_id] = (x, y)
+				else:
+					n2xy[s_id] = (x, y)
+			for r_glyph in layout.getListOfReactionGlyphs():
+				r_id = r_glyph.getReactionId()
+				(x, y), _ = get_layout(r_glyph)
+				n2xy[r_id] = (x, y)
+			for c_glyph in layout.getListOfCompartmentGlyphs():
+				c_id = c_glyph.getCompartmentId()
+				(x, y), _ = get_layout(c_glyph)
+				n2xy[c_id] = (x, y)
+	else:
+		raise LoPlError()
+	return n2xy
 
 
 def check_for_groups(groups_sbml, sbo_term, group_type):
@@ -683,5 +717,10 @@ def check_for_groups(groups_sbml, sbo_term, group_type):
 
 
 class GrPlError(Exception):
-	def __init__(self, msg):
-		self.msg = msg
+	def __init__(self):
+		self.msg = "groups plugin not installed"
+
+
+class LoPlError(Exception):
+	def __init__(self):
+		self.msg = "layout plugin not installed"
