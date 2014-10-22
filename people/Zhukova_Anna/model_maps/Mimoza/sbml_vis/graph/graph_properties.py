@@ -41,6 +41,9 @@ CYTOPLASM = "cytoplasm"
 ORGANELLES = "organelles"
 EXTRACELLULAR = 'extracellular'
 
+START = "start"
+END = "end"
+
 TYPE = 'type'
 TYPE_SPECIES = 1
 TYPE_REACTION = 2

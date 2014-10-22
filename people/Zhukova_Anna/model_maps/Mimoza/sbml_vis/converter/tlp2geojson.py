@@ -62,7 +62,7 @@ def e2feature(graph, e, transport, inner):
 	ubiquitous = root[UBIQUITOUS][real_e]
 	color = triplet(root[VIEW_COLOR][e])
 	props = {WIDTH: get_e_size(root, e).getW() / 2, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
-	         COLOR: get_edge_color(ubiquitous, generalized, transport, color)}
+	         COLOR: get_edge_color(ubiquitous, generalized, transport, color), START: root[ID][s], END: root[ID][t]}
 	if not transport:
 		props[COMPARTMENT_ID] = root[COMPARTMENT_ID][s]
 	else:

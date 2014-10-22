@@ -96,15 +96,16 @@ def main(argv=None):
 		logging.basicConfig(level=logging.INFO) #, filename=log_file)
 
 	groups_sbml = '%s%s_with_groups.xml' % (directory, model_id)
-	out_sbml = '%s%s_generalized.xml' % (directory, model_id)
+	gen_sbml = '%s%s_generalized.xml' % (directory, model_id)
 	layout_sbml = '%s%s_with_layout.xml' % (directory, model_id)
+	gen_layout_sbml = '%s%s_generalized_with_layout.xml' % (directory, model_id)
 	if check_for_groups(sbml, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
 		if sbml != groups_sbml:
 			if not writeSBMLToFile(doc, groups_sbml):
 				raise Exception("Could not write your model to %s" % groups_sbml)
 	else:
 		chebi = parse(get_chebi())
-		generalize_model(groups_sbml, out_sbml, sbml, chebi, cofactors=None, verbose=True)
+		generalize_model(groups_sbml, gen_sbml, sbml, chebi, cofactors=None, verbose=True)
 
 	reader = SBMLReader()
 	input_document = reader.readSBML(groups_sbml)
@@ -112,13 +113,13 @@ def main(argv=None):
 
 	root, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml, True)
 
-	fc = graph2geojson(c_id2info, c_id2outs, root, True, chebi)
+	fc, (n2lo, e2lo, (d_w, d_h)) = graph2geojson(c_id2info, c_id2outs, root, True, chebi)
 
 	groups_document = reader.readSBML(groups_sbml)
 	groups_model = groups_document.getModel()
-	out_document = reader.readSBML(out_sbml)
-	out_model = out_document.getModel()
-	save_as_layout_sbml(groups_model, out_model, layout_sbml, fc, 512, ub_sps, verbose)
+	gen_document = reader.readSBML(gen_sbml)
+	gen_model = gen_document.getModel()
+	save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, (n2lo, e2lo), (d_w, d_h), ub_sps, verbose)
 
 	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose)

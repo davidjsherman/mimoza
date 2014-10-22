@@ -66,6 +66,9 @@ def factor_nodes(graph, ns=None):
 				if root[TRANSPORT][sample_n]:
 					root[TRANSPORT][meta_n] = True
 			root[TERM][meta_n] = "\nor\n".join({root[TERM][it] for it in nodes})
+			for ub in root.getInOutNodes(meta_n):
+				if root[UBIQUITOUS][ub]:
+					root[CLONE_ID][ub] += "," + root[ID][meta_n]
 		else:
 			root[TERM][meta_n] = root[ANCESTOR_TERM][sample_n]
 

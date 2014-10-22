@@ -204,7 +204,7 @@ def create_props(graph):
 
 	graph.getBooleanProperty(FAKE)
 
-	graph.getIntegerProperty(CLONE_ID)
+	graph.getStringProperty(CLONE_ID)
 
 	graph.getStringVectorProperty(RELATED_COMPARTMENT_IDS)
 

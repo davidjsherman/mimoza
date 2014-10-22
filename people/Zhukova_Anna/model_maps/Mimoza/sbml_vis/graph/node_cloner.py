@@ -1,4 +1,4 @@
-from sbml_vis.graph.graph_properties import CLONE_ID
+from sbml_vis.graph.graph_properties import CLONE_ID, ID
 
 __author__ = 'anna'
 
@@ -9,11 +9,10 @@ def clone_node(graph, n):
 	graphs_to_update = get_graphs_by_node(n, root)
 
 	used_n = False
-	clone_id = 0
-	root[CLONE_ID][n] = clone_id
-	for e in root.getInOutEdges(n):
-		clone_id += 1
+	for r in root.getInOutNodes(n):
+		clone_id = root[ID][r]
 		if not used_n:
+			root[CLONE_ID][n] = clone_id
 			used_n = True
 			continue
 		# duplicate node
@@ -22,10 +21,12 @@ def clone_node(graph, n):
 			root[prop_name][dup] = root[prop_name][n]
 		root[CLONE_ID][dup] = clone_id
 
-		for graph in (graph for graph in graphs_to_update if graph.isElement(e)):
+		for graph in (graph for graph in graphs_to_update if graph.isElement(r)):
 			if not graph.isElement(dup):
 				graph.addNode(dup)
-			graph.setTarget(e, dup) if n == graph.target(e) else graph.setSource(e, dup)
+			e = graph.existEdge(r, n, False)
+			if graph.isElement(e):
+				graph.setTarget(e, dup) if n == graph.target(e) else graph.setSource(e, dup)
 	for graph in graphs_to_update:
 		if graph.deg(n) == 0:
 			graph.delNode(n, True)
@@ -51,4 +52,6 @@ def merge_nodes(graph, ns):
 			root.setTarget(e, n)
 		for e in root.getOutEdges(m):
 			root.setSource(e, n)
+		root[CLONE_ID][n] += "," + root[CLONE_ID][m]
+		print root[CLONE_ID][n]
 		root.delNode(m, True)
