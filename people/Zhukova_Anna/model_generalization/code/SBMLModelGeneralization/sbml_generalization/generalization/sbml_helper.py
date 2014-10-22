@@ -1,4 +1,3 @@
-from collections import defaultdict
 import logging
 
 from libsbml import *
@@ -24,21 +23,6 @@ SBO_BIOCHEMICAL_REACTION = "SBO:0000176"
 DIMENSIONLESS_UNIT = "dimensionless"
 
 SBO_MATERIAL_ENTITY = "SBO:0000240"
-
-TYPE = 'type'
-TYPE_SPECIES = 1
-TYPE_REACTION = 2
-TYPE_COMPARTMENT = 3
-TYPE_EDGE = 0
-
-START = "start"
-END = "end"
-
-ID = 'id'
-NAME = 'name'
-
-HEIGHT = "h"
-WIDTH = "w"
 
 __author__ = 'anna'
 
@@ -390,8 +374,8 @@ def create_dimensions(width, height):
 def create_bounding_box(x, y, width, height):
 	"Create a bounding box object with given coordinates and dimensions"
 	bb = BoundingBox()
-	bb.setX(x)
-	bb.setY(y)
+	bb.setX(x - width / 2)
+	bb.setY(y - height / 2)
 	bb.setWidth(width)
 	bb.setHeight(height)
 	return bb
@@ -453,7 +437,7 @@ def create_layout((d_w, d_h), (n2lo, e2lo), layout_model, layout_plugin, ub_sps,
 					s_glyph_suffix = "%s_%s" % (s_id, r_id) if r_id else s_id
 					s_glyph.setId("sg_%s_%s" % (l_id, s_glyph_suffix))
 					s_glyph.setBoundingBox(create_bounding_box(x, y, w, h))
-					# add_label(s_name, layout, s_glyph, s_id, w, h, x, y)
+					add_label(s_name, layout, s_glyph, s_id, w, h, x, y)
 
 	for reaction in model.getListOfReactions():
 		r_id = reaction.getId()
@@ -464,14 +448,16 @@ def create_layout((d_w, d_h), (n2lo, e2lo), layout_model, layout_plugin, ub_sps,
 			r_glyph.setReactionId(r_id)
 			r_glyph.setId("rg_%s_%s" % (l_id, r_id))
 			r_glyph.setBoundingBox(create_bounding_box(x, y, w, h))
-			# add_label(r_name, layout, r_glyph, r_id, w, h, x, y)
+			add_label(r_name, layout, r_glyph, r_id, w, h, x, y)
 			link_reaction_to_species(reaction.getListOfReactants(), r_glyph, l_id, r_id, e2lo, n2lo, [x, y], -1,
-		                         lambda s_id: SPECIES_ROLE_SIDESUBSTRATE if s_id in ub_sps else SPECIES_ROLE_SUBSTRATE)
+			                         lambda
+				                         s_id: SPECIES_ROLE_SIDESUBSTRATE if s_id in ub_sps else SPECIES_ROLE_SUBSTRATE)
 			link_reaction_to_species(reaction.getListOfProducts(), r_glyph, l_id, r_id, e2lo, n2lo, [x, y], 1,
-		                         lambda s_id: SPECIES_ROLE_SIDEPRODUCT if s_id in ub_sps else SPECIES_ROLE_PRODUCT)
+			                         lambda s_id: SPECIES_ROLE_SIDEPRODUCT if s_id in ub_sps else SPECIES_ROLE_PRODUCT)
 
 
-def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, (n2lo, e2lo), (d_w, d_h), ub_sps, verbose):
+def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, (n2lo, e2lo), (d_w, d_h), ub_sps,
+                        verbose):
 	log(verbose, "serializing layout...")
 
 	doc = convert_to_lev3_v1(groups_model)
@@ -479,7 +465,6 @@ def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, (
 	layout_plugin = layout_model.getPlugin("layout")
 
 	if layout_plugin:
-		print "gr mod"
 		create_layout((d_w, d_h), (n2lo, e2lo), layout_model, layout_plugin, ub_sps, groups_model)
 		save_as_sbml(layout_model, layout_sbml, verbose)
 
@@ -487,7 +472,6 @@ def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, (
 	gen_layout_model = doc.getModel()
 	gen_layout_plugin = gen_layout_model.getPlugin("layout")
 	if gen_layout_plugin:
-		print "gen mod"
 		create_layout((d_w, d_h), (n2lo, e2lo), gen_layout_model, gen_layout_plugin, ub_sps, gen_model)
 		save_as_sbml(gen_layout_model, gen_layout_sbml, verbose)
 
@@ -502,21 +486,21 @@ def link_reaction_to_species(s_refs, r_glyph, l_id, r_id, e2lo, n2lo, r_xy, dire
 		s_ref_glyph.setSpeciesReferenceId(s_ref.getId())
 		s_ref_glyph.setRole(role(s_id))
 
-		# if (r_id, s_id) in e2lo:
-		# 	e_lo, w = e2lo[(r_id, s_id)]
-		# 	if len(e_lo) >= 2:
-		# 		s_lo = n2lo[s_id]
-		# 		if isinstance(s_lo, dict):
-		# 			s_lo = s_lo[r_id]
-		# 		s_xy = s_lo[0]
-		# 		bp1 = e_lo[1]
-		# 		bp2 = e_lo[-2]
-		# 		s_ref_curve = s_ref_glyph.getCurve()
-		# 		cb = s_ref_curve.createCubicBezier()
-		# 		cb.setStart(create_point(r_xy if 1 == direction else s_xy))
-		# 		cb.setBasePoint1(create_point(bp1))
-		# 		cb.setBasePoint2(create_point(bp2))
-		# 		cb.setEnd(create_point(r_xy if -1 == direction else s_xy))
+	# if (r_id, s_id) in e2lo:
+	# e_lo, w = e2lo[(r_id, s_id)]
+	# if len(e_lo) >= 2:
+	# 		s_lo = n2lo[s_id]
+	# 		if isinstance(s_lo, dict):
+	# 			s_lo = s_lo[r_id]
+	# 		s_xy = s_lo[0]
+	# 		bp1 = e_lo[1]
+	# 		bp2 = e_lo[-2]
+	# 		s_ref_curve = s_ref_glyph.getCurve()
+	# 		cb = s_ref_curve.createCubicBezier()
+	# 		cb.setStart(create_point(r_xy if 1 == direction else s_xy))
+	# 		cb.setBasePoint1(create_point(bp1))
+	# 		cb.setBasePoint2(create_point(bp2))
+	# 		cb.setEnd(create_point(r_xy if -1 == direction else s_xy))
 
 
 def create_point(coords):
