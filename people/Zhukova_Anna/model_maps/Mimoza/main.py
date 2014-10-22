@@ -19,7 +19,8 @@ from sbml_vis.converter.tulip_graph2geojson import graph2geojson
 import mimoza.mimoza
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS, save_as_layout_sbml
+from sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS, save_as_layout_sbml, \
+	parse_layout_sbml, LoPlError
 
 
 __author__ = 'anna'
@@ -113,13 +114,18 @@ def main(argv=None):
 
 	root, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml, True)
 
-	fc, (n2lo, e2lo, (d_w, d_h)) = graph2geojson(c_id2info, c_id2outs, root, True, chebi)
+	try:
+		n2xy = parse_layout_sbml(sbml)
+	except LoPlError:
+		n2xy = None
+
+	fc, (n2lo, (d_w, d_h)) = graph2geojson(c_id2info, c_id2outs, root, True, chebi, n2xy)
 
 	groups_document = reader.readSBML(groups_sbml)
 	groups_model = groups_document.getModel()
 	gen_document = reader.readSBML(gen_sbml)
 	gen_model = gen_document.getModel()
-	save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, (n2lo, e2lo), (d_w, d_h), ub_sps, verbose)
+	save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n2lo, (d_w, d_h), ub_sps, verbose)
 
 	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose)

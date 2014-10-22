@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from sbml_vis.graph.layout.predefined_layout import apply_node_coordinates
 from sbml_vis.graph.node_cloner import merge_nodes
 from sbml_vis.graph.resize import get_n_size
 from sbml_vis.graph.graph_properties import *
@@ -76,7 +77,7 @@ def factor_nodes(graph, ns=None):
 	return meta_ns
 
 
-def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=True, onto=None):
+def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=True, onto=None, n2xy=None):
 	root = meta_graph.getRoot()
 	ns = [n for n in meta_graph.getNodes() if root[COMPARTMENT_ID][n] == c_id]
 	if not ns:
@@ -84,7 +85,10 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=Tru
 	comp_n = meta_graph.createMetaNode(ns, False)
 	comp_graph = root[VIEW_META_GRAPH][comp_n]
 	if do_layout:
-		layout(comp_graph, 1, onto)
+		if n2xy:
+			apply_node_coordinates(comp_graph, n2xy)
+		else:
+			layout(comp_graph, 1, onto)
 	root[NAME][comp_n] = c_name
 	root[COMPARTMENT_ID][comp_n] = out_comp
 	root[TYPE][comp_n] = TYPE_COMPARTMENT

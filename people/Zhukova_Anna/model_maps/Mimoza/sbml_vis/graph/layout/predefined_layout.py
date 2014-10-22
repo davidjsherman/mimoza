@@ -80,3 +80,31 @@ def get_keys(n, graph, onto, primary=False):
 def get_primary_id(term, onto):
 	terms = {term} | onto.get_equivalents(term, None, 0, {CONJUGATE_BASE_OF, CONJUGATE_ACID_OF})
 	return sorted([t.get_id() for t in terms])[0]
+
+
+def apply_node_coordinates(graph, n2xy):
+	root = graph.getRoot()
+	for n in graph.getNodes():
+		n_id = root[ID][n]
+		if n_id in n2xy:
+			xy = n2xy[n_id]
+			if isinstance(xy, dict):
+				for r_id, (x, y) in xy.iteritems():
+					if root[CLONE_ID][n].find(r_id) != -1:
+						root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
+						break
+			else:
+				x, y = xy
+				root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
+		elif graph.isMetaNode(n):
+			x, y = 0, 0
+			count = 0
+			for m in root[VIEW_META_GRAPH][n].getNodes():
+				if root[ID][m] in n2xy:
+					x_, y_ = n2xy[root[ID][m]]
+					count += 1
+					x += x_
+					y += y_
+			if count:
+				root[VIEW_LAYOUT][n] = tlp.Coord(x / count, y / count)
+	root[VIEW_LAYOUT].setAllEdgeValue([])

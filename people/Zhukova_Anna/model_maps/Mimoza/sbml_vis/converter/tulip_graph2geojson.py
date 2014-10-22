@@ -2,7 +2,7 @@ from collections import defaultdict
 from tulip import tlp
 
 import geojson
-from sbml_vis.graph.resize import get_e_size
+from sbml_vis.graph.layout.predefined_layout import apply_node_coordinates
 
 from sbml_vis.graph.color.color import color, color_edges
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, merge_ubs_for_similar_reactions
@@ -27,7 +27,7 @@ def update_level2features(feature, c_id2level2features, z, c_id):
 	c_id2level2features[c_id][z].append(feature)
 
 
-def export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout):
+def export_edges(c_id2level2features, c_id2outs, meta_graph, processed):
 	root = meta_graph.getRoot()
 
 	get_id = lambda n: "%s_%s" % (root[ID][n], root[CLONE_ID][n])
@@ -45,17 +45,17 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout
 
 		t_type, s_type = root[TYPE][t], root[TYPE][s]
 
-		if t_type == TYPE_REACTION and s_type == TYPE_SPECIES:
-			r, m = t, s
-		elif s_type == TYPE_REACTION and t_type == TYPE_SPECIES:
-			r, m = s, t
-		else:
-			r, m = None, None
-		if r and m:
-			e_lo = root[VIEW_LAYOUT][e]
-			if e_lo:
-				w = get_e_size(root, e).getW()
-				e2layout[(root[ID][r], root[ID][m])] = [[[it[0], it[1]] for it in e_lo], w]
+		# if t_type == TYPE_REACTION and s_type == TYPE_SPECIES:
+		# 	r, m = t, s
+		# elif s_type == TYPE_REACTION and t_type == TYPE_SPECIES:
+		# 	r, m = s, t
+		# else:
+		# 	r, m = None, None
+		# if r and m:
+		# 	e_lo = root[VIEW_LAYOUT][e]
+		# 	if e_lo:
+		# 		w = get_e_size(root, e).getW()
+		# 		e2layout[(root[ID][r], root[ID][m])] = [[[it[0], it[1]] for it in e_lo], w]
 
 		# 1. if the edge is inside our compartment
 		if s_c_id == t_c_id:
@@ -258,12 +258,12 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
 						update_level2features(f, c_id2level2features, z, c_id)
 
 
-def export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout, e2layout):
-	export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout)
+def export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout):
+	export_edges(c_id2level2features, c_id2outs, meta_graph, processed)
 	export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout)
 
 
-def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps):
+def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None):
 	root = meta_graph.getRoot()
 
 	c_id2level2features = {}
@@ -272,7 +272,7 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps):
 	get_id = lambda n: "%s_%s" % (root[ID][n], root[CLONE_ID][n])
 	get_e_id = lambda e: "-".join(sorted([get_id(meta_graph.source(e)), get_id(meta_graph.target(e))]))
 	bb = tlp.computeBoundingBox(meta_graph)
-	n2layout, e2layout, (d_w, d_h) = {}, {}, (bb.width(), bb.height())
+	n2layout, (d_w, d_h) = {}, (bb.width(), bb.height())
 
 	while True:
 		for c_id, sizes in c_id2c_borders.iteritems():
@@ -282,7 +282,7 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps):
 		bend_edges(meta_graph)
 		# bend_species_edges(meta_graph)
 		color_edges(meta_graph)
-		export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout, e2layout)
+		export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout)
 
 		metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and TYPE_COMPARTMENT == root[TYPE][n]]
 		if not metas:
@@ -296,22 +296,24 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps):
 		else:
 			c_id2c_borders = {root[ID][c]: get_comp_borders(c, root) for c in metas}
 		open_meta_ns(meta_graph, metas)
+		if n2xy:
+			apply_node_coordinates(meta_graph, n2xy)
 
 	for c_id in c_id2info.iterkeys():
 		(name, go, (l, out_c_id)) = c_id2info[c_id]
-		comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, False)
+		comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, False, None, n2xy)
 		bend_edges(meta_graph)
 		color_edges(meta_graph)
-		export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout)
+		export_edges(c_id2level2features, c_id2outs, meta_graph, processed)
 		metas = factor_nodes(meta_graph)
 		bend_ubiquitous_edges(meta_graph, metas)
 		bend_edges(meta_graph)
 		metas.append(comp_n)
 		color_edges(meta_graph)
-		export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout)
+		export_edges(c_id2level2features, c_id2outs, meta_graph, processed)
 		open_meta_ns(meta_graph, metas)
 
-	return c_id2level2features, (n2layout, e2layout, (d_w, d_h))
+	return c_id2level2features, (n2layout, (d_w, d_h))
 
 
 def get_reaction2reactants_products(root):
@@ -334,7 +336,7 @@ def calculate_related_compartments(root):
 		root[RELATED_COMPARTMENT_IDS][s] = list(result - {root[COMPARTMENT_ID][s]})
 
 
-def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None):
+def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None, n2xy=None):
 	root = graph.getRoot()
 
 	log(verbose, 'generalized species/reactions -> metanodes')
@@ -347,19 +349,19 @@ def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None):
 	meta_graph = graph.inducedSubGraph([n for n in graph.getNodes()])
 
 	log(verbose, 'compartments -> metanodes')
-	process_compartments(c_id2info, meta_graph, onto)
+	process_compartments(c_id2info, meta_graph, onto, n2xy)
 
 	color(root)
 	color_edges(root)
 
 	log(verbose, 'tlp nodes -> geojson features')
-	c_id2level2features, (n2lo, e2lo, (d_w, d_h)) = meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps)
+	c_id2level2features, (n2lo, (d_w, d_h)) = meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy)
 
 	geometry = geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])
 	rescale(c_id2level2features)
 	get_l2fs = lambda l2fs: {lev: geojson.FeatureCollection(features, geometry=geometry) for (lev, features) in
 	                         l2fs.iteritems()}
-	return {c_id: get_l2fs(l2fs) for (c_id, l2fs) in c_id2level2features.iteritems()}, (n2lo, e2lo, (d_w, d_h))
+	return {c_id: get_l2fs(l2fs) for (c_id, l2fs) in c_id2level2features.iteritems()}, (n2lo, (d_w, d_h))
 
 
 def rescale(c_id2level2features):
@@ -403,7 +405,7 @@ def rescale(c_id2level2features):
 						f.properties[HEIGHT] *= scale_coefficient
 
 
-def process_compartments(c_id2info, meta_graph, onto=None):
+def process_compartments(c_id2info, meta_graph, onto=None, n2xy=None):
 	# root = meta_graph.getRoot()
 	factor_nodes(meta_graph)
 
@@ -414,6 +416,9 @@ def process_compartments(c_id2info, meta_graph, onto=None):
 			if current_zoom_level == l:
 				# ns = [n for n in meta_graph.getNodes() if root[COMPARTMENT_ID][n] == c_id]
 				# factor_nodes(meta_graph, ns)
-				comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, True, onto)
+				comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, True, onto, n2xy)
 		current_zoom_level -= 1
-		layout(meta_graph, 1, onto)
+		if n2xy:
+			apply_node_coordinates(meta_graph, n2xy)
+		else:
+			layout(meta_graph, 1, onto)

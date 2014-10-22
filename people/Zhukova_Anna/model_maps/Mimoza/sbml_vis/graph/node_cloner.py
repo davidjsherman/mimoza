@@ -53,5 +53,4 @@ def merge_nodes(graph, ns):
 		for e in root.getOutEdges(m):
 			root.setSource(e, n)
 		root[CLONE_ID][n] += "," + root[CLONE_ID][m]
-		print root[CLONE_ID][n]
 		root.delNode(m, True)
