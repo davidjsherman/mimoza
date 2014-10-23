@@ -79,14 +79,14 @@ try:
 
 		fc, (n2lo, (d_w, d_h)) = graph2geojson(c_id2info, c_id2outs, graph, True, chebi, n2xy)
 
-		groups_document = reader.readSBML(groups_sbml)
-		groups_model = groups_document.getModel()
-		gen_document = reader.readSBML(gen_sbml)
-		gen_model = gen_document.getModel()
-		save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps, True)
+		if not n2xy or gen_sbml:
+			groups_document = reader.readSBML(groups_sbml)
+			groups_model = groups_document.getModel()
+			gen_document = reader.readSBML(gen_sbml)
+			gen_model = gen_document.getModel()
+			save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps, True)
 
-		features = graph2geojson(c_id2info, c_id2outs, graph, True, chebi)
-		serialize(directory, m_dir_id, input_model, features, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
+		serialize(directory, m_dir_id, input_model, fc, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
 		          MIMOZA_FAVICON, True)
 
 except Exception as e:

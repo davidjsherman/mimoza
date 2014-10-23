@@ -1,3 +1,4 @@
+import os
 from sbml_vis.graph.color.colorer import *
 from sbml_vis.html import markup
 
@@ -366,6 +367,7 @@ def create_thanks_for_uploading_generalized_html(m_id, m_name, directory_prefix,
 	directory = '%s/%s' % (directory_prefix, m_dir_id)
 	m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
 	sbml = '%s/%s_with_groups.xml' % (directory, m_id)
+	gen_sbml = "%s/%s_generalized.xml" % (directory, m_id)
 
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, '', m_dir_id, img))
+		f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml if os.path.exists(gen_sbml) else '', m_dir_id, img))
