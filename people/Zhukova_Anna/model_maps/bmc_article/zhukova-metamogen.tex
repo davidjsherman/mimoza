@@ -356,6 +356,10 @@ Metabolic models may include several compartments, nested into each other. For e
 SBML allows to represent relative positions of the compartments in the model with an optional \emph{outside} tag. However, it is not available in all SBML levels, nor is widely used.
 
 To be able to visualize the compartments correctly even for the SBML models lacking this information, we infer their relative positions from the Gene Ontology (GO)~\cite{Ashburner2000}. We associate each compartment with a term from the \emph{cellular component} branch of GO by using annotations in the model if they are present, or matching the compartments' names otherwise. We then use the \emph{part\_of} and \emph{is\_a} relationships between the terms in GO to infer relative compartment positions. If no term for a compartment could be found, it is placed on the outer-most level. 
+
+\subsubsection*{SBML layout}
+To store the calculated layout of the model elements we use the layout extension~\cite{Gauges2013} of SBML. It allows to store the coordinates and sizes of the metabolites, reactions and compartments in the model. The TLP-to-SBML layout converter is implemented in python and is available as a part of Mimoza software.
+If the SBML model submitted by the user contains the layout information, our software uses it for nodes' positions. Therefore, it is possible to visualize a model with Mimoza, download the resulting SBML with layout annotations, edit it manually or with another software and then revisualize the updated version with Mimoza.
  
 \subsection*{ZUI}
 
@@ -376,7 +380,7 @@ One can use Mimoza in three different ways:
 \item As a standalone application.
 All Mimoza code is open-source and can be downloaded from the project web page~\cite{Zhukovaa} and installed on a local server.
 \item On the Mimoza web server.
-Mimoza web server~\cite{Zhukovaa} lets one test visualization for smaller SBML models, with the possibility to download the result as a COMBINE archive~\cite{Bergmann2014}, including the SBML file with the generalized model, GeoJSON files with the coordinates of model elements, and the HTML, CSS and JavaScript files that are needed to view the visualization in a browser.
+Mimoza web server~\cite{Zhukovaa} lets one test visualization for smaller SBML models, with the possibility to download the result as a COMBINE archive~\cite{Bergmann2014}, including the SBML file with groups (to store the metabolite and reaction groupings) and layout (to store the element coordinates) extensions, GeoJSON files with the coordinates of model elements, and the HTML, CSS and JavaScript files that are needed to view the visualization in a browser.
 \item As a Galaxy~\cite{Blankenberg2010} project tool, so that generation of Mimoza views can be included in a Galaxy workflow.
 The Galaxy wrapper for Mimoza is available for download from the project web page.
 \end{enumerate}
