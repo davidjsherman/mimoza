@@ -8,6 +8,7 @@ import cgitb
 import sys
 
 from libsbml import SBMLReader
+from sbml_generalization.generalization.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml
 
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.sbml2tlp import import_sbml
@@ -30,6 +31,7 @@ except ImportError:
 
 form = cgi.FieldStorage()
 groups_sbml = form['sbml'].value
+gen_sbml = form['gen_sbml'].value
 m_dir_id = form['dir'].value
 directory = '../html/%s/' % m_dir_id
 log_file = '%s/log.log' % directory
@@ -69,6 +71,20 @@ try:
 		# sbml -> tulip graph
 		log(True, 'sbml -> tlp')
 		graph, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml, True)
+
+		try:
+			n2xy = parse_layout_sbml(groups_sbml)
+		except LoPlError:
+			n2xy = None
+
+		fc, (n2lo, (d_w, d_h)) = graph2geojson(c_id2info, c_id2outs, graph, True, chebi, n2xy)
+
+		groups_document = reader.readSBML(groups_sbml)
+		groups_model = groups_document.getModel()
+		gen_document = reader.readSBML(gen_sbml)
+		gen_model = gen_document.getModel()
+		save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps, True)
+
 		features = graph2geojson(c_id2info, c_id2outs, graph, True, chebi)
 		serialize(directory, m_dir_id, input_model, features, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
 		          MIMOZA_FAVICON, True)

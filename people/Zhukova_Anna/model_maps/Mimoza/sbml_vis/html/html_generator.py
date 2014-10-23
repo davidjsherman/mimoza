@@ -269,40 +269,32 @@ def a_blank(href, text):
 	return '<a href="%s" target="_blank">%s</a>' % (href, text)
 
 
-def generate_exists_html(css, js, ico, model_id, existing_m_url, url, sbml, m_dir_id, progress_icon):
-	return generate_model_html("%s Exists" % model_id, "Already at Mimoza",
-	                           'There is already %s with this identifier, check it out!' % a_blank(existing_m_url,
-	                                                                                               'a processed model'),
-	                           'If you prefer to carry on with your model instead, press the button below.',
-	                           css, js, ico, model_id, url, sbml, m_dir_id, progress_icon, 'visualise.py', False)
-
-
-def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
+def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to generalize!", '',
 	                           'Now let\'s generalize it: To start the generalization press the button below.',
 	                           '''<br>When the generalization is done, it will become available at <a href="%s">%s</a>.
                                <br>It might take some time (up to an hour for genome-scale models), so, please, be patient and do not lose hope :)''' % (
 		                           url, url),
-	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'generalize.py', False)
+	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'generalize.py', False)
 
 
-def generate_uploaded_generalized_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
+def generate_uploaded_generalized_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualize!", '',
 	                           'Your model seems to be already generalized. Now let\'s visualize it: To start the visualization press the button below.',
 	                           '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
 		                           url, url),
-	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'visualise.py', False)
+	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
 
-def generate_generalized_html(css, js, ico, m_name, model_id, url, sbml, m_dir_id, progress_icon):
+def generate_generalized_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Generalized" % model_id, "Generalized, time to visualize!", '',
 	                           'Your model is successfully generalized. Now let\'s visualize it: To start the visualization press the button below.',
 	                           '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
 		                           url, url),
-	                           css, js, ico, m_name, sbml, m_dir_id, progress_icon, 'visualise.py', False)
+	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
 
-def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id, sbml, m_dir_id, progress_icon, action,
+def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id, sbml, gen_sbml, m_dir_id, progress_icon, action,
                         header=True):
 	scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in js])
 	h = "Content-Type: text/html;charset=utf-8" if header else "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>"
@@ -329,14 +321,15 @@ def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id
             </div>
         </body>
     </html>''' % (h, css, ico, scripts, title, h1, model_id, text, expl, more_expl,
-	              generate_visualisation_button(sbml, m_dir_id, progress_icon, action))
+	              generate_visualisation_button(sbml, gen_sbml, m_dir_id, progress_icon, action))
 
 
-def generate_visualisation_button(sbml, m_dir_id, progress_icon, action):
+def generate_visualisation_button(sbml, gen_sbml, m_dir_id, progress_icon, action):
 	return '''
         <div class="centre margin" id="visualize_div">
             <form action="/cgi-bin/%s" method="POST" name="input_form" enctype="multipart/form-data">
                 <input type="hidden" name="sbml" value="%s" />
+                <input type="hidden" name="gen_sbml" value="%s" />
                 <input type="hidden" name="dir" value="%s" />
                 <input class="ui-button img-centre" type="submit" id="bb" value="Go!" onclick="progress()"/>
             </form>
@@ -355,16 +348,17 @@ def generate_visualisation_button(sbml, m_dir_id, progress_icon, action):
                 span.appendChild(document.createTextNode("We are currently processing your model..."));
             }
 
-        </script>''' % (action, sbml, m_dir_id, progress_icon)
+        </script>''' % (action, sbml, gen_sbml, m_dir_id, progress_icon)
 
 
 def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, js, fav, img):
 	directory = '%s/%s' % (directory_prefix, m_dir_id)
 	m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
 	sbml = '%s/%s.xml' % (directory, m_id)
+	gen_sbml = '%s/%s_generalized.xml' % (directory, m_id)
 
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_uploaded_html(css, js, fav, m_name, m_id, m_url, sbml, m_dir_id, img))
+		f.write(generate_uploaded_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml, m_dir_id, img))
 
 
 def create_thanks_for_uploading_generalized_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, js, fav,
@@ -374,14 +368,4 @@ def create_thanks_for_uploading_generalized_html(m_id, m_name, directory_prefix,
 	sbml = '%s/%s_with_groups.xml' % (directory, m_id)
 
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, m_dir_id, img))
-
-
-def create_exists_html(m_id, existing_m_dir_id, directory_prefix, m_dir_id, url, url_end, css, js, fav, img):
-	directory = '%s/%s' % (directory_prefix, m_dir_id)
-	m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
-	sbml = '%s/%s.xml' % (directory, m_id)
-	existing_m_url = '%s/%s/%s' % (url, existing_m_dir_id, url_end)
-
-	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_exists_html(css, js, fav, m_id, existing_m_url, m_url, sbml, m_dir_id, img))
+		f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, '', m_dir_id, img))

@@ -70,8 +70,8 @@ try:
 
 	if not os.path.exists(groups_sbml):
 		chebi = parse(get_chebi())
-		out_sbml = None#"%s/%s_generalized.xml" % (sbml_directory, m_id)
-		r_id2g_id, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, out_sbml,
+		gen_sbml = "%s/%s_generalized.xml" % (sbml_directory, m_id)
+		r_id2g_id, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, gen_sbml,
 		                                                                                  sbml, chebi,
 		                                                                                  cofactors=None,
 		                                                                                  verbose=True,
