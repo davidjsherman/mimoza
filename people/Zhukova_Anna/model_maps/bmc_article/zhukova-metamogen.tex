@@ -374,7 +374,7 @@ The GeoJSON objects are then added as layers to the map and rendered by Leaflet 
 After the visualization with Mimoza is done, we provide a link for embedding the view in another web page.
 
 \subsection*{Download and distribution}
-
+   
 One can use Mimoza in three different ways:
 \begin{enumerate}
 \item As a standalone application.
@@ -400,7 +400,7 @@ The overall Mimoza pipeline contains 5 steps:
 \section*{Results and Discussion}
 %The Results and Discussion may be combined into a single section or presented separately. They may also be broken into subsections with short, informative headings. In any case what should be described is the functionality of the software together with data on how its performance and functionality compare with and improve on functionally similar existing software. There should then be a discussion of the intended use of the software, and the benefits that are envisioned together, if possible, with an outline for the planned future development of new features.
 To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network model~\cite{Herrgard2008}. The result can be found at \url{http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8}. 
-Three zoom levels (cytoplasm view, the generalized peroxisome compartment and the detailed view of a part of the peroxisome) are shown in Figure~\ref{fig:zoom_levels}. The first level (bottom) shows the organelle compartments, transport reactions between them, and the reactions happening inside the cytoplasm; the second level (middle) shows the generalized structure of the peroxisome, the main processes happening in it (e.g. $\beta$-oxidation of fatty acids~\cite{Metzler01}); the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
+Three zoom levels (compartment view, the generalized peroxisome compartment and the detailed view) corresponding to the part of the model representing $\beta$-oxidation of fatty acids~\cite{Metzler01} are shown in Figure~\ref{fig:zoom_levels}. The first level (bottom) shows the peroxisome compartment, and the reactions happening inside the cytoplasm; the second level (middle) shows the generalized structure of the peroxisome, the main processes happening in it; the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
 
 We visualized the same model using MetDraw with no manual adjustments. The resulting SVG file\footnote{MetDraw -- http://www.metdraw.com/metdraw/bc7df60221ba314c383b1bf6e7dad4c3056f92bb} has only one zoom level with lots of clutter, that does not allow one to see the structure of the network.
 
@@ -513,10 +513,10 @@ The output SBML file contains the initial model (including the lists of metaboli
       \end{figure}
       
   \begin{figure}[h!]
- \includegraphics[scale=0.5]{figure1.png}
+ \includegraphics[scale=0.41]{figure_main.png}
   \caption{\csentence{Three zoom levels}
-  \label{fig:zoom_levels}
-      The bottom level represents the cytoplasm compartment containing organelle compartments and transport reactions between them. The intermediate zoom shows the generalized processes in the peroxisome compartment. The most detailed view reveals the metabolites that were generalized into a \emph{straight-chain saturated fatty acid} on the previous level, e.g. \textit{dodecanoate}, and reactions they participate in.}
+  \label{fig:zoom_levels}  
+      The most general zoom level (bottom) shows the peroxisome and a generalized transport reaction. The intermediate zoom (middle) shows the generalized processes inside the peroxisome compartment. The most detailed view (top) reveals the metabolites and reactions of the initial model.}
       \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
