@@ -38,7 +38,7 @@
         <div class="centre margin" id="input">
             <form name="input_form" enctype="multipart/form-data" action="/cgi-bin/upload.py" method="POST">
                 <input type="file" name="file_input" id="model_file"
-                       accept="text/xml, text/sbml"/>
+                       accept="text/xml, text/sbml, .sbml, .xml"  onchange="return checkSBML(this)"/>
                 <input class="ui-button" type="submit" value="Submit" onclick="progress()">
             </form>
         </div>
@@ -54,6 +54,20 @@
                 src="http://mimoza.bordeaux.inria.fr/lib/modelmap/loader.gif" class="centre margin" alt="Loading..."/>
     </div>
     <script type="text/javascript">
+        function checkSBML(el) {
+            if(el.value) {
+                var parts = el.value.split('.');
+                if(parts[parts.length - 1].toLowerCase() === 'sbml' || parts[parts.length - 1].toLowerCase() === 'xml') {
+                    return true;
+                } else {
+                    alert('Please choose an SBML file (.xml or .sbml).');
+                    el.value = '';
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
         function progress() {
             var img = document.getElementById("img");
             img.style.visibility = "visible";
