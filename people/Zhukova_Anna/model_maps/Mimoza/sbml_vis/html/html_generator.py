@@ -92,7 +92,7 @@ def format_color(color):
 
 def add_map(page, map_id):
 	""" <div class="margin" id="map" style="width: 1024px; height: 1024px"></div> """
-	page.div('', class_='margin map', id=map_id)
+	page.div('', class_='margin map ui-widget-content', id=map_id)
 
 
 def add_model_description(model, page):
@@ -109,6 +109,7 @@ def add_js(page, json_files, c_id2json_vars, map_id, comps):
         initializeMap({%s}, "%s", %s);
     ''' % (", ".join(("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems())),
 	       map_id, comps), type="text/javascript")
+	page.script('''$(function() {$( "#%s" ).resizable();});''' % map_id)
 
 
 def add_embed_button(page):
@@ -161,15 +162,15 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
 	page.div(class_='centre', id='all')
 	add_compartment_menu(page, c_id2name)
 
-	add_download_link(groups_sbml_url, archive_url, page)
-
 	# add_embed_button(page)
-
-	add_explanations(page)
-
 	add_search(page)
 
 	add_map(page, map_id)
+
+	add_download_link(groups_sbml_url, archive_url, page)
+
+	add_explanations(page)
+
 
 	add_model_description(model, page)
 

@@ -3,8 +3,8 @@ body {
     background-color: #ffffff;
     vertical-align: middle;
     height:100%;
-    margin-top:20px;
-    margin-bottom: 20px;
+    margin-top:10px;
+    margin-bottom: 10px;
     padding:0;
     font-family: "Helvetica", monospace;/*"Lucida Sans Unicode",monospace;*/
 }
@@ -165,8 +165,8 @@ p.popup table td {
 
 div.margin {
     text-align: justify;
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
     padding-bottom: 5px;
     padding-top: 5px;
     margin: 0;
@@ -185,7 +185,7 @@ div.map {
     width: inherit;
     height: inherit;
     border: 1px solid #ac3131;
-    margin: 10px;
+    margin: 5px;
 }
 
 span.pant {
@@ -225,7 +225,7 @@ ul.menu li
 
 .leaflet-label-overlay {
     line-height:0px;
-    margin-top: 9px;
+    margin-top: 5px;
     position:absolute;
 }
 

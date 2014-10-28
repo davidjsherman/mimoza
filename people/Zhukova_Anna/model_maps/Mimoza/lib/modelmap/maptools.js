@@ -4,16 +4,21 @@
 
 var UB_LAYER_NAME = "<i>Ubiquitous species</i>",
     OUT_TR_LAYER_NAME = "<i>Transport to outside</i>",
-    IN_TR_LAYER_NAME = "<i>Inner transport</i>";
+    IN_TR_LAYER_NAME = "<i>Inner transport</i>",
+    LEAFLET_POPUP_MARGIN = 10;
 
 function adjustMapSize(mapId) {
     "use strict";
     var VIEWPORT_MARGIN = 50,
         MIN_DIMENTION_SIZE = 256,
-        LEAFLET_POPUP_MARGIN = 10,
         width = Math.max(MIN_DIMENTION_SIZE, ($(window).width() - VIEWPORT_MARGIN)),
-        height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() - VIEWPORT_MARGIN) * 0.7)),
-        $map_div = $("#" + mapId),
+        height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() - VIEWPORT_MARGIN) * 0.7));
+    return adjustMapDivSize(mapId, width, height);
+}
+
+function adjustMapDivSize(mapId, width, height) {
+    "use strict";
+    var $map_div = $("#" + mapId),
         old_height = $map_div.height(),
         old_width = $map_div.width();
     if (old_width != width || old_height != height) {
@@ -116,9 +121,9 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         crs: L.CRS.Simple
     });
     handlePopUpClosing(map);
-    window.onresize = function (event) {
-        adjustMapSize(mapId);
-    };
+    //window.onresize = function (event) {
+    //    adjustMapSize(mapId);
+    //};
     var name2popup = {},
         name2zoom = {},
         json,
@@ -146,6 +151,23 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     var mapW = coords[1][0] - coords[0][0],
         mapH = coords[0][1] - coords[1][1];
     map.setView([coords[0][0] + mapW / 2, coords[1][1] + mapH / 2], minZoom);
+
+
+    var $map_div = $("#" + mapId);
+    $("#" + mapId).bind('resize', function(){
+        var h = $map_div.height(),
+            w = $map_div.width();
+        $(".leaflet-popup").css({
+            'maxHeight': h,
+            'maxWidth': w
+        });
+        $(".leaflet-popup-content").css({
+            'maxHeight': h - LEAFLET_POPUP_MARGIN,
+            'maxWidth': w - LEAFLET_POPUP_MARGIN
+        });
+        map.invalidateSize();
+        map.setView(map.getCenter(), map.getZoom());
+    });
 
     loadGeoJson(map, json, minZoom + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
     loadGeoJson(map, json, minZoom + 1, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
@@ -214,8 +236,6 @@ function initializeMap(cId2jsonData, mapId, compIds) {
             initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
-
-    console.log(map.getPanes());
     return map;
 }
 

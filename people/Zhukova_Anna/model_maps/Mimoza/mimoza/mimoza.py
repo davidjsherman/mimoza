@@ -13,9 +13,9 @@ MIMOZA_GEOJSON_JS = 'lib/modelmap/geojson_manager.js'
 MIMOZA_CSS = 'lib/modelmap/modelmap.css'
 MIMOZA_FAVICON = 'lib/modelmap/fav.ico'
 
-JQUERY_JS = 'lib/jquery/jquery-2.1.1.min.js'
-JQUERY_UI_JS = 'lib/jquery/jquery-ui-1.10.4.custom.min.js'
-JQUERY_UI_CSS = 'lib/jquery/jquery-ui-1.10.4.custom.min.css'
+JQUERY_JS = 'lib/jquery/jquery-1.10.2.js'
+JQUERY_UI_JS = 'lib/jquery/jquery-ui.js'
+JQUERY_UI_CSS = 'lib/jquery/jquery-ui.css'
 
 LEAFLET_LABEL_JS = 'lib/leaflet_label/leaflet.label.js'
 LEAFLET_JS = 'lib/leaflet/leaflet.js'
