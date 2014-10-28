@@ -214,6 +214,8 @@ function initializeMap(cId2jsonData, mapId, compIds) {
             initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
+
+    console.log(map.getPanes());
     return map;
 }
 

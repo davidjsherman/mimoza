@@ -38,7 +38,7 @@ function pnt2layer(map, feature, zoom, coords) {
             lineJoin: 'round',
             clickable: false,
             fill: false,
-            zIndexOffset: -2000,
+            zIndexOffset: 0,
             riseOnHover: false
         });
     }
@@ -56,7 +56,7 @@ function pnt2layer(map, feature, zoom, coords) {
             weight: is_bg ? 0 : Math.min(1, w / 10 * Math.pow(2, zoom)),
             fill: true,
             clickable: !is_bg && w * scaleFactor > MIN_CLICKABLE_R,
-            zIndexOffset: is_bg ? -2000 : 1000,
+            zIndexOffset: is_bg ? 0 : 6,
             riseOnHover: !is_bg
         },
         bounds,
@@ -99,7 +99,6 @@ function pnt2layer(map, feature, zoom, coords) {
     coords[0][1] = coords[0][1] == null ? sw.lng : Math.max(coords[0][1], sw.lng);
     coords[1][0] = coords[1][0] == null ? ne.lat : Math.max(coords[1][0], ne.lat);
     coords[1][1] = coords[1][1] == null ? ne.lng : Math.min(coords[1][1], ne.lng);
-
     node = L.featureGroup([node]);
     w *= scaleFactor;
     if (COMPARTMENT == feature.properties.type){
@@ -112,11 +111,12 @@ function pnt2layer(map, feature, zoom, coords) {
         var size = Math.max(w * 0.9 / 4, 8),
             label = L.marker(centre,
                             {icon: L.divIcon({
-                                    className: 'label',
+                                    className: 'element-label',
                                     html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.name + "</span>",
                                     iconSize: [w * 0.89, w * 0.89],
-                                    zIndexOffset: -1000,
-                                    riseOnHover: false})
+                                    zIndexOffset: 0,
+                                    riseOnHover: false,
+                                    riseOffset: 0})
                             }
             );
         node.addLayer(label);

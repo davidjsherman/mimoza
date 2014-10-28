@@ -98,8 +98,7 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
         return;
     }
     var scaleFactor = Math.pow(2, zoom),
-        content = "<h2>" + feature.properties.name + "</h2>" + p(i("id: ") + feature.properties.id),
-        label = content;
+        content = "<h2>" + feature.properties.name + "</h2>" + p(i("id: ") + feature.properties.id);
     if (feature.properties.w * scaleFactor <= MIN_CLICKABLE_R) {
         return;
     }
@@ -108,13 +107,11 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
             ga_res = p(formatGA(feature.properties.term)),
             formula = p(formatFormula(feature.properties.rev, feature.properties.rs, feature.properties.ps));
         content += formula + ga_res + transport;
-        label += formula + transport;
     } else if (SPECIES == feature.properties.type) {
         var transported = feature.properties.tr ? p(i("Participates in a transport reaction.")) : "",
             ch = p(formatChebi(feature.properties.term)),
             compartment = p(i("compartment: ") + feature.properties.c_name);
         content += compartment + ch + transported;
-        label += compartment + transported;
     } else if (COMPARTMENT == feature.properties.type) {
         content += p(formatGo(feature.properties.term));
         if (zoom > map.getMinZoom()) {
@@ -154,7 +151,7 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
             }
         });
     }
-    layer.bindLabel(label).bindPopup(popup);
+    layer.bindPopup(popup);
     [feature.properties.name, feature.properties.id, feature.properties.term].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
@@ -165,7 +162,30 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
             }
         }
     });
+    layer.bindLabel(getLabel(feature), {direction: "auto", pane: map.getPanes().popupPane, opacity: 1});
+}
 
+
+function getLabel(feature) {
+    "use strict";
+    if (EDGE == feature.properties.type) {
+        return null;
+    }
+    var label = "<h2>" + feature.properties.name + "</h2>" + p(i("id: ") + feature.properties.id);
+    if (REACTION == feature.properties.type) {
+        var transport = feature.properties.tr ? p(i("Is a transport reaction.")) : "",
+            formula = p(formatFormula(feature.properties.rev, feature.properties.rs, feature.properties.ps));
+        return label + formula + transport;
+    }
+    if (SPECIES == feature.properties.type) {
+        var transported = feature.properties.tr ? p(i("Participates in a transport reaction.")) : "",
+            compartment = p(i("compartment: ") + feature.properties.c_name);
+        return label + compartment + transported;
+    }
+    if (COMPARTMENT == feature.properties.type) {
+        return label;
+    }
+    return null;
 }
 
 function highlightCircle(feature, map, zoom) {
