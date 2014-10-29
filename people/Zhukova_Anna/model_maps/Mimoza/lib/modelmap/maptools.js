@@ -169,10 +169,6 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         map.setView(map.getCenter(), map.getZoom());
     });
 
-    loadGeoJson(map, json, minZoom + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
-    loadGeoJson(map, json, minZoom + 1, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
-    loadGeoJson(map, json, minZoom + 1, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
-
     if (ubJSON) {
         overlays[UB_LAYER_NAME] = ubLayer;
     }
@@ -197,18 +193,15 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         if (zoom > maxLoadedZoom) {
             for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
                 json = jsonData[(z - minZoom) / 2];
-                loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
-                jsonArray = loadGeoJson(map, json, z + 1, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
                 ubJSON |= jsonArray[1];
 
-                loadGeoJson(map, json, z, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
-                jsonArray = loadGeoJson(map, json, z + 1, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
                 ubJSON |= jsonArray[1];
                 // outside transport should already be visible on the min zoom level
                 outJSON |= jsonArray[0] || jsonArray[1];
 
-                loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
-                jsonArray = loadGeoJson(map, json, z + 1, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
                 ubJSON |= jsonArray[1];
                 inJSON |= jsonArray[0] || jsonArray[1];
             }

@@ -105,6 +105,7 @@ def add_js(page, json_files, c_id2json_vars, map_id, comps):
 	for json in json_files:
 		page.script(src=json, type="text/javascript")
 		page.script.close()
+	page.script("L_PREFER_CANVAS = true;")
 	page.script('''
         initializeMap({%s}, "%s", %s);
     ''' % (", ".join(("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems())),

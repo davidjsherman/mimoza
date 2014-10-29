@@ -25,8 +25,7 @@ function pnt2layer(map, feature, zoom, coords) {
     "use strict";
     var e = feature.geometry.coordinates,
         scaleFactor = Math.pow(2, zoom),
-        w = feature.properties.w,
-        h;
+        w = feature.properties.w;
     if (EDGE == feature.properties.type) {
         return L.polyline(e.map(function (coord) {
             return map.unproject(coord, 1);
@@ -41,6 +40,9 @@ function pnt2layer(map, feature, zoom, coords) {
             zIndexOffset: 0,
             riseOnHover: false
         });
+    }
+    if (SPECIES == feature.properties.type || BG_SPECIES == feature.properties.type) {
+        w /= Math.sqrt(2);
     }
     var x = e[0], y = e[1],
         is_bg = -1 !== BG.indexOf(feature.properties.type),
@@ -59,61 +61,42 @@ function pnt2layer(map, feature, zoom, coords) {
             zIndexOffset: is_bg ? 0 : 6,
             riseOnHover: !is_bg
         },
-        bounds,
-        centre;
+        h = (BG_COMPARTMENT == feature.properties.type || COMPARTMENT == feature.properties.type) ? feature.properties.h : w,
+        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1)),
+        centre = map.unproject([x, y], 1),
+        ne = bounds.getNorthEast(),
+        sw = bounds.getSouthWest(),
+        r = w * 40075000 * Math.cos(centre.lat * (Math.PI / 180)) / Math.pow(2, map.getMinZoom() + 8);
     var node = null;
-    if (BG_REACTION == feature.properties.type) {
-        h = w;
-        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
-        return L.rectangle(bounds, props);
-    }
-    if (BG_COMPARTMENT == feature.properties.type) {
-        h = feature.properties.h;
-        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
+    if (BG_REACTION == feature.properties.type || BG_COMPARTMENT == feature.properties.type) {
         return L.rectangle(bounds, props);
     }
     if (BG_SPECIES == feature.properties.type) {
-        centre = map.unproject([x, y], 1);
-        node = L.circleMarker(centre, props);
-        node.setRadius(w * scaleFactor / 2);
-        return node;
+        return L.circle(centre, r, props);
     }
-    if (REACTION == feature.properties.type) {
-        h = w;
-        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
-        node = L.rectangle(bounds, props);
-    } else if (COMPARTMENT == feature.properties.type) {
-        h = feature.properties.h;
-        bounds = new L.LatLngBounds(map.unproject([x - w, y + h], 1), map.unproject([x + w, y - h], 1));
+    if (REACTION == feature.properties.type || COMPARTMENT == feature.properties.type) {
         node = L.rectangle(bounds, props);
     } else if (SPECIES == feature.properties.type) {
-        centre = map.unproject([x, y], 1);
-        node = L.circleMarker(centre, props);
-        node.setRadius(w * scaleFactor / 2);
+        node = L.circle(centre, r, props);
+        //node.setRadius(w * scaleFactor / 2);
     } else {
         return null;
     }
-    var ne = node.getBounds().getNorthEast(),
-        sw = node.getBounds().getSouthWest();
     coords[0][0] = coords[0][0] == null ? sw.lat : Math.min(coords[0][0], sw.lat);
     coords[0][1] = coords[0][1] == null ? sw.lng : Math.max(coords[0][1], sw.lng);
     coords[1][0] = coords[1][0] == null ? ne.lat : Math.max(coords[1][0], ne.lat);
     coords[1][1] = coords[1][1] == null ? ne.lng : Math.min(coords[1][1], ne.lng);
     node = L.featureGroup([node]);
-    w *= scaleFactor;
-    if (COMPARTMENT == feature.properties.type){
-        w = Math.min(w, h * scaleFactor);
-    } else if (SPECIES == feature.properties.type) {
-        w /= Math.sqrt(2);
-    }
-    if (w > 8) {
-        centre = map.unproject([x, y], 1);
-        var size = Math.max(w * 0.9 / 4, 8),
-            label = L.marker(centre,
+    w *= scaleFactor * 1.2;
+    h *= scaleFactor * 1.5;
+    if (h > 8) {
+        var size = Math.max(Math.round(h / 4), 8);
+        h -= h % (size + 1);
+        var label = L.marker(centre,
                             {icon: L.divIcon({
                                     className: 'element-label',
-                                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 4) + "px\">" + feature.properties.name + "</span>",
-                                    iconSize: [w * 0.89, w * 0.89],
+                                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 1) + "px\">" + feature.properties.name + "</span>",
+                                    iconSize: [w, h],
                                     zIndexOffset: 0,
                                     riseOnHover: false,
                                     riseOffset: 0})
@@ -165,7 +148,7 @@ function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, n
                 return (typeof feature.properties.ub !== 'undefined' && feature.properties.ub) && matchesCompartment(cId, feature);
             }
         );
-    if (map.getZoom() == z) {
+    if (map.getZoom() == z || map.getZoom() == z + 1) {
         compLayer.addLayer(specificJson);
         if (map.hasLayer(ubLayer)) {
             compLayer.addLayer(ubiquitousJson);
@@ -174,7 +157,7 @@ function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, n
     map.on('zoomend', function (e) {
         var zoom = map.getZoom();
         // if we are about to zoom in/out to this geojson
-        if (zoom == z) {
+        if (zoom == z || map.getZoom() == z + 1) {
             compLayer.addLayer(specificJson);
             if (map.hasLayer(ubLayer)) {
                 compLayer.addLayer(ubiquitousJson);
@@ -189,12 +172,12 @@ function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, n
         }
     });
     map.on('overlayadd', function(e) {
-        if (e.layer === ubLayer && map.getZoom() == z) {
+        if (e.layer === ubLayer && (map.getZoom() == z || map.getZoom() == z + 1)) {
             compLayer.addLayer(ubiquitousJson);
         }
     });
     map.on('overlayremove', function(e) {
-        if (e.layer === ubLayer && map.getZoom() == z) {
+        if (e.layer === ubLayer && (map.getZoom() == z || map.getZoom() == z + 1)) {
             compLayer.removeLayer(ubiquitousJson);
         }
     });

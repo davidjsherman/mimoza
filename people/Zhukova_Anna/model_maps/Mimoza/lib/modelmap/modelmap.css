@@ -240,7 +240,7 @@ ul.menu li
     overflow:hidden;
     font-size:14px;
     line-height: 18px;
-    text-overflow: ellipsis;
+    text-overflow: clip;
 }
 
 #overlay {
