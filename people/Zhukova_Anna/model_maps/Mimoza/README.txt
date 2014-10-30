@@ -8,26 +8,12 @@ It takes a model in `SBML format <http://sbml.org/>`_ as input, and produces a `
 Dependencies
 ==================
 
-*Mimoza* uses *libSBML* library for python with the groups extension.
-To install it, please download and extract the source files for *libSBML with extensions*,
-e.g. from `sourceforge.net <https://sourceforge.net/projects/sbml/files/libsbml/5.8.0/experimental/src/>`_.
-Make sure you have the following libraries installed:
-* libxml2-dev 
-* xml2 
-* libxml2 
-* cmake
-
-Then, build and install *libsbml* for python:
-* cd where_you_have_extracted_libsbml_archive
-* mkdir build
-* cd build
-* cmake -DENABLE_GROUPS=ON -DWITH_PYTHON=ON ..
-* make
-* export PYTHONPATH=where_you_have_extracted_libsbml_archive/build/src/bindings/python:$PYTHONPATH
+*Mimoza* uses `libSBML <http://sbml.org/Software/libSBML>`_ library for python with the groups and layout extensions.
+Install it:
+* sudo pip install python-libsbml-experimental
 
 *Mimoza* uses *Model Generalization* library for python to produce generalized views of the model.
 To install it, please download and extract the source files from `gforge.inria.fr <http://metamogen.gforge.inria.fr>`_.
-(Make sure that libSBML is installed.)
 From the directory where you have extracted it, execute:
 * python setup.py
 
@@ -60,4 +46,4 @@ Running Mimoza
 Execute:
 * python ./main.py --model path_to_your_model.xml --verbose
 
-This will produce a `COMBINE archive <http://co.mbine.org/documents/archive>`_, containing the visualized model.
+This will produce a `COMBINE archive <http://co.mbine.org/documents/archive>`_, containing the visualized model. You can see the result in your browser (index.html file inside the COMBINE archive).
