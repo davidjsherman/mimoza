@@ -174,11 +174,13 @@
 
 \begin{abstract} % abstract
 
-\parttitle{Motivation}
+\parttitle{Background}
 The complexity of genome-scale metabolic models makes them quite difficult for human users to read, since they contain thousands of reactions that must be included for accurate computer simulation. For example, the metabolic network of the bacterium \emph{E. coli} contains 2\,168 reactions, the \emph{yeast 7} metabolic network model of \emph{S.~cerevisiae} includes 2\,352 reactions, and \emph{recon 2}, a global human metabolism reconstruction, has 7\,440 reactions. Interestingly, hidden similarities between groups of reactions can be discovered, and generalized to reveal higher-level patterns.
 
 \parttitle{Results}
 The web-based navigation system Mimoza allows a human expert to explore metabolic network models in a semantically zoomable manner: The most general view represents the compartments of the model; the next view shows the generalized versions of reactions and metabolites in each compartment; and the most detailed view represents the initial network with the generalization-based layout (where similar metabolites and reactions are placed next to each other). It allows a human expert to grasp the general structure of the network and analyze it in a top-down manner.
+
+\parttitle{Conclusions}
 Mimoza can be installed standalone, or used on-line at http://mimoza.bordeaux.inria.fr/, or installed in a Galaxy server for use in workflows.
 Mimoza views can be embedded in web pages, or downloaded as COMBINE archives.
 \end{abstract}
@@ -345,10 +347,20 @@ Depending on the nature of the connected component subgraph, we choose one of th
 \end{itemize}
 
 % Ubiquitous metabolites hadling
-To avoid clutter we duplicate all the ubiquitous metabolites (\textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}, etc.) before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions in which they participate.
+To avoid clutter we duplicate all the \emph{ubiquitous} metabolites (\textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}, etc.) before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions in which they participate. 
 
 \subsubsection*{Generalization-based full model layout}
-The layout for the full model is based on the corresponding generalized model's layout. To allow zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model.
+The layout for the full model is based on the corresponding generalized model's layout. To allow zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model. 
+
+An edge in the generalized view might expand into several edges in the full-model view, for example, if it is a generalized edge connecting a generalized metabolite to a generalized reaction. The positions of the edges after such an expansion might slightly differ from the corresponding generalized one.
+
+\subsubsection*{Node colors}
+
+A different color is assigned to each generalized metabolite/reaction; and is propagated to the corresponding metabolites/reactions of the full model. Ubiquitous metabolites are colored grey. Mimoza's interface includes a checkbox that permits to hide/show ubiquitous metabolites .
+
+\subsubsection*{Node sizes}
+
+The size of the nodes depends on their nature: ubiquitous metabolites are smaller than the non-ubiquitous ones; a radius of a generalized metabolite/reaction is calculated as a sum of radiuses of the elements that it groups; compartment sizes are defined by the layouts of the elements inside them, so that the compartments are represented as minimal rectangles containing all the corresponding elements. All non-ubiquitous specific (i.e., not generalized) metabolites are of the same size; as well as all specific reactions.
 
 \subsubsection*{Relative positions of compartments}
 Metabolic models may include several compartments, nested into each other. For example, the \emph{peroxisome} compartment is surrounded by its \emph{membrane}, and contained in \emph{cytoplasm}; the \emph{cytoplasm} is part of the \emph{cell}, which is surrounded by the \emph{cell envelope}.
@@ -367,7 +379,7 @@ The zoomable interactive representation is achieved using Leaflet~\cite{Agafonki
 
 We export elements of the network graph (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{fig:geojson} shows an example of a reaction represented in GeoJSON format. The TLP-to-GeoJSON converter is implemented in python and is available as a part of Mimoza software. 
 
-The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. Metabolites are represented as circles, and reactions as squares, following the SBGN standard~\cite{LeNovere2009}.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions. 
+The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. We follow SBGN Process Description language convention~\cite{LeNovere2009} to choose the glyphs for model elements' representation: Metabolites are drawn as circles linked by edges to the reactions where they participate; reactions are represented as squares; compartments are drawn as rectangles.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions. 
  
 
 \subsection*{Embedding}
@@ -420,9 +432,9 @@ Finally, the API of the Leaflet framework used for the interactive navigation ca
 
 % Allowing to combine several models as an input, and producing a common generalisation is another interesting direction.
 
-% \section*{Conclusions}
+\section*{Conclusions}
 % %This should state clearly the main conclusions of the article and give a clear explanation of the importance and relevance of the software.
-
+todo
 % Mimoza is an amazing tool that everyone was waiting for and can finally use and become happy!
 
 \section*{Availability and requirements}
@@ -448,7 +460,7 @@ The authors declare that they have no competing interests.
 AZ and DJS conceived the study, AZ wrote the software, AZ and DJS wrote the manuscript.
 
 \section*{Acknowledgements}
-We would like to thank Antoine Lambert for helpful discussions about using the Tulip software as a library.
+We would like to thank Dr. Antoine Lambert for helpful discussions about using the Tulip software as a library.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                  The Bibliography                       %%
