@@ -98,8 +98,8 @@ def main(argv=None):
 
 	groups_sbml = '%s%s_with_groups.xml' % (directory, model_id)
 	gen_sbml = '%s%s_generalized.xml' % (directory, model_id)
-	layout_sbml = '%s%s_with_layout.xml' % (directory, model_id)
-	gen_layout_sbml = '%s%s_generalized_with_layout.xml' % (directory, model_id)
+	# layout_sbml = '%s%s_with_layout.xml' % (directory, model_id)
+	# gen_layout_sbml = '%s%s_generalized_with_layout.xml' % (directory, model_id)
 	if check_for_groups(sbml, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
 		if sbml != groups_sbml:
 			if not writeSBMLToFile(doc, groups_sbml):
@@ -125,7 +125,7 @@ def main(argv=None):
 	groups_model = groups_document.getModel()
 	gen_document = reader.readSBML(gen_sbml)
 	gen_model = gen_document.getModel()
-	save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n2lo, (d_w, d_h), ub_sps, verbose)
+	save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps, verbose)
 
 	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose)

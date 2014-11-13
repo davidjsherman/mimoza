@@ -101,10 +101,19 @@ def apply_node_coordinates(graph, n2xy):
 			count = 0
 			for m in root[VIEW_META_GRAPH][n].getNodes():
 				if root[ID][m] in n2xy:
-					x_, y_ = n2xy[root[ID][m]]
-					count += 1
-					x += x_
-					y += y_
+					xy_ = n2xy[root[ID][m]]
+					if isinstance(xy_, dict):
+						for r_id, (x_, y_) in xy_.iteritems():
+							if root[CLONE_ID][m].find(r_id) != -1:
+								x += x_
+								y += y_
+								count += 1
+								break
+					else:
+						x_, y_ = xy_
+						count += 1
+						x += x_
+						y += y_
 			if count:
 				root[VIEW_LAYOUT][n] = tlp.Coord(x / count, y / count)
 	root[VIEW_LAYOUT].setAllEdgeValue([])
