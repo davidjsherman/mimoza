@@ -5,8 +5,6 @@ from sbml_generalization.generalization.rdf_annotation_helper import get_qualifi
 from sbml_generalization.generalization.sbml_helper import create_compartment
 
 
-FAKE_ROOT_COMP = "system"
-
 GO_CYTOPLASM = 'go:0005737'
 GO_NUCLEUS = 'go:0005634'
 GO_ORGANELLE_OUTER_MEMBRANE = 'go:0031968'
@@ -91,7 +89,10 @@ def comp2level(model, onto):
 				the_root = it
 				break
 		if not the_root:
-			the_root = create_compartment(model, FAKE_ROOT_COMP).getId()
+			comp_name = model.getName()
+			if not comp_name:
+				comp_name = model.getId()
+			the_root = create_compartment(model, comp_name).getId()
 		for root in roots:
 			if not root == the_root:
 				model.getCompartment(root).setOutside(the_root)
