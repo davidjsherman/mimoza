@@ -216,6 +216,9 @@ Location: %s
     <head>
         <link media="all" href="%s" type="text/css" rel="stylesheet" />
         <link href="%s" type="image/x-icon" rel="shortcut icon" />
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+		<meta http-equiv="Pragma" content="no-cache" />
+		<meta http-equiv="Expires" content="0" />
         <meta http-equiv="refresh" content="0;url=%s" />
         <title>Redirecting...</title>
     </head>
@@ -248,6 +251,9 @@ def generate_error_html(css, ico, title, h1, short_explanation, further_explanat
         <html lang="en">
 
           <head>
+            <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+			<meta http-equiv="Pragma" content="no-cache" />
+			<meta http-equiv="Expires" content="0" />
             <link media="all" href="%s" type="text/css" rel="stylesheet" />
             <link href="%s" type="image/x-icon" rel="shortcut icon" />
             <title>%s</title>
@@ -283,7 +289,10 @@ def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, 
 
 def generate_uploaded_generalized_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualize!", '',
-	                           'Your model seems to be already generalized. Now let\'s visualize it: To start the visualization press the button below.',
+	                           '''Your model seems to be already generalized. Now let\'s visualize it: To start the visualization press the button below.<br>
+	                           <i>(If your model contains <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/Layout_%28layout%29" target="_blank">SBML layout</a> information,
+	                           it will be used during the visualization.)</i>''',
+
 	                           '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
 		                           url, url),
 	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
@@ -291,7 +300,9 @@ def generate_uploaded_generalized_html(css, js, ico, m_name, model_id, url, sbml
 
 def generate_generalized_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, m_dir_id, progress_icon):
 	return generate_model_html("%s Generalized" % model_id, "Generalized, time to visualize!", '',
-	                           'Your model is successfully generalized. Now let\'s visualize it: To start the visualization press the button below.',
+	                           '''Your model is successfully generalized. Now let\'s visualize it: To start the visualization press the button below.<br>
+	                           <i>(If your model contained <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/Layout_%28layout%29" target="_blank">SBML layout</a> information,
+	                           it will be used during the visualization.)</i>''',
 	                           '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
 		                           url, url),
 	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
@@ -305,6 +316,9 @@ def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id
 
 
     <html lang="en">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+		<meta http-equiv="Pragma" content="no-cache" />
+		<meta http-equiv="Expires" content="0" />
         <head>
             <link media="all" href="%s" type="text/css" rel="stylesheet" />
             <link href="%s" type="image/x-icon" rel="shortcut icon" />

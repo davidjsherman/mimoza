@@ -198,11 +198,15 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
 
 		x, y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
 		w, h = root[VIEW_SIZE][n].getW(), root[VIEW_SIZE][n].getH()
-		if root[UBIQUITOUS][n]:
-			if not root[ID][n] in n2layout:
-				n2layout[root[ID][n]] = {}
-			for clone_id in root[CLONE_ID][n].split(","):
-				n2layout[root[ID][n]][clone_id] = [(x, y), (w, h)]
+		if root[UBIQUITOUS][n] and root[CLONE_ID][n]:
+			clone_ids = root[CLONE_ID][n].split(",")
+			if clone_ids:
+				if not root[ID][n] in n2layout:
+					n2layout[root[ID][n]] = {}
+				for clone_id in clone_ids:
+					n2layout[root[ID][n]][clone_id] = [(x, y), (w, h)]
+			else:
+				n2layout[root[ID][n]] = [(x, y), (w, h)]
 		else:
 			n2layout[root[ID][n]] = [(x, y), (w, h)]
 

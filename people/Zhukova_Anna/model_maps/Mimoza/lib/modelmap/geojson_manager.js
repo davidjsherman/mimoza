@@ -19,7 +19,7 @@ var BG = [BG_SPECIES, BG_REACTION, BG_COMPARTMENT];
 var TRANSPORT = "transport to outside";
 var INNER_TRANSPORT = "inside transport";
 
-var MIN_CLICKABLE_R = 4;
+var MIN_CLICKABLE_R = 2;
 
 function pnt2layer(map, feature, zoom, coords) {
     "use strict";
@@ -87,7 +87,7 @@ function pnt2layer(map, feature, zoom, coords) {
     coords[1][0] = coords[1][0] == null ? ne.lat : Math.max(coords[1][0], ne.lat);
     coords[1][1] = coords[1][1] == null ? ne.lng : Math.min(coords[1][1], ne.lng);
     node = L.featureGroup([node]);
-    w *= scaleFactor * 1.2;
+    w *= scaleFactor * (COMPARTMENT == feature.properties.type ? 1 : 1.3);
     h *= scaleFactor * 1.5;
     if (h > 8) {
         var size = Math.max(Math.round(h / 4), 8);

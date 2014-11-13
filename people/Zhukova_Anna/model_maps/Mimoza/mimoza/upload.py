@@ -128,6 +128,9 @@ print '''Content-Type: text/html;charset=utf-8
         <html lang="en">
 
           <head>
+            <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+		    <meta http-equiv="Pragma" content="no-cache" />
+		    <meta http-equiv="Expires" content="0" />
             <link media="all" href="../%s" type="text/css" rel="stylesheet" />
             <link href="../%s" type="image/x-icon" rel="shortcut icon" />
             %s
