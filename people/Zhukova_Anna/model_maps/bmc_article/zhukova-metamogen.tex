@@ -554,6 +554,28 @@ The output SBML file contains the initial model (including the lists of metaboli
 %% Use of \listoftables is discouraged.
 %%
 \section*{Tables}
+
+\begin{center}
+\begin{table}[h!]
+\caption{Comparison of ZUIs for metabolic models.}\label{tbl:zui}
+\begin{tabular}{c|c|c|c|c|c}
+        \hline
+         & & Semantic & User's & Automatic &  \\ 
+        Tool name  & Fixed layout & zoom  & model & layout & Modules \\
+        \hline
+        Genome Projector & yes & no & no & - & no\\
+        NaviCell & no & if created & yes & no & yes\\
+        & & by user & & & \\
+        Cellular Overview & yes & no & no & - & no\\
+        Reactome & yes (same pathw. diff. org.) /& yes & no & - & yes\\
+         & no (diff. pathw. same organism)& & &  & \\
+        Mimoza & no & yes & yes & yes & yes \\
+        \hline
+\end{tabular}
+\end{table}
+\end{center}
+
+
 \begin{center}
 \begin{longtable}{c|c|c|c}
 \caption{Performance of the model generalization method.}\label{tbl:gen}\\
