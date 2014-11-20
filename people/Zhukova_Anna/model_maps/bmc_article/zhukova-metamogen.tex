@@ -263,7 +263,7 @@ The metabolic network reconstruction process is becoming more advanced, and ther
 Starting from a model for a similar organism or a collection of pathways, and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database~\cite{Li10}, BIGG~\cite{Schellenberger2010}, JWS online~\cite{Snoep2003}. KEGG~\cite{Kanehisa12} and Reactome~\cite{Milacic2012, Croft2013} provide an extensive collection of pathways. 
 
 %% Representation
-Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN~\cite{LeNovere2009}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2014}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable, standardization efforts such as Identifiers.org~\cite{Juty2012} emerge. Further in this manuscript we will consider metabolic models in SBML format.
+Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN~\cite{LeNovere2009}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2014}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. Further in this manuscript we will consider metabolic models in SBML format.
 
 Although automatic model inference tools and genomic comparison methods are becoming steadily more sophisticated, they may still leave gaps in the model or add erroneous reactions. The intrinsic and extrinsic correctness of the model should be checked during the phases of analysis and curation.
 
@@ -293,7 +293,9 @@ Finally, a group of models for related species can be compared and combined to p
  
 There exist various software facilitating model merging, e.g.,  semanticSBML~\cite{Krause2010}, OREMPdb~\cite{Umeton2012}, PathCase-SB Model Composition Tool~\cite{Coskun2013}, but all of them require human expert's intervention in cases when the models to be merged are incompatible or contradict to each other, as well as for better discovery of common parts. Thereby, after the creation, the combined model becomes a draft and should in its turn undergo the analysis and curation cycle.
 
-By combining these modeling tasks into workflows, as in Figure~\ref{fig:workflow}, one can accomplish the modeling objectives listed above. 
+By combining these modeling tasks into workflows, as in Figure~\ref{fig:workflow}, one can accomplish the modeling objectives listed above.
+
+At least three of the aforementioned tasks (curation, exploration, comparison) require the intervention of a human expert, and thus require methods of dealing with the complexity of the models, e.g., by splitting them into smaller modules, by defining different levels of abstraction, and by visualization.
 
 
 \subsection*{Existing visualization approaches}
@@ -558,7 +560,7 @@ We would like to thank Dr. Antoine Lambert for helpful discussions about using t
 The processes highlighted in yellow represent the \emph{model creation cycle}: The draft model is created by model inference tools based on models for similar organism, pathway and reaction information extracted from model repositories and pathway and reaction databases; it is then iteratively improved during the process of curation and analysis. The resulting model can in its turn be added to model repositories.
 The processes highlighted in red show \emph{model usages}: simulation and knowledge-oriented exploration.
 The processes highlighted in green describe \emph{comparison and combination of several models}. As the model creation cycle, they also include the curation and analysis stage.
-The processes represented with the red arrows can use model generalization, described in this thesis, to discover similarities between the reactions and metabolites in the model, or in different models, and to aid a human understanding of large networks.}
+The processes represented with the red arrows require human expert's intervention, and thus need good visualization tools, ways of splitting models into modules and different levels of abstraction.}
 \end{figure}
 
  
