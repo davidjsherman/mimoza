@@ -1,9 +1,194 @@
-@article{Karl-FriedrichBohringer,
-author = {{Karl-Friedrich B\"{o}hringer}, Frances Newbery Paulisch},
-file = {::},
-title = {{Using Constraints To Achieve Stability In Automatic Graph Layout Algorithms}},
-url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.35.7000}
+@INPROCEEDINGS{Karl-FriedrichBohringer,
+    author = {Karl-Friedrich Böhringer and Frances Newbery Paulisch},
+    title = {Using Constraints To Achieve Stability In Automatic Graph Layout Algorithms},
+    booktitle = {IN PROCEEDINGS OF THE CHI --- CONFERENCE ON HUMAN FACTORS IN COMPUTING SYSTEMS},
+    year = {1990},
+    pages = {43--51},
+    publisher = {ACM},
+    url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.35.7000}
 }
+
+@article{Buchel2013,
+abstract = {BACKGROUND: Systems biology projects and omics technologies have led to a growing number of biochemical pathway models and reconstructions. However, the majority of these models are still created de novo, based on literature mining and the manual processing of pathway data. RESULTS: To increase the efficiency of model creation, the Path2Models project has automatically generated mathematical models from pathway representations using a suite of freely available software. Data sources include KEGG, BioCarta, MetaCyc and SABIO-RK. Depending on the source data, three types of models are provided: kinetic, logical and constraint-based. Models from over 2 600 organisms are encoded consistently in SBML, and are made freely available through BioModels Database at http://www.ebi.ac.uk/biomodels-main/path2models. Each model contains the list of participants, their interactions, the relevant mathematical constructs, and initial parameter values. Most models are also available as easy-to-understand graphical SBGN maps. CONCLUSIONS: To date, the project has resulted in more than 140 000 freely available models. Such a resource can tremendously accelerate the development of mathematical models by providing initial starting models for simulation and analysis, which can be subsequently curated and further parameterized.},
+author = {B\"{u}chel, Finja and Rodriguez, Nicolas and Swainston, Neil and Wrzodek, Clemens and Czauderna, Tobias and Keller, Roland and Mittag, Florian and Schubert, Michael and Glont, Mihai and Golebiewski, Martin and van Iersel, Martijn and Keating, Sarah and Rall, Matthias and Wybrow, Michael and Hermjakob, Henning and Hucka, Michael and Kell, Douglas B and M\"{u}ller, Wolfgang and Mendes, Pedro and Zell, Andreas and Chaouiya, Claudine and Saez-Rodriguez, Julio and Schreiber, Falk and Laibe, Camille and Dr\"{a}ger, Andreas and {Le Nov\`{e}re}, Nicolas},
+doi = {10.1186/1752-0509-7-116},
+file = {:Users/anna/Library/Application Support/Mendeley Desktop/Downloaded/B\"{u}chel et al. - 2013 - Path2Models large-scale generation of computational models from biochemical pathway maps.pdf:pdf},
+issn = {1752-0509},
+journal = {BMC Systems Biology},
+keywords = {pat2model metabolic tool},
+mendeley-groups = {thesis},
+mendeley-tags = {pat2model metabolic tool},
+month = nov,
+number = {1},
+pages = {116},
+pmid = {24180668},
+title = {{Path2Models: large-scale generation of computational models from biochemical pathway maps.}},
+url = {http://www.biomedcentral.com/1752-0509/7/116},
+volume = {7},
+year = {2013}
+}
+
+@article{Coskun2013,
+abstract = {BACKGROUND: There are multiple representation formats for Systems Biology computational models, and the Systems Biology Markup Language (SBML) is one of the most widely used. SBML is used to capture, store, and distribute computational models by Systems Biology data sources (e.g., the BioModels Database) and researchers. Therefore, there is a need for all-in-one web-based solutions that support advance SBML functionalities such as uploading, editing, composing, visualizing, simulating, querying, and browsing computational models. RESULTS: We present the design and implementation of the Model Composition Tool (Interface) within the PathCase-SB (PathCase Systems Biology) web portal. The tool helps users compose systems biology models to facilitate the complex process of merging systems biology models. We also present three tools that support the model composition tool, namely, (1) Model Simulation Interface that generates a visual plot of the simulation according to user's input, (2) iModel Tool as a platform for users to upload their own models to compose, and (3) SimCom Tool that provides a side by side comparison of models being composed in the same pathway. Finally, we provide a web site that hosts BioModels Database models and a separate web site that hosts SBML Test Suite models. CONCLUSIONS: Model composition tool (and the other three tools) can be used with little or no knowledge of the SBML document structure. For this reason, students or anyone who wants to learn about systems biology will benefit from the described functionalities. SBML Test Suite models will be a nice starting point for beginners. And, for more advanced purposes, users will able to access and employ models of the BioModels Database as well.},
+author = {Coskun, Sarp A and Cicek, A Ercument and Lai, Nicola and Dash, Ranjan K and Ozsoyoglu, Z Meral and Ozsoyoglu, Gultekin},
+doi = {10.1186/1752-0509-7-88},
+file = {:Users/anna/Library/Application Support/Mendeley Desktop/Downloaded/Coskun et al. - 2013 - An online model composition tool for system biology models.pdf:pdf},
+issn = {1752-0509},
+journal = {BMC Systems Biology},
+keywords = {Algorithms,Computer Simulation,Energy Metabolism,Enzymes,Enzymes: metabolism,Humans,Internet,Kinetics,Online Systems,Software,Systems Biology,Systems Biology: methods,User-Computer Interface},
+month = jan,
+pages = {88},
+pmid = {24006914},
+title = {{An online model composition tool for system biology models.}},
+url = {http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=3846440\&tool=pmcentrez\&rendertype=abstract},
+volume = {7},
+year = {2013}
+}
+
+@article{Umeton2012,
+abstract = {BACKGROUND: The information coming from biomedical ontologies and computational pathway models is expanding continuously: research communities keep this process up and their advances are generally shared by means of dedicated resources published on the web. In fact, such models are shared to provide the characterization of molecular processes, while biomedical ontologies detail a semantic context to the majority of those pathways. Recent advances in both fields pave the way for a scalable information integration based on aggregate knowledge repositories, but the lack of overall standard formats impedes this progress. Indeed, having different objectives and different abstraction levels, most of these resources "speak" different languages. Semantic web technologies are here explored as a means to address some of these problems. METHODS: Employing an extensible collection of interpreters, we developed OREMP (Ontology Reasoning Engine for Molecular Pathways), a system that abstracts the information from different resources and combines them together into a coherent ontology. Continuing this effort we present OREMPdb; once different pathways are fed into OREMP, species are linked to the external ontologies referred and to reactions in which they participate. Exploiting these links, the system builds species-sets, which encapsulate species that operate together. Composing all of the reactions together, the system computes all of the reaction paths from-and-to all of the species-sets. RESULTS: OREMP has been applied to the curated branch of BioModels (2011/04/15 release) which overall contains 326 models, 9244 reactions, and 5636 species. OREMPdb is the semantic dictionary created as a result, which is made of 7360 species-sets. For each one of these sets, OREMPdb links the original pathway and the link to the original paper where this information first appeared.},
+author = {Umeton, Renato and Nicosia, Giuseppe and Dewey, C Forbes},
+doi = {10.1186/1471-2105-13-S4-S6},
+file = {:Users/anna/Library/Application Support/Mendeley Desktop/Downloaded/Umeton, Nicosia, Dewey - 2012 - OREMPdb a semantic dictionary of computational pathway models.pdf:pdf},
+issn = {1471-2105},
+journal = {BMC Bioinformatics},
+keywords = {Computer Simulation,Controlled,Internet,Knowledge Bases,Medical Informatics,Medical Informatics: instrumentation,Research,Semantics,Vocabulary},
+month = jan,
+pages = {S6},
+pmid = {22536973},
+title = {{OREMPdb: a semantic dictionary of computational pathway models.}},
+url = {http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=3303718\&tool=pmcentrez\&rendertype=abstract},
+volume = {13 Suppl 4},
+year = {2012}
+}
+
+@article{Krause2010,
+abstract = {SUMMARY: Systems Biology Markup Language (SBML) is the leading exchange format for mathematical models in Systems Biology. Semantic annotations link model elements with external knowledge via unique database identifiers and ontology terms, enabling software to check and process models by their biochemical meaning. Such information is essential for model merging, one of the key steps towards the construction of large kinetic models. SemanticSBML is a tool that helps users to check and edit MIRIAM annotations and SBO terms in SBML models. Using a large collection of biochemical names and database identifiers, it supports modellers in finding the right annotations and in merging existing models. Initially, an element matching is derived from the MIRIAM annotations and conflicting element attributes are categorized and highlighted. Conflicts can then be resolved automatically or manually, allowing the user to control the merging process in detail. AVAILABILITY: SemanticSBML comes as a free software written in Python and released under the GPL 3. A Debian package, a source package for other Linux distributions, a Windows installer and an online version of semanticSBML with limited functionality are available at http://www.semanticsbml.org. A preinstalled version can be found on the Linux live DVD SB.OS, available at http://www.sbos.eu. SUPPLEMENTARY INFORMATION: Supplementary data are available at Bioinformatics online.},
+author = {Krause, Falko and Uhlendorf, Jannis and Lubitz, Timo and Schulz, Marvin and Klipp, Edda and Liebermeister, Wolfram},
+doi = {10.1093/bioinformatics/btp642},
+issn = {1367-4811},
+journal = {Bioinformatics},
+keywords = {Computational Biology,Computational Biology: methods,Database Management Systems,Databases,Factual,Semantics,Software,Systems Biology,Systems Biology: methods},
+month = feb,
+number = {3},
+pages = {421--2},
+pmid = {19933161},
+title = {{Annotation and merging of SBML models with semanticSBML.}},
+url = {http://www.ncbi.nlm.nih.gov/pubmed/19933161},
+volume = {26},
+year = {2010}
+}
+
+@article{Schulz2006,
+abstract = {The Systems Biology Markup Language (SBML) is an XML-based format for representing mathematical models of biochemical reaction networks, and it is likely to become a main standard in the systems biology community. As published mathematical models in cell biology are growing in number and size, modular modelling approaches will gain additional importance. The main issue to be addressed in computer-assisted model combination is the specification and handling of model semantics. The software SBMLmerge assists the user in combining models of biological subsystems to larger biochemical networks. First, the program helps the user in annotating all model elements with unique identifiers pointing to databases such as KEGG or Gene Ontology. Second, during merging, SBMLmerge detects and resolves various syntactic and semantic problems. Typical problems are conflicting variable names, elements which appear in more than one input model, and mathematical problems arising from the combination of equations. If the input models make contradicting statements about a biochemical quantity, the user is asked to choose between them. In the end the merging process results in a new, valid SBML model.},
+author = {Schulz, Marvin and Uhlendorf, Jannis and Klipp, Edda and Liebermeister, Wolfram},
+issn = {0919-9454},
+journal = {Genome informatics. International Conference on Genome Informatics},
+keywords = {Computer Simulation,Metabolic Networks and Pathways,Models, Biological,Models, Chemical,Software},
+month = jan,
+number = {1},
+pages = {62--71},
+pmid = {17503356},
+title = {{SBMLmerge, a system for combining biochemical network models.}},
+url = {http://www.ncbi.nlm.nih.gov/pubmed/17503356},
+volume = {17},
+year = {2006}
+}
+
+@article{Klamt07,
+abstract = {Background: Mathematical modelling of cellular networks is an integral
+part of Systems Biology and requires appropriate software tools.
+An important class of methods in Systems Biology deals with structural
+or topological (parameter-free) analysis of cellular networks. So
+far, software tools providing such methods for both mass-flow (metabolic)
+as well as signal-flow (signalling and regulatory) networks are lacking.
+
+
+Results: Herein we introduce CellNetAnalyzer, a toolbox for MATLAB
+facilitating, in an interactive and visual manner, a comprehensive
+structural analysis of metabolic, signalling and regulatory networks.
+The particular strengths of CellNetAnalyzer are methods for functional
+network analysis, i.e. for characterising functional states, for
+detecting functional dependencies, for identifying intervention strategies,
+or for giving qualitative predictions on the effects of perturbations.
+CellNetAnalyzer extends its predecessor FluxAnalyzer (originally
+developed for metabolic network and pathway analysis) by a new modelling
+framework for examining signal-flow networks. Two of the novel methods
+implemented in CellNetAnalyzer are discussed in more detail regarding
+algorithmic issues and applications: the computation and analysis
+(i) of shortest positive and shortest negative paths and circuits
+in interaction graphs and (ii) of minimal intervention sets in logical
+networks.
+
+
+Conclusion: CellNetAnalyzer provides a single suite to perform structural
+and qualitative analysis of both mass-flow- and signal-flow-based
+cellular networks in a user-friendly environment. It provides a large
+toolbox with various, partially unique, functions and algorithms
+for functional network analysis. CellNetAnalyzer is freely available
+for academic use.},
+author = {Klamt, S and Saez-Rodriguez, J and Gilles, E D},
+file = {:Users/anna/Documents/PhD/articles/Klamt2007-CellNetAnalyzer.pdf:pdf},
+journal = {BMC Systems Biology},
+title = {{Structural and functional analysis of cellular networks with CellNetAnalyzer}},
+volume = {1},
+year = {2007}
+}
+
+@article{Orth2011,
+abstract = {The initial genome-scale reconstruction of the metabolic network of Escherichia coli K-12 MG1655 was assembled in 2000. It has been updated and periodically released since then based on new and curated genomic and biochemical knowledge. An update has now been built, named iJO1366, which accounts for 1366 genes, 2251 metabolic reactions, and 1136 unique metabolites. iJO1366 was (1) updated in part using a new experimental screen of 1075 gene knockout strains, illuminating cases where alternative pathways and isozymes are yet to be discovered, (2) compared with its predecessor and to experimental data sets to confirm that it continues to make accurate phenotypic predictions of growth on different substrates and for gene knockout strains, and (3) mapped to the genomes of all available sequenced E. coli strains, including pathogens, leading to the identification of hundreds of unannotated genes in these organisms. Like its predecessors, the iJO1366 reconstruction is expected to be widely deployed for studying the systems biology of E. coli and for metabolic engineering applications.},
+author = {Orth, Jeffrey D and Conrad, Tom M and Na, Jessica and Lerman, Joshua A and Nam, Hojung and Feist, Adam M and Palsson, Bernhard \O},
+doi = {10.1038/msb.2011.65},
+issn = {1744-4292},
+journal = {Molecular Systems Biology},
+keywords = {Bacterial,Biological,Computational Biology,Computational Biology: methods,Escherichia coli K12,Escherichia coli K12: genetics,Escherichia coli K12: metabolism,Gene Knockout Techniques,Genes,Genome,Genomics,Genomics: methods,Metabolic Engineering,Metabolic Networks and Pathways,Models,Systems Biology,Systems Biology: methods},
+language = {en},
+month = jan,
+number = {1},
+pages = {535},
+pmid = {21988831},
+publisher = {EMBO Press},
+title = {{A comprehensive genome-scale reconstruction of Escherichia coli metabolism--2011.}},
+url = {http://msb.embopress.org/content/7/1/535.abstract},
+volume = {7},
+year = {2011}
+}
+
+@article{Thiele2014,
+abstract = {MOTIVATION: Genome-scale metabolic reconstructions summarize current knowledge about a target organism in a structured manner and as such highlight missing information. Such gaps can be filled algorithmically. Scalability limitations of available algorithms for gap filling hinder their application to compartmentalized reconstructions. RESULTS: We present fastGapFill, a computationally efficient tractable extension to the COBRA toolbox that permits the identification of candidate missing knowledge from a universal biochemical reaction database (e.g. Kyoto Encyclopedia of Genes and Genomes) for a given (compartmentalized) metabolic reconstruction. The stoichiometric consistency of the universal reaction database and of the metabolic reconstruction can be tested for permitting the computation of biologically more relevant solutions. We demonstrate the efficiency and scalability of fastGapFill on a range of metabolic reconstructions. Availability and implementation: fastGapFill is freely available from http://thielelab.eu. CONTACT: ines.thiele@uni.lu Supplementary information: Supplementary data are available at Bioinformatics online.},
+author = {Thiele, Ines and Vlassis, Nikos and Fleming, Ronan M T},
+doi = {10.1093/bioinformatics/btu321},
+issn = {1367-4811},
+journal = {Bioinformatics},
+month = may,
+number = {17},
+pages = {2529--2531},
+pmid = {24812336},
+title = {{fastGapFill: efficient gap filling in metabolic networks.}},
+url = {http://bioinformatics.oxfordjournals.org/content/30/17/2529.full.html?etoc},
+volume = {30},
+year = {2014}
+}
+
+@article{Thiele2013,
+abstract = {Multiple models of human metabolism have been reconstructed, but each represents only a subset of our knowledge. Here we describe Recon 2, a community-driven, consensus 'metabolic reconstruction', which is the most comprehensive representation of human metabolism that is applicable to computational modeling. Compared with its predecessors, the reconstruction has improved topological and functional features, including ∼2× more reactions and ∼1.7× more unique metabolites. Using Recon 2 we predicted changes in metabolite biomarkers for 49 inborn errors of metabolism with 77\% accuracy when compared to experimental data. Mapping metabolomic data and drug information onto Recon 2 demonstrates its potential for integrating and analyzing diverse data types. Using protein expression data, we automatically generated a compendium of 65 cell type-specific models, providing a basis for manual curation or investigation of cell-specific metabolic properties. Recon 2 will facilitate many future biomedical studies and is freely available at http://humanmetabolism.org/.},
+author = {Thiele, Ines and Swainston, Neil and Fleming, Ronan M T and Hoppe, Andreas and Sahoo, Swagatika and Aurich, Maike K and Haraldsdottir, Hulda and Mo, Monica L and Rolfsson, Ottar and Stobbe, Miranda D and Thorleifsson, Stefan G and Agren, Rasmus and B\"{o}lling, Christian and Bordel, Sergio and Chavali, Arvind K and Dobson, Paul and Dunn, Warwick B and Endler, Lukas and Hala, David and Hucka, Michael and Hull, Duncan and Jameson, Daniel and Jamshidi, Neema and Jonsson, Jon J and Juty, Nick and Keating, Sarah and Nookaew, Intawat and {Le Nov\`{e}re}, Nicolas and Malys, Naglis and Mazein, Alexander and Papin, Jason A and Price, Nathan D and Selkov, Evgeni and Sigurdsson, Martin I and Simeonidis, Evangelos and Sonnenschein, Nikolaus and Smallbone, Kieran and Sorokin, Anatoly and van Beek, Johannes H G M and Weichart, Dieter and Goryanin, Igor and Nielsen, Jens and Westerhoff, Hans V and Kell, Douglas B and Mendes, Pedro and Palsson, Bernhard \O},
+doi = {10.1038/nbt.2488},
+file = {:Users/anna/Library/Application Support/Mendeley Desktop/Downloaded/Thiele et al. - 2013 - A community-driven global reconstruction of human metabolism.pdf:pdf},
+issn = {1546-1696},
+journal = {Nature Biotechnology},
+keywords = {Computer Simulation,Databases, Protein,Humans,Metabolome,Metabolome: physiology,Models, Biological,Proteome,Proteome: metabolism},
+month = may,
+number = {5},
+pages = {419--25},
+pmid = {23455439},
+title = {{A community-driven global reconstruction of human metabolism.}},
+url = {http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=3856361\&tool=pmcentrez\&rendertype=abstract},
+volume = {31},
+year = {2013}
+}
+
+
 @book{Unwin2006,
 abstract = {This book shows how to look at ways of visualizing large datasets, whether large in numbers of cases, or large in numbers of variables, or large in both. All ideas are illustrated with displays from analyses of real datasets and the importance of interpreting displays effectively is emphasized. Graphics should be drawn to convey information and the book includes many insightful examples. New approaches to graphics are needed to visualize the information in large datasets and most of the innovations described in this book are developments of standard graphics. The book is accessible to readers with some experience of drawing statistical graphics.},
 author = {Unwin, Antony and Theus, Martin and Hofmann, Heike},

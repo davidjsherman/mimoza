@@ -176,7 +176,8 @@
 \begin{abstract} % abstract
 
 \parttitle{Background}
-The complexity of genome-scale metabolic models makes them quite difficult for human users to read, since they contain thousands of reactions that must be included for accurate computer simulation. For example, the metabolic network of the bacterium \emph{E. coli} contains 2\,168 reactions, the \emph{yeast 7} metabolic network model of \emph{S.~cerevisiae} includes 2\,352 reactions, and \emph{recon 2}, a global human metabolism reconstruction, has 7\,440 reactions. Interestingly, hidden similarities between groups of reactions can be discovered, and generalized to reveal higher-level patterns.
+The complexity of genome-scale metabolic models makes them quite difficult for human users to read, since they contain thousands of reactions that must be included for accurate computer simulation. % For example, the metabolic network of the bacterium \emph{E. coli} contains 2\,168 reactions, the \emph{yeast 7} metabolic network model of \emph{S.~cerevisiae} includes 2\,352 reactions, and \emph{recon 2}, a global human metabolism reconstruction, has 7\,440 reactions. 
+Interestingly, hidden similarities between groups of reactions can be discovered, and generalized to reveal higher-level patterns.
 
 \parttitle{Results}
 The web-based navigation system Mimoza allows a human expert to explore metabolic network models in a semantically zoomable manner: The most general view represents the compartments of the model; the next view shows the generalized versions of reactions and metabolites in each compartment; and the most detailed view represents the initial network with the generalization-based layout (where similar metabolites and reactions are placed next to each other). It allows a human expert to grasp the general structure of the network and analyze it in a top-down manner.
@@ -249,7 +250,11 @@ To explore the opportunities of the method we implemented it as a practical tool
 The \emph{zooming user interface} (ZUI)~\cite{Bederson1998} paradigm has proven to be a powerful tool for representation of data at different scales. It is being adopted for various domains of applications, including cartographic~\cite{Nivala2008}, exploratory data visualization~\cite{Roberts2005}, collaborative interfaces~\cite{Laufer2011} and biological data~\cite{Pook1998, Hu2007}. The challenge is how to use ZUI-based visualization for semantic generalization of metabolic networks.
 
 \subsection*{Metabolic network reconstruction and infrastructure}
-There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analyzed by a human curator: Genome-scale metabolic models include thousands of reactions that may participate in organism's metabolism, while human experts understand best small-sized networks, containing up to hundreds of nodes~\cite{VonLandesberger2011,Herman2000}.
+There is a conflict between the level of detail of metabolic models needed for computer simulation and the one that can be easily analyzed by a human curator: Genome-scale metabolic models include thousands of reactions that may participate in organism's metabolism (e.g.,  2\,251 reactions in the metabolic network of the bacterium \emph{E. coli}~\cite{Orth2011}, 2\,352 reactions in the \emph{yeast 7} metabolic network model of \emph{S.~cerevisiae}~\cite{Aung2013}, 7\,440 reactions in \emph{recon 2},  a global human metabolism reconstruction~\cite{Thiele2013}), while human experts understand best small-sized networks, containing up to hundreds of nodes~\cite{VonLandesberger2011,Herman2000}.
+
+Metabolic network reconstruction can address various objectives. Examples include creation of a model for a new organism from its genomic data and a reference model for a similar organism; creation of a larger-scale model by combining several models of different aspects of organism's metabolism; improving an existing model by incorporating new data and new expertise. To accomplish these objectives the following tasks are used (see Figure~\ref{fig:workflow}). 
+
+\paragraph{Inference}
 
 %% Reconstruction
 The metabolic network reconstruction process is becoming more advanced, and there now exist various tools for semi-automatic model inference, e.g. PathwayTools~\cite{Karp2002}, CoReCo~\cite{Pitkanen2014}, SuBliMinaL~\cite{Swainston2011} (see~\cite{Hamilton2014} for a review).
@@ -260,8 +265,36 @@ Starting from a model for a similar organism or a collection of pathways, and ge
 %% Representation
 Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN~\cite{LeNovere2009}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2014}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. To keep the identifiers representation unique and machine readable, standardization efforts such as Identifiers.org~\cite{Juty2012} emerge. Further in this manuscript we will consider metabolic models in SBML format.
 
-% Why do we need humans?
-Although model inference tools are becoming more and more advanced, curation by a human expert in organism's metabolism remains crucial. This requires a means of splitting genome-scale models into smaller units that can be checked and analyzed independently by human experts. At a higher level, appropriate levels of abstraction need to be found to allow experts to compare whole genome networks. Good model visualization tools are also required.
+Although automatic model inference tools and genomic comparison methods are becoming steadily more sophisticated, they may still leave gaps in the model or add erroneous reactions. The intrinsic and extrinsic correctness of the model should be checked during the phases of analysis and curation.
+
+
+\paragraph{Curation and analysis}
+The inferred draft network needs to be refined during several iterations of analysis, curation and improvement~\cite{Thiele2010,Swainston2011}. The goal of the \emph{model analysis} is to verify that the model does not contain inner contradictions and errors, e.g., that the network is connected; the transport reactions between compartments are well defined; the reactions are chemically balanced, etc. Various model analysis tools, e.g, FASTGAPFILL \cite{Thiele2014} for gap filling, CellNetAnalyser~\cite{Klamt07} for for finding dead ends and blocked reactions, SuBliMinaL Toolbox~\cite{Swainston2011} for reaction balancing, can facilitate model analysis; but human expert's knowledge on organism's metabolism still plays an important role.
+
+The \emph{curation} is needed to %check the extrinsic correctness of the model, \ie to 
+ensure that the experts' knowledge is stored in the model in an appropriate way, such as that the metabolites and reactions are annotated with the identifiers from the corresponding knowledge bases and additional important information, making their names unambiguous for the audience apart from the model creators, as well as for the machines; that all the known processes that need to be part of the model are present and correct, etc.
+
+The processes of curation and analysis can be repeated several times, iteratively improving the draft model, till the satisfiable level of quality is achieved.
+
+The curation by a human expert requires a means of splitting genome-scale models into smaller units that can be checked and analyzed independently. At a higher level, appropriate levels of abstraction need to be found to allow experts to compare whole genome networks. Good model visualization tools are also required.
+
+\paragraph{Simulation}
+The improved model, created during the iterations of curation and analysis, %can be used in several ways (see processes with the light red background in Figure~\ref{fig:workflow}). It 
+can be used for computer simulation to obtain numerical results. We do not exploit simulation in this manuscript.
+
+\paragraph{Exploration}
+The model can also be used for knowledge-oriented exploration to obtain new knowledge about the processes happening in the organisms' metabolism, and the relationships between them, e.g., the ``redundancy'' of the model: discovery of similar reactions, and alternative pathways. 
+Means of splitting genome-scale models into smaller units, appropriate levels of abstraction and good model visualization tools are as important for model exploration task as they are for curation.
+
+\paragraph{Comparison and combination}
+Model comparison and combination is another important task. Possible scenarios include comparison to a different model of the same organism, with potential merging into a new, more complete, model; comparison of a model of a healthy organism to the one of a metabolism suffering from a disease to discover disease-specific metabolic adaptations.
+A genome-scale model can be created by combining several smaller models, describing different metabolic processes in a species~\cite{Schulz2006}, where model comparison is needed to detect overlaps. Such a model can be used as a draft model, and will need to undergo the analysis and curation phase.
+Finally, a group of models for related species can be compared and combined to produce a concise representation of their common metabolism, to study the common properties of a group, as well as the organism-specific adaptations.
+ 
+There exist various software facilitating model merging, e.g.,  semanticSBML~\cite{Krause2010}, OREMPdb~\cite{Umeton2012}, PathCase-SB Model Composition Tool~\cite{Coskun2013}, but all of them require human expert's intervention in cases when the models to be merged are incompatible or contradict to each other, as well as for better discovery of common parts. Thereby, after the creation, the combined model becomes a draft and should in its turn undergo the analysis and curation cycle.
+
+By combining these modeling tasks into workflows, as in Figure~\ref{fig:workflow}, one can accomplish the modeling objectives listed above. 
+
 
 \subsection*{Existing visualization approaches}
 % Desktop
@@ -515,6 +548,19 @@ We would like to thank Dr. Antoine Lambert for helpful discussions about using t
 %% Do not use \listoffigures as most will included as separate files
 
 \section*{Figures}
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.6]{workflow.png}
+\caption{\csentence{Metabolic modeling workflow.} 
+\label{fig:workflow}
+The processes highlighted in yellow represent the \emph{model creation cycle}: The draft model is created by model inference tools based on models for similar organism, pathway and reaction information extracted from model repositories and pathway and reaction databases; it is then iteratively improved during the process of curation and analysis. The resulting model can in its turn be added to model repositories.
+The processes highlighted in red show \emph{model usages}: simulation and knowledge-oriented exploration.
+The processes highlighted in green describe \emph{comparison and combination of several models}. As the model creation cycle, they also include the curation and analysis stage.
+The processes represented with the red arrows can use model generalization, described in this thesis, to discover similarities between the reactions and metabolites in the model, or in different models, and to aid a human understanding of large networks.}
+\end{figure}
+
  
       \begin{figure}[h!]
 \centering
