@@ -342,7 +342,7 @@ def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id
                 %s
             </div>
         </body>
-    </html>''' % (h, css, ico, scripts, c_hierarchy, title, h1, model_id, text, expl, more_expl,
+    </html>''' % (h, css, ico, scripts, title, h1, model_id, text, expl, more_expl,
 	              generate_visualisation_button(sbml, gen_sbml, m_dir_id, progress_icon, action))
 
 
