@@ -75,7 +75,8 @@ def add_explanations(page):
 	page.span('Click', class_='pant')
 	page.span(' on elements to see their annotations. ')
 	page.span('Adjust', class_='pant')
-	page.span(' map settings <span class="explanation">(top right corner of the map view)</span> to show/hide ubiquitous metabolites and transport reactions.')
+	page.span(
+		' map settings <span class="explanation">(top right corner of the map view)</span> to show/hide ubiquitous metabolites and transport reactions.')
 	page.p.close()
 
 	page.p(
@@ -85,6 +86,7 @@ def add_explanations(page):
 			format_color(BLUE)))
 
 	page.div.close()
+
 
 def format_color(color):
 	return '<span style="background-color:%s">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' % color
@@ -101,15 +103,17 @@ def add_model_description(model, page):
 		page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
-def add_js(page, json_files, c_id2json_vars, map_id, comps):
+def add_js(page, json_files, c_id2json_vars, map_id, comps, c_id2out_c_id):
 	for json in json_files:
 		page.script(src=json, type="text/javascript")
 		page.script.close()
 	page.script("L_PREFER_CANVAS = true;")
 	page.script('''
-        initializeMap({%s}, "%s", %s);
+        initializeMap({%s}, "%s", %s, {%s});
     ''' % (", ".join(("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems())),
-	       map_id, comps), type="text/javascript")
+	       map_id, comps,
+	       ", ".join(("'%s': '%s'" % (c_id, out_c_id) for (c_id, out_c_id) in c_id2out_c_id.iteritems()))),
+	            type="text/javascript")
 	page.script('''$(function() {$( "#%s" ).resizable();});''' % map_id)
 
 
@@ -143,7 +147,7 @@ def add_embedding_dialog(page, url):
 
 def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
                 scripts, css,
-                fav, map_id):
+                fav, map_id, c_id2out_c_id):
 	page = markup.page()
 	if not scripts:
 		scripts = []
@@ -172,14 +176,13 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
 
 	add_explanations(page)
 
-
 	add_model_description(model, page)
 
 	add_embedding_dialog(page, embed_url)
 
 	page.div.close()
 
-	add_js(page, json_files, c_id2json_vars, map_id, c_id2name)
+	add_js(page, json_files, c_id2json_vars, map_id, c_id2name, c_id2out_c_id)
 
 	with open('%s/comp.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -200,7 +203,8 @@ def create_embedded_html(model, directory, json_files, json_vars, scripts, css, 
 
 	add_map(page, map_id)
 
-	add_js(page, json_files, json_vars, map_id, {c.getId(): c.getName() for c in model.getListOfCompartments()})
+	add_js(page, json_files, json_vars, map_id, {c.getId(): c.getName() for c in model.getListOfCompartments()},
+		{})
 
 	with open('%s/comp_min.html' % directory, 'w+') as f:
 		f.write(str(page))
@@ -308,7 +312,8 @@ def generate_generalized_html(css, js, ico, m_name, model_id, url, sbml, gen_sbm
 	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
 
-def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id, sbml, gen_sbml, m_dir_id, progress_icon, action,
+def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id, sbml, gen_sbml, m_dir_id,
+                        progress_icon, action,
                         header=True):
 	scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in js])
 	h = "Content-Type: text/html;charset=utf-8" if header else "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>"
@@ -337,7 +342,7 @@ def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id
                 %s
             </div>
         </body>
-    </html>''' % (h, css, ico, scripts, title, h1, model_id, text, expl, more_expl,
+    </html>''' % (h, css, ico, scripts, c_hierarchy, title, h1, model_id, text, expl, more_expl,
 	              generate_visualisation_button(sbml, gen_sbml, m_dir_id, progress_icon, action))
 
 
@@ -386,4 +391,5 @@ def create_thanks_for_uploading_generalized_html(m_id, m_name, directory_prefix,
 	gen_sbml = "%s/%s_generalized.xml" % (directory, m_id)
 
 	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml if os.path.exists(gen_sbml) else '', m_dir_id, img))
+		f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml if os.path.exists(gen_sbml) else '',
+		                      m_dir_id, img))

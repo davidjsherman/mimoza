@@ -74,6 +74,11 @@ try:
 		# sbml -> tulip graph
 		log(True, 'sbml -> tlp')
 		graph, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml, True)
+		c_id2out_c_id = {}
+		for c_id, info in c_id2info.iteritems():
+			_, _, (_, out_c_id) = info
+			if out_c_id:
+				c_id2out_c_id[c_id] = out_c_id
 
 		try:
 			n2xy = parse_layout_sbml(groups_sbml)
@@ -89,7 +94,7 @@ try:
 			gen_model = gen_document.getModel()
 			save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps, True)
 
-		serialize(directory, m_dir_id, input_model, fc, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
+		serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
 		          MIMOZA_FAVICON, True)
 
 except Exception as e:

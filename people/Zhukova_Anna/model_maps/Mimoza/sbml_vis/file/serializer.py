@@ -13,7 +13,7 @@ from sbml_generalization.utils.logger import log
 __author__ = 'anna'
 
 
-def serialize(directory, m_dir_id, input_model, c_id2level2features, groups_sbml, main_url, scripts, css, fav, verbose, map_id=None):
+def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_id, groups_sbml, main_url, scripts, css, fav, verbose, map_id=None):
 	if not map_id:
 		map_id = m_dir_id
 
@@ -40,7 +40,7 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, groups_sbml
 	archive_url = "%s.zip" % m_dir_id
 
 	create_html(input_model, directory, embed_url, redirect_url, geojson_files, c_id2geojson_names, groups_sbml_url, archive_url, scripts,
-	            css, fav, map_id)
+	            css, fav, map_id, c_id2out_c_id)
 
 	create_embedded_html(input_model, directory, geojson_files, c_id2geojson_names, scripts, css, fav, map_id)
 

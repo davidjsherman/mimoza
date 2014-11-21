@@ -80,7 +80,7 @@ function updateMapBounds(coords, map) {
     map.setMaxBounds(coords);
 }
 
-function initializeMap(cId2jsonData, mapId, compIds) {
+function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
@@ -89,6 +89,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         overlays = {},
         cIds = {},
         cId = gup(),
+        outCId = null,
         jsonData;
     if (cId == null && compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0) {
         cId = Object.keys(compIds)[0];
@@ -97,6 +98,9 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         cIds[cId] = compIds[cId];
         jsonData = cId2jsonData[cId];
         $("#comp").html(compIds[cId]);
+        if (cId in cId2outside) {
+            outCId = cId2outside[cId];
+        }
     }
     if (typeof jsonData === 'undefined' || jsonData.length <= 0) {
         return null;
@@ -114,7 +118,7 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     layers.push(inTransportLayer);
     var map = L.map(mapId, {
         maxZoom: maxZoom,
-        minZoom: minZoom,
+        minZoom: outCId != null ? minZoom - 1 : minZoom,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
         layers: layers,
@@ -138,12 +142,12 @@ function initializeMap(cId2jsonData, mapId, compIds) {
         outJSON = false,
         jsonArray;
     json = jsonData[0];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom);
     ubJSON |= jsonArray[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom);
     ubJSON |= jsonArray[1];
     outJSON |= jsonArray[0] || jsonArray[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom);
     ubJSON |= jsonArray[1];
     inJSON |= jsonArray[0] || jsonArray[1];
 
@@ -189,19 +193,22 @@ function initializeMap(cId2jsonData, mapId, compIds) {
     map.on('zoomend', function (e) {
         var zoom = map.getZoom(),
             mZoom = Math.min(zoom + 1, maxZoom);
+        if (outCId != null && zoom == map.getMinZoom()) {
+            window.location.href = "?id=" + outCId;
+        }
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
             for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
                 json = jsonData[(z - minZoom) / 2];
-                jsonArray = loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom);
                 ubJSON |= jsonArray[1];
 
-                jsonArray = loadGeoJson(map, json, z, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom);
                 ubJSON |= jsonArray[1];
                 // outside transport should already be visible on the min zoom level
                 outJSON |= jsonArray[0] || jsonArray[1];
 
-                jsonArray = loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords);
+                jsonArray = loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom);
                 ubJSON |= jsonArray[1];
                 inJSON |= jsonArray[0] || jsonArray[1];
             }

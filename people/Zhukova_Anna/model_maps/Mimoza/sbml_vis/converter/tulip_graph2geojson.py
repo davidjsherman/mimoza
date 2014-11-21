@@ -220,7 +220,7 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
 				f, _ = n2feature(meta_graph, n, c_id2info, r2rs_ps, False, False)
 				for z in [1, 2]:
 					update_level2features(f, c_id2level2features, z, c_id)
-			# add its feature and its background to its own collection
+			# add its background to its own collection
 			c_id = root[ID][n]
 			_, bg = n2feature(meta_graph, n, c_id2info, r2rs_ps, False, False)
 			# update_level2features(f, c_id2level2features, 0, c_id)
@@ -233,23 +233,24 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
 			other_related_c_ids = [comp_id for comp_id in root[RELATED_COMPARTMENT_IDS][n] if
 			                       comp_id in c_id2outs[c_id]]
 			# 2.1. it's generalized
-			is_transport = root[TRANSPORT][n] if TYPE_REACTION == n_type \
-				else next(
-				(1 for it in root.getInOutNodes(n) if TYPE_COMPARTMENT == root[TYPE][it] or root[TRANSPORT][it]), None)
+			# is_transport = root[TRANSPORT][n] if TYPE_REACTION == n_type \
+			# 	else next(
+			# 	(1 for it in root.getInOutNodes(n) if TYPE_COMPARTMENT == root[TYPE][it] or root[TRANSPORT][it]), None)
 			if meta_graph.isMetaNode(n):
-				f, bg = n2feature(meta_graph, n, c_id2info, r2rs_ps, is_transport,
+				f, bg = n2feature(meta_graph, n, c_id2info, r2rs_ps, root[TRANSPORT][n] if TYPE_REACTION == n_type else False,
 				                  not other_related_c_ids)
 				# add features to it's own compartment
 				update_level2features(f, c_id2level2features, 1, c_id)
 				update_level2features(bg, c_id2level2features, 2, c_id)
 				# add features to the compartments for that it's outside
-				for c_id in related_c_ids:
+				for o_c_id in related_c_ids:
 					f, bg = n2feature(meta_graph, n, c_id2info, r2rs_ps, True, False)
-					update_level2features(f, c_id2level2features, 1, c_id)
-					update_level2features(bg, c_id2level2features, 2, c_id)
+					update_level2features(f, c_id2level2features, 1, o_c_id)
+					update_level2features(bg, c_id2level2features, 2, o_c_id)
 			# 2.1. it's simple
 			else:
-				f, _ = n2feature(meta_graph, n, c_id2info, r2rs_ps, is_transport, not other_related_c_ids)
+				f, _ = n2feature(meta_graph, n, c_id2info, r2rs_ps, root[TRANSPORT][n] if TYPE_REACTION == n_type else False,
+				                 not other_related_c_ids)
 				# add features to it's own compartment
 				# (level depends on whether it was generalized on the previous zoom or not)
 				for z in [2] if root[ANCESTOR_ID][n] else [1, 2]:

@@ -21,7 +21,7 @@ var INNER_TRANSPORT = "inside transport";
 
 var MIN_CLICKABLE_R = 2;
 
-function pnt2layer(map, feature, zoom, coords) {
+function pnt2layer(map, feature, zoom, coords, minZoom) {
     "use strict";
     var e = feature.geometry.coordinates,
         scaleFactor = Math.pow(2, zoom),
@@ -66,7 +66,7 @@ function pnt2layer(map, feature, zoom, coords) {
         centre = map.unproject([x, y], 1),
         ne = bounds.getNorthEast(),
         sw = bounds.getSouthWest(),
-        r = w * 40075000 * Math.cos(centre.lat * (Math.PI / 180)) / Math.pow(2, map.getMinZoom() + 8);
+        r = w * 40075000 * Math.cos(centre.lat * (Math.PI / 180)) / Math.pow(2, minZoom + 8);
     var node = null;
     if (BG_REACTION == feature.properties.type || BG_COMPARTMENT == feature.properties.type) {
         return L.rectangle(bounds, props);
@@ -120,12 +120,12 @@ function matchesCompartment(cId, feature) {
     return cId === feature.properties.c_id || cId === feature.properties.id;
 }
 
-function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, filterFunction) {
+function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, minZoom, filterFunction) {
     "use strict";
     var name2selection = {};
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, zoom, coords);
+            return pnt2layer(map, feature, zoom, coords, minZoom);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom);
@@ -136,14 +136,14 @@ function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, f
     });
 }
 
-function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords) {
+function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom) {
     "use strict";
-    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords,
+    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom,
             function (feature) {
                 return (typeof feature.properties.ub === 'undefined' || !feature.properties.ub) && matchesCompartment(cId, feature);
             }
         ),
-        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords,
+        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom,
             function (feature) {
                 return (typeof feature.properties.ub !== 'undefined' && feature.properties.ub) && matchesCompartment(cId, feature);
             }

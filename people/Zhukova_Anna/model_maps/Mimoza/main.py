@@ -113,6 +113,11 @@ def main(argv=None):
 	input_model = input_document.getModel()
 
 	root, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml, True)
+	c_id2out_c_id = {}
+	for c_id, info in c_id2info.iteritems():
+		_, _, (_, out_c_id) = info
+		if out_c_id:
+			c_id2out_c_id[c_id] = out_c_id
 
 	try:
 		n2xy = parse_layout_sbml(sbml)
@@ -127,7 +132,8 @@ def main(argv=None):
 	gen_model = gen_document.getModel()
 	save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps, verbose)
 
-	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc, groups_sbml=groups_sbml,
+	serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc,
+	          c_id2out_c_id=c_id2out_c_id, groups_sbml=groups_sbml,
 	          main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose)
 
 

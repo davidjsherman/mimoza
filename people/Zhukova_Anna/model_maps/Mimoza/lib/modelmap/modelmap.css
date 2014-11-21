@@ -128,6 +128,8 @@ a:active { /* selected link */
 td a, p.popup a {
     font-size: 10px;
     text-decoration: none;
+    text-color: #773131;
+    color: #773131;
 }
 p.popup {
     width: auto;

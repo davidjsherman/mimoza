@@ -36,6 +36,7 @@ WIDTH = "w"
 
 PRODUCTS = 'ps'
 REACTANTS = 'rs'
+FORMULA = "f"
 
 CYTOPLASM = "cytoplasm"
 ORGANELLES = "organelles"

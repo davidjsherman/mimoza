@@ -58,7 +58,8 @@ def e2feature(graph, e, transport, inner):
 
 	real_e = e
 	while root.isMetaEdge(real_e):
-		real_e = list(root[VIEW_META_GRAPH][real_e])[0]
+		real_e = next((ee for ee in root[VIEW_META_GRAPH][real_e] if not root[UBIQUITOUS][ee]),
+		              next(iter(root[VIEW_META_GRAPH][real_e])))
 	ubiquitous = root[UBIQUITOUS][real_e]
 	color = triplet(root[VIEW_COLOR][e])
 	props = {WIDTH: get_e_size(root, e).getW() / 2, TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
@@ -66,7 +67,7 @@ def e2feature(graph, e, transport, inner):
 	if not transport:
 		props[COMPARTMENT_ID] = root[COMPARTMENT_ID][s]
 	else:
-	# let's not store unneeded False
+		# let's not store unneeded False
 		props[TRANSPORT] = True
 		if inner:
 			props[INNER] = True
@@ -84,17 +85,21 @@ def n2feature(graph, n, c_id2info, r2rs_ps, transport, inner):
 	w, h = root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2
 	node_type = root[TYPE][n]
 	generalized = graph.isMetaNode(n)
-	props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n], NAME: root[NAME][n]} #LABEL: get_short_name(graph, n, onto)}
+	props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n],
+	         NAME: root[NAME][n]}  # LABEL: get_short_name(graph, n, onto)}
 	color = triplet(root[VIEW_COLOR][n])
 	if TYPE_REACTION == node_type:
-		ins, outs = get_formula(graph, n, r2rs_ps)
+		# ins, outs = get_formula(graph, n, r2rs_ps)
+		formula = get_formula(graph, n, r2rs_ps, root[REVERSIBLE][n])
 		genes = get_gene_association_list(root[TERM][n])
 		if genes:
 			props[TERM] = genes
-		if ins:
-			props[REACTANTS] = ins
-		if outs:
-			props[PRODUCTS] = outs
+		# if ins:
+		# props[REACTANTS] = ins
+		# if outs:
+		# 	props[PRODUCTS] = outs
+		if formula:
+			props[FORMULA] = formula
 		props[COLOR] = get_reaction_color(generalized, transport, color)
 		if transport:
 			del props[COMPARTMENT_ID]
@@ -102,44 +107,49 @@ def n2feature(graph, n, c_id2info, r2rs_ps, transport, inner):
 			props[TRANSPORT] = True
 			if inner:
 				props[INNER] = True
-		if root[REVERSIBLE][n]:
-			props[REVERSIBLE] = True
+			# if root[REVERSIBLE][n]:
+			# 	props[REVERSIBLE] = True
 	elif TYPE_COMPARTMENT == node_type:
 		term = root[TERM][n]
 		if term:
-			props[TERM] = term
+			term = term.upper()
+			props[TERM] = "<a href=\'http://www.ebi.ac.uk/QuickGO/GTerm?id=%s\' target=\'_blank\'>%s</a>" % (term, term)
+
 		props.update({HEIGHT: h, COLOR: get_compartment_color()})
 	elif TYPE_SPECIES == node_type:
 		ubiquitous = root[UBIQUITOUS][n]
 		if ubiquitous:
 			# let's not store unneeded False
 			props[UBIQUITOUS] = True
-		if transport:
+		if transport and not inner:
 			props[TRANSPORT] = True
-			# even if a species participates in inner transport,
-			# we need to always show it inside its compartment
-			# if inner and ubiquitous:
-			# 	props[INNER] = True
+		# even if a species participates in inner transport,
+		# we need to always show it inside its compartment
+		# if inner and ubiquitous:
+		# props[INNER] = True
 		# Get compartment name from c_id2info: c_id -> (name, go, (level, out_c_id))
 		comp_name = c_id2info[c_id][0]
 		term = root[TERM][n]
 		if term:
-			props[TERM] = term
+			term = term.upper()
+			if term.find("UNKNOWN") == -1:
+				props[
+					TERM] = "<a href=\'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=%s\' target=\'_blank\'>%s</a>" % (
+					term, term)
 		props.update({COMPARTMENT_NAME: comp_name, COLOR: get_species_color(ubiquitous, generalized, color)})
 
 	bg_feature = None
 	# if generalized:
 	if generalized:
 		node_type = TYPE_2_BG_TYPE[node_type]
-		transport = TRANSPORT in props
 		bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport, color)}
-		if transport:
+		if TRANSPORT in props:
 			# let's not store unneeded False
 			bg_props[TRANSPORT] = True
-			if inner and TYPE_REACTION == node_type:
-				props[INNER] = True
+			if inner and TYPE_BG_REACTION == node_type:
+				bg_props[INNER] = True
 		if COMPARTMENT_ID in props:
-			bg_props[COMPARTMENT_ID] = c_id
+			bg_props[COMPARTMENT_ID] = root[COMPARTMENT_ID][n]
 		if TYPE_BG_COMPARTMENT == node_type:
 			bg_props[HEIGHT] = h
 			bg_props[COMPARTMENT_ID] = root[ID][n]
@@ -147,7 +157,7 @@ def n2feature(graph, n, c_id2info, r2rs_ps, transport, inner):
 	return geojson.Feature(geometry=geojson.Point([x, y]), properties=props), bg_feature
 
 
-def get_gene_association_list(ga):
+def _get_gene_association_list(ga):
 	gene_association = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
 	if not gene_association:
 		return []
@@ -157,6 +167,35 @@ def get_gene_association_list(ga):
 		return gene_association
 	except:
 		return []
+
+
+def get_gene_association_list(ga):
+	gene_association = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
+	if not gene_association:
+		return ""
+	try:
+		res = to_cnf(gene_association, False)
+		gene_association = [[str(it) for it in disjuncts(cjs)] for cjs in conjuncts(res)]
+		result = '''<table border="0" width="100%%">
+						<tr class="centre"><th colspan="%d" class="centre">Gene association</th></tr>
+						<tr>''' % (2 * len(gene_association) - 1)
+		first = True
+		for genes in gene_association:
+			if first:
+				first = False
+			else:
+				result += '<td class="centre"><i>and</i></td>'
+			result += '<td><table border="0">'
+			if len(genes) > 1:
+				result += "<tr><td class='centre'><i>(or)</i></td></tr>"
+			for gene in genes:
+				result += "<tr><td class='main'><a href=\'http://www.ncbi.nlm.nih.gov/gene/?term=%s[sym]\' target=\'_blank\'>%s</a></td></tr>" % (
+					gene, gene)
+			result += '</table></td>'
+		result += '</tr></table>'
+		return result
+	except:
+		return ""
 
 
 def get_reaction_participants_inside_compartment(n, r, root):
@@ -171,7 +210,7 @@ def get_reaction_participants_inside_compartment(n, r, root):
 		return {s for s in root[VIEW_META_GRAPH][n].getNodes()}
 
 
-def get_formula(graph, r, r2rs_ps):
+def _get_formula(graph, r, r2rs_ps):
 	root = graph.getRoot()
 	name_prop = NAME
 	formatter = lambda (st, n), prop: [root[prop if root[prop][n] else NAME][n], int(st)]
@@ -180,6 +219,30 @@ def get_formula(graph, r, r2rs_ps):
 		name_prop = ANCESTOR_NAME
 	rs, ps = r2rs_ps[r]
 	return sorted(formatter(it, name_prop) for it in rs), sorted(formatter(it, name_prop) for it in ps)
+
+
+def get_formula(graph, r, r2rs_ps, reversible):
+	root = graph.getRoot()
+	name_prop = NAME
+	formatter = lambda (st, n), prop: [root[prop if root[prop][n] else NAME][n], int(st)]
+	if graph.isMetaNode(r):
+		r = root[VIEW_META_GRAPH][r].getOneNode()
+		name_prop = ANCESTOR_NAME
+	rs, ps = r2rs_ps[r]
+	rs, ps = sorted(formatter(it, name_prop) for it in rs), sorted(formatter(it, name_prop) for it in ps)
+
+	res = '<table border="0" width="100%"><tr><td width="45%"><table border="0">'
+	if rs:
+		for [r, st] in rs:
+			res += '<tr><td class="main">%d&nbsp;</td><td>%s</td></tr>' % (st, r)
+	res += '</table></td>'
+	res += '<th class="centre" width="10%%">%s</th>' % "&#8596;" if reversible else "&#65515;"
+	res += '<td  width="45%"><table border="0">'
+	if ps:
+		for [p, st] in ps:
+			res += '<tr><td class="main">%d&nbsp;</td><td>%s</td></tr>' % (st, p)
+	res += '</table></td></tr></table>'
+	return res
 
 
 def rgb(rrggbb):
