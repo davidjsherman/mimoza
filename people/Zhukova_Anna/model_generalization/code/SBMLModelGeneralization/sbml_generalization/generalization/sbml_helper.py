@@ -429,7 +429,10 @@ def create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, model):
 		s_id = species.getId()
 		s_name = species.getName()
 		if s_id in n2lo:
-			elements = n2lo[s_id].iteritems() if s_id in ub_sps else [(None, n2lo[s_id])]
+			if isinstance(n2lo[s_id], dict):
+				elements = n2lo[s_id].iteritems()
+			else:
+				elements = [(None, n2lo[s_id])]
 			for r_id, [(x, y), (w, h)] in elements:
 				if not r_id or model.getReaction(r_id):
 					s_glyph = layout.createSpeciesGlyph()

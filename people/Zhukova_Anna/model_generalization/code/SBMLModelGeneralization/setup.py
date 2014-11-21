@@ -42,6 +42,5 @@ setup(name='SBMLModelGeneralization',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
       ],
-      install_requires=["libsbml >= 5.0.0"],
-      requires=['libsbml', 'geojson', 'sympy', 'tulip']
+      requires=['python-libsbml-experimental', 'sympy', 'geojson']
 )
