@@ -245,7 +245,8 @@ Mimoza views can be embedded in web pages, or downloaded as COMBINE archives.
 
 Semantic generalization of metabolic network models~\cite{Zhukova2014} is a theoretical method designed to aid users in understanding complex models. Generalization identifies and groups similar metabolites and similar reactions in the network.
 Applied to different models, it can bring them to the same level of abstraction so that they can be compared.
-To explore the opportunities of the method we implemented it as a practical tool.
+To explore the opportunities of the method we implement it here as a practical tool that
+can be easily adopted and easily integrated into existing workflows.
 
 The \emph{zooming user interface} (ZUI)~\cite{Bederson1998} paradigm has proven to be a powerful tool for representation of data at different scales. It is being adopted for various domains of applications, including cartographic~\cite{Nivala2008}, exploratory data visualization~\cite{Roberts2005}, collaborative interfaces~\cite{Laufer2011} and biological data~\cite{Pook1998, Hu2007}. The challenge is how to use ZUI-based visualization for semantic generalization of metabolic networks.
 
@@ -349,6 +350,11 @@ Our method places similar metabolites and reactions (detected at level 2) next t
 
 \subsection*{Model generalization}
 The metabolic model generalization method~\cite{Zhukova2014}, which we recall here, groups similar metabolites and reactions in the network based on its structure and the knowledge extracted from metabolite ontologies. 
+A generalization is made specifically for a given model and is maximal with respect to the
+relations in the model; it respects semantic constraints such as reaction stoichiometry,
+connectivity, and transport between compartments; and it is performed through a heuristic
+method that is efficient in practice for genome-scale models. The reader is referred to
+the \cite{Zhukova2014} for these technical details, which are beyond the scope of this article.
 
 To make metabolite grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical entities is used. Each metabolite can be generalized up to one of its ancestors in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for metabolite annotation in metabolic networks. If a ChEBI annotation for a metabolite is not present in the model, the method attempts to automatically deduce it by comparing metabolite's name to ChEBI terms' names and synonyms. 
 
@@ -481,8 +487,22 @@ Finally, the API of the Leaflet framework used for the interactive navigation ca
 
 \section*{Conclusions}
 % %This should state clearly the main conclusions of the article and give a clear explanation of the importance and relevance of the software.
-We have implemented Mimoza .... As a web-server it requires just a browser with enabled javascript. The library itself uses libSBML, leaflet, Tulip, etc. One needs to installed them as described in web page.
-
+We have implemented Mimoza, a novel software tool for automatically constructing zoomable
+user interfaces for genome-scale metabolic models. 
+By exploiting \emph{model generalization}, Mimoza reduces
+the dimension of the model's network at outer zoom levels, and intelligently co-localizes
+equivalent reactions and molecular species at inner zoom levels.
+Consequently the biological user may efficiently navigate the high-level structure of the
+model; whether the goal is to understand the model or to search for errors, Mimoza exposes
+the important features at out zoom levels and and hides the specific details in the inner
+ones.
+We provide an efficient, useful  tool that is easy to adopt and, though the use of
+standards such as SBML and the ChEBI ontology, is easy to integrate into existing
+expert-centered modeling pipelines.
+By carefully combining model generalization with adaptive layout and open-source
+cartographic software, the Mimoza we server requires just a browser with Javascript. 
+Mimoza is open source and can also be installed locally, as described on the web page,
+and depends on libSBML, Tulip,and Python.
 % Mimoza is an amazing tool that everyone was waiting for and can finally use and become happy!
 
 \section*{Availability and requirements}
@@ -490,7 +510,10 @@ We have implemented Mimoza .... As a web-server it requires just a browser with 
 \textbf{Project home page:} http://mimoza.bordeaux.inria.fr\\
 \textbf{Operating system(s):} Platform independent\\
 \textbf{Programming language:} Python, JavaScript\\
-\textbf{Other requirements:} JavaScript should be enabled in the web browser. The standalone Mimoza application requires Python 2.7; libSBML-experimental $\geq$ 5.9 for Python with groups and layout extensions; Tulip $\geq$ 4.0 for python; and model generalization library\footnote{Model Generalization -- http://metamogen.gforge.inria.fr}.\\
+\textbf{Other requirements:} JavaScript should be enabled in the web browser. The
+standalone Mimoza application requires Python 2.7; libSBML-experimental $\geq$ 5.9 for
+Python with groups and layout extensions; Leaflet 0.7.3; jQuery 2.1.1 and jQuery-ui
+1.10.4; Tulip $\geq$ 4.0 for python; and model generalization library\footnote{Model Generalization -- http://metamogen.gforge.inria.fr}.\\
 \textbf{License:} CeCILL (GPL compatible)\\
 \textbf{Any restrictions to use by non-academics:} no restrictions
 
