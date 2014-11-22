@@ -75,8 +75,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%\def\includegraphic{}
-%\def\includegraphics{}
+\def\includegraphic{}
+\def\includegraphics{}
 
 
 
@@ -326,7 +326,7 @@ At least three of the aforementioned tasks (curation, exploration, comparison) r
 
 \subsection*{Existing visualization approaches}
 % Desktop
-There exist various modeling tools for metabolic networks that also support visualization. Desktop tools include CellDesigner~\cite{Funahashi2008}, VANTED~\cite{Rohn2012}, and Cytoscape~\cite{Smoot2011}. They produce reasonably good visualizations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualization unreadable. For comparison, the winner of the best SBGN map competition~\cite{SBGN}, the ER Stress response~\cite{Groenendyk2010} map,  was created manually in CellDesigner.
+There exist various modeling tools for metabolic networks that also support visualization. Desktop tools include CellDesigner~\cite{Funahashi2008}, VANTED~\cite{Rohn2012}, and Cytoscape~\cite{Smoot2011}. They produce reasonably good visualizations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualization unreadable. %For comparison, the winner of the best SBGN map competition~\cite{SBGN}, the ER Stress response~\cite{Groenendyk2010} map,  was created manually in CellDesigner.
 
 % Web-based
 Web-based tools allowing for metabolic network visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for network visualization using a force-directed layout algorithm~\cite{Fruchterman1991, Tamassia:2007:HGD:1202383}. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
@@ -386,8 +386,9 @@ We address the problem of large-scale metabolic model visualization by combining
 
   Our method places similar metabolites and reactions (detected at level 2) next to each
   other, thus simplifying the analysis of their presence.
-
 \end{enumerate}
+  
+ Figure~\ref{fig:zoom_levels} shows such a 3-level representation on the example of the model of $\beta$-oxidation of fatty acids~\cite{Metzler01} in the peroxisome compartment of a yeast \textit{Y.~lipolytica}. The first level (bottom) shows the peroxisome compartment, and the transport reactions; the second level (middle) shows the generalized structure of the peroxisome, the main processes happening in it; the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
 
 \subsection*{Model generalization}
 The metabolic model generalization method~\cite{Zhukova2014}, which we recall here, groups similar metabolites and reactions in the network based on its structure and the knowledge extracted from metabolite ontologies. 
@@ -441,20 +442,20 @@ Depending on the nature of the connected component subgraph, we choose one of th
 \end{itemize}
 
 % Ubiquitous metabolites hadling
-To avoid clutter we duplicate all the \emph{ubiquitous} metabolites (\textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}, etc.) before applying the layout algorithms, so that there is a copy of an ubiquitous metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the ubiquitous metabolites, apply the combined layout on it, and then place the ubiquitous metabolites next to the reactions in which they participate. 
+To avoid clutter we duplicate all the \emph{minor} metabolites (\textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}, etc.) before applying the layout algorithms, so that there is a copy of a minor metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the minor metabolites, apply the combined layout on it, and then place the minor metabolites next to the reactions in which they participate. 
 
 \subsubsection*{Generalization-based full model layout}
-The layout for the full model is based on the corresponding generalized model's layout. To allow zooming into the generalized model, we keep the same coordinates as in the generalized model for the ubiquitous metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model. 
+The layout for the full model is based on the corresponding generalized model's layout. To allow zooming into the generalized model, we keep the same coordinates as in the generalized model for the minor metabolites and the ungeneralized metabolites and reactions, and place similar metabolites or reactions next to each other inside the space used by the corresponding generalized metabolites or reactions in the generalized model. 
 
 An edge in the generalized view might expand into several edges in the full-model view, for example, if it is a generalized edge connecting a generalized metabolite to a generalized reaction. The positions of the edges after such an expansion might slightly differ from the corresponding generalized one.
 
 \subsubsection*{Node colors}
 
-A different color is assigned to each generalized metabolite/reaction; and is propagated to the corresponding metabolites/reactions of the full model. Ubiquitous metabolites are colored grey. Mimoza's interface includes a checkbox that permits to hide/show ubiquitous metabolites .
+A different color is assigned to each generalized metabolite/reaction; and is propagated to the corresponding metabolites/reactions of the full model. Minor metabolites are colored grey. Mimoza's interface includes a checkbox that permits to hide/show minor metabolites .
 
 \subsubsection*{Node sizes}
 
-The size of the nodes depends on their nature: ubiquitous metabolites are smaller than the non-ubiquitous ones; a radius of a generalized metabolite/reaction is calculated as a sum of radiuses of the elements that it groups; compartment sizes are defined by the layouts of the elements inside them, so that the compartments are represented as minimal rectangles containing all the corresponding elements. All non-ubiquitous specific (i.e., not generalized) metabolites are of the same size; as well as all specific reactions.
+The size of the nodes depends on their nature: minor metabolites are smaller than the other ones; a radius of a generalized metabolite/reaction is calculated as a sum of radiuses of the elements that it groups; compartment sizes are defined by the layouts of the elements inside them, so that the compartments are represented as minimal rectangles containing all the corresponding elements. All major specific (i.e., not generalized) metabolites are of the same size; as well as all specific reactions.
 
 \subsubsection*{Relative positions of compartments}
 Metabolic models may include several compartments, nested into each other. For example, the \emph{peroxisome} compartment is surrounded by its \emph{membrane}, and contained in \emph{cytoplasm}; the \emph{cytoplasm} is part of the \emph{cell}, which is surrounded by the \emph{cell envelope}.
@@ -473,7 +474,7 @@ The zoomable interactive representation is achieved using Leaflet~\cite{Agafonki
 
 We export elements of the network graph (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{fig:geojson} shows an example of a reaction represented in GeoJSON format. The TLP-to-GeoJSON converter is implemented in python and is available as a part of Mimoza software. 
 
-The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. We follow SBGN Process Description language convention~\cite{LeNovere2009} to choose the glyphs for model elements' representation: Metabolites are drawn as circles linked by edges to the reactions where they participate; reactions are represented as squares; compartments are drawn as rectangles.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions. 
+The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. We follow SBGN Process Description language convention~\cite{LeNovere2009} to choose the glyphs for model elements' representation: Metabolites are drawn as circles linked by edges to the reactions where they participate; reactions are represented as squares; compartments are drawn as rectangles.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions. Two overlays allow user to show or hide minor metabolites (e.g., water, oxygen, hydrogen, etc.), and  transport reactions.
  
 
 \subsection*{Embedding}
@@ -505,14 +506,17 @@ The overall Mimoza pipeline contains 5 steps:
 
 \section*{Results and Discussion}
 %The Results and Discussion may be combined into a single section or presented separately. They may also be broken into subsections with short, informative headings. In any case what should be described is the functionality of the software together with data on how its performance and functionality compare with and improve on functionally similar existing software. There should then be a discussion of the intended use of the software, and the benefits that are envisioned together, if possible, with an outline for the planned future development of new features.
-To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network model~\cite{Herrgard2008}. The result can be found at \url{http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_8}. 
-Three semantic zoom levels (compartment view, the generalized peroxisome compartment and the detailed view) corresponding to the part of the model representing $\beta$-oxidation of fatty acids~\cite{Metzler01} are shown in Figure~\ref{fig:zoom_levels}. The first level (bottom) shows the peroxisome compartment, and the reactions happening inside the cytoplasm; the second level (middle) shows the generalized structure of the peroxisome, the main processes happening in it; the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
+To illustrate the use of Mimoza and compare it with other available ZUI tools, we visualized the yeast consensus genome-scale metabolic network model~\cite{Herrgard2008}. The result can be found at \url{http://mimoza.bordeaux.inria.fr/yeast4/comp.html?id=C_1}. Mimoza automatically split the network into compartments and created a 3-level visualization for each of them.
 
 We visualized the same model using MetDraw with no manual adjustments. The resulting SVG file\footnote{MetDraw -- http://www.metdraw.com/metdraw/bc7df60221ba314c383b1bf6e7dad4c3056f92bb} has only one zoom level with lots of clutter, that does not allow one to see the structure of the network.
 
 Cellular Overview does not allow one to visualize a model provided by a user, but has a map of metabolism of \emph{Saccharomyces cerevisiae}.\footnote{Cellular Overview -- http://biocyc.org/overviewsWeb/celOv.shtml} It has a clear non-overlapping representation of various pathways present in the model, but does not show the compartmentalization. It is not automatic and is pathway-oriented, thus is not suitable for models having no pathway metadata. The zoom-in shows additional labels but all the metabolites and reactions are present at all the levels, making the elements at the most general level very small and hard to analyze.
 
-Mimoza especially targets draft models during curation, allowing one to visualize them fully automatically and help to analyze them in a top-down manner, starting from the general structure and going down to the details. The generalized level differentiates it from other tools, since it shows both the overall network structure and fine-grain visualization in the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on pathway information, automatically infers the relative compartment placement (e.g. places organelles inside the cytoplasm) and exploits a model in SBML format with ChEBI annotations for metabolites (if no annotations are present, it tries to infer them automatically based on metabolites' names).
+NaviCell does not allow to visualize an SBML model automatically. Genome Projector only contains maps for bacterial genomes and does not permit user's model input.
+
+Neither Reactome allows users to visualize their own models, but it contains a pathway map for \emph{Saccharomyces cerevisiae}.\footnote{Reactome -- http://www.reactome.org/PathwayBrowser/\#SPECIES=68322\&DIAGRAM=5662370} It has two semantic zoom levels: a visualization of a list of pathways present in the model, and submaps corresponding to each of them. The representation of each pathways is very clear, and has several geometric zoom levels. However, it is not always space-efficient as it contains gaps due to reactions present in other organisms but absent in \emph{S. cerevisiae}. Another particularity is that while the positions of elements common to different organisms are conserved within a pathway, their positions might differ between different pathways of the same organism. In Mimoza, on the contrary, the positions of the reactions and metabolites are conserved between the compartments of the same organisms; but the layout of common processes (e.g. pathways) in different organisms' visualizations might differ in the current implementation.
+
+Table~\ref{tbl:zui} summarizes the comparison of Mimoza to other ZUI tools. Mimoza especially targets draft models during curation, allowing one to visualize them fully automatically and helps to analyze them in a top-down manner, starting from the general structure and going down to the details. The generalized level differentiates it from other tools, since it shows both the overall network structure and fine-grain visualization in the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on pathway information, automatically infers the relative compartment placement (e.g. places organelles inside the cytoplasm) and exploits a model in SBML format with ChEBI annotations for metabolites (if no annotations are present, it tries to infer them automatically based on metabolites' names).
 
 Using generalization to compare two metabolic networks makes most sense if they have equivalent generalized nodes that can be placed in corresponding positions in the two layouts. Mimoza currently handles this correspondence between zoom levels of the same network, but does not guarantee such correspondence when two networks are laid out independently.
 To meet this challenge, three strategies can be explored.
@@ -523,6 +527,8 @@ The third strategy, which we are in the process of testing, is to learn a common
 % We also plan to make the tool more interactive giving a user an opportunity to change layout and annotations, run FBA, etc. 
 
 Finally, the API of the Leaflet framework used for the interactive navigation can be used to integrate the maps with other web-based tools, such as annotation editors or simulation software.
+
+Mimoza is currently targeted to metabolic networks. While it can provide a geometric zooming visualization of a generic SBML model (e.g., a signaling network), the knowledge-based generalization, and therefore semantic zooming, depends on the ChEBI ontology and is intended for metabolic models. A domain-specific adaptation of the generalization method (e.g., use of a domain-specific ontology instead of ChEBI, that is targeted to metabolism) might allow Mimoza to assist in modeling of other kinds of biological networks. 
 
 % Allowing to combine several models as an input, and producing a common generalisation is another interesting direction.
 
@@ -537,13 +543,13 @@ Consequently the biological user may efficiently navigate the high-level structu
 model; whether the goal is to understand the model or to search for errors, Mimoza exposes
 the important features at out zoom levels and and hides the specific details in the inner
 ones.
-We provide an efficient, useful  tool that is easy to adopt and, though the use of
+We provide an efficient, useful tool that is easy to adopt and, through the use of
 standards such as SBML and the ChEBI ontology, is easy to integrate into existing
 expert-centered modeling pipelines.
 By carefully combining model generalization with adaptive layout and open-source
-cartographic software, the Mimoza we server requires just a browser with Javascript. 
+cartographic software, the Mimoza web server requires just a browser with Javascript. 
 Mimoza is open source and can also be installed locally, as described on the web page,
-and depends on libSBML, Tulip,and Python.
+and depends on libSBML, Tulip, and Python.
 % Mimoza is an amazing tool that everyone was waiting for and can finally use and become happy!
 
 \section*{Availability and requirements}
@@ -618,7 +624,7 @@ We would like to thank Dr. Antoine Lambert for helpful discussions about using t
 
 \begin{figure}[h!]
 \centering
-\includegraphics[scale=0.6]{workflow.png}
+\includegraphics[scale=1]{figure1.eps}
 \caption{\csentence{Metabolic modeling workflow.} 
 \label{fig:workflow}
 The processes highlighted in yellow represent the \emph{model creation cycle}: The draft model is created by model inference tools based on models for similar organism, pathway and reaction information extracted from model repositories and pathway and reaction databases; it is then iteratively improved during the process of curation and analysis. The resulting model can in its turn be added to model repositories.
@@ -626,35 +632,35 @@ The processes highlighted in red show \emph{model usages}: simulation and knowle
 The processes highlighted in green describe \emph{comparison and combination of several models}. As the model creation cycle, they also include the curation and analysis stage.
 The processes represented with the red arrows require human expert's intervention, and thus need good visualization tools, ways of splitting models into modules and different levels of abstraction.}
 \end{figure}
+      
+  \begin{figure}[h!]
+ \includegraphics[scale=1]{figure2.eps}
+  \caption{\csentence{Three zoom levels}
+  \label{fig:zoom_levels}  
+      The most general zoom level (bottom) shows the peroxisome and a generalized transport reaction. The intermediate zoom (middle) shows the generalized processes inside the peroxisome compartment. The most detailed view (top) reveals the metabolites and reactions of the initial model.}
+      \end{figure}
 
  
       \begin{figure}[h!]
 \centering
-\includegraphics[scale=0.4]{groups.png}
+\includegraphics[scale=1]{figure3.eps}
 \caption{\csentence{Representation of a generalized model in SBML level~3 version~1 format with groups extension.}
 \label{fig:groups}
 The output SBML file contains the initial model (including the lists of metabolites (called \emph{species} in SBML), reactions, etc.) plus the \emph{listOfGroups} section that represents non-trivial quotient metabolite and reaction sets. In the figure, a group representing a quotient metabolite set of \emph{hydroxy fatty acyl-CoAs} is shown; it includes \emph{(S)-3-hydroxydecanoyl-CoA} (s\_0045),  \emph{(S)-3-hydroxylauroyl-CoA} (s\_0051), etc. Each of those metabolites was previously declared in the \emph{listOfSpecies} section.}
 \end{figure}
 
 \begin{figure}[h!]
-\includegraphics[scale=0.5]{figure2.png}
+\includegraphics[scale=1]{figure4.eps}
   \caption{\csentence{GeoJSON representation of a reaction}
   \label{fig:geojson}
       An SBML reaction is stored as a GeoJSON Point feature, with its layout coordinates encoded in the geometry section. The identifiers, labels and annotations, as well as the information on the reactant and product metabolites are stored as properties. The ``type'' property value specifies that this GeoJSON feature is a reaction.}
       \end{figure}
       
 \begin{figure}[h!]
-\includegraphics[scale=0.54]{figure3.png}
+\includegraphics[scale=1]{figure5.eps}
   \caption{\csentence{A reaction pop-up}
   \label{fig:pop_up}
       (right part) An example of a pop-up that opens when a user clicks on a reaction: It contains the information on the reaction name, identifier, reactant and product metabolites and their stoichiometries, as well as gene associations. (left part) Gene names are hyperlinks redirecting to the NCBI Gene database~\cite{NCBI}.}
-      \end{figure}
-      
-  \begin{figure}[h!]
- \includegraphics[scale=0.41]{figure_main.png}
-  \caption{\csentence{Three zoom levels}
-  \label{fig:zoom_levels}  
-      The most general zoom level (bottom) shows the peroxisome and a generalized transport reaction. The intermediate zoom (middle) shows the generalized processes inside the peroxisome compartment. The most detailed view (top) reveals the metabolites and reactions of the initial model.}
       \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
