@@ -20,7 +20,8 @@ def get_qualifier_values(annotation, qualifier_type):
     for i in xrange(cv_terms.getSize()):
         term = cv_terms.get(i)
         if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifier_type == term.getBiologicalQualifierType():
-            yield term.getResourceURI(0).replace("%3A", ":")
+            for i in xrange(term.getNumResources()):
+                yield term.getResourceURI(i).replace("%3A", ":")
 
 
 def add_annotation(element, qualifier, annotation):
