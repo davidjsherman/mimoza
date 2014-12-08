@@ -92,7 +92,7 @@ function i(text) {
     return "<span class='explanation'>" + text + "</span>";
 }
 
-function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom) {
+function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom, minZoom) {
     "use strict";
     if (EDGE == feature.properties.type) {
         return;
@@ -131,7 +131,7 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
             name2selection[key] = L.featureGroup();
         }
         var selection_layer = name2selection[key];
-        selection_layer.addLayer(highlightCircle(feature, map, zoom));
+        selection_layer.addLayer(highlightCircle(feature, map, minZoom));
         map.on('popupopen', function(e) {
             if (e.popup === popup) {
                 map.addLayer(selection_layer);
@@ -186,11 +186,13 @@ function getLabel(feature) {
     return null;
 }
 
-function highlightCircle(feature, map, zoom) {
+function highlightCircle(feature, map, minZoom) {
     "use strict";
     var e = feature.geometry.coordinates,
         centre = map.unproject([e[0], e[1]], 1),
-        node = L.circleMarker(centre, {
+        w = feature.properties.w / Math.sqrt(2),
+        r = w * 40075000 * Math.cos(centre.lat * (Math.PI / 180)) / Math.pow(2, minZoom + 8);
+    var node = L.circle(centre, r, {
             name: feature.properties.name,
             title: feature.properties.name,
             alt: feature.properties.name,
@@ -202,10 +204,7 @@ function highlightCircle(feature, map, zoom) {
             weight: 2,
             fill: true,
             clickable: false
-        }),
-        scaleFactor = Math.pow(2, zoom),
-        r = feature.properties.w * scaleFactor;
-    node.setRadius(r / 2);
+        });
     return node;
 }
 

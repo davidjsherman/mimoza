@@ -128,7 +128,7 @@ function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, m
             return pnt2layer(map, feature, zoom, coords, minZoom);
         },
         onEachFeature: function (feature, layer) {
-            addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom);
+            addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom, minZoom);
         },
         filter: function (feature, layer) {
             return filterFunction(feature);
