@@ -150,7 +150,7 @@ function addPopups(map, name2popup, name2zoom, name2selection, feature, layer, m
         });
     }
     layer.bindPopup(popup);
-    [feature.properties.name, feature.properties.id, feature.properties.term].forEach(function (key) {
+    [feature.properties.name, feature.properties.id, feature.properties.t].forEach(function (key) {
         if (key) {
             name2popup[key] = popup;
             if (!name2zoom.hasOwnProperty(key)) {

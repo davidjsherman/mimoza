@@ -1,5 +1,6 @@
 ID = 'id'
 TERM = 'term'
+T = 't'
 NAME = 'name'
 
 ANCESTOR_ID = 'anc_id'

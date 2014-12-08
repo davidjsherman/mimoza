@@ -113,6 +113,7 @@ def n2feature(graph, n, c_id2info, r2rs_ps, transport, inner):
 		term = root[TERM][n]
 		if term:
 			term = term.upper()
+			props[T] = term
 			props[TERM] = "<a href=\'http://www.ebi.ac.uk/QuickGO/GTerm?id=%s\' target=\'_blank\'>%s</a>" % (term, term)
 
 		props.update({HEIGHT: h, COLOR: get_compartment_color()})
@@ -133,6 +134,7 @@ def n2feature(graph, n, c_id2info, r2rs_ps, transport, inner):
 		if term:
 			term = term.upper()
 			if term.find("UNKNOWN") == -1:
+				props[T] = term
 				props[
 					TERM] = "<a href=\'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=%s\' target=\'_blank\'>%s</a>" % (
 					term, term)
