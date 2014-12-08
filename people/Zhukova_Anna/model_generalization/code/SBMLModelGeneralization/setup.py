@@ -42,5 +42,5 @@ setup(name='SBMLModelGeneralization',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
       ],
-      requires=['python-libsbml-experimental', 'sympy', 'geojson']
+      requires=['libsbml', 'sympy', 'geojson']
 )
