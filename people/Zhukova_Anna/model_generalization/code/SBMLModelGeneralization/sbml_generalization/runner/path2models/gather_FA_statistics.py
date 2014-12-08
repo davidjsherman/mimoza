@@ -1,11 +1,12 @@
 from collections import defaultdict
 from genericpath import isfile, exists
 from os import listdir, makedirs
+import os
 from shutil import copyfile
 
-from libsbml import SBMLReader, os
+from libsbml import SBMLReader
 from sbml_generalization.utils.annotate_with_chebi import get_species_term
-from sbml_generalization.generalization.reaction_filters import getReactants, getProducts
+from sbml_generalization.generalization.reaction_filters import get_reactants, get_products
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.utils.obo_ontology import parse
 from main import ROOT_DIR
@@ -39,7 +40,7 @@ def count_fa_coa_oxidation(model, the_terms, chebi):
         for r_ids in the_s_ids:
             if r_ids:
                 s_id1, s_id2 = r_ids
-                rs, ps = getReactants(reaction), getProducts(reaction)
+                rs, ps = get_reactants(reaction), get_products(reaction)
                 if rs & s_id1 and ps & s_id2 or rs & s_id2 and ps & s_id1:
                 # if filterReactionByBetweenSpecies(reaction, s_id1, s_id2):
                     the_reactions[i].add(reaction.getId())
@@ -58,7 +59,7 @@ def test_acyl_coa_number(model, acyl_coa_terms, chebi):
 
     acyl_coa_reactions = 0
     for reaction in model.getListOfReactions():
-        if acyls_coa & (getReactants(reaction) | getProducts(reaction)):
+        if acyls_coa & (get_reactants(reaction) | get_products(reaction)):
             acyl_coa_reactions += 1
 
     return len(acyls_coa), acyl_coa_reactions
