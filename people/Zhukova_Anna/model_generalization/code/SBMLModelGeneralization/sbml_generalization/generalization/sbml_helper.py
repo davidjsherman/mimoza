@@ -119,14 +119,10 @@ def remove_unused_elements(output_model):
 			output_model.removeCompartment(compartment_id)
 
 
-# TODO: improve
 def normalize(t):
 	if isinstance(t, tuple):
 		t = ''.join(flatten(t))
-	return t.lower().replace("-", "_").replace(":", "_").replace("(", "_").replace(")", "_").replace("[", "_") \
-		.replace("]", "_").replace("'", "_").replace("/", "_").replace(",", "_").replace("\"", "_").replace(" ", "_") \
-		.replace(".", "_").replace("%3a", "_").replace("%3A", "_").replace("=", "_").replace("{", "_") \
-		.replace("}", "_").replace("+", "_").replace(">", "_")
+	return ''.join(e for e in t if e.isalnum()).lower()
 
 
 def flatten(t):
