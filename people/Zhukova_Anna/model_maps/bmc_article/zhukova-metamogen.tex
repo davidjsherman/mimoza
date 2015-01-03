@@ -271,13 +271,13 @@ Metabolic network reconstruction can address various objectives. Examples includ
 \paragraph{Inference}
 
 %% Reconstruction
-The metabolic network reconstruction process is becoming more advanced, and there now exist various tools for semi-automatic model inference, e.g. PathwayTools~\cite{Karp2002}, CoReCo~\cite{Pitkanen2014}, SuBliMinaL~\cite{Swainston2011} (see~\cite{Hamilton2014} for a review).
+The metabolic network reconstruction process is becoming more advanced, and there now exist various tools for semi-automatic model inference, e.g., PathwayTools~\cite{Karp2002}, the RAVEN toolbox~\cite{Agren2013}, KEGGtranslator~\cite{Wrzodek2013}, CoReCo~\cite{Pitkanen2014}, SuBliMinaL~\cite{Swainston2011} (see~\cite{Hamilton2014} for a review).
 
 %% Storage
-Starting from a model for a related organism or a collection of pathways, and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database~\cite{Li10}, BIGG~\cite{Schellenberger2010}, JWS online~\cite{Snoep2003}. KEGG~\cite{Kanehisa12} and Reactome~\cite{Milacic2012, Croft2013} provide an extensive collection of pathways. 
+Starting from a model for a related organism or a collection of pathways, and genomic data, they produce a draft model for the target organism. Existing metabolic models can be found in several resources, including Biomodels Database~\cite{Li10}, BiGG~\cite{Schellenberger2010}, JWS online~\cite{Snoep2003}. KEGG~\cite{Kanehisa12} and Reactome~\cite{Milacic2012, Croft2013} provide an extensive collection of pathways. 
 
 %% Representation
-Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN~\cite{LeNovere2009}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g. ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2014}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. Further in this manuscript we will consider metabolic models in SBML format.
+Models are stored and shared using established formats, such as SBML~\cite{Hucka2003}, SBGN-ML~\cite{VanIersel2012}, CellML~\cite{Lloyd2004}. A model represented in these formats can be further enriched with the knowledge from biological databases and ontologies, e.g., ChEBI~\cite{deMatos10}, Uniprot~\cite{TheUniProtConsortium2014}, by annotating elements of the models (such as metabolites, reactions) with appropriate identifiers. Further in this manuscript we will consider metabolic models in SBML format.
 
 Although automatic model inference tools and genomic comparison methods are becoming steadily more sophisticated, they may still leave gaps in the model or add erroneous reactions. The intrinsic and extrinsic correctness of the model should be checked during the phases of analysis and curation.
 
@@ -306,7 +306,7 @@ The curation by a human expert requires a means of splitting genome-scale models
 
 \paragraph{Simulation}
 The improved model, created during the iterations of curation and analysis, %can be used in several ways (see processes with the light red background in Figure~\ref{fig:workflow}). It 
-can be used for computer simulation to obtain numerical results. We do not exploit simulation in this manuscript.
+can be used for computer simulation to obtain numerical results (see~\cite{Copeland2012a} for a review of simulation and flux analysis tools). We do not exploit simulation in this manuscript.
 
 \paragraph{Exploration}
 The model can also be used for knowledge-oriented exploration to obtain new knowledge about the processes happening in the organisms' metabolism, and the relationships between them, e.g., the ``redundancy'' of the model: discovery of similar reactions, and alternative pathways. 
@@ -329,7 +329,7 @@ At least three of the aforementioned tasks (curation, exploration, comparison) r
 There exist various modeling tools for metabolic networks that also support visualization. Desktop tools include CellDesigner~\cite{Funahashi2008}, VANTED~\cite{Rohn2012}, and Cytoscape~\cite{Smoot2011}. They produce reasonably good visualizations of small networks (up to hundreds of reactions), but become cluttered at the genome-scale level, making the visualization unreadable. %For comparison, the winner of the best SBGN map competition~\cite{SBGN}, the ER Stress response~\cite{Groenendyk2010} map,  was created manually in CellDesigner.
 
 % Web-based
-Web-based tools allowing for metabolic network visualization are also emerging.  JWS online~\cite{Snoep2003}, for example, provides a mechanism for network visualization using a force-directed layout algorithm~\cite{Fruchterman1991, Tamassia:2007:HGD:1202383}. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
+Web-based tools allowing for metabolic network visualization are also available. JWS online~\cite{Snoep2003}, for example, provides a mechanism for network visualization using a force-directed layout algorithm~\cite{Fruchterman1991, Tamassia:2007:HGD:1202383}. It also encounters the aforementioned issues and thus is not capable of providing a readable representation for large networks.  
 
 MetDraw~\cite{Jensen2014} is an online tool for genome-scale metabolic model visualization, that makes use of decomposition of the model into compartments and pathways (if the pathway information is present in the model as a \emph{subsystem} annotation of reactions) and duplication of minor metabolites. Metabolite duplication reduces clutter, but the huge number of reactions in the compartments of some models and missing \emph{subsystem} annotations, makes the visualization consume too much space and do not allow a user to grasp the essential structure of the network.
 
@@ -338,15 +338,15 @@ Due to the huge numbers of reactions and of metabolites participating in multipl
 
 Semantic zooming was first introduced for biological data visualization in 1988 with Zomit~\cite{Pook1998}, a generic application programming interface for developing  servers for zoomable navigation and visualization, and illustrated with an example of ZoomMap, a prototype browser for HuGeMap human genome database~\cite{Barillot1998}. The work by Jianlu and Laidlaw~\cite{Jianu2013} evaluates geometric zooming with the Google Maps interface on five examples (a gene co-regulation visualization, a gene expression heatmap viewer, a genome browser, a protein interaction network, and  neural projections), and describes a positive feedback provided by both domain experts and less experienced users. Another example of a Google Maps-based ZUI is X:map~\cite{Yates2008}, a genome annotation database that supports zoomable data browsing. It does not use semantic zooming, but allows for showing/hiding layers with additional information (EST and GenScan predictions).
 
-There exist several web-based tools that include a zoomable representation of metabolic networks. Genome Projector~\cite{Arakawa2009} is a zoomable genome map with multiple views, including a pathway map. The pathway map is based on the Roche Biochemical Pathway wall chart available from the ExPASy proteomics server~\cite{Gasteiger2003}. The Roche Biochemical Pathway wall chart has a large size and shows the collection of biochemically known molecules, enzymes and reactions. Genome Projector provides a geometric zooming on the map and overlay layers to highlight reactions present in the organism of interest. The list of organisms is fixed to 320 bacterial genomes. The full Roche Biochemical Pathway map with the fixed layout is always shown, but only the reactions of interest (corresponding to the chosen organism) are highlighted.
+There exist several web-based tools that include a zoomable representation of metabolic networks. Genome Projector~\cite{Arakawa2009} is a zoomable genome map with multiple views, including a pathway map. The pathway map is based on the Roche Biochemical Pathway wall chart available from the ExPASy proteomics server~\cite{Gasteiger2003}. The Roche Biochemical Pathway wall chart has a large size and shows the collection of biochemically known molecules, enzymes and reactions. Genome Projector provides a geometric zooming on the map and overlay layers to highlight reactions present in the organism of interest. The list of organisms is fixed to 320 bacterial genomes. The full Roche Biochemical Pathway map with the imposed layout is always shown, but only the reactions of interest (corresponding to the chosen organism) are highlighted.
 
 NaviCell~\cite{Kuperstein2013} is a web environment that permits exploiting large maps of molecular interactions, including metabolic maps. It allows users to create their own maps, but does not provide a solution to the problem of huge network layout. The map creation is not fully automatic: The user must create a map in CellDesigner, export it as an image and partly manually edit it in a graphical designer to produce intermediate views (possibly with different level of details for semantic zooming). In addition, NaviCell permits a user to split the map into submaps called modules.
 
 Another web-based tool, the Cellular Overview~\cite{Latendresse2011} creates interactive diagrams for metabolic maps of organisms in the BioCyc database~\cite{Caspi2012}. It is pathway-oriented, and supports only geometric zooming. Another drawback is that it does not show the compartmentalization.
 
-The Reactome pathway database~\cite{Milacic2012, Croft2013} browser provides a zommable visualization of manually curated pathways for 19 organisms. It has two semantic zoom levels: a general representation of organism's pathways (nodes represent pathways, the edges connect the related ones); and submaps showing the details of each of the pathways, including compartmentalization. Several levels of geometric zoom are available on both semantic zoom levels. Reactome is pathway-oriented. Inside each pathway the layout is fixed: reactions, metabolites, and compartments common to two organisms have the same layout in corresponding representations. On the other hand, the positions and sizes of compartments might differ between pathways of the same organism.
+The Reactome pathway database~\cite{Milacic2012, Croft2013} browser provides a zommable visualization of manually curated pathways for 19 organisms. It has two semantic zoom levels: a general representation of organism's pathways (nodes represent pathways, the edges connect the related ones); and submaps showing the details of each of the pathways, including compartmentalization. Several levels of geometric zoom are available on both semantic zoom levels. Reactome is pathway-oriented. Inside each pathway the layout is imposed: reactions, metabolites, and compartments common to two organisms have the same layout in corresponding representations. On the other hand, the positions and sizes of compartments might differ between pathways of the same organism.
 
-None of the ZUI tools for metabolic map representation described above, except for NaviCell, allow users to input their own models. Moreover, as these examples show, not only geometric zoom but also model decomposition and semantic zoom are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g. the mitochondrial compartment of the yeast consensus model~\cite{Herrgard2008} containing 230 reactions), a further decomposition is required. We address these issues below by combining model generalization with a ZUI.
+None of the ZUI tools for metabolic map representation described above, except for NaviCell, allow users to input their own models. Moreover, as these examples show, not only geometric zoom but also model decomposition and semantic zoom are important for multi-level visualization of huge models. At the general level, the network needs to be decomposed into several meaningful modules (such as compartments, pathways). If after such a decomposition the model remains complicated (e.g., the mitochondrial compartment of the yeast consensus model~\cite{Herrgard2008} containing 230 reactions), a further decomposition is required. We address these issues below by combining model generalization with a ZUI.
 
 
 \section*{Implementation}
@@ -395,10 +395,9 @@ The metabolic model generalization method~\cite{Zhukova2014}, which we recall he
 A generalization is made specifically for a given model and is maximal with respect to the
 relations in the model; it respects semantic constraints such as reaction stoichiometry,
 connectivity, and transport between compartments; and it is performed through a heuristic
-method that is efficient in practice for genome-scale models. The reader is referred to
-the \cite{Zhukova2014} for these technical details, which are beyond the scope of this article.
+method that is efficient in practice for genome-scale models. The reader is referred to \cite{Zhukova2014} for these technical details, which are beyond the scope of this article.
 
-To make metabolite grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical entities is used. Each metabolite can be generalized up to one of its ancestors in the ontology. We use the \textit{ChEBI} ontology, as it is the de facto standard for metabolite annotation in metabolic networks. If a ChEBI annotation for a metabolite is not present in the model, the method attempts to automatically deduce it by comparing metabolite's name to ChEBI terms' names and synonyms. 
+To make metabolite grouping semantically meaningful, an ontology describing hierarchical relationships between biochemical entities is used. Each metabolite can be generalized up to one of its ancestors in the ontology. We use the \textit{ChEBI} ontology, as it is the \textit{de facto} standard for metabolite annotation in metabolic networks. If a ChEBI annotation for a metabolite is not present in the model, the method attempts to automatically deduce it by comparing metabolite's name to ChEBI terms' names and synonyms. 
 
 Reactions that share the same generalized reactants and the same generalized products, are considered equivalent and are factored together into a generalized reaction. 
 
@@ -419,10 +418,14 @@ For instance, \textit{(S)-3-hydroxydecanoyl-CoA}, \textit{(S)-3-hydroxylauroyl-C
 
 The method is available as a python library~\cite{Metamogen} that operates on models in \textit{SBML}~\cite{Hucka08} format. It takes an SBML file of level~2 or~3 (any version) and produces an SBML level~3 version~1 file with groups extension~\cite{Hucka2012} that contains the initial model plus groups for all non-trivial similar metabolite and reaction sets (see Figure~\ref{fig:groups}).
 
-The compression that can be achieved with the model generalization method depends on the model structure and on how well the model is annotated with the ChEBI ontology (as the metabolites lacking ChEBI annotations are not generalized). Table~\ref{tbl:gen} shows the results of the application of the model generalization method to 269 metabolic models from Path2Model project~\cite{Buchel2013}. All those models are genome-scale, the average number of reactions per model is 2\,879. The average compression ratio ($\frac{number\,of\,reactions\,in\,the\,initial\,model}{number\,of\,reactions\,in\,the\,generalized\,model}$) is 1.14.
+The compression that can be achieved with the model generalization method depends on the model structure and on how well the model is annotated with the ChEBI ontology (as the metabolites lacking ChEBI annotations are not generalized). Table~\ref{tbl:gen} shows the results of the application of the model generalization method to 269 metabolic models from Path2Model project~\cite{Buchel2013}. All those models are genome-scale, the average number of reactions per model is 2\,879. The average compression ratio $r$ is 1.14:
+
+\begin{equation}\label{ratio}
+r = \frac{\textnormal{number of reactions in the initial model}}{\textnormal{number of reactions in the generalized model}}
+\end{equation}
 
 % Ubiquitous metabolites are duplicated (to improve readability)
-%We do not generalize ubiquitous (frequently occurring) metabolites, e.g. \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping metabolites increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these metabolites are usually duplicated~\cite{Rohn2012} to improve readability.
+%We do not generalize ubiquitous (frequently occurring) metabolites, e.g., \textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}. Grouping metabolites increases the number of reactions they participate in, while these are already shared by many reactions and networks to such an extent that during visualization these metabolites are usually duplicated~\cite{Rohn2012} to improve readability.
 
 \subsection*{Layers Layout}
 To visualize a metabolic network we first represent it as a bipartite graph~\cite{Diestel2012} with two disjoint sets of nodes (metabolites and reactions), and edges that connect the reactions to their substrate and product metabolites. To achieve such a representation, we implemented a converter from SBML to TLP format, that is used by the Tulip graph visualization tool~\cite{Auber04}. TLP format stores nodes and edges of the graph, and associates each node and edge to a list of named attributes: standard ones, such as shape, size, color; and user-defined ones, such as, in our case, element type (compartment, reaction or metabolite), ChEBI identifier, group number, gene association, etc. The SBML-to-TLP converter is implemented in python, using libSBML library~\cite{Bornstein2008}, and is available as a part of Mimoza software. 
@@ -472,9 +475,9 @@ If the SBML model submitted by the user contains the layout information, our sof
 
 The zoomable interactive representation is achieved using Leaflet~\cite{Agafonkin}, a JavaScript library for interactive maps. 
 
-We export elements of the network graph (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g. ChEBI annotations for metabolites). Figure~\ref{fig:geojson} shows an example of a reaction represented in GeoJSON format. The TLP-to-GeoJSON converter is implemented in python and is available as a part of Mimoza software. 
+We export elements of the network graph (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g., ChEBI annotations for metabolites). Figure~\ref{fig:geojson} shows an example of a reaction represented in GeoJSON format. The TLP-to-GeoJSON converter is implemented in python and is available as a part of Mimoza software. 
 
-The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. We follow SBGN Process Description language convention~\cite{LeNovere2009} to choose the glyphs for model elements' representation: Metabolites are drawn as circles linked by edges to the reactions where they participate; reactions are represented as squares; compartments are drawn as rectangles.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g. gene associations and formulas for reactions. Two overlays allow user to show or hide minor metabolites (e.g., water, oxygen, hydrogen, etc.), and  transport reactions.
+The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. We follow SBGN Process Description language convention~\cite{LeNovere2009} to choose the glyphs for model elements' representation: Metabolites are drawn as circles linked by edges to the reactions where they participate; reactions are represented as squares; compartments are drawn as rectangles.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g., gene associations and formulas for reactions. Two overlays allow user to show or hide minor metabolites (e.g., water, oxygen, hydrogen, etc.), and  transport reactions.
  
 
 \subsection*{Embedding}
@@ -514,9 +517,9 @@ Cellular Overview does not allow one to visualize a model provided by a user, bu
 
 NaviCell does not allow to visualize an SBML model automatically. Genome Projector only contains maps for bacterial genomes and does not permit user's model input.
 
-Neither Reactome allows users to visualize their own models, but it contains a pathway map for \emph{Saccharomyces cerevisiae}.\footnote{Reactome -- http://www.reactome.org/PathwayBrowser/\#SPECIES=68322\&DIAGRAM=5662370} It has two semantic zoom levels: a visualization of a list of pathways present in the model, and submaps corresponding to each of them. The representation of each pathways is very clear, and has several geometric zoom levels. However, it is not always space-efficient as it contains gaps due to reactions present in other organisms but absent in \emph{S. cerevisiae}. Another particularity is that while the positions of elements common to different organisms are conserved within a pathway, their positions might differ between different pathways of the same organism. In Mimoza, on the contrary, the positions of the reactions and metabolites are conserved between the compartments of the same organisms; but the layout of common processes (e.g. pathways) in different organisms' visualizations might differ in the current implementation.
+Neither Reactome allows users to visualize their own models, but it contains a pathway map for \emph{Saccharomyces cerevisiae}.\footnote{Reactome -- http://www.reactome.org/PathwayBrowser/\#SPECIES=68322\&DIAGRAM=5662370} It has two semantic zoom levels: a visualization of a list of pathways present in the model, and submaps corresponding to each of them. The representation of each pathways is very clear, and has several geometric zoom levels. However, it is not always space-efficient as it contains gaps due to reactions present in other organisms but absent in \emph{S. cerevisiae}. Another particularity is that while the positions of elements common to different organisms are conserved within a pathway, their positions might differ between different pathways of the same organism. In Mimoza, on the contrary, the positions of the reactions and metabolites are conserved between the compartments of the same organisms; but the layout of common processes (e.g., pathways) in different organisms' visualizations might differ in the current implementation.
 
-Table~\ref{tbl:zui} summarizes the comparison of Mimoza to other ZUI tools. Mimoza especially targets draft models during curation, allowing one to visualize them fully automatically and helps to analyze them in a top-down manner, starting from the general structure and going down to the details. The generalized level differentiates it from other tools, since it shows both the overall network structure and fine-grain visualization in the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on pathway information, automatically infers the relative compartment placement (e.g. places organelles inside the cytoplasm) and exploits a model in SBML format with ChEBI annotations for metabolites (if no annotations are present, it tries to infer them automatically based on metabolites' names).
+Table~\ref{tbl:zui} summarizes the comparison of Mimoza to other ZUI tools. Mimoza especially targets draft models during curation, allowing one to visualize them fully automatically and helps to analyze them in a top-down manner, starting from the general structure and going down to the details. The generalized level differentiates it from other tools, since it shows both the overall network structure and fine-grain visualization in the most detailed level, automatically placing semantically similar metabolites next to each other. Mimoza does not depend on pathway information, automatically infers the relative compartment placement (e.g., places organelles inside the cytoplasm) and exploits a model in SBML format with ChEBI annotations for metabolites (if no annotations are present, it tries to infer them automatically based on metabolites' names).
 
 Using generalization to compare two metabolic networks makes most sense if they have equivalent generalized nodes that can be placed in corresponding positions in the two layouts. Mimoza currently handles this correspondence between zoom levels of the same network, but does not guarantee such correspondence when two networks are laid out independently.
 To meet this challenge, three strategies can be explored.
@@ -676,10 +679,10 @@ The output SBML file contains the initial model (including the lists of metaboli
 \begin{center}
 \begin{table}[h!]
 \caption{Comparison of ZUIs for metabolic models.}\label{tbl:zui}
-\begin{tabular}{c|c|c|c|c|c}
+\begin{tabular}{l|c|c|c|c|c}
         \hline
          & & Semantic & User's & Automatic &  \\ 
-        Tool name  & Fixed layout & zoom  & model & layout & Modules \\
+        Tool name  & Imposed layout & zoom  & model & layout & Modules \\
         \hline
         Genome Projector & yes & no & no & - & no\\
         NaviCell & no & if created & yes & no & yes\\
@@ -776,11 +779,11 @@ BMID000000140261 & 1293 & 1187 & 1.09 \\
 BMID000000140262 & 3064 & 2696 & 1.14 \\
 BMID000000140263 & 3705 & 3260 & 1.14 \\
 BMID000000140264 & 2435 & 2051 & 1.19 \\
-BMID000000140265 & 2281 & 2066 & 1.1 \\
+BMID000000140265 & 2281 & 2066 & 1.10\\
 BMID000000140266 & 2623 & 2398 & 1.09 \\
 BMID000000140267 & 1811 & 1598 & 1.13 \\
 BMID000000140268 & 4321 & 3707 & 1.17 \\
-BMID000000140269 & 3571 & 2983 & 1.2 \\
+BMID000000140269 & 3571 & 2983 & 1.20\\
 BMID000000140270 & 2199 & 1858 & 1.18 \\
 BMID000000140271 & 3941 & 3447 & 1.14 \\
 BMID000000140272 & 2354 & 2071 & 1.14 \\
@@ -818,7 +821,7 @@ BMID000000140303 & 3145 & 2748 & 1.14 \\
 BMID000000140304 & 3740 & 3289 & 1.14 \\
 BMID000000140305 & 1640 & 1502 & 1.09 \\
 BMID000000140306 & 2058 & 1839 & 1.12 \\
-BMID000000140307 & 2732 & 2475 & 1.1 \\
+BMID000000140307 & 2732 & 2475 & 1.10\\
 BMID000000140308 & 1648 & 1459 & 1.13 \\
 BMID000000140309 & 1168 & 1082 & 1.08 \\
 BMID000000140310 & 3888 & 3429 & 1.13 \\
@@ -827,22 +830,22 @@ BMID000000140312 & 2826 & 2469 & 1.14 \\
 BMID000000140313 & 5056 & 4428 & 1.14 \\
 BMID000000140314 & 1425 & 1319 & 1.08 \\
 BMID000000140315 & 1116 & 1036 & 1.08 \\
-BMID000000140316 & 2138 & 1950 & 1.1 \\
+BMID000000140316 & 2138 & 1950 & 1.10\\
 BMID000000140317 & 3535 & 2972 & 1.19 \\
 BMID000000140318 & 1519 & 1363 & 1.11 \\
-BMID000000140319 & 2117 & 1927 & 1.1 \\
+BMID000000140319 & 2117 & 1927 & 1.10\\
 BMID000000140320 & 2531 & 2269 & 1.12 \\
 BMID000000140321 & 3513 & 3071 & 1.14 \\
 BMID000000140322 & 4339 & 3716 & 1.17 \\
-BMID000000140323 & 597 & 541 & 1.1 \\
+BMID000000140323 & 597 & 541 & 1.10\\
 BMID000000140324 & 1245 & 1156 & 1.08 \\
 BMID000000140325 & 2513 & 2334 & 1.08 \\
 BMID000000140326 & 2607 & 2399 & 1.09 \\
 BMID000000140327 & 2244 & 1930 & 1.16 \\
 BMID000000140328 & 974 & 872 & 1.12 \\
 BMID000000140329 & 3231 & 2880 & 1.12 \\
-BMID000000140330 & 2011 & 1828 & 1.1 \\
-BMID000000140331 & 1693 & 1542 & 1.1 \\
+BMID000000140330 & 2011 & 1828 & 1.10\\
+BMID000000140331 & 1693 & 1542 & 1.10\\
 BMID000000140332 & 4269 & 3669 & 1.16 \\
 BMID000000140333 & 1633 & 1509 & 1.08 \\
 BMID000000140334 & 3546 & 3107 & 1.14 \\
@@ -860,10 +863,10 @@ BMID000000140345 & 3189 & 2682 & 1.19 \\
 BMID000000140346 & 1921 & 1778 & 1.08 \\
 BMID000000140347 & 2999 & 2675 & 1.12 \\
 BMID000000140348 & 1930 & 1818 & 1.06 \\
-BMID000000140349 & 2895 & 2627 & 1.1 \\
+BMID000000140349 & 2895 & 2627 & 1.10\\
 BMID000000140350 & 1799 & 1545 & 1.16 \\
 BMID000000140351 & 3620 & 3170 & 1.14 \\
-BMID000000140352 & 2586 & 2351 & 1.1 \\
+BMID000000140352 & 2586 & 2351 & 1.10\\
 BMID000000140353 & 2927 & 2631 & 1.11 \\
 BMID000000140354 & 4744 & 4174 & 1.14 \\
 BMID000000140355 & 4673 & 4017 & 1.16 \\
@@ -915,13 +918,13 @@ BMID000000140400 & 2765 & 2445 & 1.13 \\
 BMID000000140401 & 3418 & 3017 & 1.13 \\
 BMID000000140402 & 2979 & 2680 & 1.11 \\
 BMID000000140403 & 3301 & 2907 & 1.14 \\
-BMID000000140404 & 3586 & 3000 & 1.2 \\
+BMID000000140404 & 3586 & 3000 & 1.20\\
 BMID000000140405 & 1935 & 1820 & 1.06 \\
 BMID000000140406 & 2768 & 2448 & 1.13 \\
 BMID000000140407 & 2771 & 2484 & 1.12 \\
 BMID000000140408 & 4011 & 3375 & 1.19 \\
 BMID000000140409 & 3853 & 3397 & 1.13 \\
-BMID000000140410 & 2787 & 2531 & 1.1 \\
+BMID000000140410 & 2787 & 2531 & 1.10\\
 BMID000000140411 & 3029 & 2651 & 1.14 \\
 BMID000000140412 & 4639 & 3967 & 1.17 \\
 BMID000000140413 & 1939 & 1668 & 1.16 \\
@@ -929,10 +932,10 @@ BMID000000140414 & 2805 & 2528 & 1.11 \\
 BMID000000140415 & 1289 & 1181 & 1.09 \\
 BMID000000140416 & 1608 & 1422 & 1.13 \\
 BMID000000140417 & 3099 & 2768 & 1.12 \\
-BMID000000140418 & 2859 & 2603 & 1.1 \\
+BMID000000140418 & 2859 & 2603 & 1.10\\
 BMID000000140419 & 2059 & 1787 & 1.15 \\
 BMID000000140420 & 3833 & 3330 & 1.15 \\
-BMID000000140421 & 3042 & 2756 & 1.1 \\
+BMID000000140421 & 3042 & 2756 & 1.10\\
 BMID000000140422 & 2131 & 1843 & 1.16 \\
 BMID000000140423 & 4512 & 3900 & 1.16 \\
 BMID000000140424 & 1711 & 1545 & 1.11 \\
@@ -953,7 +956,7 @@ BMID000000140438 & 3824 & 3391 & 1.13 \\
 BMID000000140439 & 2996 & 2686 & 1.12 \\
 BMID000000140440 & 2371 & 2172 & 1.09 \\
 BMID000000140441 & 1848 & 1743 & 1.06 \\
-BMID000000140442 & 2732 & 2484 & 1.1 \\
+BMID000000140442 & 2732 & 2484 & 1.10\\
 BMID000000140443 & 2627 & 2373 & 1.11 \\
 BMID000000140444 & 3027 & 2639 & 1.15 \\
 BMID000000140445 & 4260 & 3706 & 1.15 \\
@@ -977,7 +980,7 @@ BMID000000140462 & 389 & 347 & 1.12 \\
 BMID000000140463 & 4895 & 4216 & 1.16 \\
 BMID000000140464 & 1078 & 1030 & 1.05 \\
 BMID000000140465 & 3114 & 2791 & 1.12 \\
-BMID000000140466 & 3546 & 2963 & 1.2 \\
+BMID000000140466 & 3546 & 2963 & 1.20\\
 BMID000000140467 & 4355 & 3745 & 1.16 \\
 BMID000000140468 & 4418 & 3823 & 1.16 \\
 BMID000000140469 & 3563 & 3189 & 1.12 \\

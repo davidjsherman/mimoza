@@ -784,7 +784,84 @@ year = {2011}
  publisher = {ACM},
  address = {New York, NY, USA},
  keywords = {ZUI, avatars, computer supported collaborativ work, gamification, presentation},
-} 
+}
+
+@article{Copeland2012a,
+abstract = {A great variety of software applications are now employed in the metabolic engineering field. These applications have been created to support a wide range of experimental and analysis techniques. Computational tools are utilized throughout the metabolic engineering workflow to extract and interpret relevant information from large data sets, to present complex models in a more manageable form, and to propose efficient network design strategies. In this review, we present a number of tools that can assist in modifying and understanding cellular metabolic networks. The review covers seven areas of relevance to metabolic engineers. These include metabolic reconstruction efforts, network visualization, nucleic acid and protein engineering, metabolic flux analysis, pathway prospecting, post-structural network analysis and culture optimization. The list of available tools is extensive and we can only highlight a small, representative portion of the tools from each area.},
+author = {Copeland, Wilbert B and Bartley, Bryan A and Chandran, Deepak and Galdzicki, Michal and Kim, Kyung H and Sleight, Sean C and Maranas, Costas D and Sauro, Herbert M},
+issn = {1096-7184},
+journal = {Metabolic engineering},
+keywords = {Computer Simulation,Metabolic Engineering,Metabolic Engineering: methods,Protein Engineering,Protein Engineering: methods},
+month = may,
+number = {3},
+pages = {270--80},
+pmid = {22629572},
+title = {{Computational tools for metabolic engineering.}},
+url = {http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=3361690\&tool=pmcentrez\&rendertype=abstract},
+volume = {14},
+year = {2012}
+}
+
+@article{VanIersel2012,
+abstract = {MOTIVATION: LibSBGN is a software library for reading, writing and manipulating Systems Biology Graphical Notation (SBGN) maps stored using the recently developed SBGN-ML file format. The library (available in C++ and Java) makes it easy for developers to add SBGN support to their tools, whereas the file format facilitates the exchange of maps between compatible software applications. The library also supports validation of maps, which simplifies the task of ensuring compliance with the detailed SBGN specifications. With this effort we hope to increase the adoption of SBGN in bioinformatics tools, ultimately enabling more researchers to visualize biological knowledge in a precise and unambiguous manner.
+
+AVAILABILITY AND IMPLEMENTATION: Milestone 2 was released in December 2011. Source code, example files and binaries are freely available under the terms of either the LGPL v2.1+ or Apache v2.0 open source licenses from http://libsbgn.sourceforge.net.
+
+CONTACT: sbgn-libsbgn@lists.sourceforge.net.},
+author = {van Iersel, Martijn P and Vill\'{e}ger, Alice C and Czauderna, Tobias and Boyd, Sarah E and Bergmann, Frank T and Luna, Augustin and Demir, Emek and Sorokin, Anatoly and Dogrusoz, Ugur and Matsuoka, Yukiko and Funahashi, Akira and Aladjem, Mirit I and Mi, Huaiyu and Moodie, Stuart L and Kitano, Hiroaki and {Le Nov\`{e}re}, Nicolas and Schreiber, Falk},
+doi = {10.1093/bioinformatics/bts270},
+issn = {1367-4811},
+journal = {Bioinformatics (Oxford, England)},
+keywords = {Computational Biology,Computational Biology: methods,Programming Languages,Software,Systems Biology},
+month = aug,
+number = {15},
+pages = {2016--21},
+pmid = {22581176},
+title = {{Software support for SBGN maps: SBGN-ML and LibSBGN.}},
+url = {http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=3400951\&tool=pmcentrez\&rendertype=abstract},
+volume = {28},
+year = {2012}
+}
+ 
+@article{Agren2013,
+abstract = {We present the RAVEN (Reconstruction, Analysis and Visualization of Metabolic Networks) Toolbox: a software suite that allows for semi-automated reconstruction of genome-scale models. It makes use of published models and/or the KEGG database, coupled with extensive gap-filling and quality control features. The software suite also contains methods for visualizing simulation results and omics data, as well as a range of methods for performing simulations and analyzing the results. The software is a useful tool for system-wide data analysis in a metabolic context and for streamlined reconstruction of metabolic networks based on protein homology. The RAVEN Toolbox workflow was applied in order to reconstruct a genome-scale metabolic model for the important microbial cell factory Penicillium chrysogenum Wisconsin54-1255. The model was validated in a bibliomic study of in total 440 references, and it comprises 1471 unique biochemical reactions and 1006 ORFs. It was then used to study the roles of ATP and NADPH in the biosynthesis of penicillin, and to identify potential metabolic engineering targets for maximization of penicillin production.},
+author = {Agren, Rasmus and Liu, Liming and Shoaie, Saeed and Vongsangnak, Wanwipa and Nookaew, Intawat and Nielsen, Jens},
+doi = {10.1371/journal.pcbi.1002980},
+editor = {Maranas, Costas D.},
+file = {:home/anna/.local/share/data/Mendeley Ltd./Mendeley Desktop/Downloaded/Agren et al. - 2013 - The RAVEN toolbox and its use for generating a genome-scale metabolic model for Penicillium chrysogenum.pdf:pdf},
+issn = {1553-7358},
+journal = {PLoS computational biology},
+keywords = {Adenosine Triphosphate,Adenosine Triphosphate: metabolism,Bioengineering,Computational Biology,Computational Biology: methods,Databases, Genetic,Genome, Bacterial,Metabolic Networks and Pathways,Models, Biological,NADP,NADP: metabolism,Penicillins,Penicillins: metabolism,Penicillium chrysogenum,Penicillium chrysogenum: genetics,Penicillium chrysogenum: metabolism,Software},
+month = jan,
+number = {3},
+pages = {e1002980},
+pmid = {23555215},
+publisher = {Public Library of Science},
+title = {{The RAVEN toolbox and its use for generating a genome-scale metabolic model for Penicillium chrysogenum.}},
+url = {http://dx.plos.org/10.1371/journal.pcbi.1002980},
+volume = {9},
+year = {2013}
+}
+@article{Wrzodek2013,
+abstract = {BACKGROUND: The KEGG PATHWAY database provides a plethora of pathways for a diversity of organisms. All pathway components are directly linked to other KEGG databases, such as KEGG COMPOUND or KEGG REACTION. Therefore, the pathways can be extended with an enormous amount of information and provide a foundation for initial structural modeling approaches. As a drawback, KGML-formatted KEGG pathways are primarily designed for visualization purposes and often omit important details for the sake of a clear arrangement of its entries. Thus, a direct conversion into systems biology models would produce incomplete and erroneous models.
+
+RESULTS: Here, we present a precise method for processing and converting KEGG pathways into initial metabolic and signaling models encoded in the standardized community pathway formats SBML (Levels 2 and 3) and BioPAX (Levels 2 and 3). This method involves correcting invalid or incomplete KGML content, creating complete and valid stoichiometric reactions, translating relations to signaling models and augmenting the pathway content with various information, such as cross-references to Entrez Gene, OMIM, UniProt ChEBI, and many more.Finally, we compare several existing conversion tools for KEGG pathways and show that the conversion from KEGG to BioPAX does not involve a loss of information, whilst lossless translations to SBML can only be performed using SBML Level 3, including its recently proposed qualitative models and groups extension packages.
+
+CONCLUSIONS: Building correct BioPAX and SBML signaling models from the KEGG database is a unique characteristic of the proposed method. Further, there is no other approach that is able to appropriately construct metabolic models from KEGG pathways, including correct reactions with stoichiometry. The resulting initial models, which contain valid and comprehensive SBML or BioPAX code and a multitude of cross-references, lay the foundation to facilitate further modeling steps.},
+author = {Wrzodek, Clemens and B\"{u}chel, Finja and Ruff, Manuel and Dr\"{a}ger, Andreas and Zell, Andreas},
+doi = {10.1186/1752-0509-7-15},
+file = {::},
+issn = {1752-0509},
+journal = {BMC systems biology},
+keywords = {Algorithms,Databases, Genetic,Models, Biological,Programming Languages,Signal Transduction,Signal Transduction: genetics,Software,Systems Biology,Systems Biology: methods},
+month = jan,
+pages = {15},
+pmid = {23433509},
+title = {{Precise generation of systems biology models from KEGG pathways.}},
+url = {http://www.pubmedcentral.nih.gov/articlerender.fcgi?artid=3623889\&tool=pmcentrez\&rendertype=abstract},
+volume = {7},
+year = {2013}
+}
 
 @article{Bergmann2014,
 archivePrefix = {arXiv},
