@@ -434,13 +434,13 @@ While layout of large graphs is widely studied~\cite{Unwin2006}, the corresponde
 
 \subsubsection*{Generalized model layout}
 % General idea
-In order to lay out the sub-networks corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by Tulip. We divide the compartment graph into connected components (subgraphs in which any two nodes are connected to each other by undirected paths, and which are not connected to any additional nodes in the supergraph), using a method provides by Tulip. We then apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm (provided by Tulip), which places the components close to each other while removing the overlaps between them.
+In order to lay out the sub-networks corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by Tulip. We divide the compartment graph into connected components (subgraphs in which any two nodes are connected to each other by undirected paths, and which are not connected to any additional nodes in the supergraph), using a method provided by Tulip. We then apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm (provided by Tulip), which places the components close to each other while removing the overlaps between them.
 
 % Laying out a connected component
-Depending on the nature of the connected component subgraph, we choose one of the following layout algorithms, provided by Tulip:
+Depending on the number of cycles (detected using the depth-first search algorithm~\cite{Cormen2001}) in the connected component subgraph, we choose one of the following layout algorithms, provided by Tulip:
 \begin{itemize}
 \item \emph{Hierarchical Layout} for the components that contain no cycles (\emph{Sugiyama (OGDF)}~\cite{Sugiyama1981} algorithm, that has the complexity of $O(|V||E|)$ in time and of $O(|V| + |E|)$ in space);
-\item \emph{Circular Layout} for the components with less than 100 nodes and less than 3 cycles (\emph{Circular (OGDF)}~\cite{Tamassia:2007:HGD:1202383}, with $O(|E|^2)$ time and space complexity);
+\item \emph{Circular Layout} for the components with less than 3 cycles and less than 100 nodes (\emph{Circular (OGDF)}~\cite{Tamassia:2007:HGD:1202383}, with $O(|E|^2)$ time and space complexity);
 \item \emph{Force-Directed Layout} for all the other components (\emph{$FM^3$ (OGDF)}~\cite{Hachul2005}, that has the asymptotic worst-case running time of $O(|V|log|V|+|E|)$ with linear memory requirements).
 \end{itemize}
 
@@ -477,7 +477,7 @@ The zoomable interactive representation is achieved using Leaflet~\cite{Agafonki
 
 We export elements of the network graph (compartments, metabolites and reactions) as map features in GeoJSON format~\cite{Butler} in order to store their coordinates and metadata (e.g., ChEBI annotations for metabolites). Figure~\ref{fig:geojson} shows an example of a reaction represented in GeoJSON format. The TLP-to-GeoJSON converter is implemented in python and is available as a part of Mimoza software. 
 
-The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. We follow SBGN Process Description language convention~\cite{LeNovere2009} to choose the glyphs for model elements' representation: Metabolites are drawn as circles linked by edges to the reactions where they participate; reactions are represented as squares; compartments are drawn as rectangles.  When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g., gene associations and formulas for reactions. Two overlays allow user to show or hide minor metabolites (e.g., water, oxygen, hydrogen, etc.), and  transport reactions.
+The GeoJSON objects are then added as layers to the map and rendered by Leaflet into clickable elements at corresponding zoom levels. We follow SBGN Process Description language convention~\cite{LeNovere2009} to choose the glyphs for model elements' representation: Metabolites are drawn as circles linked by edges to the reactions where they participate; reactions are represented as squares; compartments are drawn as rectangles. On the semantic zoom levels that show compartments, the corresponding transport reactions are connected to compartments. On the more detailed zoom levels, where the metabolites inside those compartments are shown, these reactions are connected to the corresponding metabolites. When a user clicks on a map element a pop-up appears (see Figure~\ref{fig:pop_up}) showing its name, identifier and additional information, e.g., gene associations and formulas for reactions. Two overlays allow user to show or hide minor metabolites (e.g., water, oxygen, hydrogen, etc.), and  transport reactions.
  
 
 \subsection*{Embedding}
