@@ -388,7 +388,7 @@ We address the problem of large-scale metabolic model visualization by combining
   other, thus simplifying the analysis of their presence.
 \end{enumerate}
   
- Figure~\ref{fig:zoom_levels} shows such a 3-level representation on the example of the model of $\beta$-oxidation of fatty acids~\cite{Metzler01} in the peroxisome compartment of a yeast \textit{Y.~lipolytica}. The first level (bottom) shows the peroxisome compartment, and the transport reactions; the second level (middle) shows the generalized structure of the peroxisome, the main processes happening in it; the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
+ Figure~\ref{fig:zoom_levels} shows such a 3-level representation on the example of the model of $\beta$-oxidation of fatty acids~\cite{Metzler01} in the peroxisome compartment of a yeast \textit{Y.~lipolytica}. The first level (bottom) shows the peroxisome compartment, and the transport reactions; the second level (middle) shows the generalized structure of the peroxisome; the most detailed level (top) represents the complete model, placing semantically similar metabolites and reactions next to each other.
 
 \subsection*{Model generalization}
 The metabolic model generalization method~\cite{Zhukova2014}, which we recall here, groups similar metabolites and reactions in the network based on its structure and the knowledge extracted from metabolite ontologies. 
@@ -434,15 +434,15 @@ While layout of large graphs is widely studied~\cite{Unwin2006}, the corresponde
 
 \subsubsection*{Generalized model layout}
 % General idea
-In order to lay out the sub-networks corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by Tulip. We divide the compartment graph into connected components (subgraphs in which any two nodes are connected to each other by undirected paths, and which are not connected to any additional nodes in the supergraph), using a method provided by Tulip. We then apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm (provided by Tulip), which places the components close to each other while removing the overlaps between them.
+In order to lay out the sub-networks corresponding to each of the compartments after the generalization, we use a combination of standard layout algorithms provided by Tulip. We divide the compartment graph into connected components (i.e., subgraphs in which any two nodes are connected to each other by undirected paths, and which are not connected to any additional nodes in the supergraph), using a method provided by Tulip. We then apply an appropriate layout algorithm on each of them. The results are combined together using the \emph{Connected Component Packing} algorithm (provided by Tulip), which places the components close to each other while removing the overlaps between them.
 
 % Laying out a connected component
-Depending on the number of cycles (detected using the depth-first search algorithm~\cite{Cormen2001}) in the connected component subgraph, we choose one of the following layout algorithms, provided by Tulip:
+Regarding each of the connected component subgraphs as a directed graph (the direction of the edges is defined by the direction of the corresponding reactions; for reversible reactions edges in both directions are considered), we detect their strongly connected components (i.e., subgraphs where every vertex is reachable from every other vertex) using path-based depth-first search algorithm~\cite{Gabow2000}. Depending on the number of cycles in each strongly connected component subgraph, we choose one of the following layout algorithms, provided by Tulip:
 \begin{itemize}
-\item \emph{Hierarchical Layout} for the components that contain no cycles (\emph{Sugiyama (OGDF)}~\cite{Sugiyama1981} algorithm, that has the complexity of $O(|V||E|)$ in time and of $O(|V| + |E|)$ in space);
-\item \emph{Circular Layout} for the components with less than 3 cycles and less than 100 nodes (\emph{Circular (OGDF)}~\cite{Tamassia:2007:HGD:1202383}, with $O(|E|^2)$ time and space complexity);
-\item \emph{Force-Directed Layout} for all the other components (\emph{$FM^3$ (OGDF)}~\cite{Hachul2005}, that has the asymptotic worst-case running time of $O(|V|log|V|+|E|)$ with linear memory requirements).
+\item \emph{Circular Layout} for the strongly connected components with less than 20 cycles (\emph{Circular (OGDF)}~\cite{Tamassia:2007:HGD:1202383}, with $O(|E|^2)$ time and space complexity);
+\item For components with more cycles we use \emph{Force-Directed Layout} (\emph{$FM^3$ (OGDF)}~\cite{Hachul2005}, that has the asymptotic worst-case running time of $O(|V|log|V|+|E|)$ with linear memory requirements) to reduce the number of edge intersections.
 \end{itemize}
+We then represent each strongly connected component as a meta-node~\cite{Auber04}, apply a \emph{Hierarchical Layout} (\emph{Sugiyama (OGDF)}~\cite{Sugiyama1981} algorithm (complexity of $O(|V||E|)$ in time and of $O(|V| + |E|)$ in space) on the initial connected component subgraph (that now contains no cycles), and then open the meta-nodes.
 
 % Ubiquitous metabolites hadling
 To avoid clutter we duplicate all the \emph{minor} metabolites (\textit{oxygen}, \textit{hydrogen}, \textit{water}, \textit{ATP}, etc.) before applying the layout algorithms, so that there is a copy of a minor metabolite for each reaction in which it is used. We then extract a subgraph, containing all but the minor metabolites, apply the combined layout on it, and then place the minor metabolites next to the reactions in which they participate. 
