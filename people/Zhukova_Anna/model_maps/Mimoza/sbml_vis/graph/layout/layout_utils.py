@@ -1,5 +1,5 @@
 from tulip import tlp
-from graph.resize import get_mn_size
+from sbml_vis.graph.resize import get_mn_size
 
 from sbml_vis.graph.graph_properties import *
 
