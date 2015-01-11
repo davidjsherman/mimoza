@@ -53,11 +53,6 @@ def factor_nodes(graph, ns=None):
 		root[VIEW_SIZE][meta_n] = get_n_size(root, meta_n)
 		root[NAME][meta_n] = root[ANCESTOR_NAME][sample_n]
 
-		for meta_e in root.getInOutEdges(meta_n):
-			sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
-			root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
-			root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
-
 		if TYPE_REACTION == type_:
 			root[REVERSIBLE][meta_n] = True
 			root[TRANSPORT][meta_n] = False
@@ -72,6 +67,13 @@ def factor_nodes(graph, ns=None):
 					root[CLONE_ID][ub] += ("," + root[ID][meta_n]) if root[CLONE_ID][ub] else root[ID][meta_n]
 		else:
 			root[TERM][meta_n] = root[ANCESTOR_TERM][sample_n]
+
+		for meta_e in root.getInOutEdges(meta_n):
+			sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
+			root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
+			root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
+			# todo: this is not True but will help with cycle detection
+			root[REVERSIBLE][meta_e] = not root[UBIQUITOUS][meta_e]
 
 		meta_ns.append(meta_n)
 	return meta_ns
@@ -100,6 +102,7 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=Tru
 		sample_e = next(e for e in root[VIEW_META_GRAPH][meta_e])
 		root[UBIQUITOUS][meta_e] = root[UBIQUITOUS][sample_e]
 		root[STOICHIOMETRY][meta_e] = root[STOICHIOMETRY][sample_e]
+		root[REVERSIBLE][meta_e] = root[REVERSIBLE][sample_e] and not root[UBIQUITOUS][sample_e]
 	return comp_n
 
 

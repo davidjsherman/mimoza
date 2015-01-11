@@ -2,23 +2,12 @@ from collections import defaultdict
 from math import sqrt, radians, degrees, cos, sin, atan2
 from tulip import tlp
 
-from sbml_vis.graph.layout.layout_utils import layout_hierarchically, detect_components, layout_circle, layout_force, pack_cc
+from sbml_vis.graph.layout.layout_utils import pack_cc, layout_components
 from sbml_vis.graph.resize import get_n_size, UBIQUITOUS_SPECIES_SIZE, REACTION_SIZE, get_n_length
 from sbml_vis.graph.graph_properties import UBIQUITOUS, VIEW_LAYOUT, VIEW_SIZE, TYPE_REACTION, TYPE, TYPE_SPECIES, \
 	TYPE_COMPARTMENT, VIEW_META_GRAPH, COMPARTMENT_ID
 
-
-OVERLAP_REMOVAL = "Fast Overlap Removal"
-
 __author__ = 'anna'
-
-
-def remove_overlaps(graph, margin=1):
-	root = graph.getRoot()
-	ds = tlp.getDefaultPluginParameters(OVERLAP_REMOVAL, graph)
-	ds["x border"] = margin
-	ds["y border"] = margin
-	graph.computeLayoutProperty(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
 def ub_or_single(nd, graph):
@@ -604,14 +593,7 @@ def layout(graph, margin=1, onto=None):
 	root = graph.getRoot()
 	# create_fake_rs(graph)
 	gr = graph.inducedSubGraph([n for n in graph.getNodes() if not ub_or_single(n, graph)])
-	simples, cycles, mess = detect_components(gr)
-	for qo in simples:
-		layout_hierarchically(qo, margin)
-	for qo in cycles:
-		layout_circle(qo, margin)
-	for qo in mess:
-		layout_force(qo, margin)
-		remove_overlaps(qo, margin)
+	layout_components(gr)
 	pack_cc(gr)
 	graph.delAllSubGraphs(gr)
 	# if onto:

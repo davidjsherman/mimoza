@@ -47,7 +47,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 	# get_sp_comp = lambda _id: graph[COMPARTMENT][id2n[_id]]
 	get_sp_comp = lambda _id: input_model.getSpecies(_id).getCompartment()
 
-	def link_reaction_to_species(reaction_node, sp_ref, all_comps, is_reactant=True):
+	def link_reaction_to_species(reaction_node, sp_ref, all_comps, is_reactant=True, reversible=False):
 		s_id = sp_ref.getSpecies()
 
 		all_comps.add(get_sp_comp(s_id))
@@ -66,6 +66,8 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 		graph[NAME][e] = input_model.getSpecies(s_id).getName()
 		ub = graph[UBIQUITOUS][species_node]
 		graph[UBIQUITOUS][e] = ub
+		graph[REVERSIBLE][e] = reversible and not ub
+
 
 	for r in input_model.getListOfReactions():
 		name = r.getName()
@@ -87,9 +89,9 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 
 		all_comps = set()
 		for sp_ref in r.getListOfReactants():
-			link_reaction_to_species(n, sp_ref, all_comps, is_reactant=True)
+			link_reaction_to_species(n, sp_ref, all_comps, is_reactant=True, reversible=r.getReversible())
 		for sp_ref in r.getListOfProducts():
-			link_reaction_to_species(n, sp_ref, all_comps, is_reactant=False)
+			link_reaction_to_species(n, sp_ref, all_comps, is_reactant=False, reversible=r.getReversible())
 
 		graph[TRANSPORT][n] = len(all_comps) > 1
 		graph[COMPARTMENT_ID][n] = get_r_comp(all_comps)
