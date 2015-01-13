@@ -103,7 +103,7 @@ def get_quotient_maps(chebi, input_model, sbml_file, verbose):
 		species_id2chebi_id = get_species_to_chebi(input_model, chebi) if (r_id2g_id or ub_sps) else {}
 		return r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
 	except GrPlError:
-		return None, None, None, None, None
+		return None, None, None, None
 
 
 def compute_c_id2info(c_id2level, comp2go_term, input_model):

@@ -13,5 +13,9 @@ def remove_from_map(mp, key, value):
 def invert_map(key2value):
     value2keys = defaultdict(set)
     for key, value in key2value.iteritems():
-        value2keys[value].add(key)
+        if isinstance(value, list) or isinstance(value, set):
+            for v in value:
+                value2keys[v].add(key)
+        else:
+            value2keys[value].add(key)
     return value2keys

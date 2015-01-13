@@ -33,5 +33,5 @@ setup(name='Mimoza',
           'Operating System :: POSIX',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
-      ], requires=['daemon', 'tulip', 'sympy', 'geojson', 'instant']
+      ], requires=['tulip', 'sympy', 'geojson']
 )

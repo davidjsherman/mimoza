@@ -51,7 +51,7 @@ def get_species_term(species, chebi, model):
     return term
 
 
-def get_species_to_chebi(model, chebi):
+def get_species_to_chebi(model, chebi, guess=True):
 
     species2chebi = {}
     used_terms = set()
@@ -75,23 +75,24 @@ def get_species_to_chebi(model, chebi):
             continue
         else:
             entity2species[entity].add(species)
-    # annotate unannotated
-    for entity, species_set in entity2species.iteritems():
-        name, name_bis = get_names(entity)
-        if isinstance(entity, Species):
-            index = name.find("[{0}]".format(model.getCompartment(entity.getCompartment()).getName()))
-            if -1 != index:
-                name = name[:index].strip()
-        possibilities = chebi.get_ids_by_name(name)
-        if not possibilities:
-            possibilities = chebi.get_ids_by_name(name_bis)
-        if not possibilities:
-            continue
-        possibilities = {chebi.get_term(it) for it in possibilities}
-        intersection = possibilities & used_terms
-        term = intersection.pop() if intersection else possibilities.pop()
-        for species in species_set:
-            species2chebi[species.getId()] = term.get_id()
-        add_annotation(entity, get_is_qualifier(), to_identifiers_org_format(term.get_id()))
-        used_terms.add(term)
+    if guess:
+        # annotate unannotated
+        for entity, species_set in entity2species.iteritems():
+            name, name_bis = get_names(entity)
+            if isinstance(entity, Species):
+                index = name.lower().find("[{0}]".format(model.getCompartment(entity.getCompartment()).getName().lower()))
+                if -1 != index:
+                    name = name[:index].strip()
+            possibilities = chebi.get_ids_by_name(name)
+            if not possibilities:
+                possibilities = chebi.get_ids_by_name(name_bis)
+            if not possibilities:
+                continue
+            possibilities = {chebi.get_term(it) for it in possibilities}
+            intersection = possibilities & used_terms
+            term = intersection.pop() if intersection else possibilities.pop()
+            for species in species_set:
+                species2chebi[species.getId()] = term.get_id()
+            add_annotation(entity, get_is_qualifier(), to_identifiers_org_format(term.get_id()))
+            used_terms.add(term)
     return species2chebi

@@ -1,15 +1,13 @@
 # !/usr/bin/env python
 # encoding: utf-8
 
-
-from _libsbml import writeSBMLToFile
 import getopt
 import logging
 import os
 from os.path import dirname, abspath
 from shutil import copytree
 
-from libsbml import SBMLReader
+from libsbml import SBMLReader, SBMLWriter
 
 from mimoza.mimoza import JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, MIMOZA_URL
 from sbml_vis.converter.sbml2tlp import import_sbml
@@ -19,7 +17,7 @@ from sbml_vis.converter.tulip_graph2geojson import graph2geojson
 import mimoza.mimoza
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS, save_as_layout_sbml, \
+from sbml_generalization.generalization.sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS, save_as_layout_sbml, \
 	parse_layout_sbml, LoPlError
 
 
@@ -102,7 +100,7 @@ def main(argv=None):
 	# gen_layout_sbml = '%s%s_generalized_with_layout.xml' % (directory, model_id)
 	if check_for_groups(sbml, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
 		if sbml != groups_sbml:
-			if not writeSBMLToFile(doc, groups_sbml):
+			if not SBMLWriter().writeSBMLToFile(doc, groups_sbml):
 				raise Exception("Could not write your model to %s" % groups_sbml)
 	else:
 		chebi = parse(get_chebi())

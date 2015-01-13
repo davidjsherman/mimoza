@@ -37,7 +37,7 @@ def layout_hierarchically(qo, margin=1):
         # ds["node spacing"] = d + margin
         ds["layer distance"] = d + margin
         ds["node distance"] = d + margin
-    qo.computeLayoutProperty(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
+    qo.applyLayoutAlgorithm(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
 
 
 def layout_circle(qo, margin=1):
@@ -49,20 +49,20 @@ def layout_circle(qo, margin=1):
         ds["minDistLevel"] = dist
         ds["minDistCC"] = 1
         ds["minDistSibling"] = dist
-    qo.computeLayoutProperty(CIRCULAR, root[VIEW_LAYOUT], ds)
+    qo.applyLayoutAlgorithm(CIRCULAR, root[VIEW_LAYOUT], ds)
 
 
 def layout_force(qo, margin=1):
     root = qo.getRoot()
     ds = tlp.getDefaultPluginParameters(FM3, qo)
     ds["Unit edge length"] = margin
-    qo.computeLayoutProperty(FM3, root[VIEW_LAYOUT], ds)
+    qo.applyLayoutAlgorithm(FM3, root[VIEW_LAYOUT], ds)
 
 
 def pack_cc(graph):
     root = graph.getRoot()
     ds = tlp.getDefaultPluginParameters(COMPONENT_PACKING, graph)
-    graph.computeLayoutProperty(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
+    graph.applyLayoutAlgorithm(COMPONENT_PACKING, root[VIEW_LAYOUT], ds)
 
 
 def remove_overlaps(graph, margin=1):
@@ -70,7 +70,7 @@ def remove_overlaps(graph, margin=1):
     ds = tlp.getDefaultPluginParameters(OVERLAP_REMOVAL, graph)
     ds["x border"] = margin
     ds["y border"] = margin
-    graph.computeLayoutProperty(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
+    graph.applyLayoutAlgorithm(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
 def layout_components(graph, cycle_number_threshold=25, node_number_threshold=400, margin=5):

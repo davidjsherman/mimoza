@@ -43,7 +43,7 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
 		return transformation(x, other_x), transformation(y, other_y)
 
 
-def e2feature(graph, e, transport, inner):
+def e2feature(graph, e, e_id, transport, inner):
 	root = graph.getRoot()
 	layout = root[VIEW_LAYOUT]
 	s, t = graph.source(e), graph.target(e)
@@ -73,10 +73,10 @@ def e2feature(graph, e, transport, inner):
 			props[INNER] = True
 	if ubiquitous:
 		props[UBIQUITOUS] = True
-	return geojson.Feature(geometry=geom, properties=props)
+	return geojson.Feature(id=e_id, geometry=geom, properties=props)
 
 
-def n2feature(graph, n, c_id2info, r2rs_ps, transport, inner):
+def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
 	root = graph.getRoot()
 
 	x, y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
@@ -155,8 +155,8 @@ def n2feature(graph, n, c_id2info, r2rs_ps, transport, inner):
 		if TYPE_BG_COMPARTMENT == node_type:
 			bg_props[HEIGHT] = h
 			bg_props[COMPARTMENT_ID] = root[ID][n]
-		bg_feature = geojson.Feature(geometry=geom, properties=bg_props)
-	return geojson.Feature(geometry=geojson.Point([x, y]), properties=props), bg_feature
+		bg_feature = geojson.Feature(id="%s_bg" % n_id, geometry=geom, properties=bg_props)
+	return geojson.Feature(id=n_id, geometry=geojson.Point([x, y]), properties=props), bg_feature
 
 
 def _get_gene_association_list(ga):
