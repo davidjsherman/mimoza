@@ -35,8 +35,10 @@ def layout_hierarchically(qo, margin=1):
         d = get_distance(qo)
         # ds["layer spacing"] = d + margin
         # ds["node spacing"] = d + margin
-        ds["layer distance"] = d + margin
-        ds["node distance"] = d + margin
+        # ds["layer distance"] = d + margin
+        # ds["node distance"] = d + margin
+        ds["layer distance"] = margin
+        ds["node distance"] = margin
     qo.applyLayoutAlgorithm(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
 
 
@@ -73,7 +75,7 @@ def remove_overlaps(graph, margin=1):
     graph.applyLayoutAlgorithm(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
-def layout_components(graph, cycle_number_threshold=25, node_number_threshold=400, margin=5):
+def layout_components(graph, cycle_number_threshold=30, node_number_threshold=100, margin=5):
     root = graph.getRoot()
     comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
     for ns in comp_list:
@@ -172,7 +174,7 @@ def strongly_connected_components_iterative(graph):
                     boundaries.append(index[v])
                     to_do.append(('POSTVISIT', v))
                     to_do.extend([('VISITEDGE', w) for w in set(graph.getOutNodes(v)) |
-                                  {graph.source(e) for e in graph.getInEdges(v) if graph[REVERSIBLE][e]}])
+                                  {graph.source(e) for e in graph.getInEdges(v) if graph[REVERSIBLE][e] and graph.isMetaNode(v)}])
                 elif operation_type == 'VISITEDGE':
                     if v not in index:
                         to_do.append(('VISIT', v))
