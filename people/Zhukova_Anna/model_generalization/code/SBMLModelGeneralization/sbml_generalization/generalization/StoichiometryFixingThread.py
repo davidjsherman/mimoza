@@ -1,6 +1,5 @@
-from collections import defaultdict
+from itertools import chain
 import threading
-from sbml_generalization.generalization.reaction_filters import get_reactions_by_term
 
 __author__ = 'anna'
 
@@ -36,19 +35,17 @@ class StoichiometryFixingThread(threading.Thread):
         self.onto = onto
         self.clu = clu
         self.term_id2clu = term_id2clu
-        # self.term_id2clu = defaultdict()
 
     def get_conflicts(self):
-        term_id2s_ids = defaultdict(set)
-        for s_id, t_id in self.species_id2term_id.iteritems():
-            if t_id in self.term_ids:
-                term_id2s_ids[t_id].add(s_id)
-        r2term_ids = defaultdict(set)
-        rs = [r for r in self.model.getListOfReactions()]
-        for t_id in self.term_ids:
-            for r in get_reactions_by_term(t_id, rs, term_id2s_ids):
-                r2term_ids[r.getId()].add(t_id)
-        return [terms for terms in r2term_ids.itervalues() if len(terms) > 1]
+        conflicts = []
+        for r in self.model.getListOfReactions():
+            t_ids = {self.species_id2term_id[s_id]
+                     for s_id in chain((species_ref.getSpecies() for species_ref in r.getListOfReactants()),
+                                       (species_ref.getSpecies() for species_ref in r.getListOfProducts()))
+                     if s_id in self.species_id2term_id}
+            if len(t_ids) > 1:
+                conflicts.append(t_ids)
+        return conflicts
 
     def get_common_roots(self):
         # the least common ancestors, or roots if there are none

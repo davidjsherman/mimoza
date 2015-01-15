@@ -246,14 +246,6 @@ def _get_prefixed_notes_value(notes, result, prefix):
 		_get_prefixed_notes_value(child, result, prefix)
 
 
-def get_reactions_by_term(t_id, reactions, term_id2s_ids):
-	return (r for r in reactions if len(term_id2s_ids[t_id] & (get_reactants(r) | get_products(r))) > 0)
-
-
-def get_reactions_by_species(s_id, reactions):
-	return [r for r in reactions if s_id in (get_reactants(r) | get_products(r))]
-
-
 # ----------------------INFIX-TO-POSTFIX-NOTATION-CONVERSION--------------------------
 
 _is_operator = lambda s: s in ['&', '|']

@@ -68,7 +68,7 @@ def get_ubiquitous_species_set(model, species_id2chebi_id, ontology, threshold=U
 
 def get_cofactors(onto):
 	cofactors = set()
-	sub_cofactors = onto.get_term(COFACTOR_CHEBI_ID).get_ancestors(False)
+	sub_cofactors = onto.get_term(COFACTOR_CHEBI_ID).get_descendants(False)
 
 	def is_cofactor(t_id):
 		if COFACTOR_CHEBI_ID == t_id:

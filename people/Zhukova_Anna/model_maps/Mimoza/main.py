@@ -106,7 +106,7 @@ def main(argv=None):
     else:
         chebi = parse(get_chebi())
         generalize_model(groups_sbml, gen_sbml, sbml, chebi, cofactors=None,
-                         verbose=True)  # , ub_s_ids={'C00112MM', 'C00112Cyto', 'C00112_b', 'C00044MM', 'C00081MM',
+                          verbose=True) #, ub_s_ids={'C00112MM', 'C00112Cyto', 'C00112_b', 'C00044MM', 'C00081MM',
         # 'C00104MM', 'C00704MM', 'C00131MM', 'C00131Cyto', 'C00131_b',
         # 'C00286Cyto', 'C00286_b', 'C00286MM', 'C00363Cyto', 'C00363MM',
         # 'C00363_b', 'C00459_b', 'C00459Cyto', 'C00459MM',
@@ -124,7 +124,7 @@ def main(argv=None):
         # 'C00206MM', 'C00206Cyto', 'C00458_b', 'C00458MM', 'C00458Cyto',
         # 'C00361Cyto', 'C00361_b', 'C00229MM', 'C03939MM',
         # 'C00361MM', 'C14818MM', 'C14818Cyto', 'C14818_b',
-        # 'C00014MM', 'C00014Cyto'})
+        # 'C00014MM', 'C00014Cyto', 'C00000MM', 'C00000Cyto'})
 
     reader = SBMLReader()
     input_document = reader.readSBML(groups_sbml)

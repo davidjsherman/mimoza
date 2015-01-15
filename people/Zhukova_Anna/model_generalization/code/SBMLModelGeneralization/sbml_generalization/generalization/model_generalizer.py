@@ -1,14 +1,14 @@
 from collections import defaultdict, Counter
+from itertools import chain
 from math import sqrt
+
 from sbml_generalization.generalization.MaximizingThread import MaximizingThread
 from sbml_generalization.generalization.StoichiometryFixingThread import StoichiometryFixingThread
-from sbml_generalization.generalization.reaction_filters import get_reactions_by_species, get_reactants, get_products, \
-    get_reactions_by_term
+from sbml_generalization.generalization.reaction_filters import get_reactants, get_products
 from sbml_generalization.generalization.vertical_key import get_vertical_key, is_reactant
-from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.utils.logger import log_clusters, log
 from sbml_generalization.utils.misc import invert_map
-from sbml_generalization.utils.obo_ontology import Term, filter_ontology
+from sbml_generalization.utils.obo_ontology import Term
 from sbml_generalization.generalization.mark_ubiquitous import get_ubiquitous_species_set, UBIQUITOUS_THRESHOLD
 
 
@@ -41,17 +41,15 @@ def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 
 def compute_s_id2clu(model, species_id2term_id, term_id2clu):
     s_id2clu = {}
-    term_id2s_ids = defaultdict(set)
     for s_id, t_id in species_id2term_id.iteritems():
-        term_id2s_ids[t_id].add(s_id)
         if t_id in term_id2clu:
             s_id2clu[s_id] = (term_id2clu[t_id], model.getSpecies(s_id).getCompartment())
-    return s_id2clu, term_id2s_ids
+    return s_id2clu
 
 
 def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
     clu2term_ids = invert_map(term_id2clu)
-    s_id2clu, term_id2s_ids = compute_s_id2clu(model, species_id2term_id, term_id2clu)
+    s_id2clu = compute_s_id2clu(model, species_id2term_id, term_id2clu)
 
     r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)
 
@@ -60,7 +58,7 @@ def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
         if len(term_ids) <= 1:
             continue
 
-        thread = MaximizingThread(model, term_ids, term_id2s_ids, species_id2term_id, clu, term_id2clu,
+        thread = MaximizingThread(model, term_ids, species_id2term_id, clu, term_id2clu,
                                   s_id2clu, ubiquitous_chebi_ids, r_id2clu)
         thrds.append(thread)
         thread.start()  # This actually causes the thread to run
@@ -71,15 +69,20 @@ def maximize(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
 
 def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_chebi_ids):
     clu2term_ids = invert_map(term_id2clu)
-    s_id2clu, term_id2s_ids = compute_s_id2clu(model, species_id2term_id, term_id2clu)
+    s_id2clu = compute_s_id2clu(model, species_id2term_id, term_id2clu)
 
     r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)
-    rs = [r for r in model.getListOfReactions() if r.getNumReactants() > 1 or r.getNumProducts() > 1]
+    t_id2rs = defaultdict(list)
+    for r in (r for r in model.getListOfReactions() if r.getNumReactants() > 1 or r.getNumProducts() > 1):
+        for s_id in chain((species_ref.getSpecies() for species_ref in r.getListOfReactants()),
+                          (species_ref.getSpecies() for species_ref in r.getListOfProducts())):
+            if s_id in species_id2term_id:
+                t_id2rs[species_id2term_id[s_id]].append(r)
 
     for clu, t_ids in clu2term_ids.iteritems():
         r2t_ids = defaultdict(set)
         for t_id in t_ids:
-            for r in get_reactions_by_term(t_id, rs, term_id2s_ids):
+            for r in t_id2rs[t_id]:
                 r2t_ids[r.getId()].add(t_id)
 
         t_id2r_clus = {}
@@ -87,7 +90,7 @@ def update_binary_vectors(model, term_id2clu, species_id2term_id, ubiquitous_che
         for t_id in t_ids:
             clus = {(r_id2clu[r.getId()],
                      "in" if is_reactant(t_id, r, s_id2clu, species_id2term_id, ubiquitous_chebi_ids) else "out")
-                    for r in get_reactions_by_term(t_id, rs, term_id2s_ids)}
+                    for r in t_id2rs[t_id]}
             t_id2r_clus[t_id] = clus
             all_clus |= {clu[0] for clu in clus}
         clu2index = dict(zip(all_clus, xrange(0, len(all_clus))))
@@ -209,6 +212,9 @@ def update_onto(onto, term_id2clu):
     removed_something = False
     count = Counter(ancestors)
     for t in (t for t in count.keys() if count[t] > 1):
+        # if this term has been already removed as an ancestor/equivalent of another term
+        if not onto.get_term(t.id):
+            continue
         for it in onto.get_generalized_ancestors(t, relationships=EQUIVALENT_TERM_RELATIONSHIPS):
             onto.remove_term(it, True)
         for it in onto.get_equivalents(t, relationships=EQUIVALENT_TERM_RELATIONSHIPS):
@@ -302,14 +308,14 @@ def filter_clu_to_terms(term2clu):
 
 
 def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids, verbose):
-    interesting_term_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
-    log(verbose, "  computing eq 0...")
-    term_id2clu = cover_t_ids(interesting_term_ids, onto)
+    chebi_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
+    log(verbose, "  aggressive metabolite grouping...")
+    term_id2clu = cover_t_ids(chebi_ids, onto)
     onto.trim({it[0] for it in term_id2clu.itervalues()}, relationships=EQUIVALENT_TERM_RELATIONSHIPS)
     # log_clusters(term_id2clu, onto, verbose, True)
     onto_updated = True
     while onto_updated:
-        log(verbose, "  maximizing...")
+        log(verbose, "  satisfying metabolite diversity...")
         term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
         onto_updated = update_onto(onto, term_id2clu)
         for clu, t_ids in invert_map(term_id2clu).iteritems():
@@ -326,7 +332,7 @@ def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids
     # log_clusters(term_id2clu, onto, verbose, True)
     onto_updated = True
     while onto_updated:
-        log(verbose, "  maximizing...")
+        log(verbose, "  satisfying metabolite diversity...")
         term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
         onto_updated = update_onto(onto, term_id2clu)
         for clu, t_ids in invert_map(term_id2clu).iteritems():
@@ -336,6 +342,9 @@ def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids
                 term_id2clu.update(cover_t_ids(t_ids, onto))
     # log_clusters(term_id2clu, onto, verbose, True)
     return term_id2clu
+
+
+# def infer_clusters(model, s_ids, term_id2clu):
 
 
 def generalize_species(model, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose=False):
@@ -377,92 +386,6 @@ def sort_by_compartment(input_model, r_sps):
         else:
             comp2r_sps[input_model.getSpecies(it).getCompartment()].append(it)
     return comp2r_sps
-
-
-def update_clusters(c_id2sps, i, reactions, s_id2clu, onto):
-    for c_id, sps in c_id2sps.iteritems():
-        if len(sps) > 1:
-            res = get_compatible_species(sps, reactions, c_id, s_id2clu, onto)
-            if res:
-                term, sps = res
-                if not term:
-                    term = (None, i)
-                    i += 1
-                for s_id in sps:
-                    s_id2clu[s_id] = c_id, term
-
-
-def get_compatible_species(s_ids, reactions, c_id, s_id2clu, onto):
-    term = None
-    rs = set()
-    sps = []
-    for s_id in s_ids:
-        if isinstance(s_id, Term):
-            if term and term != s_id:
-                common_ancestor_terms = {(c_id, tt) for tt in onto.common_points({term, s_id}, 2)}
-                if common_ancestor_terms:
-                    term = common_ancestor_terms.pop()[1]
-                else:
-                    return None
-            else:
-                term = s_id
-            for s_id in (s_id for (s_id, clu) in s_id2clu.iteritems() if clu == (c_id, term)):
-                its_rs = set(get_reactions_by_species(s_id, reactions))
-                if rs & its_rs:
-                    return None
-                rs |= its_rs
-                sps.append(s_id)
-        else:
-            its_rs = set(get_reactions_by_species(s_id, reactions))
-            if rs & its_rs:
-                return None
-            rs |= its_rs
-            sps.append(s_id)
-    return term, sps
-
-
-# TODO: should check if it breaks compatibility after (i.e., stoichiometry)
-def simplified_key_generalization(input_model, s_id2clu, ub_sps, keys, onto):
-    simple_key2vks = defaultdict(set)
-    for ((ub_rs, ub_ps, rs, ps), comps) in keys.keys():
-        if ub_rs or ub_ps:
-            simple_key = ((ub_rs, ub_ps, len(rs), len(ps)), comps)
-            simple_key2vks[simple_key].add(((ub_rs, ub_ps, rs, ps), comps))
-    reactions = list(input_model.getListOfReactions())
-    i = 0
-    for ((ub_rs, ub_ps, _, _), _), vks in simple_key2vks.iteritems():
-        if len(vks) > 1:  # and (ub_ps or ub_rs):
-            r_counter, p_counter = Counter(), Counter()
-            for ((_, _, rs, ps), _) in vks:
-                r_counter.update(rs)
-                p_counter.update(ps)
-            r_max, p_max = r_counter.most_common(1), p_counter.most_common(1)
-            r_max, p_max = r_max[0] if r_max else None, p_max[0] if p_max else None
-            rp_max_count = max(r_max[1] if r_max else 0, p_max[1] if p_max else 0)
-            if rp_max_count > 1:
-                if r_max and rp_max_count == r_max[1]:
-                    to_merge = [vk for vk in vks if r_max[0] in vk[0][2]]
-                else:
-                    to_merge = [vk for vk in vks if p_max[0] in vk[0][3]]
-                r_sps, p_sps = set(), set()
-                common_rs = set(to_merge[0][0][2]) & set(to_merge[1][0][2])
-                common_ps = set(to_merge[0][0][3]) & set(to_merge[1][0][3])
-                # if there are less that 1 common elements, it's not enough evidence
-                if len(ub_rs) + len(ub_sps) + len(common_rs) & len(common_ps) < 1:
-                    continue
-                stop = False
-                for vk in to_merge:
-                    r_s, p_s = set(vk[0][2]) - common_rs, set(vk[0][3]) - common_ps
-                    if len(r_s) > 1 or len(p_s) > 1:
-                        stop = True
-                        break
-                    r_sps |= r_s
-                    p_sps |= p_s
-                if not stop:
-                    comp2r_sps = sort_by_compartment(input_model, r_sps)
-                    update_clusters(comp2r_sps, i, reactions, s_id2clu, onto)
-                    comp2p_sps = sort_by_compartment(input_model, p_sps)
-                    update_clusters(comp2p_sps, i, reactions, s_id2clu, onto)
 
 
 def map2chebi(species_id2chebi_id, cofactors, input_model, onto, threshold=UBIQUITOUS_THRESHOLD):

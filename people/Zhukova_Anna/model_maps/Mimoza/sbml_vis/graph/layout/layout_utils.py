@@ -75,7 +75,7 @@ def remove_overlaps(graph, margin=1):
     graph.applyLayoutAlgorithm(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
-def layout_components(graph, cycle_number_threshold=30, node_number_threshold=100, margin=5):
+def layout_components(graph, cycle_number_threshold=40, node_number_threshold=100, margin=5):
     root = graph.getRoot()
     comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
     for ns in comp_list:

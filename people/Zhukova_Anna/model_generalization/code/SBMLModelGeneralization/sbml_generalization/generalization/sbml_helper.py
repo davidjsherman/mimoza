@@ -317,7 +317,7 @@ def convert_to_l2v4_with_species_types(sbml):
 
 def check_compartments(model):
 	if not model.getListOfCompartments():
-		cell_id = create_compartment(model, "cell", outside=None, term_id="GO:0005623").get_id()
+		cell_id = create_compartment(model, "cell", outside=None, term_id="GO:0005623").getId()
 		for sp in model.getListOfSpecies():
 			sp.setCompartment(cell_id)
 
@@ -555,7 +555,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 					s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
 					g_name = "{0} [{1}]".format(t_name, comp.getName())
 					s_group.setName(g_name)
-					log(verbose, "%s: %d" % (g_name, len(s_ids)))
+					# log(verbose, "%s: %d" % (g_name, len(s_ids)))
 					if t_id:
 						add_annotation(s_group, BQB_IS, to_identifiers_org_format(t_id))
 					for s_id in s_ids:
@@ -595,7 +595,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 					r_group.setKind(GROUP_KIND_COLLECTION)
 					r_group.setSBOTerm(SBO_BIOCHEMICAL_REACTION)
 					r_group.setName(r_name)
-					log(verbose, "%s: %d" % (r_name, len(r_ids)))
+					# log(verbose, "%s: %d" % (r_name, len(r_ids)))
 					for r_id in r_ids:
 						member = r_group.createMember()
 						member.setIdRef(r_id)
