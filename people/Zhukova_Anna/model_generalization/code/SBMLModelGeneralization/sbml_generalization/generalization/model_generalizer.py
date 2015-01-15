@@ -307,6 +307,12 @@ def filter_clu_to_terms(term2clu):
             del term2clu[terms.pop()]
 
 
+def fix_t_id2clu(onto, term_id2clu):
+    for t_id in term_id2clu.keys():
+        if not onto.get_term(t_id):
+            del term_id2clu[t_id]
+
+
 def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids, verbose):
     chebi_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
     log(verbose, "  aggressive metabolite grouping...")
@@ -318,6 +324,8 @@ def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids
         log(verbose, "  satisfying metabolite diversity...")
         term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
         onto_updated = update_onto(onto, term_id2clu)
+        if onto_updated:
+            fix_t_id2clu(onto, term_id2clu)
         for clu, t_ids in invert_map(term_id2clu).iteritems():
             if len(t_ids) == 1:
                 del term_id2clu[t_ids.pop()]
@@ -335,6 +343,8 @@ def fix_incompatibilities(model, onto, species_id2chebi_id, ubiquitous_chebi_ids
         log(verbose, "  satisfying metabolite diversity...")
         term_id2clu = maximize(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
         onto_updated = update_onto(onto, term_id2clu)
+        if onto_updated:
+            fix_t_id2clu(onto, term_id2clu)
         for clu, t_ids in invert_map(term_id2clu).iteritems():
             if len(t_ids) == 1:
                 del term_id2clu[t_ids.pop()]
