@@ -26,10 +26,10 @@ isAorPartOf = lambda t_id, onto, candidates: {it for it in candidates if
                                               isACheck(it, t_id, onto) or partOfCheck(it.get_id(), t_id, onto)}
 
 
-def get_go_term(annotation, qualifier, onto):
-	if not annotation:
+def get_go_term(element, qualifier, onto):
+	if not element:
 		return None
-	for go_id in get_qualifier_values(annotation, qualifier):
+	for go_id in get_qualifier_values(element, qualifier):
 		go_id = miriam_to_term_id(go_id)
 		term = onto.get_term(go_id)
 		if term:
@@ -40,10 +40,9 @@ def get_go_term(annotation, qualifier, onto):
 def get_comp2go(model, onto):
 	comp2go = {}
 	for comp in model.getListOfCompartments():
-		annotation = comp.getAnnotation()
-		term = get_go_term(annotation, BQB_IS, onto)
+		term = get_go_term(comp, BQB_IS, onto)
 		if not term:
-			term = get_go_term(annotation, BQB_IS_VERSION_OF, onto)
+			term = get_go_term(comp, BQB_IS_VERSION_OF, onto)
 		if not term:
 			term_ids = onto.get_ids_by_name(comp.getName())
 			if term_ids:
@@ -65,14 +64,12 @@ def comp2level(model, onto):
 	if not outs_set:
 		term2comp = {}
 		for comp in model.getListOfCompartments():
-			annotation = comp.getAnnotation()
-			if annotation:
-				term = get_go_term(annotation, BQB_IS, onto)
-				if not term:
-					term = get_go_term(annotation, BQB_IS_VERSION_OF, onto)
-				if term:
-					term2comp[term] = comp
-					continue
+			term = get_go_term(comp, BQB_IS, onto)
+			if not term:
+				term = get_go_term(comp, BQB_IS_VERSION_OF, onto)
+			if term:
+				term2comp[term] = comp
+				continue
 			term_ids = onto.get_ids_by_name(comp.getName())
 			if term_ids:
 				term2comp[onto.get_term(set(term_ids).pop())] = comp

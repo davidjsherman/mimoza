@@ -103,7 +103,7 @@ def process_file(sbml_file):
             pass
     except:
         pass
-    logging.basicConfig(level=logging.INFO, filename=log_file)
+    logging.basicConfig(level=logging.INFO, format='%(message)s', filename=log_file)
 
     if check_for_groups(sbml_file, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
         new_sbml_file = '%s%s_with_groups.xml' % (directory, model_id)

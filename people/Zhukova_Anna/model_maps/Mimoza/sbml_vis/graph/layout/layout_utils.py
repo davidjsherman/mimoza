@@ -1,5 +1,5 @@
 from tulip import tlp
-from sbml_vis.graph.resize import get_mn_size
+from sbml_vis.graph.resize import get_mn_size, SPECIES_SIZE
 
 from sbml_vis.graph.graph_properties import *
 
@@ -10,7 +10,7 @@ FM3 = "FM^3 (OGDF)"
 
 CIRCULAR = "Circular (OGDF)"
 
-HIERARCHICAL_GRAPH = "Sugiyama (OGDF)"#"Hierarchical Graph"
+HIERARCHICAL_GRAPH = "Sugiyama (OGDF)"  # "Hierarchical Graph"
 
 OVERLAP_REMOVAL = "Fast Overlap Removal"
 
@@ -32,13 +32,13 @@ def layout_hierarchically(qo, margin=1):
     if qo.numberOfNodes() > 1:
         # looks like there is a bug in Tulip and it uses the 'layer spacing' value
         # instead of the 'node spacing' one and visa versa
-        d = get_distance(qo)
-        # ds["layer spacing"] = d + margin
-        # ds["node spacing"] = d + margin
-        # ds["layer distance"] = d + margin
-        # ds["node distance"] = d + margin
-        ds["layer distance"] = margin
-        ds["node distance"] = margin
+        d = 2 * SPECIES_SIZE #get_distance(qo)
+        ds["layer spacing"] = d + margin
+        ds["node spacing"] = d + margin
+        ds["layer distance"] = d + margin
+        ds["node distance"] = d + margin
+        # ds["layer distance"] = margin
+        # ds["node distance"] = margin
     qo.applyLayoutAlgorithm(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
 
 
@@ -57,7 +57,7 @@ def layout_circle(qo, margin=1):
 def layout_force(qo, margin=1):
     root = qo.getRoot()
     ds = tlp.getDefaultPluginParameters(FM3, qo)
-    ds["Unit edge length"] = margin
+    ds["Unit edge length"] = 2 * SPECIES_SIZE + margin
     qo.applyLayoutAlgorithm(FM3, root[VIEW_LAYOUT], ds)
 
 
@@ -86,7 +86,8 @@ def layout_components(graph, cycle_number_threshold=40, node_number_threshold=10
                 scc_node = gr.createMetaNode(scc, False)
                 scc_graph = root[VIEW_META_GRAPH][scc_node]
                 cycles_num = dfs(list(scc)[0], scc_graph, set(), None, cycle_number_threshold)
-                if cycles_num > cycle_number_threshold:
+                if cycles_num > cycle_number_threshold \
+                        or next((n for n in scc_graph.getNodes() if root[TYPE][n] == TYPE_COMPARTMENT), False):
                     layout_force(scc_graph, margin)
                     remove_overlaps(scc_graph, margin)
                 else:
@@ -95,7 +96,8 @@ def layout_components(graph, cycle_number_threshold=40, node_number_threshold=10
                 w, h = get_mn_size(scc_node, root)
                 root[VIEW_SIZE][scc_node] = tlp.Size(w, h)
                 meta_ns.append(scc_node)
-        if gr.numberOfNodes() < node_number_threshold:
+        if gr.numberOfNodes() < node_number_threshold and not next(
+                (n for n in gr.getNodes() if root[TYPE][n] == TYPE_COMPARTMENT), False):
             layout_hierarchically(gr)
         else:
             layout_force(gr, margin)
@@ -174,7 +176,8 @@ def strongly_connected_components_iterative(graph):
                     boundaries.append(index[v])
                     to_do.append(('POSTVISIT', v))
                     to_do.extend([('VISITEDGE', w) for w in set(graph.getOutNodes(v)) |
-                                  {graph.source(e) for e in graph.getInEdges(v) if graph[REVERSIBLE][e] and graph.isMetaNode(v)}])
+                                  {graph.source(e) for e in graph.getInEdges(v) if
+                                   graph[REVERSIBLE][e] and graph.isMetaNode(v)}])
                 elif operation_type == 'VISITEDGE':
                     if v not in index:
                         to_do.append(('VISIT', v))

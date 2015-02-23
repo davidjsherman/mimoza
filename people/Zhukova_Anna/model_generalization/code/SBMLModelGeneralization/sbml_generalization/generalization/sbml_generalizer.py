@@ -1,18 +1,28 @@
 from libsbml import SBMLReader
+
+from generalization.mark_ubiquitous import UBIQUITOUS_THRESHOLD, get_cofactors, COMMON_UB_IDS
 from sbml_generalization.generalization.sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, \
     remove_unused_elements
 from sbml_generalization.utils.logger import log
-from sbml_generalization.generalization.mark_ubiquitous import get_cofactors
-from sbml_generalization.generalization.model_generalizer import map2chebi, generalize_species, generalize_reactions, \
+from sbml_generalization.generalization.model_generalizer import generalize_species, generalize_reactions, \
     EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
 from sbml_generalization.utils.obo_ontology import filter_ontology
+from sbml_generalization.utils.misc import invert_map
 
 
 __author__ = 'anna'
 
 
-def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, verbose=False, log_file=None, ub_s_ids=None):
+def add_equivalent_ub_chebi_ids(onto, ub_chebi_ids):
+    return reduce(lambda s1, s2: s1 | s2,
+                  (reduce(lambda s1, s2: s1 | s2,
+                          (it.get_all_ids() for it in onto.get_equivalents(t, relationships=EQUIVALENT_TERM_RELATIONSHIPS)),
+                          t.get_all_ids())
+                   for t in (onto.get_term(ub_id) for ub_id in ub_chebi_ids)), ub_chebi_ids)
+
+
+def generalize_model(groups_sbml, out_sbml, in_sbml, onto, verbose=False, ub_s_ids=None, ub_chebi_ids=None):
     # input_model
     input_doc = SBMLReader().readSBML(in_sbml)
     input_model = input_doc.getModel()
@@ -20,26 +30,31 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, cofactors=None, verbo
     remove_is_a_reactions(input_model)
     remove_unused_elements(input_model)
 
-    log(verbose, "mapping species to ChEBI...")
-    if not cofactors:
-        cofactors = get_cofactors(onto)
-    species_id2chebi_id = get_species_to_chebi(input_model, onto)
-    terms = (onto.get_term(t_id) for t_id in species_id2chebi_id.itervalues())
-    filter_ontology(onto, terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS, min_deepness=11)
-    if not ub_s_ids:
-        ubiquitous_chebi_ids = map2chebi(species_id2chebi_id, cofactors, input_model, onto)
-        ub_s_ids = {s.getId() for s in input_model.getListOfSpecies() if
-                  s.getId() in species_id2chebi_id and species_id2chebi_id[s.getId()] in ubiquitous_chebi_ids}
+    log(verbose, "mapping species to ChEBI")
+    s_id2chebi_id = get_species_to_chebi(input_model, onto)
+    terms = (onto.get_term(t_id) for t_id in s_id2chebi_id.itervalues())
+    if ub_s_ids:
+        if not ub_chebi_ids:
+            ub_chebi_ids = set()
+        ub_chebi_ids |= {s_id2chebi_id[s_id] for s_id in ub_s_ids if s_id in s_id2chebi_id}
+    if not ub_chebi_ids:
+        ub_chebi_ids = get_cofactors(onto) | COMMON_UB_IDS
+        ub_chebi_ids = add_equivalent_ub_chebi_ids(onto, ub_chebi_ids)
     else:
-        ubiquitous_chebi_ids = {species_id2chebi_id[s_id] for s_id in ub_s_ids if s_id in species_id2chebi_id}
+        ub_chebi_ids = add_equivalent_ub_chebi_ids(onto, ub_chebi_ids)
+        if not ub_s_ids:
+            ub_s_ids = {s.getId() for s in input_model.getListOfSpecies() if
+                        s.getId() in s_id2chebi_id and s_id2chebi_id[s.getId()] in ub_chebi_ids}
 
-    r_id2g_eq, r_id2ch_id, s_id2gr_id = {}, {}, {}
+    filter_ontology(onto, terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS, min_deepness=5)
 
-    # generalize
-    s_id2clu = generalize_species(input_model, species_id2chebi_id, ubiquitous_chebi_ids, onto, verbose)
-    r_id2clu = generalize_reactions(input_model, s_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
-    r_id2g_eq, s_id2gr_id = save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, s_id2clu,
-                                                          ub_s_ids,
-                                                          verbose)
-    log(verbose, "generalization done...")
-    return r_id2g_eq, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_s_ids
+    threshold = min(int(0.1 * input_model.getNumReactions()), UBIQUITOUS_THRESHOLD)
+    s_id2clu, ub_s_ids = generalize_species(input_model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, verbose, threshold)
+    log(verbose, "generalized species")
+    r_id2clu = generalize_reactions(input_model, s_id2clu, s_id2chebi_id, ub_chebi_ids)
+    log(verbose, "generalized reactions")
+
+    clu2s_ids = invert_map(s_id2clu)
+    r_id2g_eq, s_id2gr_id = save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, clu2s_ids,
+                                                          ub_s_ids, onto, verbose)
+    return r_id2g_eq, s_id2gr_id, s_id2chebi_id, ub_s_ids

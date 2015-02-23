@@ -341,7 +341,7 @@ def calculate_related_compartments(root):
 		root[RELATED_COMPARTMENT_IDS][s] = list(result - {root[COMPARTMENT_ID][s]})
 
 
-def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None, n2xy=None):
+def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None, n2xy=None, colorer=color):
 	root = graph.getRoot()
 
 	log(verbose, 'generalized species/reactions -> metanodes')
@@ -356,7 +356,7 @@ def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None, n2xy=None):
 	log(verbose, 'compartments -> metanodes')
 	process_compartments(c_id2info, meta_graph, onto, n2xy)
 
-	color(root)
+	colorer(root)
 	color_edges(root)
 
 	log(verbose, 'tlp nodes -> geojson features')

@@ -28,10 +28,7 @@ class SBMLImport(tlp.ImportModule):
                 groups_sbml = "%s/%s_with_groups.xml" % (sbml_directory, m_id)
                 chebi = parse(get_chebi())
                 gen_sbml = "%s/%s_generalized.xml" % (sbml_directory, m_id)
-                r_id2g_id, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, gen_sbml,
-		                                                                                  sbml_file, chebi,
-		                                                                                  cofactors=None,
-		                                                                                  verbose=False)
+                generalize_model(groups_sbml, gen_sbml, sbml_file, chebi, verbose=False)
                 sbml_file = groups_sbml
                 reader = SBMLReader()
                 input_document = reader.readSBML(sbml_file)

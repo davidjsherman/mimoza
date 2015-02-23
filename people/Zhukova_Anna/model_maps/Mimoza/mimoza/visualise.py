@@ -35,7 +35,7 @@ gen_sbml = form['gen_sbml'].value
 m_dir_id = form['dir'].value
 directory = '../html/%s/' % m_dir_id
 log_file = '%s/log.log' % directory
-logging.basicConfig(level=logging.INFO, filename=log_file)
+logging.basicConfig(level=logging.INFO, format='%(message)s', filename=log_file)
 scripts = '\n'.join(['<script src="../%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
 
 print '''Content-Type: text/html;charset=utf-8

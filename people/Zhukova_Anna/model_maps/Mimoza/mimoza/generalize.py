@@ -58,7 +58,7 @@ url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 directory = '../html/%s/' % m_dir_id
 
 log_file = '%s/log.log' % directory
-logging.basicConfig(level=logging.INFO, filename=log_file)
+logging.basicConfig(level=logging.INFO, format='%(message)s', filename=log_file)
 
 # temp = os.dup(sys.stdout.fileno())
 try:
@@ -74,11 +74,7 @@ try:
 	if not os.path.exists(groups_sbml):
 		chebi = parse(get_chebi())
 		gen_sbml = "%s/%s_generalized.xml" % (sbml_directory, m_id)
-		r_id2g_id, r_id2ch_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, gen_sbml,
-		                                                                                  sbml, chebi,
-		                                                                                  cofactors=None,
-		                                                                                  verbose=True,
-		                                                                                  log_file=log_file)
+		r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, gen_sbml, sbml, chebi, verbose=True)
 	create_thanks_for_uploading_generalized_html(m_id, input_model.getName(), '../html/', m_dir_id,
 	                                             MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
 	                                             MIMOZA_FAVICON, PROGRESS_ICON, generate_generalized_html)

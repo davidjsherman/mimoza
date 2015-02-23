@@ -47,7 +47,8 @@ def to_identifiers_org_format(t_id, prefix="obo.chebi"):
 
 def filter_ontology(onto, terms_collection, relationships=None, min_deepness=None):
     terms_to_keep = set()
-    # level2term = {}
+
+    t_id2level = onto.get_t_id2level()
 
     def keep(term):
         t_id = term.get_id()
@@ -55,9 +56,9 @@ def filter_ontology(onto, terms_collection, relationships=None, min_deepness=Non
             return
         terms_to_keep.add(t_id)
         for parent_id in term.get_parent_ids():
-            p_term = onto.get_term(parent_id)
-            if not min_deepness or max(onto.get_level(p_term)) >= min_deepness:
+            if not min_deepness or max(t_id2level[parent_id]) >= min_deepness:
                 # add2map(level2term, max(onto.getLevel(p_term)), p_term.getName())
+                p_term = onto.get_term(parent_id)
                 keep(p_term)
         for (subj, rel, obj) in onto.get_term_relationships(t_id, None, 0):
             if relationships and not (rel in relationships):
@@ -68,7 +69,7 @@ def filter_ontology(onto, terms_collection, relationships=None, min_deepness=Non
     for t in terms_collection:
         keep(t)
 
-    for term in (t for t in onto.get_all_terms() if not t.get_id() in terms_to_keep):
+    for term in (t for t in onto.get_all_terms() if t.get_id() not in terms_to_keep):
         onto.remove_term(term, True)
 
     onto.filter_relationships(relationships)
@@ -177,6 +178,8 @@ def parse(obo_file, relationships=None):
                 if modifier != -1:
                     value = value[:modifier]
                 term.add_alt_id(value.strip().replace(" ", "."))
+                if value.find("KEGG COMPOUND:") != -1:
+                    term.add_kegg(value.replace("KEGG COMPOUND:", '').strip())
 
     if term:
         ontology.add_term(term)
@@ -195,6 +198,7 @@ class Term:
         self.parents = set(parents) if parents else set()
         self.children = set(children) if children else set()
         self.synonyms = set()
+        self.kegg = set()
 
     def get_id(self):
         return str(self.id)
@@ -237,6 +241,13 @@ class Term:
             result |= child.get_descendants(direct)
         return result
 
+    def add_kegg(self, kegg):
+        if kegg:
+            self.kegg.add(kegg.lower().strip())
+
+    def get_kegg_ids(self):
+        return set(self.kegg)
+
     def __str__(self):
         return "{0}({1})".format(self.get_id(), self.get_name())
 
@@ -248,6 +259,7 @@ class Ontology:
         self.alt_id2term = {}
         self.name2term_ids = defaultdict(set)
         self.rel_map = defaultdict(set)
+        self.kegg2term_id = {}
 
     def get_all_terms(self):
         return self.id2term.values()
@@ -283,6 +295,13 @@ class Ontology:
             result |= {rel for (subj, rel, obj) in rel_set}
         return result
 
+    def get_t_id_by_kegg(self, kegg):
+        if kegg:
+            kegg = kegg.lower().strip()
+        if kegg in self.kegg2term_id:
+            return self.kegg2term_id[kegg]
+        return None
+
     def add_term(self, term):
         if not term:
             return
@@ -301,6 +320,9 @@ class Ontology:
         for child in term.get_descendants():
             child.parents.add(t_id)
             self.roots -= {child}
+        for kegg in term.get_kegg_ids():
+            if kegg:
+                self.kegg2term_id[kegg.lower().strip()] = t_id
 
     def filter_relationships(self, rel_to_keep):
         to_remove = set()
@@ -335,6 +357,9 @@ class Ontology:
                 self.name2term_ids[name] -= {t_id}
                 if not self.name2term_ids[name]:
                     del self.name2term_ids[name]
+        for kegg in term.get_kegg_ids():
+            if kegg in self.kegg2term_id:
+                del self.kegg2term_id[kegg]
         parents = term.get_parent_ids()
         if not parents:
             self.roots -= {term}
@@ -417,6 +442,19 @@ class Ontology:
             if not (parent in checked):
                 result |= self.get_ancestors(parent, direct, rel, checked)
         return result
+
+    def get_t_id2level(self):
+        t_id2level = defaultdict(set)
+
+        def _update_level(t, cur_level):
+            t_id2level[t.get_id()].add(cur_level)
+            for it in t.get_descendants(True):
+                _update_level(it, cur_level + 1)
+
+        for t in self.roots:
+            _update_level(t, 0)
+
+        return t_id2level
 
     def get_level(self, term):
         parents = self.get_ancestors(term)

@@ -100,7 +100,7 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
 def get_quotient_maps(chebi, input_model, sbml_file, verbose):
 	try:
 		r_id2g_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
-		species_id2chebi_id = get_species_to_chebi(input_model, chebi) if (r_id2g_id or ub_sps) else {}
+		species_id2chebi_id = get_species_to_chebi(input_model, chebi, False) if (r_id2g_id or ub_sps) else {}
 		return r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
 	except GrPlError:
 		return None, None, None, None

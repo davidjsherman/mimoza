@@ -65,7 +65,6 @@ def main(argv=None):
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         print >> sys.stderr, "\t for help use --help"
         return 2
-
     reader = SBMLReader()
     doc = reader.readSBML(sbml)
     model = doc.getModel()
@@ -89,42 +88,25 @@ def main(argv=None):
         # log_file = None
         # try:
         # log_file = '%s/log.log' % directory
-        # 	with open(log_file, "w+"):
-        # 		pass
+        # with open(log_file, "w+"):
+        #      pass
         # except:
         # 	pass
-        logging.basicConfig(level=logging.INFO)  #, filename=log_file)
+        logging.captureWarnings(True)
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S")  #, filename=log_file)
+        logging.captureWarnings(True)
 
     groups_sbml = '%s%s_with_groups.xml' % (directory, model_id)
     gen_sbml = '%s%s_generalized.xml' % (directory, model_id)
-    # layout_sbml = '%s%s_with_layout.xml' % (directory, model_id)
-    # gen_layout_sbml = '%s%s_generalized_with_layout.xml' % (directory, model_id)
+
     if check_for_groups(sbml, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
         if sbml != groups_sbml:
             if not SBMLWriter().writeSBMLToFile(doc, groups_sbml):
                 raise Exception("Could not write your model to %s" % groups_sbml)
     else:
         chebi = parse(get_chebi())
-        generalize_model(groups_sbml, gen_sbml, sbml, chebi, cofactors=None,
-                          verbose=True) #, ub_s_ids={'C00112MM', 'C00112Cyto', 'C00112_b', 'C00044MM', 'C00081MM',
-        # 'C00104MM', 'C00704MM', 'C00131MM', 'C00131Cyto', 'C00131_b',
-        # 'C00286Cyto', 'C00286_b', 'C00286MM', 'C00363Cyto', 'C00363MM',
-        # 'C00363_b', 'C00459_b', 'C00459Cyto', 'C00459MM',
-        # 'C00008MM', 'C00008Cyto', 'C00008_b', 'C00020MM', 'C00020Cyto',
-        # 'C00002_b', 'C00002Cyto', 'C00002MM', 'C00024MM', 'C00033MM',
-        # 'C00055MM', 'C00011Cyto', 'C00011_b', 'C00011MM', 'C00063MM',
-        # 'C00010MM', 'C00010_b', 'C00010Cyto', 'C00013Cyto', 'C00016MM',
-        # 'C00016Cyto', 'C00016_b', 'C01352MM', 'C00035_b', 'C00035MM',
-        # 'C00035Cyto', 'C00080Cyto', 'C00080_b', 'C00080MM', 'C00001MM',
-        # 'C00001Cyto', 'C00001_b', 'C00027MM', 'C00288Cyto', 'C00288MM',
-        # 'C00288_b', 'C00003Cyto', 'C00003_b', 'C00003MM', 'C00004Cyto',
-        # 'C00004MM', 'C00006MM', 'C00005MM', 'C00009Cyto', 'C00009MM',
-        # 'C00009_b', 'C00007Cyto', 'C00007MM', 'C00007_b', 'C00013MM',
-        # 'C00015MM', 'C00015Cyto', 'C00015_b', 'C00075MM', 'C00206_b',
-        # 'C00206MM', 'C00206Cyto', 'C00458_b', 'C00458MM', 'C00458Cyto',
-        # 'C00361Cyto', 'C00361_b', 'C00229MM', 'C03939MM',
-        # 'C00361MM', 'C14818MM', 'C14818Cyto', 'C14818_b',
-        # 'C00014MM', 'C00014Cyto', 'C00000MM', 'C00000Cyto'})
+        _, _, species_id2chebi_id, ub_s_ids = \
+            generalize_model(groups_sbml, gen_sbml, sbml, chebi, verbose=True)
 
     reader = SBMLReader()
     input_document = reader.readSBML(groups_sbml)
