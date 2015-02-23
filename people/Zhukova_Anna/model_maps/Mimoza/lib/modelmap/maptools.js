@@ -69,14 +69,21 @@ function handlePopUpClosing(map) {
     });
 }
 
-function updateMapBounds(coords, map) {
+function updateMapBounds(coords, commonCoords, map) {
+    coords[0][0] = coords[0][0] == null ? commonCoords[0][0] : Math.min(coords[0][0], commonCoords[0][0]);
+    coords[0][1] = coords[0][1] == null ? commonCoords[0][1] : Math.max(coords[0][1], commonCoords[0][1]);
+    coords[1][0] = coords[1][0] == null ? commonCoords[1][0] : Math.max(coords[1][0], commonCoords[1][0]);
+    coords[1][1] = coords[1][1] == null ? commonCoords[1][1] : Math.min(coords[1][1], commonCoords[1][1]);
+
     var mapW = coords[1][0] - coords[0][0],
         mapH = coords[0][1] - coords[1][1],
         margin = Math.max(mapW, mapH) * 0.1;
+
     coords[0][0] -= margin;
     coords[0][1] += margin;
     coords[1][0] += margin;
     coords[1][1] -= margin;
+
     map.setMaxBounds(coords);
 }
 
@@ -119,6 +126,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     var map = L.map(mapId, {
         maxZoom: maxZoom,
         minZoom: outCId != null ? minZoom - 1 : minZoom,
+        zoom: minZoom + 1,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
         layers: layers,
@@ -134,15 +142,32 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         maxLoadedZoom = minZoom + 1,
         coords = [
             [null, null],
-            [null, null]
+            [null, null],
+            null
+        ],
+        commonCoords = [
+            [null, null],
+            [null, null],
+            null
         ],
         ubJSON = false,
         inJSON = false,
         outJSON = false,
         jsonArray;
 
-    // load the most general level
+    // load common elements
     json = jsonData[0];
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, commonCoords, minZoom, 8);
+    ubJSON |= jsonArray[1];
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, commonCoords, minZoom, 8);
+    ubJSON |= jsonArray[1];
+    outJSON |= jsonArray[0] || jsonArray[1];
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, commonCoords, minZoom, 8);
+    ubJSON |= jsonArray[1];
+    inJSON |= jsonArray[0] || jsonArray[1];
+
+    // load generalized elements
+    json = jsonData[1];
     jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, 2);
     ubJSON |= jsonArray[1];
     jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom, 2);
@@ -152,10 +177,8 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     ubJSON |= jsonArray[1];
     inJSON |= jsonArray[0] || jsonArray[1];
 
-    updateMapBounds(coords, map);
-    var mapW = coords[1][0] - coords[0][0],
-        mapH = coords[0][1] - coords[1][1];
-    map.setView([coords[0][0] + mapW / 2, coords[1][1] + mapH / 2], minZoom);
+    updateMapBounds(coords, commonCoords, map);
+    map.setView(commonCoords[2], minZoom);
 
 
     var $map_div = $("#" + mapId);
@@ -201,8 +224,8 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         }
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
-
-            json = jsonData[1];//(z - minZoom) / 2];
+            // load specific elements
+            json = jsonData[2];//(z - minZoom) / 2];
             jsonArray = loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep);
             ubJSON |= jsonArray[1];
 
@@ -215,7 +238,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
             ubJSON |= jsonArray[1];
             inJSON |= jsonArray[0] || jsonArray[1];
 
-            updateMapBounds(coords, map);
+            updateMapBounds(coords, commonCoords, map);
             var updateControl = false;
             if (!overlays.hasOwnProperty(UB_LAYER_NAME) && ubJSON) {
                 overlays[UB_LAYER_NAME] = ubLayer;

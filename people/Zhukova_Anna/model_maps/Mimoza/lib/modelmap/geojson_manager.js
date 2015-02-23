@@ -21,7 +21,7 @@ var INNER_TRANSPORT = "inside transport";
 
 var MIN_CLICKABLE_R = 2;
 
-function pnt2layer(map, feature, zoom, coords, minZoom) {
+function pnt2layer(map, feature, zoom, coords, minZoom, cId) {
     "use strict";
     var e = feature.geometry.coordinates,
         scaleFactor = Math.pow(2, zoom),
@@ -32,7 +32,7 @@ function pnt2layer(map, feature, zoom, coords, minZoom) {
         }), {
             color: feature.properties.color,
             opacity: 1,
-            weight: w,
+            weight: w / 2,
             lineCap: 'round',
             lineJoin: 'round',
             clickable: false,
@@ -55,7 +55,7 @@ function pnt2layer(map, feature, zoom, coords, minZoom) {
             fillColor: feature.properties.color,
             fillOpacity: is_bg ? 0.3 : 1,
             opacity: 1,
-            weight: is_bg ? 0 : Math.min(1, w / 10 * Math.pow(2, zoom)),
+            weight: is_bg ? 0 : Math.min(1, w / 10 * scaleFactor),
             fill: true,
             clickable: !is_bg && w * scaleFactor > MIN_CLICKABLE_R,
             zIndexOffset: is_bg ? 0 : 6,
@@ -67,13 +67,16 @@ function pnt2layer(map, feature, zoom, coords, minZoom) {
         ne = bounds.getNorthEast(),
         sw = bounds.getSouthWest(),
         r = w * 40075000 * Math.cos(centre.lat * (Math.PI / 180)) / Math.pow(2, minZoom + 8);
-    var node = null;
+    if (BG_COMPARTMENT == feature.properties.type && cId == feature.properties.c_id) {
+        coords[2] = centre;
+    }
     if (BG_REACTION == feature.properties.type || BG_COMPARTMENT == feature.properties.type) {
         return L.rectangle(bounds, props);
     }
     if (BG_SPECIES == feature.properties.type) {
         return L.circle(centre, r, props);
     }
+    var node = null;
     if (REACTION == feature.properties.type || COMPARTMENT == feature.properties.type) {
         node = L.rectangle(bounds, props);
     } else if (SPECIES == feature.properties.type) {
@@ -90,7 +93,7 @@ function pnt2layer(map, feature, zoom, coords, minZoom) {
 
     var z2label = {},
         z;
-    for (z = map.getMinZoom(); z <= map.getMaxZoom(); z += 1) {
+    for (z = minZoom; z <= map.getMaxZoom(); z += 1) {
         var sz = h * Math.pow(2, z);
         if (sz > 8) {
             var size = Math.max(Math.round(sz / 4), 8),
@@ -122,6 +125,16 @@ function pnt2layer(map, feature, zoom, coords, minZoom) {
             node.addLayer(z2label[z]);
         }
     });
+
+    if (COMPARTMENT == feature.properties.type) {
+        map.on('zoomend', function (e) {
+            if (map.getZoom() == map.getMaxZoom()) {
+                if (map.getBounds().intersects(bounds)) {
+                    window.location.href = "?id=" + feature.properties.id;
+                }
+            }
+        });
+    }
     return node;
 }
 
@@ -138,12 +151,12 @@ function matchesCompartment(cId, feature) {
     return cId === feature.properties.c_id || cId === feature.properties.id;
 }
 
-function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, minZoom, filterFunction) {
+function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, minZoom, cId, filterFunction) {
     "use strict";
     var name2selection = {};
     return L.geoJson(jsn, {
         pointToLayer: function (feature, latlng) {
-            return pnt2layer(map, feature, zoom, coords, minZoom);
+            return pnt2layer(map, feature, zoom, coords, minZoom, cId);
         },
         onEachFeature: function (feature, layer) {
             addPopups(map, name2popup, name2zoom, name2selection, feature, layer, mapId, zoom, minZoom);
@@ -156,41 +169,42 @@ function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, m
 
 function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep) {
     "use strict";
-    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom,
+    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom, cId,
             function (feature) {
                 return (typeof feature.properties.ub === 'undefined' || !feature.properties.ub) && matchesCompartment(cId, feature);
             }
         ),
-        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom,
+        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom, cId,
             function (feature) {
                 return (typeof feature.properties.ub !== 'undefined' && feature.properties.ub) && matchesCompartment(cId, feature);
             }
         );
-    if (map.getZoom() >= z && map.getZoom() < z + zStep) {
+    if (typeof map.getZoom() === 'undefined' && z >= minZoom && z < minZoom + zStep || map.getZoom() >= z && map.getZoom() < z + zStep) {
         compLayer.addLayer(specificJson);
         if (map.hasLayer(ubLayer)) {
             compLayer.addLayer(ubiquitousJson);
         }
     }
-    map.on('zoomend', function (e) {
-        var zoom = map.getZoom();
-        // if we are about to zoom in/out to this geojson
-        if (zoom >= z && map.getZoom() < z + zStep) {
-            if (!compLayer.hasLayer(specificJson)) {
-                compLayer.addLayer(specificJson);
-                if (map.hasLayer(ubLayer)) {
-                    compLayer.addLayer(ubiquitousJson);
+    if (z > minZoom || z + zStep - 1 < map.getMaxZoom()) {
+        map.on('zoomend', function (e) {
+            // if we are about to zoom in/out to this geojson
+            if (map.getZoom() >= z && map.getZoom() < z + zStep) {
+                if (!compLayer.hasLayer(specificJson)) {
+                    compLayer.addLayer(specificJson);
+                    if (map.hasLayer(ubLayer)) {
+                        compLayer.addLayer(ubiquitousJson);
+                    }
+                }
+            } else {
+                if (compLayer.hasLayer(specificJson)) {
+                    compLayer.removeLayer(specificJson);
+                    if (map.hasLayer(ubLayer)) {
+                        compLayer.removeLayer(ubiquitousJson);
+                    }
                 }
             }
-        } else {
-            if (compLayer.hasLayer(specificJson)) {
-                compLayer.removeLayer(specificJson);
-                if (map.hasLayer(ubLayer)) {
-                    compLayer.removeLayer(ubiquitousJson);
-                }
-            }
-        }
-    });
+        });
+    }
     map.on('overlayadd', function(e) {
         if (e.layer === ubLayer && (map.getZoom() >= z && map.getZoom() < z + zStep)) {
             compLayer.addLayer(ubiquitousJson);
