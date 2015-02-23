@@ -157,7 +157,8 @@ def color_edges(graph):
         for e in graph.getInOutEdges(n):
             real_e = e
             while root.isMetaEdge(real_e):
-                real_e = list(root[VIEW_META_GRAPH][real_e])[0]
+                real_e = next((ee for ee in root[VIEW_META_GRAPH][real_e] if not root[UBIQUITOUS][ee]),
+                              next(iter(root[VIEW_META_GRAPH][real_e])))
             if root[UBIQUITOUS][real_e] or root[UBIQUITOUS][graph.target(e)] or root[UBIQUITOUS][graph.source(e)]:
                 view_color[e] = GRAY
             else:
