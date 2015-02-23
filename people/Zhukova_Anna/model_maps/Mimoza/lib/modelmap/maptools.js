@@ -84,7 +84,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
-        minZoom = size <= MAP_DIMENSION_SIZE / 2 ? 0 : Math.max(1, Math.round(size / MAP_DIMENSION_SIZE)),
+        minZoom = Math.max(1, Math.round(size / MAP_DIMENSION_SIZE)),
         ubLayer = L.layerGroup(),
         overlays = {},
         cIds = {},
@@ -105,7 +105,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     if (typeof jsonData === 'undefined' || jsonData.length <= 0) {
         return null;
     }
-    var maxZoom = 3 + minZoom,
+    var maxZoom = 7 + minZoom,
         tiles = getTiles("lib/modelmap/white.jpg", minZoom, maxZoom),
         grayTiles = getTiles("lib/modelmap/gray.jpg", minZoom, maxZoom),
         outTransportLayer = L.layerGroup(),
@@ -131,7 +131,6 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     var name2popup = {},
         name2zoom = {},
         json,
-        z,
         maxLoadedZoom = minZoom + 1,
         coords = [
             [null, null],
@@ -141,13 +140,15 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         inJSON = false,
         outJSON = false,
         jsonArray;
+
+    // load the most general level
     json = jsonData[0];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom);
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, 2);
     ubJSON |= jsonArray[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom);
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom, 2);
     ubJSON |= jsonArray[1];
     outJSON |= jsonArray[0] || jsonArray[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom);
+    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom, 2);
     ubJSON |= jsonArray[1];
     inJSON |= jsonArray[0] || jsonArray[1];
 
@@ -158,7 +159,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
 
 
     var $map_div = $("#" + mapId);
-    $("#" + mapId).bind('resize', function(){
+    $map_div.bind('resize', function(){
         var h = $map_div.height(),
             w = $map_div.width();
         $(".leaflet-popup").css({
@@ -192,26 +193,28 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     initializeAutocomplete(name2popup, name2zoom, map);
     map.on('zoomend', function (e) {
         var zoom = map.getZoom(),
-            mZoom = Math.min(zoom + 1, maxZoom);
+            zStep = 6,
+            mZoom = Math.min(zoom + zStep - 1, maxZoom),
+            z = maxLoadedZoom + 1;
         if (outCId != null && zoom == map.getMinZoom()) {
             window.location.href = "?id=" + outCId;
         }
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
-            for (z = maxLoadedZoom + 1; z <= mZoom; z += 2) {
-                json = jsonData[(z - minZoom) / 2];
-                jsonArray = loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom);
-                ubJSON |= jsonArray[1];
 
-                jsonArray = loadGeoJson(map, json, z, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom);
-                ubJSON |= jsonArray[1];
-                // outside transport should already be visible on the min zoom level
-                outJSON |= jsonArray[0] || jsonArray[1];
+            json = jsonData[1];//(z - minZoom) / 2];
+            jsonArray = loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep);
+            ubJSON |= jsonArray[1];
 
-                jsonArray = loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom);
-                ubJSON |= jsonArray[1];
-                inJSON |= jsonArray[0] || jsonArray[1];
-            }
+            jsonArray = loadGeoJson(map, json, z, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom, zStep);
+            ubJSON |= jsonArray[1];
+            // outside transport should already be visible on the min zoom level
+            outJSON |= jsonArray[0] || jsonArray[1];
+
+            jsonArray = loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom, zStep);
+            ubJSON |= jsonArray[1];
+            inJSON |= jsonArray[0] || jsonArray[1];
+
             updateMapBounds(coords, map);
             var updateControl = false;
             if (!overlays.hasOwnProperty(UB_LAYER_NAME) && ubJSON) {
@@ -244,11 +247,12 @@ function initializeAutocomplete(name2popup, name2zoom, map) {
     "use strict";
     var searchForm = document.getElementById('search_form');
     if (searchForm !== null) {
-        $("#tags").autocomplete({
+        var $tags = $("#tags");
+        $tags.autocomplete({
             source: Object.keys(name2popup),
             autoFocus: true
         });
-        $('#tags').keypress(function (e) {
+        $tags.keypress(function (e) {
             var code = e.keyCode || e.which;
             if (code === $.ui.keyCode.ENTER) {
                 search(map, name2popup, name2zoom);
@@ -261,10 +265,12 @@ function initializeAutocomplete(name2popup, name2zoom, map) {
     }
 }
 
+
 function centerMap() {
     "use strict";
     map.setView([0, 0], map.getZoom());
 }
+
 
 function overlay() {
     "use strict";

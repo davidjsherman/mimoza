@@ -87,23 +87,41 @@ function pnt2layer(map, feature, zoom, coords, minZoom) {
     coords[1][0] = coords[1][0] == null ? ne.lat : Math.max(coords[1][0], ne.lat);
     coords[1][1] = coords[1][1] == null ? ne.lng : Math.min(coords[1][1], ne.lng);
     node = L.featureGroup([node]);
-    w *= scaleFactor * (COMPARTMENT == feature.properties.type ? 1 : 1.3);
-    h *= scaleFactor * 1.5;
-    if (h > 8) {
-        var size = Math.max(Math.round(h / 4), 8);
-        h -= h % (size + 1);
-        var label = L.marker(centre,
-                            {icon: L.divIcon({
-                                    className: 'element-label',
-                                    html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 1) + "px\">" + feature.properties.name + "</span>",
-                                    iconSize: [w, h],
-                                    zIndexOffset: 0,
-                                    riseOnHover: false,
-                                    riseOffset: 0})
-                            }
+
+    var z2label = {},
+        z;
+    for (z = map.getMinZoom(); z <= map.getMaxZoom(); z += 1) {
+        var sz = h * Math.pow(2, z);
+        if (sz > 8) {
+            var size = Math.max(Math.round(sz / 4), 8),
+                wz = w * Math.pow(2, z);
+            sz -= sz % (size + 1);
+            z2label[z] = L.marker(centre,
+                {
+                    icon: L.divIcon({
+                        className: 'element-label',
+                        html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 1) + "px\">" + feature.properties.name + "</span>",
+                        iconSize: [wz, sz],
+                        zIndexOffset: 0,
+                        riseOnHover: false,
+                        riseOffset: 0
+                    })
+                }
             );
-        node.addLayer(label);
+        }
     }
+    if (z2label.hasOwnProperty(zoom)) {
+        node.addLayer(z2label[zoom]);
+    }
+    map.on('zoomend', function (e) {
+        for (z in z2label) {
+            node.removeLayer(z2label[z]);
+        }
+        z = map.getZoom();
+        if (z2label.hasOwnProperty(z)) {
+            node.addLayer(z2label[z]);
+        }
+    });
     return node;
 }
 
@@ -136,7 +154,7 @@ function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, m
     });
 }
 
-function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom) {
+function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep) {
     "use strict";
     var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom,
             function (feature) {
@@ -148,7 +166,7 @@ function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, n
                 return (typeof feature.properties.ub !== 'undefined' && feature.properties.ub) && matchesCompartment(cId, feature);
             }
         );
-    if (map.getZoom() == z || map.getZoom() == z + 1) {
+    if (map.getZoom() >= z && map.getZoom() < z + zStep) {
         compLayer.addLayer(specificJson);
         if (map.hasLayer(ubLayer)) {
             compLayer.addLayer(ubiquitousJson);
@@ -157,10 +175,12 @@ function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, n
     map.on('zoomend', function (e) {
         var zoom = map.getZoom();
         // if we are about to zoom in/out to this geojson
-        if (zoom == z || map.getZoom() == z + 1) {
-            compLayer.addLayer(specificJson);
-            if (map.hasLayer(ubLayer)) {
-                compLayer.addLayer(ubiquitousJson);
+        if (zoom >= z && map.getZoom() < z + zStep) {
+            if (!compLayer.hasLayer(specificJson)) {
+                compLayer.addLayer(specificJson);
+                if (map.hasLayer(ubLayer)) {
+                    compLayer.addLayer(ubiquitousJson);
+                }
             }
         } else {
             if (compLayer.hasLayer(specificJson)) {
@@ -172,12 +192,12 @@ function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, n
         }
     });
     map.on('overlayadd', function(e) {
-        if (e.layer === ubLayer && (map.getZoom() == z || map.getZoom() == z + 1)) {
+        if (e.layer === ubLayer && (map.getZoom() >= z && map.getZoom() < z + zStep)) {
             compLayer.addLayer(ubiquitousJson);
         }
     });
     map.on('overlayremove', function(e) {
-        if (e.layer === ubLayer && (map.getZoom() == z || map.getZoom() == z + 1)) {
+        if (e.layer === ubLayer && (map.getZoom() >= z && map.getZoom() < z + zStep)) {
             compLayer.removeLayer(ubiquitousJson);
         }
     });
