@@ -95,7 +95,9 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         ubLayer = L.layerGroup(),
         overlays = {},
         cIds = {},
-        cId = gup(),
+        cId = getParameter("id"),
+        inZoom = getParameter("zoom"),
+        curZoom = inZoom == null ? minZoom + 1 : minZoom + 2,
         outCId = null,
         jsonData;
     if (cId == null && compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0) {
@@ -126,7 +128,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     var map = L.map(mapId, {
         maxZoom: maxZoom,
         minZoom: outCId != null ? minZoom - 1 : minZoom,
-        zoom: minZoom + 1,
+        zoom: curZoom,
         attributionControl: false,
         padding: [MARGIN, MARGIN],
         layers: layers,
@@ -138,12 +140,10 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     //};
     var name2popup = {},
         name2zoom = {},
-        json,
-        maxLoadedZoom = minZoom + 1,
+        maxLoadedZoom = inZoom == null ? minZoom + 1 : minZoom + 7,
         coords = [
             [null, null],
-            [null, null],
-            null
+            [null, null]
         ],
         commonCoords = [
             [null, null],
@@ -155,30 +155,29 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         outJSON = false,
         jsonArray;
 
-    // load common elements
-    json = jsonData[0];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, commonCoords, minZoom, 8);
-    ubJSON |= jsonArray[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, commonCoords, minZoom, 8);
-    ubJSON |= jsonArray[1];
-    outJSON |= jsonArray[0] || jsonArray[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, commonCoords, minZoom, 8);
-    ubJSON |= jsonArray[1];
-    inJSON |= jsonArray[0] || jsonArray[1];
+    function loadElements(json, zoom, coords, zStep) {
+        jsonArray = loadGeoJson(map, json, zoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep, inZoom);
+        ubJSON |= jsonArray[1];
+        jsonArray = loadGeoJson(map, json, zoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom, zStep, inZoom);
+        ubJSON |= jsonArray[1];
+        outJSON |= jsonArray[0] || jsonArray[1];
+        jsonArray = loadGeoJson(map, json, zoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom, zStep, inZoom);
+        ubJSON |= jsonArray[1];
+        inJSON |= jsonArray[0] || jsonArray[1];
+    }
 
+    // load common elements
+    loadElements(jsonData[0], minZoom, commonCoords, 8);
     // load generalized elements
-    json = jsonData[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, 2);
-    ubJSON |= jsonArray[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom, 2);
-    ubJSON |= jsonArray[1];
-    outJSON |= jsonArray[0] || jsonArray[1];
-    jsonArray = loadGeoJson(map, json, minZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom, 2);
-    ubJSON |= jsonArray[1];
-    inJSON |= jsonArray[0] || jsonArray[1];
+    loadElements(jsonData[1], minZoom, coords, 2);
+
+    if (curZoom > minZoom + 1) {
+        loadElements(jsonData[2], minZoom + 2, coords, 6);
+    }
 
     updateMapBounds(coords, commonCoords, map);
-    map.setView(commonCoords[2], minZoom);
+    map.setView(commonCoords[2], curZoom);
+
 
 
     var $map_div = $("#" + mapId);
@@ -214,41 +213,27 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     control.addTo(map);
 
     initializeAutocomplete(name2popup, name2zoom, map);
+
     map.on('zoomend', function (e) {
         var zoom = map.getZoom(),
             zStep = 6,
             mZoom = Math.min(zoom + zStep - 1, maxZoom),
             z = maxLoadedZoom + 1;
         if (outCId != null && zoom == map.getMinZoom()) {
-            window.location.href = "?id=" + outCId;
+            window.location.href = "?id=" + outCId + (cId == null ? "" : ("&zoom=" + cId));
         }
         // if we are about to zoom in/out to this geojson
         if (zoom > maxLoadedZoom) {
             // load specific elements
-            json = jsonData[2];//(z - minZoom) / 2];
-            jsonArray = loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep);
-            ubJSON |= jsonArray[1];
-
-            jsonArray = loadGeoJson(map, json, z, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom, zStep);
-            ubJSON |= jsonArray[1];
-            // outside transport should already be visible on the min zoom level
-            outJSON |= jsonArray[0] || jsonArray[1];
-
-            jsonArray = loadGeoJson(map, json, z, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom, zStep);
-            ubJSON |= jsonArray[1];
-            inJSON |= jsonArray[0] || jsonArray[1];
-
+            loadElements(jsonData[2], z, coords, zStep);
             updateMapBounds(coords, commonCoords, map);
             var updateControl = false;
             if (!overlays.hasOwnProperty(UB_LAYER_NAME) && ubJSON) {
                 overlays[UB_LAYER_NAME] = ubLayer;
                 updateControl = true;
             }
-            // outside transport should already be visible on the min zoom level
-//            if (!overlays.hasOwnProperty(OUT_TR_LAYER_NAME) && outJSON) {
-//                overlays[OUT_TR_LAYER_NAME] = outTransportLayer;
-//                updateControl = true;
-//            }
+            // outside transport should already be visible on the general zoom level,
+            // so no need to update the control
             if (!overlays.hasOwnProperty(IN_TR_LAYER_NAME) && inJSON) {
                 overlays[IN_TR_LAYER_NAME] = inTransportLayer;
                 updateControl = true;
@@ -342,8 +327,8 @@ function overlay() {
 }
 
 
-function gup(){
-  var regexS = "[\\?&]id=([^&#]*)";
+function getParameter(name){
+  var regexS = "[\\?&]" + name + "=([^&#]*)";
   var regex = new RegExp(regexS);
   var results = regex.exec(window.location.href);
   if(results == null)
@@ -355,7 +340,7 @@ function gup(){
 
 function update_embed_value(w, h) {
     "use strict";
-    var cId = gup(),
+    var cId = getParameter(),
         url = $("#embed-url").val();
     if (cId) {
         url += "?id=" + cId;

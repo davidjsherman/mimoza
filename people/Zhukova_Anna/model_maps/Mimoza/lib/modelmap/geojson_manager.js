@@ -67,7 +67,9 @@ function pnt2layer(map, feature, zoom, coords, minZoom, cId) {
         ne = bounds.getNorthEast(),
         sw = bounds.getSouthWest(),
         r = w * 40075000 * Math.cos(centre.lat * (Math.PI / 180)) / Math.pow(2, minZoom + 8);
-    if (BG_COMPARTMENT == feature.properties.type && cId == feature.properties.c_id) {
+    if (BG_COMPARTMENT == feature.properties.type && cId == feature.properties.c_id
+        || COMPARTMENT == feature.properties.type && cId == feature.properties.id) {
+        console.log(cId);
         coords[2] = centre;
     }
     if (BG_REACTION == feature.properties.type || BG_COMPARTMENT == feature.properties.type) {
@@ -128,10 +130,10 @@ function pnt2layer(map, feature, zoom, coords, minZoom, cId) {
 
     if (COMPARTMENT == feature.properties.type) {
         map.on('zoomend', function (e) {
-            if (map.getZoom() == map.getMaxZoom()) {
-                if (map.getBounds().intersects(bounds)) {
+            var mapBounds = map.getBounds();
+            if (map.getZoom() > minZoom + 2 && map.getBounds().intersects(bounds) && (map.getZoom() == map.getMaxZoom()
+            || bounds.contains(mapBounds.getSouthWest()) && bounds.contains(mapBounds.getNorthEast()))) {
                     window.location.href = "?id=" + feature.properties.id;
-                }
             }
         });
     }
@@ -167,14 +169,14 @@ function getFilteredJson(map, jsn, name2popup, name2zoom, zoom, mapId, coords, m
     });
 }
 
-function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep) {
+function loadGeoJson(map, json, z, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep, inZoom) {
     "use strict";
-    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom, cId,
+    var specificJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom, inZoom == null ? cId: inZoom,
             function (feature) {
                 return (typeof feature.properties.ub === 'undefined' || !feature.properties.ub) && matchesCompartment(cId, feature);
             }
         ),
-        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom, cId,
+        ubiquitousJson = getFilteredJson(map, json, name2popup, name2zoom, z, mapId, coords, minZoom, inZoom == null ? cId: inZoom,
             function (feature) {
                 return (typeof feature.properties.ub !== 'undefined' && feature.properties.ub) && matchesCompartment(cId, feature);
             }
