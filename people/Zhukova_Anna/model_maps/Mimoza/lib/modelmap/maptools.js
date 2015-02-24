@@ -135,9 +135,6 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         crs: L.CRS.Simple
     });
     handlePopUpClosing(map);
-    //window.onresize = function (event) {
-    //    adjustMapSize(mapId);
-    //};
     var name2popup = {},
         name2zoom = {},
         maxLoadedZoom = inZoom == null ? minZoom + 1 : minZoom + 7,
@@ -155,30 +152,28 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         outJSON = false,
         jsonArray;
 
-    function loadElements(json, zoom, coords, zStep) {
-        jsonArray = loadGeoJson(map, json, zoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, zStep, inZoom);
+    function loadElements(json, fromZoom, toZoom, coords) {
+        jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, inZoom);
         ubJSON |= jsonArray[1];
-        jsonArray = loadGeoJson(map, json, zoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom, zStep, inZoom);
+        jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minZoom, inZoom);
         ubJSON |= jsonArray[1];
         outJSON |= jsonArray[0] || jsonArray[1];
-        jsonArray = loadGeoJson(map, json, zoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom, zStep, inZoom);
+        jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minZoom, inZoom);
         ubJSON |= jsonArray[1];
         inJSON |= jsonArray[0] || jsonArray[1];
     }
 
     // load common elements
-    loadElements(jsonData[0], minZoom, commonCoords, 8);
+    loadElements(jsonData[0], minZoom, maxZoom, commonCoords);
     // load generalized elements
-    loadElements(jsonData[1], minZoom, coords, 2);
+    loadElements(jsonData[1], minZoom, minZoom + 1, coords);
 
     if (curZoom > minZoom + 1) {
-        loadElements(jsonData[2], minZoom + 2, coords, 6);
+        loadElements(jsonData[2], minZoom + 2, maxZoom, coords);
     }
 
     updateMapBounds(coords, commonCoords, map);
     map.setView(commonCoords[2], curZoom);
-
-
 
     var $map_div = $("#" + mapId);
     $map_div.bind('resize', function(){
@@ -215,17 +210,13 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     initializeAutocomplete(name2popup, name2zoom, map);
 
     map.on('zoomend', function (e) {
-        var zoom = map.getZoom(),
-            zStep = 6,
-            mZoom = Math.min(zoom + zStep - 1, maxZoom),
-            z = maxLoadedZoom + 1;
-        if (outCId != null && zoom == map.getMinZoom()) {
+        if (outCId != null && map.getZoom() == map.getMinZoom()) {
             window.location.href = "?id=" + outCId + (cId == null ? "" : ("&zoom=" + cId));
         }
         // if we are about to zoom in/out to this geojson
-        if (zoom > maxLoadedZoom) {
+        if (map.getZoom() > maxLoadedZoom) {
             // load specific elements
-            loadElements(jsonData[2], z, coords, zStep);
+            loadElements(jsonData[2], minZoom + 2, maxZoom, coords);
             updateMapBounds(coords, commonCoords, map);
             var updateControl = false;
             if (!overlays.hasOwnProperty(UB_LAYER_NAME) && ubJSON) {
@@ -243,7 +234,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
                 control = L.control.layers(baseLayers, overlays);
                 control.addTo(map);
             }
-            maxLoadedZoom = mZoom;
+            maxLoadedZoom = maxZoom;
             initializeAutocomplete(name2popup, name2zoom, map);
         }
     });
@@ -271,12 +262,6 @@ function initializeAutocomplete(name2popup, name2zoom, map) {
             search(map, name2popup, name2zoom);
         };
     }
-}
-
-
-function centerMap() {
-    "use strict";
-    map.setView([0, 0], map.getZoom());
 }
 
 

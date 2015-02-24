@@ -161,18 +161,6 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
     return geojson.Feature(id=n_id, geometry=geojson.Point([x, y]), properties=props), bg_feature
 
 
-def _get_gene_association_list(ga):
-    gene_association = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
-    if not gene_association:
-        return []
-    try:
-        res = to_cnf(gene_association, False)
-        gene_association = [[str(it) for it in disjuncts(cjs)] for cjs in conjuncts(res)]
-        return gene_association
-    except:
-        return []
-
-
 def get_gene_association_list(ga):
     gene_association = ga.replace('and', '&').replace('or', '|').replace('OR', '|')
     if not gene_association:
@@ -214,21 +202,11 @@ def get_reaction_participants_inside_compartment(n, r, root):
         return {s for s in root[VIEW_META_GRAPH][n].getNodes()}
 
 
-def _get_formula(graph, r, r2rs_ps):
-    root = graph.getRoot()
-    name_prop = NAME
-    formatter = lambda (st, n), prop: [root[prop if root[prop][n] else NAME][n], int(st)]
-    if graph.isMetaNode(r):
-        r = root[VIEW_META_GRAPH][r].getOneNode()
-        name_prop = ANCESTOR_NAME
-    rs, ps = r2rs_ps[r]
-    return sorted(formatter(it, name_prop) for it in rs), sorted(formatter(it, name_prop) for it in ps)
-
-
 def get_formula(graph, r, r2rs_ps, reversible):
     root = graph.getRoot()
     name_prop = NAME
-    formatter = lambda (st, n), prop: [root[prop if root[prop][n] else NAME][n], int(st)]
+    format_st = lambda st: "" if st == 1 else ("%f" % st if st % 1 != 0 else "%d" % int(st))
+    formatter = lambda (st, n), prop: [root[prop if root[prop][n] else NAME][n], format_st(float(st))]
     if graph.isMetaNode(r):
         r = root[VIEW_META_GRAPH][r].getOneNode()
         name_prop = ANCESTOR_NAME
@@ -238,13 +216,13 @@ def get_formula(graph, r, r2rs_ps, reversible):
     res = '<table border="0" width="100%"><tr><td width="45%"><table border="0">'
     if rs:
         for [r, st] in rs:
-            res += '<tr><td class="main">%d&nbsp;</td><td>%s</td></tr>' % (st, r)
+            res += '<tr><td class="main">%s&nbsp;</td><td>%s</td></tr>' % (st, r)
     res += '</table></td>'
     res += '<th class="centre" width="10%%">%s</th>' % "&#8596;" if reversible else "&#65515;"
     res += '<td  width="45%"><table border="0">'
     if ps:
         for [p, st] in ps:
-            res += '<tr><td class="main">%d&nbsp;</td><td>%s</td></tr>' % (st, p)
+            res += '<tr><td class="main">%s&nbsp;</td><td>%s</td></tr>' % (st, p)
     res += '</table></td></tr></table>'
     return res
 
