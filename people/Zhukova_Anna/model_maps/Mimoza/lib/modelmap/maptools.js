@@ -2,7 +2,7 @@
  * Created by anna on 12/12/13.
  */
 
-var UB_LAYER_NAME = "<i>Ubiquitous species</i>",
+var UB_LAYER_NAME = "<i>Ubiquitous metabolites</i>",
     OUT_TR_LAYER_NAME = "<i>Transport to outside</i>",
     IN_TR_LAYER_NAME = "<i>Inner transport</i>",
     LEAFLET_POPUP_MARGIN = 10;

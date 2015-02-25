@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, Counter
 from itertools import chain
 import threading
 from generalization.reaction_filters import get_reactants, get_products
@@ -30,6 +30,17 @@ def good(t_set, conflicts):
         if len(t_set & c_ts) > 1:
             return False
     return True
+
+
+def get_most_problematic_term(t_set, conflicts):
+    if not t_set or len(t_set) == 1:
+        return None
+    result = Counter()
+    for c_ts in conflicts:
+        common = t_set & c_ts
+        if len(common) > 1:
+            result.update({t: 1 for t in common})
+    return max(result.iterkeys(), key=lambda t: result[t])
 
 
 def get_conflict_num(t_set, conflicts):
@@ -211,8 +222,8 @@ class StoichiometryFixingThread(threading.Thread):
         self.ub_chebi_ids = ub_chebi_ids
         self.s_id2term_id = s_id2term_id
         self.model = model
-        self.unmapped_s_ids = unmapped_s_ids
-        self.term_ids = term_ids
+        self.unmapped_s_ids = set(unmapped_s_ids)
+        self.term_ids = set(term_ids)
         self.onto = onto
         self.clu = clu
         self.term_id2clu = term_id2clu
@@ -222,22 +233,15 @@ class StoichiometryFixingThread(threading.Thread):
         # the least common ancestors, or roots if there are none
         common_ancestor_terms = self.onto.common_points({self.onto.get_term(t) for t in self.term_ids}, 3)
         if not common_ancestor_terms:
-            common_ancestor_terms = set()
-            for t in self.term_ids:
-                term = self.onto.get_term(t)
-                # then it's a fake term
-                if not term:
-                    continue
-                common_ancestor_terms |= self.onto.get_generalized_ancestors_of_level(term, set(), None, 3)
+            terms = (self.onto.get_term(t) for t in self.term_ids)
+            common_ancestor_terms = \
+                reduce(lambda s1, s2: s1 | s2,
+                       (self.onto.get_generalized_ancestors_of_level(term, set(), None, 3) for term in terms if term),
+                       set())
         return common_ancestor_terms
 
     def get_covered_term_ids(self, term, term_ids):
-        result = set()
-        for sub_t in self.onto.get_sub_tree(term):
-            sub_t_id = sub_t.get_id()
-            if sub_t_id in term_ids:
-                result.add(sub_t_id)
-        return result
+        return term_ids & {t.get_id() for t in self.onto.get_sub_tree(term)}
 
     def get_level(self, t):
         level = self.onto.get_level(t)
@@ -260,54 +264,69 @@ class StoichiometryFixingThread(threading.Thread):
             return True
 
         # sets defined by the least common ancestors
-        processed = set()
+        for t_id in self.term_ids:
+            term = self.onto.get_term(t_id)
+            ancestor_level = self.get_level(term) if term else 0
+            process({t_id}, (3, ancestor_level), basics)
+
+        processed = set(self.term_ids)
+
         for common_ancestor in common_ancestor_terms:
+            if common_ancestor.get_id() in processed:
+                continue
+            processed.add(common_ancestor.get_id())
+
             common_ancestor_covered_term_ids = self.get_covered_term_ids(common_ancestor, self.term_ids)
             ancestor_level = self.get_level(common_ancestor)
             process(common_ancestor_covered_term_ids, (3, ancestor_level), basics)
             for t in self.onto.get_generalized_descendants(common_ancestor, False, set()):
-                if t in processed:
+                if t.get_id() in processed:
                     continue
-                processed.add(t)
-
+                processed.add(t.get_id())
                 t_covered_term_ids = self.get_covered_term_ids(t, common_ancestor_covered_term_ids)
                 if not t_covered_term_ids:
                     continue
                 t_level = self.get_level(t)
-                if process(t_covered_term_ids, (3, t_level), basics):
+                process(t_covered_term_ids, (3, t_level), basics)
+                # if process(t_covered_term_ids, (3, t_level), basics):
                     # complement set
-                    complement = common_ancestor_covered_term_ids - t_covered_term_ids
-                    if complement:
-                        process(complement, (2, ancestor_level), basics)
+                    # complement = common_ancestor_covered_term_ids - t_covered_term_ids
+                    # if complement:
+                    #     process(complement, (2, ancestor_level), basics)
 
-        if len(self.term_ids) + len(conflicts) < 60:
-            # the differences between sets already in Psi
-            for _ in xrange(2):
-                to_add = []
-                i = 0
-                for basic in basics:
-                    i1, j1 = set2score[tuple(basic)]
-                    i += 1
-                    for t_covered_term_ids in basics[i:]:
-                        for complement_covered_term_ids in (basic - t_covered_term_ids, t_covered_term_ids - basic):
-                            if complement_covered_term_ids:
-                                i0, j0 = set2score[tuple(t_covered_term_ids)]
-                                score = min(i0, i1) - 1, min(j0, j1)
-                                process(complement_covered_term_ids, score, to_add)
-                basics += to_add
+        # if len(self.term_ids) + len(conflicts) < 60:
+        #     # the differences between sets already in Psi
+        #     for _ in xrange(2):
+        #         to_add = []
+        #         i = 0
+        #         for basic in basics:
+        #             i1, j1 = set2score[tuple(basic)]
+        #             i += 1
+        #             for t_covered_term_ids in basics[i:]:
+        #                 for complement_covered_term_ids in (basic - t_covered_term_ids, t_covered_term_ids - basic):
+        #                     if complement_covered_term_ids:
+        #                         i0, j0 = set2score[tuple(t_covered_term_ids)]
+        #                         score = min(i0, i1) - 1, min(j0, j1)
+        #                         process(complement_covered_term_ids, score, to_add)
+        #         basics += to_add
 
-        result = [term_set for term_set in psi if good(set(term_set), conflicts)]
+        # result = [term_set for term_set in psi if good(set(term_set), conflicts)]
+        result = psi
         return result, set2score
 
     def greedy(self, psi, set2score, conflicts):
         terms = set(self.term_ids)
         while terms and psi:
-            if good(terms, conflicts):
+            if good(set(terms), conflicts):
                 yield terms
                 break
-            s = max(psi, key=lambda candidate_terms: (len(set(candidate_terms) & terms), set2score[candidate_terms]))
+            s = max((term_set for term_set in psi if good(set(term_set), conflicts)), key=lambda candidate_terms: (len(set(candidate_terms) & terms), set2score[candidate_terms]))
             result = set(s)
-            # yield result
+            if len(result & terms) == 1:
+                problematic_term = get_most_problematic_term(set(terms), conflicts)
+                if problematic_term:
+                    s = (problematic_term,)
+                    result = {problematic_term}
             yield result & terms
             terms -= result
             psi.remove(s)

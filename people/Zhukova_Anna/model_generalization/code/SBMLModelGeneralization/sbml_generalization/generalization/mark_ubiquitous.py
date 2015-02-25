@@ -18,7 +18,7 @@ UBIQUITOUS_THRESHOLD = 14
 # 'acyl-CoA', 'IDP(3-)', 'dCDP', 'dATP(4-)', 'dGTP', 'CTP', 'GTP', 'ITP(4-)', 'NADP(+)', 'FADH2(2-)', 'dGTP(4-)',
 # 'FAD(3-)', 'UDP', 'diphosphate(4-)', 'dGDP', 'oxygen atom', 'dCMP', 'dTMP', 'CDP', 'dUDP',
 # 'acetyl-[acyl-carrier protein]', 'AMP', 'hydrogen peroxide', '((18)O)water', 'NADH', 'NAD(1-)', 'ADP(3-)',
-# 'AMP(2-)', 'acetyl-CoA', 'NADH(2-)', 'ACP'
+# 'AMP(2-)', 'acetyl-CoA', 'NADH(2-)', 'ACP', 'ACP'
 #
 COMMON_UB_IDS = {'chebi:37568', 'chebi:15422', 'chebi:57783', 'chebi:17625', 'chebi:58115', 'chebi:37565',
                  'chebi:16192', 'chebi:15846', 'chebi:25805', 'chebi:26020', 'chebi:13390', 'chebi:13392',
@@ -33,7 +33,7 @@ COMMON_UB_IDS = {'chebi:37568', 'chebi:15422', 'chebi:57783', 'chebi:17625', 'ch
                  'chebi:28862', 'chebi:28850', 'chebi:17093', 'chebi:16027', 'chebi:33813', 'chebi:57287',
                  'chebi:57288', 'chebi:16234', 'chebi:16039', 'chebi:16238', 'chebi:36080', 'chebi:16284',
                  'chebi:16526', 'chebi:17984', 'chebi:58280', 'chebi:28846', 'chebi:16174', 'chebi:15996',
-                 'chebi:18009', 'chebi:15918', 'chebi:15351', 'chebi:18359'}
+                 'chebi:18009', 'chebi:15918', 'chebi:15351', 'chebi:18359', 'chebi:13534'}
 
 CONJUGATE_ACID_BASE_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of'}
 EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}

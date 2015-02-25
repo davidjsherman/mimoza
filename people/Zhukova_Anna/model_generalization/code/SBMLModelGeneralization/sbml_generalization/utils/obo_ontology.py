@@ -478,22 +478,18 @@ class Ontology:
                | self.get_equivalents(t, None, 0, relationships) | {t}
 
     def get_generalized_descendants(self, term, direct=True, checked=None, relationships=None):
-        if not checked:
+        if checked is None:
             checked = set()
-        terms = {term} | self.get_equivalents(term, None, 0, relationships)
-        direct_kids = set()
-        for it in terms:
-            children = it.get_descendants(True)
-            direct_kids |= children
-            for ch in children:
-                direct_kids |= self.get_equivalents(ch, None, 0, relationships)
+        term2eqs = lambda t: {t} | self.get_equivalents(t, None, 0, relationships)
+        cup = lambda s1, s2: s1 | s2
+        terms = term2eqs(term)
+        direct_children = \
+            reduce(cup, (reduce(cup, (term2eqs(t) for t in it.get_descendants(True)), set()) for it in terms), set())
         if direct:
-            return direct_kids
+            return direct_children
         checked |= terms
-        result = set(direct_kids)
-        for kid in direct_kids - checked:
-            result |= self.get_generalized_descendants(kid, direct, checked, relationships)
-        return result
+        return reduce(cup, (self.get_generalized_descendants(t, direct, checked, relationships)
+                            for t in direct_children - checked), direct_children)
 
     def get_generalized_ancestors(self, term, direct=True, checked=None, relationships=None, depth=None):
         if depth is not None and depth <= 0:

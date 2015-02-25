@@ -40,7 +40,7 @@ class MaximizingThread(threading.Thread):
         neighbours2term_ids = defaultdict(set)
         neighbourless_terms = set()
         t_id2rs = defaultdict(list)
-        for r in (r for r in self.model.getListOfReactions() if r.getNumReactants() + r.getNumProducts() >= 2):
+        for r in (r for r in self.model.getListOfReactions() if r.getNumReactants() + r.getNumProducts() > 2):
             for s_id in chain((species_ref.getSpecies() for species_ref in r.getListOfReactants()),
                               (species_ref.getSpecies() for species_ref in r.getListOfProducts())):
                 if s_id in self.species_id2term_id:

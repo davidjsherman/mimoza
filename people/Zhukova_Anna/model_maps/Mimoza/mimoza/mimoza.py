@@ -24,6 +24,7 @@ LEAFLET_CSS = 'lib/leaflet/leaflet.css'
 
 PROGRESS_ICON = 'lib/modelmap/ajax-loader.gif'
 LOADER_ICON = 'lib/modelmap/loader.gif'
+METHOD_ICON = 'lib/modelmap/method.gif'
 
 SBML_ORG = "http://sbml.org"
 
