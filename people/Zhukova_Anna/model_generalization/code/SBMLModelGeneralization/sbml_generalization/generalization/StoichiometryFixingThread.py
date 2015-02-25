@@ -1,9 +1,9 @@
 from collections import defaultdict, Counter
 from itertools import chain
 import threading
-from generalization.reaction_filters import get_reactants, get_products
-from generalization.vertical_key import get_vk2r_ids, vk2s_vk, get_vertical_key, get_r_compartments
-from utils.misc import invert_map
+from sbml_generalization.generalization.reaction_filters import get_reactants, get_products
+from sbml_generalization.generalization.vertical_key import get_vk2r_ids, vk2s_vk, get_vertical_key, get_r_compartments
+from sbml_generalization.utils.misc import invert_map
 
 __author__ = 'anna'
 

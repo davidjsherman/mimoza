@@ -1,6 +1,6 @@
 from libsbml import SBMLReader
 
-from generalization.mark_ubiquitous import UBIQUITOUS_THRESHOLD, get_cofactors, COMMON_UB_IDS
+from sbml_generalization.generalization.mark_ubiquitous import UBIQUITOUS_THRESHOLD, get_cofactors, COMMON_UB_IDS
 from sbml_generalization.generalization.sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, \
     remove_unused_elements
 from sbml_generalization.utils.logger import log
