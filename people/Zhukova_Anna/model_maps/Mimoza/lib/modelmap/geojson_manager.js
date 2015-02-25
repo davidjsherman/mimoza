@@ -132,20 +132,26 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
     node.bindLabel(getLabel(feature), {direction: "auto", opacity: 1});
 
     var z2label = {},
-        z;
-    for (z = fromZoom; z <= toZoom; z += 1) {
-        var sz = h * Math.pow(2, z);
+        wz = null,
+        sz = null;
+    for (var z = fromZoom; z <= toZoom; z += 1) {
+        if (sz == null) {
+            var scale = Math.pow(2, z);
+            sz = h * scale;
+            wz = w * scale;
+        } else {
+            sz *= 2;
+            wz *= 2;
+        }
         if (sz > 8) {
-            var size = Math.max(Math.round(sz / 4), 8),
-                wz = w * Math.pow(2, z);
-            sz -= sz % (size + 1);
+            var size = Math.max(Math.round(sz / 4), 8);
             z2label[z] = L.marker(centre,
                 {
                     icon: L.divIcon({
                         className: 'element-label',
                         html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 1) + "px\">"
                         + feature.properties.name + "</span>",
-                        iconSize: [wz, sz],
+                        iconSize: [wz, sz - sz % (size + 1)],
                         zIndexOffset: 0,
                         riseOnHover: false,
                         riseOffset: 0

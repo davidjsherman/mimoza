@@ -183,6 +183,9 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
                     if 0 < len(r_s_ids) <= 1 and 0 < len(p_s_ids) <= 1 and r_s_ids or p_s_ids:
                         if r_s_ids and vk_rs - rs:
                             s_id = r_s_ids.pop()
+                            # if it is not a species id but a cluster, continue
+                            if not isinstance(s_id, str):
+                                continue
                             clu = (vk_rs - rs).pop()
                             # if it is a species id instead of a cluster, continue
                             if not isinstance(clu, tuple):
@@ -197,6 +200,9 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
                                 continue
                         if p_s_ids and vk_ps - ps:
                             s_id = p_s_ids.pop()
+                            # if it is not a species id but a cluster, continue
+                            if not isinstance(s_id, str):
+                                continue
                             clu = (vk_ps - ps).pop()
                             # if it is a species id instead of a cluster, continue
                             if not isinstance(clu, tuple):
