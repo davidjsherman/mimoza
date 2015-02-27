@@ -103,7 +103,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         curZoom = inZoom == null ? maxGeneralizedZoom : minSpecificZoom,
         outCId = null,
         jsonData;
-    if (cId == null && compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0) {
+    if (compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0 && (cId == null || !compIds.hasOwnProperty(cId))) {
         cId = Object.keys(compIds)[0];
     }
     if (cId != null) {
@@ -113,6 +113,9 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         if (cId in cId2outside) {
             outCId = cId2outside[cId];
         }
+    }
+    if (inZoom != null && !compIds.hasOwnProperty(inZoom)) {
+        inZoom = null;
     }
     if (typeof jsonData === 'undefined' || jsonData.length <= 0) {
         return null;
