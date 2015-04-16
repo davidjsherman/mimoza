@@ -64,8 +64,7 @@ def e2feature(graph, e, e_id, transport, inner):
     color = triplet(root[VIEW_COLOR][real_e])
     props = {WIDTH: get_e_size(root, e).getW(), TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
              COLOR: get_edge_color(ubiquitous, generalized, transport, color)}
-    if (TYPE_REACTION == root[TYPE][root.source(real_e)] and not root[NAME][root.source(real_e)][0] == '-') \
-            or (TYPE_REACTION == root[TYPE][root.target(real_e)] and root[NAME][root.target(real_e)][0] == '-'):
+    if TYPE_REACTION == root[TYPE][root.source(real_e)]:
         props[DIRECTION] = True
     if not transport:
         props[COMPARTMENT_ID] = root[COMPARTMENT_ID][s]
