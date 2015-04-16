@@ -3,12 +3,15 @@
 
 import getopt
 import logging
+from os import listdir
 import sys
+import libsbml
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
-from sbml_generalization.generalization.sbml_generalizer import generalize_model
+from sbml_generalization.generalization.sbml_generalizer import generalize_model, merge_models
 
 from sbml_generalization.utils.obo_ontology import get_chebi, parse
 from sbml_generalization.utils.usage import Usage
+from utils.misc import invert_map
 
 
 __author__ = 'anna'
@@ -33,7 +36,21 @@ def main(argv=None):
         if verbose:
             logging.basicConfig(level=logging.INFO)
         ontology = parse(chebi, EQUIVALENT_TERM_RELATIONSHIPS | {'has_role'})
-        generalize_model(groups_sbml, None, in_sbml, ontology, verbose)
+        in_path = "/home/anna/Documents/Magnome/model_generalization/ThreeModelsFromCobraPy/"
+        in_sbml_list = [(in_path + f) for f in listdir(in_path) if f.find(".xml") != -1]
+        m_sbml = "/home/anna/Documents/Magnome/model_generalization/Merged.xml"
+        merge_models(in_sbml_list, m_sbml, verbose=False)
+        groups_sbml = "/home/anna/Documents/Magnome/model_generalization/Merged_with_groups.xml"
+        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, None, m_sbml, ontology, verbose)
+        doc = libsbml.SBMLReader().readSBML(groups_sbml)
+        model = doc.getModel()
+        clu2r_ids = invert_map(r_id2clu)
+        clu2s_ids = invert_map(s_id2clu)
+        for s_ids in clu2s_ids.itervalues():
+            print(len(s_ids), [(s_id, model.getSpecies(s_id).getName()) for s_id in s_ids])
+        print('---------------------')
+        for r_ids in clu2r_ids.itervalues():
+            print(len(r_ids), [(r_id, model.getReaction(r_id).getName()) for r_id in r_ids])
     except Usage, err:
         logging.error(sys.argv[0].split("/")[-1] + ": " + str(err.msg))
         logging.error(sys.stderr, "\t for help use --help")
