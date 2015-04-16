@@ -61,9 +61,12 @@ def e2feature(graph, e, e_id, transport, inner):
         real_e = next((ee for ee in root[VIEW_META_GRAPH][real_e] if not root[UBIQUITOUS][ee]),
                       next(iter(root[VIEW_META_GRAPH][real_e])))
     ubiquitous = root[UBIQUITOUS][real_e]
-    color = triplet(root[VIEW_COLOR][e])
+    color = triplet(root[VIEW_COLOR][real_e])
     props = {WIDTH: get_e_size(root, e).getW(), TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
              COLOR: get_edge_color(ubiquitous, generalized, transport, color)}
+    if (TYPE_REACTION == root[TYPE][root.source(real_e)] and not root[NAME][root.source(real_e)][0] == '-') \
+            or (TYPE_REACTION == root[TYPE][root.target(real_e)] and root[NAME][root.target(real_e)][0] == '-'):
+        props[DIRECTION] = True
     if not transport:
         props[COMPARTMENT_ID] = root[COMPARTMENT_ID][s]
     else:

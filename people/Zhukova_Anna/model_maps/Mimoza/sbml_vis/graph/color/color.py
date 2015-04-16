@@ -108,6 +108,50 @@ def color(graph):
             view_color[n] = tlp.Color(r, g, b, a)
 
 
+def color_by_compartment(graph, c_id2m_ids):
+    root = graph.getRoot()
+    view_color = root.getColorProperty(VIEW_COLOR)
+
+    i = len(c_id2m_ids.keys()) + 1
+
+    colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.7, 0.8) for x in xrange(i)]
+    colors = [(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
+
+    ub_colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.2, 0.8) for x in xrange(i)]
+    ub_colors = [(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in ub_colors]
+
+    key2color = dict(zip(c_id2m_ids.iterkeys(), colors[1:]))
+    key2ub_color = dict(zip(c_id2m_ids.iterkeys(), ub_colors[1:]))
+
+    m_id2color = {}
+    m_id2ub_color = {}
+    for c_id, m_ids in c_id2m_ids.iteritems():
+        for m_id in m_ids:
+            m_id2color[m_id] = key2color[c_id]
+            m_id2ub_color[m_id] = key2ub_color[c_id]
+
+    for n in graph.getNodes():
+        view_color[n] = WHITE
+
+    for n in (n for n in graph.getNodes() if not graph.isMetaNode(n) and root[TYPE][n] == TYPE_SPECIES):
+        r, g, b = m_id2color[root[ID][n]] if root[ID][n] in m_id2color else (255, 255, 255)
+        for r_n in graph.getInOutNodes(n):
+            type_ = root[TYPE][r_n]
+            if TYPE_REACTION == type_ and view_color[r_n] == WHITE:
+                view_color[r_n] = tlp.Color(r, g, b)
+        if root[UBIQUITOUS][n]:
+            r, g, b = m_id2ub_color[root[ID][n]] if root[ID][n] in m_id2ub_color else (255, 255, 255)
+        view_color[n] = tlp.Color(r, g, b)
+
+    for n in (n for n in graph.getNodes() if graph.isMetaNode(n)):
+        type_ = root[TYPE][n]
+
+        if TYPE_COMPARTMENT == type_:
+            # view_color[n] = key2comp_color[root[NAME][n]] if root[NAME][n] in key2comp_color else TRANSPARENT_GRAY
+            continue
+        view_color[n] = view_color[next(root[VIEW_META_GRAPH][n].getNodes())]
+
+
 def color_by_pathway(graph, pw2r_ids):
     root = graph.getRoot()
     view_color = root.getColorProperty(VIEW_COLOR)
@@ -138,7 +182,7 @@ def color_by_pathway(graph, pw2r_ids):
                     r_, g_, b_ = 180, 180, 180
                 else:
                     r_, g_, b_ = r, g, b
-                view_color[m] = tlp.Color(r, g, b)
+                view_color[m] = tlp.Color(r_, g_, b_)
 
     for n in (n for n in graph.getNodes() if graph.isMetaNode(n)):
         type_ = root[TYPE][n]
@@ -152,17 +196,17 @@ def color_by_pathway(graph, pw2r_ids):
 def color_edges(graph):
     root = graph.getRoot()
     view_color = root.getColorProperty(VIEW_COLOR)
-    for n in (n for n in graph.getNodes() if TYPE_REACTION == root[TYPE][n]):
-        color = view_color[n]
-        for e in graph.getInOutEdges(n):
-            real_e = e
-            while root.isMetaEdge(real_e):
-                real_e = next((ee for ee in root[VIEW_META_GRAPH][real_e] if not root[UBIQUITOUS][ee]),
-                              next(iter(root[VIEW_META_GRAPH][real_e])))
-            if root[UBIQUITOUS][real_e] or root[UBIQUITOUS][graph.target(e)] or root[UBIQUITOUS][graph.source(e)]:
-                view_color[e] = GRAY
-            else:
-                view_color[e] = color
+    for e in graph.getEdges():
+        real_e = e
+        while root.isMetaEdge(real_e):
+            real_e = next((ee for ee in root[VIEW_META_GRAPH][real_e] if not root[UBIQUITOUS][ee]),
+                          next(iter(root[VIEW_META_GRAPH][real_e])))
+        t = root.target(real_e)
+        s = root.source(real_e)
+        if root[UBIQUITOUS][real_e] or root[UBIQUITOUS][t] or root[UBIQUITOUS][s]:
+            view_color[e] = GRAY
+        else:
+            view_color[e] = view_color[s if TYPE_SPECIES == root[TYPE][s] else t]
 
 
 def simple_color(graph):

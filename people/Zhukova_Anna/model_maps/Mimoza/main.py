@@ -6,8 +6,7 @@ import logging
 import os
 from os.path import dirname, abspath
 from shutil import copytree
-
-from libsbml import SBMLReader, SBMLWriter
+import libsbml
 
 from mimoza.mimoza import JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, MIMOZA_URL
 from sbml_vis.converter.sbml2tlp import import_sbml
@@ -65,7 +64,7 @@ def main(argv=None):
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         print >> sys.stderr, "\t for help use --help"
         return 2
-    reader = SBMLReader()
+    reader = libsbml.SBMLReader()
     doc = reader.readSBML(sbml)
     model = doc.getModel()
     if not model:
@@ -101,14 +100,14 @@ def main(argv=None):
 
     if check_for_groups(sbml, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
         if sbml != groups_sbml:
-            if not SBMLWriter().writeSBMLToFile(doc, groups_sbml):
+            if not libsbml.SBMLWriter().writeSBMLToFile(doc, groups_sbml):
                 raise Exception("Could not write your model to %s" % groups_sbml)
     else:
         chebi = parse(get_chebi())
         _, _, species_id2chebi_id, ub_s_ids = \
             generalize_model(groups_sbml, gen_sbml, sbml, chebi, verbose=True)
 
-    reader = SBMLReader()
+    reader = libsbml.SBMLReader()
     input_document = reader.readSBML(groups_sbml)
     input_model = input_document.getModel()
 

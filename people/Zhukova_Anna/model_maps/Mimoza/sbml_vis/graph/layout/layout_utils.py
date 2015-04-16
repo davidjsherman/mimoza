@@ -32,13 +32,11 @@ def layout_hierarchically(qo, margin=1):
     if qo.numberOfNodes() > 1:
         # looks like there is a bug in Tulip and it uses the 'layer spacing' value
         # instead of the 'node spacing' one and visa versa
-        d = 2 * SPECIES_SIZE #get_distance(qo)
-        ds["layer spacing"] = d + margin
-        ds["node spacing"] = d + margin
-        ds["layer distance"] = d + margin
-        ds["node distance"] = d + margin
-        # ds["layer distance"] = margin
-        # ds["node distance"] = margin
+        d = 2 * SPECIES_SIZE + margin #get_distance(qo)
+        ds["layer spacing"] = d
+        ds["node spacing"] = d
+        ds["layer distance"] = d
+        ds["node distance"] = d
     qo.applyLayoutAlgorithm(HIERARCHICAL_GRAPH, root[VIEW_LAYOUT], ds)
 
 
@@ -75,7 +73,7 @@ def remove_overlaps(graph, margin=1):
     graph.applyLayoutAlgorithm(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
-def layout_components(graph, cycle_number_threshold=40, node_number_threshold=100, margin=5):
+def layout_components(graph, cycle_number_threshold=30, node_number_threshold=75, margin=5):
     root = graph.getRoot()
     comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
     for ns in comp_list:
@@ -177,7 +175,7 @@ def strongly_connected_components_iterative(graph):
                     to_do.append(('POSTVISIT', v))
                     to_do.extend([('VISITEDGE', w) for w in set(graph.getOutNodes(v)) |
                                   {graph.source(e) for e in graph.getInEdges(v) if
-                                   graph[REVERSIBLE][e] and graph.isMetaNode(v)}])
+                                   graph[REVERSIBLE][e]}]) # and graph.isMetaNode(v)}])
                 elif operation_type == 'VISITEDGE':
                     if v not in index:
                         to_do.append(('VISIT', v))

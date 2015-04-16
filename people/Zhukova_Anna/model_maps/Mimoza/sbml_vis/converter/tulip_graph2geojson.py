@@ -350,12 +350,13 @@ def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None, n2xy=None, co
 
     r2rs_ps = get_reaction2reactants_products(root)
 
-    calculate_related_compartments(root)
 
     meta_graph = graph.inducedSubGraph([n for n in graph.getNodes()])
 
     log(verbose, 'compartments -> metanodes')
     process_compartments(c_id2info, meta_graph, onto, n2xy)
+
+    calculate_related_compartments(root)
 
     colorer(root)
     color_edges(root)
