@@ -1,16 +1,12 @@
 # from genericpath import exists, isfile
 from collections import defaultdict
-from os import listdir, makedirs
 import sys
 # from sbml_generalization.generalization.mark_ubiquitous import get_cofactors
-from sbml_generalization.generalization.rdf_annotation_helper import get_qualifier_values
-from sbml_generalization.generalization.sbml_helper import SBO_BIOCHEMICAL_REACTION, GROUP_TYPE_EQUIV, GrPlError
 
 # from sbml_generalization.utils.logger import log
 # from sbml_generalization.utils.obo_ontology import parse, get_chebi
 # from sbml_generalization.generalization.sbml_generalizer import generalize_model
 # from sbml_generalization.runner.path2models.gather_FA_statistics import get_statistics
-from libsbml import *
 
 
 __author__ = 'anna'

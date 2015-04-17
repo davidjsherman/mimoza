@@ -9,12 +9,13 @@ import sys
 
 from libsbml import SBMLReader
 
-from sbml_generalization.generalization.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml
+from sbml_generalization.sbml.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.sbml2tlp import import_sbml
 from mimoza.mimoza import *
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
-from sbml_generalization.utils.obo_ontology import parse, get_chebi
+from sbml_generalization.onto.obo_ontology import parse
+from sbml_generalization.onto.onto_getter import get_chebi
 
 
 cgitb.enable()

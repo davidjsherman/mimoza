@@ -1,6 +1,8 @@
 from collections import defaultdict
 from itertools import chain
-from sbml_generalization.generalization.reaction_filters import get_reactants, get_products
+
+from sbml_generalization.sbml.reaction_filters import get_reactants, get_products
+
 
 __author__ = 'anna'
 

@@ -1,8 +1,10 @@
 from collections import defaultdict
-from sbml_generalization.generalization.reaction_filters import get_formula
-from sbml_generalization.utils.obo_ontology import miriam_to_term_id, to_identifiers_org_format
-from sbml_generalization.generalization.rdf_annotation_helper import get_qualifier_values, add_annotation, \
+
+from sbml_generalization.sbml.reaction_filters import get_formula
+from sbml_generalization.onto.obo_ontology import miriam_to_term_id, to_identifiers_org_format
+from sbml_generalization.annotation.rdf_annotation_helper import get_qualifier_values, add_annotation, \
     get_is_qualifier, get_is_vo_qualifier
+
 
 __author__ = 'anna'
 

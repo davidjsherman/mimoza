@@ -1,4 +1,4 @@
-from reaction_filters import get_participants
+from sbml_generalization.sbml.reaction_filters import get_participants
 
 __author__ = 'anna'
 

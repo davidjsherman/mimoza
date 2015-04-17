@@ -6,6 +6,7 @@ import logging
 import os
 from os.path import dirname, abspath
 from shutil import copytree
+
 import libsbml
 
 from mimoza.mimoza import JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON, MIMOZA_URL
@@ -15,10 +16,10 @@ from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
 import mimoza.mimoza
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
-from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from sbml_generalization.generalization.sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, \
-    GROUP_TYPE_UBIQUITOUS, save_as_layout_sbml, \
-    parse_layout_sbml, LoPlError
+from sbml_generalization.onto.onto_getter import get_chebi
+from sbml_generalization.onto.obo_ontology import parse
+from sbml_generalization.sbml.sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, \
+    GROUP_TYPE_UBIQUITOUS, save_as_layout_sbml, parse_layout_sbml, LoPlError
 
 
 __author__ = 'anna'

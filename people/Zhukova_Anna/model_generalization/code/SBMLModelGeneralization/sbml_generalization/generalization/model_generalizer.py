@@ -7,8 +7,8 @@ from sbml_generalization.generalization.StoichiometryFixingThread import Stoichi
     infer_clusters, suggest_clusters
 from sbml_generalization.generalization.vertical_key import get_vk2r_ids
 from sbml_generalization.utils.misc import invert_map
-from sbml_generalization.utils.obo_ontology import Term
-from sbml_generalization.generalization.mark_ubiquitous import UBIQUITOUS_THRESHOLD
+from sbml_generalization.onto.obo_ontology import Term
+from sbml_generalization.annotation.mark_ubiquitous import UBIQUITOUS_THRESHOLD
 
 
 __author__ = 'anna'

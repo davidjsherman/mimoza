@@ -1,11 +1,12 @@
 import logging
 from tulip import tlp
 
-from sbml_generalization.generalization.sbml_helper import check_names, check_compartments, parse_group_sbml, GrPlError
-from sbml_generalization.utils.compartment_positioner import get_comp2go, comp2level
-from sbml_generalization.utils.obo_ontology import parse, get_chebi, get_go, Term
-from sbml_generalization.generalization.reaction_filters import get_gene_association
-from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
+from sbml_generalization.sbml.sbml_helper import check_names, check_compartments, parse_group_sbml, GrPlError
+from sbml_generalization.annotation.compartment_positioner import get_comp2go, comp2level
+from sbml_generalization.onto.obo_ontology import parse, Term
+from sbml_generalization.onto.onto_getter import get_chebi, get_go
+from sbml_generalization.sbml.reaction_filters import get_gene_association
+from sbml_generalization.annotation.annotate_with_chebi import get_species_to_chebi
 from sbml_vis.graph.node_cloner import clone_node
 from sbml_vis.graph.graph_properties import *
 from sbml_vis.graph.resize import get_n_size

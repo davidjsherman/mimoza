@@ -1,13 +1,14 @@
 from collections import defaultdict
+from libsbml import _libsbml
 import logging
 
 import libsbml
 
-from sbml_generalization.utils.annotate_with_chebi import get_term
+from sbml_generalization.annotation.annotate_with_chebi import get_term
 from sbml_generalization.utils.misc import invert_map
-from sbml_generalization.utils.obo_ontology import to_identifiers_org_format
-from rdf_annotation_helper import add_annotation, get_qualifier_values
-from reaction_filters import get_products, get_reactants, get_participants
+from sbml_generalization.onto.obo_ontology import to_identifiers_org_format
+from sbml_generalization.annotation.rdf_annotation_helper import add_annotation, get_qualifier_values
+from sbml_generalization.sbml.reaction_filters import get_products, get_reactants, get_participants
 
 
 GROUP_TYPE_EQUIV = "equivalent"

@@ -3,12 +3,13 @@ from genericpath import isfile, exists
 from os import listdir, makedirs
 import os
 from shutil import copyfile
+
 import libsbml
 
-from sbml_generalization.utils.annotate_with_chebi import get_species_term
-from sbml_generalization.generalization.reaction_filters import get_reactants, get_products
+from sbml_generalization.annotation.annotate_with_chebi import get_species_term
+from sbml_generalization.sbml.reaction_filters import get_reactants, get_products
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
-from sbml_generalization.utils.obo_ontology import parse
+from sbml_generalization.onto.obo_ontology import parse
 from main import ROOT_DIR
 
 

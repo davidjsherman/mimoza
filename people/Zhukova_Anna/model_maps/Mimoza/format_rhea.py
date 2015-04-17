@@ -1,10 +1,12 @@
 from os import walk
+import sys
+
 import libsbml
 
-from sbml_generalization.utils.obo_ontology import to_identifiers_org_format, get_chebi, parse
-from sbml_generalization.generalization.rdf_annotation_helper import add_annotation
-from sbml_generalization.generalization.sbml_helper import create_compartment, create_species, create_reaction, save_as_sbml
-import sys
+from sbml_generalization.onto.onto_getter import get_chebi
+from sbml_generalization.onto.obo_ontology import to_identifiers_org_format, parse
+from sbml_generalization.annotation.rdf_annotation_helper import add_annotation
+from sbml_generalization.sbml.sbml_helper import create_compartment, create_species, create_reaction, save_as_sbml
 
 
 RHEA_IN_DIR = "/Users/anna/Downloads/rd/"

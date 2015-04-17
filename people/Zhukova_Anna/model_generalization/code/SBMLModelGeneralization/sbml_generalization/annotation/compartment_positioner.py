@@ -1,7 +1,8 @@
 import libsbml
-from sbml_generalization.utils.obo_ontology import miriam_to_term_id
-from sbml_generalization.generalization.rdf_annotation_helper import get_qualifier_values
-from sbml_generalization.generalization.sbml_helper import create_compartment
+
+from sbml_generalization.onto.obo_ontology import miriam_to_term_id
+from sbml_generalization.annotation.rdf_annotation_helper import get_qualifier_values
+from sbml_generalization.sbml.sbml_helper import create_compartment
 
 
 GO_CYTOPLASM = 'go:0005737'

@@ -17,17 +17,10 @@ setup(name='SBMLModelGeneralization',
       author_email='anna.zhukova@inria.fr',
       url='https://team.inria.fr/magnome/software/',
       version='1.0',
-      #packages=['sbml_generalization/generalization', 'sbml_generalization/runner',
-      #          'sbml_generalization/utils'],
       packages=find_packages(exclude=['sbml_generalization/runner/', 'sbml_generalization/runner/path2models']),
-      package_data={'': ['sbml_generalization/data/chebi.obo',
-                                  'sbml_generalization/data/gene_ontology_ext.obo']},
+      package_data={'': ['sbml_generalization/onto/data/chebi.obo',
+                                  'sbml_generalization/onto/data/gene_ontology_ext.obo']},
       include_package_data=True,
-      #package_data={
-      #    'sbml_generalization/generalization': ['sbml_generalization/data/chebi.obo',
-      #                            'sbml_generalization/data/gene_ontology_ext.obo']},
-      #data_files=[('',
-      #             ['sbml_generalization/data/chebi.obo', 'sbml_generalization/data/gene_ontology_ext.obo'])],
       license='LICENSE.txt',
       platform=['MacOS', 'Linux', 'Windows'],
       classifiers=[
@@ -42,5 +35,5 @@ setup(name='SBMLModelGeneralization',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
       ],
-      requires=['libsbml', 'sympy', 'geojson']
+      requires=['libsbml', 'sympy']
 )

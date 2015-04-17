@@ -1,9 +1,11 @@
 from collections import defaultdict, Counter
 from itertools import chain
 import threading
-from sbml_generalization.generalization.reaction_filters import get_reactants, get_products
+
+from sbml_generalization.sbml.reaction_filters import get_reactants, get_products
 from sbml_generalization.generalization.vertical_key import get_vk2r_ids, vk2s_vk, get_vertical_key, get_r_compartments
 from sbml_generalization.utils.misc import invert_map
+
 
 __author__ = 'anna'
 
@@ -85,8 +87,8 @@ def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitou
         if s_vk in s_vk2vk:
             ub_rs, ub_ps = tuple(sorted(ub_rs)), tuple(sorted(ub_ps))
             for ((vk_ub_rs, vk_ub_ps, vk_rs, vk_ps), comps) in s_vk2vk[s_vk]:
-                vk_rs, vk_ps = {s_id if s_id not in s_id2clu else  s_id2clu[s_id] for s_id in vk_rs}, \
-                         {s_id if s_id not in s_id2clu else s_id2clu[s_id] for s_id in vk_ps}
+                vk_rs, vk_ps = {s_id if s_id not in s_id2clu else s_id2clu[s_id] for s_id in vk_rs}, \
+                               {s_id if s_id not in s_id2clu else s_id2clu[s_id] for s_id in vk_ps}
                 proposal = {}
                 if vk_ub_rs == ub_ps and vk_ub_ps == ub_rs and not partial_rs - vk_ps and not partial_ps - vk_rs:
                     vk_ub_rs, vk_ub_ps, partial_rs, partial_ps = vk_ub_ps, vk_ub_rs, partial_ps, partial_rs
@@ -172,8 +174,8 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
         if s_vk in s_vk2vk:
             ub_rs, ub_ps = tuple(sorted(ub_rs)), tuple(sorted(ub_ps))
             for ((vk_ub_rs, vk_ub_ps, vk_rs, vk_ps), comps) in s_vk2vk[s_vk]:
-                vk_rs, vk_ps = {s_id if s_id not in s_id2clu else  s_id2clu[s_id] for s_id in vk_rs}, \
-                         {s_id if s_id not in s_id2clu else s_id2clu[s_id] for s_id in vk_ps}
+                vk_rs, vk_ps = {s_id if s_id not in s_id2clu else s_id2clu[s_id] for s_id in vk_rs}, \
+                               {s_id if s_id not in s_id2clu else s_id2clu[s_id] for s_id in vk_ps}
                 proposal = {}
                 if vk_ub_rs == ub_ps and vk_ub_ps == ub_rs and not partial_rs - vk_ps and not partial_ps - vk_rs:
                     vk_ub_rs, vk_ub_ps, partial_rs, partial_ps = vk_ub_ps, vk_ub_rs, partial_ps, partial_rs

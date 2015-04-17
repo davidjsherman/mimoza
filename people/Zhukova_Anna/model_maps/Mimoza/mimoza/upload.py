@@ -14,8 +14,7 @@ from libsbml import SBMLReader, writeSBMLToFile
 from sbml_vis.html.html_generator import create_thanks_for_uploading_html, create_thanks_for_uploading_generalized_html
 from sbml_vis.file.md5_checker import check_md5
 from mimoza.mimoza import *
-
-from sbml_generalization.generalization.sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
+from sbml_generalization.sbml.sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
 
 
 ALREADY_EXISTS = 1

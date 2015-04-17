@@ -2,9 +2,10 @@ from genericpath import isfile, isdir
 from os import listdir
 from shutil import copyfile
 import sys
+
 import libsbml
 
-from sbml_generalization.generalization.rdf_annotation_helper import get_taxonomy
+from sbml_generalization.annotation.rdf_annotation_helper import get_taxonomy
 from sbml_generalization.runner.path2models.main import ROOT_DIR
 
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 from collections import defaultdict
-from misc import remove_from_map
-import misc
+
+from sbml_generalization.utils.misc import remove_from_map
 
 URN_MIRIAM = "urn:miriam:"
 
@@ -11,14 +11,6 @@ IDENTIFIERS_ORG = "http://identifiers.org/"
 __author__ = 'anna'
 
 import os
-
-
-def get_chebi():
-    return "%s/../data/chebi.obo" % os.path.dirname(os.path.abspath(misc.__file__))
-
-
-def get_go():
-    return "%s/../data/gene_ontology_ext.obo" % os.path.dirname(os.path.abspath(misc.__file__))
 
 
 def miriam_to_term_id(urn):
