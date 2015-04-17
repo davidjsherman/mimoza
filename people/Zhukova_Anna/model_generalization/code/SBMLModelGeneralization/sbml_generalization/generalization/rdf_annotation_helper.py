@@ -1,15 +1,14 @@
-from libsbml import CVTermList, RDFAnnotationParser, BIOLOGICAL_QUALIFIER, CVTerm, BQB_OCCURS_IN, BQB_IS, BQB_IS_VERSION_OF
-
+import libsbml
 
 __author__ = 'anna'
 
 
 def get_is_qualifier():
-    return BQB_IS
+    return libsbml.BQB_IS
 
 
 def get_is_vo_qualifier():
-    return BQB_IS_VERSION_OF
+    return libsbml.BQB_IS_VERSION_OF
 
 
 def get_annotation_term_of_type(element, qualifier_type):
@@ -17,7 +16,7 @@ def get_annotation_term_of_type(element, qualifier_type):
     if cv_terms:
         for i in xrange(cv_terms.getSize()):
             term = cv_terms.get(i)
-            if BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifier_type == term.getBiologicalQualifierType():
+            if libsbml.BIOLOGICAL_QUALIFIER == term.getQualifierType() and qualifier_type == term.getBiologicalQualifierType():
                 yield term
 
 
@@ -32,7 +31,7 @@ def add_annotation(element, qualifier, annotation):
         element.setMetaId("m_{0}".format(element.getId()))
     term = next(get_annotation_term_of_type(element, qualifier), None)
     if not term:
-        term = CVTerm(BIOLOGICAL_QUALIFIER)
+        term = libsbml.CVTerm(libsbml.BIOLOGICAL_QUALIFIER)
         term.setBiologicalQualifierType(qualifier)
         term.addResource(annotation)
         element.addCVTerm(term, True)
@@ -41,7 +40,7 @@ def add_annotation(element, qualifier, annotation):
 
 
 def get_taxonomy(model):
-    occurs_in = get_qualifier_values(model, BQB_OCCURS_IN)
+    occurs_in = get_qualifier_values(model, libsbml.BQB_OCCURS_IN)
     for it in occurs_in:
         start = it.find("taxonomy")
         if start != -1:

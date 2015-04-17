@@ -39,14 +39,19 @@ CONJUGATE_ACID_BASE_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_
 EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
 
 
-## The function returns a set of identifiers of ubiquitous species participating in given reactions.
-# The species in the model are divided into two groups: ubiquitous ones and the others.
-# Ubiquitous species are those participating in more than {@link #threshold threshold number} of reactions.
-# @param reactions A collection of {@link #libsbml.Reaction Reaction} objects.
-# @param threshold (Optional) A minimal number of reactions a species should participate in to become a ubiquitous one.
-# The default value is {@link #UBIQUITOUS_THRESHOLD UBIQUITOUS_THRESHOLD}.
-# @return A set of ubiquitous species identifiers.
 def get_ubiquitous_species_set(model, species_id2chebi_id, ontology, threshold=UBIQUITOUS_THRESHOLD):
+    """
+    The function returns a set of identifiers of ubiquitous species belonging to the given model.
+    The species in the model are divided into two groups: ubiquitous ones and the others.
+    Ubiquitous species are those participating in more than {@link #threshold threshold number} of reactions.
+
+    :param model: a {@link #libsbml.Model Model} object.
+    :param species_id2chebi_id: a mapping between species identifiers (string) and their ChEBI identifiers (string).
+    :param ontology: ChEBI ontology.
+    :param threshold: (Optional) A minimal number of reactions a species should participate in to become a ubiquitous one.
+    The default value is {@link #UBIQUITOUS_THRESHOLD UBIQUITOUS_THRESHOLD}.
+    :return: A set of ubiquitous species identifiers.
+    """
     reactions = model.getListOfReactions()
     chebi2vote = {}
     for reaction in reactions:

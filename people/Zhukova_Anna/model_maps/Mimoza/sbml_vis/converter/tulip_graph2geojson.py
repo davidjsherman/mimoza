@@ -1,9 +1,10 @@
 from collections import defaultdict
+import logging
 from tulip import tlp
 
 import geojson
-from sbml_vis.graph.layout.predefined_layout import apply_node_coordinates
 
+from sbml_vis.graph.layout.predefined_layout import apply_node_coordinates
 from sbml_vis.graph.color.color import color, color_edges
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, merge_ubs_for_similar_reactions
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
@@ -13,7 +14,6 @@ from sbml_vis.graph.graph_properties import ID, COMPARTMENT_ID, \
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges, layout_inner_elements, \
     get_comp_borders, bend_edges_around_compartments, layout, open_meta_ns
-from sbml_generalization.utils.logger import log
 
 
 DIMENSION = 512
@@ -342,18 +342,17 @@ def calculate_related_compartments(root):
         root[RELATED_COMPARTMENT_IDS][s] = list(result - {root[COMPARTMENT_ID][s]})
 
 
-def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None, n2xy=None, colorer=color):
+def graph2geojson(c_id2info, c_id2outs, graph, onto=None, n2xy=None, colorer=color):
     root = graph.getRoot()
 
-    log(verbose, 'generalized species/reactions -> metanodes')
+    logging.info('generalized species/reactions -> metanodes')
     merge_ubs_for_similar_reactions(root)
 
     r2rs_ps = get_reaction2reactants_products(root)
 
-
     meta_graph = graph.inducedSubGraph([n for n in graph.getNodes()])
 
-    log(verbose, 'compartments -> metanodes')
+    logging.info('compartments -> metanodes')
     process_compartments(c_id2info, meta_graph, onto, n2xy)
 
     calculate_related_compartments(root)
@@ -361,7 +360,7 @@ def graph2geojson(c_id2info, c_id2outs, graph, verbose, onto=None, n2xy=None, co
     colorer(root)
     color_edges(root)
 
-    log(verbose, 'tlp nodes -> geojson features')
+    logging.info('tlp nodes -> geojson features')
     c_id2level2features, (n2lo, (d_w, d_h)) = meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy)
 
     geometry = geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])
@@ -432,4 +431,4 @@ def process_compartments(c_id2info, meta_graph, onto=None, n2xy=None):
         if n2xy:
             apply_node_coordinates(meta_graph, n2xy)
         else:
-            layout(meta_graph, 1, onto)
+            layout(meta_graph)

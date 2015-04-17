@@ -2,10 +2,9 @@ from genericpath import isfile, isdir
 from os import listdir
 from shutil import copyfile
 import sys
+import libsbml
 
-from libsbml import SBMLReader
-
-from sbml_generalization.generalization.rdf_annotation_helper import getTaxonomy
+from sbml_generalization.generalization.rdf_annotation_helper import get_taxonomy
 from sbml_generalization.runner.path2models.main import ROOT_DIR
 
 
@@ -33,10 +32,10 @@ def get_taxonomies_main():
                 in_sbml = bm_in_path + m
                 if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
                     continue
-                reader = SBMLReader()
+                reader = libsbml.SBMLReader()
                 document = reader.readSBML(in_sbml)
                 model = document.getModel()
-                taxonomy = getTaxonomy(model)
+                taxonomy = get_taxonomy(model)
                 if not taxonomy:
                     print "TAXONOMY not found for ", in_sbml
                 out_f.write(taxonomy + "\n")
@@ -57,10 +56,10 @@ def extract_fungi():
         in_sbml = bm_in_path + m
         if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
             continue
-        reader = SBMLReader()
+        reader = libsbml.SBMLReader()
         document = reader.readSBML(in_sbml)
         model = document.getModel()
-        taxonomy = getTaxonomy(model)
+        taxonomy = get_taxonomy(model)
         if taxonomy in tax_ids:
             copyfile(gen_path + m, dist + m)
 
@@ -81,10 +80,10 @@ def extract_bacteria():
         in_sbml = bm_in_path + m
         if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
             continue
-        reader = SBMLReader()
+        reader = libsbml.SBMLReader()
         document = reader.readSBML(in_sbml)
         model = document.getModel()
-        taxonomy = getTaxonomy(model)
+        taxonomy = get_taxonomy(model)
         if taxonomy in tax_ids:
             copyfile(gen_path + m, dist + m)
             copyfile(in_sbml, dist1 + m)

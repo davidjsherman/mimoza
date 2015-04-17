@@ -72,9 +72,6 @@ def upload_file():
         return NOT_MODEL, None
 
 
-verbose = True
-
-
 def process_file(sbml_file):
     reader = SBMLReader()
     doc = reader.readSBML(sbml_file)
@@ -129,8 +126,8 @@ print '''Content-Type: text/html;charset=utf-8
 
           <head>
             <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-		    <meta http-equiv="Pragma" content="no-cache" />
-		    <meta http-equiv="Expires" content="0" />
+            <meta http-equiv="Pragma" content="no-cache" />
+            <meta http-equiv="Expires" content="0" />
             <link media="all" href="../%s" type="text/css" rel="stylesheet" />
             <link href="../%s" type="image/x-icon" rel="shortcut icon" />
             %s

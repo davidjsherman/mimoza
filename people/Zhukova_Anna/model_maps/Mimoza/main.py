@@ -105,13 +105,13 @@ def main(argv=None):
     else:
         chebi = parse(get_chebi())
         _, _, species_id2chebi_id, ub_s_ids = \
-            generalize_model(groups_sbml, gen_sbml, sbml, chebi, verbose=True)
+            generalize_model(groups_sbml, gen_sbml, sbml, chebi)
 
     reader = libsbml.SBMLReader()
     input_document = reader.readSBML(groups_sbml)
     input_model = input_document.getModel()
 
-    root, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml, True)
+    root, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml)
     c_id2out_c_id = {}
     for c_id, info in c_id2info.iteritems():
         _, _, (_, out_c_id) = info
@@ -123,17 +123,17 @@ def main(argv=None):
     except LoPlError:
         n2xy = None
 
-    fc, (n2lo, (d_w, d_h)) = graph2geojson(c_id2info, c_id2outs, root, True, chebi, n2xy)
+    fc, (n2lo, (d_w, d_h)) = graph2geojson(c_id2info, c_id2outs, root, chebi, n2xy)
 
     groups_document = reader.readSBML(groups_sbml)
     groups_model = groups_document.getModel()
     gen_document = reader.readSBML(gen_sbml)
     gen_model = gen_document.getModel()
-    save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps, verbose)
+    save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps)
 
     serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc,
               c_id2out_c_id=c_id2out_c_id, groups_sbml=groups_sbml,
-              main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON, verbose=verbose)
+              main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON)
 
 
 def get_lib():

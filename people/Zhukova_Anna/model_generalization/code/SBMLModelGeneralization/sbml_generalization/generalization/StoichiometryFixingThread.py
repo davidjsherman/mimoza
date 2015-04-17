@@ -294,29 +294,6 @@ class StoichiometryFixingThread(threading.Thread):
                     continue
                 t_level = self.get_level(t)
                 process(t_covered_term_ids, (3, t_level), basics)
-                # if process(t_covered_term_ids, (3, t_level), basics):
-                    # complement set
-                    # complement = common_ancestor_covered_term_ids - t_covered_term_ids
-                    # if complement:
-                    #     process(complement, (2, ancestor_level), basics)
-
-        # if len(self.term_ids) + len(conflicts) < 60:
-        #     # the differences between sets already in Psi
-        #     for _ in xrange(2):
-        #         to_add = []
-        #         i = 0
-        #         for basic in basics:
-        #             i1, j1 = set2score[tuple(basic)]
-        #             i += 1
-        #             for t_covered_term_ids in basics[i:]:
-        #                 for complement_covered_term_ids in (basic - t_covered_term_ids, t_covered_term_ids - basic):
-        #                     if complement_covered_term_ids:
-        #                         i0, j0 = set2score[tuple(t_covered_term_ids)]
-        #                         score = min(i0, i1) - 1, min(j0, j1)
-        #                         process(complement_covered_term_ids, score, to_add)
-        #         basics += to_add
-
-        # result = [term_set for term_set in psi if good(set(term_set), conflicts)]
         result = psi
         return result, set2score
 
@@ -348,7 +325,6 @@ class StoichiometryFixingThread(threading.Thread):
             n_clu = self.clu + (i,)
             with st_fix_lock:
                 for t in ts:
-                    # clu[0] is a compartment_id
                     self.term_id2clu[t] = n_clu
         s_id2clu = compute_s_id2clu(set(), self.model, self.s_id2term_id, self.term_id2clu)
         infer_clusters(self.model, self.unmapped_s_ids, s_id2clu, self.s_id2term_id, self.ub_chebi_ids)

@@ -1,9 +1,10 @@
+import logging
+
 import libsbml
 
 from sbml_generalization.generalization.mark_ubiquitous import UBIQUITOUS_THRESHOLD, get_cofactors, COMMON_UB_IDS
 from sbml_generalization.generalization.sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, \
     remove_unused_elements, set_consistency_level
-from sbml_generalization.utils.logger import log
 from sbml_generalization.generalization.model_generalizer import generalize_species, generalize_reactions, \
     EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.utils.annotate_with_chebi import get_species_to_chebi
@@ -11,6 +12,10 @@ from sbml_generalization.utils.obo_ontology import filter_ontology, parse, get_g
 from sbml_generalization.utils.misc import invert_map
 from sbml_generalization.utils.compartment_positioner import get_comp2go
 
+
+CYTOPLASM = 'GO:0005737'
+
+CYTOSOL = 'GO:0005829'
 
 __author__ = 'anna'
 
@@ -39,7 +44,7 @@ def get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids):
     return ub_s_ids, ub_chebi_ids
 
 
-def generalize_model(groups_sbml, out_sbml, in_sbml, onto, verbose=False, ub_s_ids=None, ub_chebi_ids=None):
+def generalize_model(groups_sbml, out_sbml, in_sbml, onto, ub_s_ids=None, ub_chebi_ids=None):
     # input_model
     input_doc = libsbml.SBMLReader().readSBML(in_sbml)
     input_model = input_doc.getModel()
@@ -47,7 +52,7 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, verbose=False, ub_s_i
     remove_is_a_reactions(input_model)
     remove_unused_elements(input_model)
 
-    log(verbose, "mapping species to ChEBI")
+    logging.info("mapping species to ChEBI")
     s_id2chebi_id = get_species_to_chebi(input_model, onto)
     ub_s_ids, ub_chebi_ids = get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids)
 
@@ -55,14 +60,14 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, verbose=False, ub_s_i
     filter_ontology(onto, terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS, min_deepness=5)
 
     threshold = min(max(3, int(0.1 * input_model.getNumReactions())), UBIQUITOUS_THRESHOLD)
-    s_id2clu, ub_s_ids = generalize_species(input_model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, verbose, threshold)
-    log(verbose, "generalized species")
+    s_id2clu, ub_s_ids = generalize_species(input_model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, threshold)
+    logging.info("generalized species")
     r_id2clu = generalize_reactions(input_model, s_id2clu, s_id2chebi_id, ub_chebi_ids)
-    log(verbose, "generalized reactions")
+    logging.info("generalized reactions")
 
     clu2s_ids = invert_map(s_id2clu)
     r_id2g_eq, s_id2gr_id = save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, clu2s_ids,
-                                                          ub_s_ids, onto, verbose)
+                                                          ub_s_ids, onto)
     return r_id2g_eq, s_id2gr_id, s_id2chebi_id, ub_s_ids
 
 
@@ -76,6 +81,10 @@ def update_model_element_ids(m_id, model, go2c_id, go):
             c_name = c.getName()
             if c_name:
                 go_id = c_name.lower()
+        elif go_id == CYTOSOL and CYTOSOL not in go2c_id and CYTOPLASM in go2c_id:
+            go_id = CYTOPLASM
+        elif go_id == CYTOPLASM and CYTOSOL in go2c_id and CYTOPLASM not in go2c_id:
+            go_id = CYTOSOL
         if go_id:
             if go_id not in go2c_id:
                 go2c_id[go_id] = "%s__%s" % (m_id, c_id)
@@ -132,7 +141,7 @@ def get_model_id(i, m_ids, model):
     return m_id
 
 
-def merge_models(in_sbml_list, out_sbml, verbose=False):
+def merge_models(in_sbml_list, out_sbml):
     if not in_sbml_list:
         raise ValueError('Provide SBML models to be merged')
     go = parse(get_go())
@@ -151,7 +160,7 @@ def merge_models(in_sbml_list, out_sbml, verbose=False):
         o_doc.checkL2v4Compatibility()
         o_doc.setLevelAndVersion(2, 4, False)
         o_model = o_doc.getModel()
-        log(verbose, "Processing %s" % o_sbml)
+        logging.info("Processing %s" % o_sbml)
         m_id = get_model_id(i, m_ids, o_model)
         update_model_element_ids(m_id, o_model, go2c_id, go)
         for c in o_model.getListOfCompartments():
@@ -169,14 +178,14 @@ def merge_models(in_sbml_list, out_sbml, verbose=False):
     libsbml.writeSBMLToFile(doc, out_sbml)
 
 
-def ubiquitize_model(groups_sbml, in_sbml, onto, verbose=False, ub_s_ids=None, ub_chebi_ids=None):
+def ubiquitize_model(groups_sbml, in_sbml, onto, ub_s_ids=None, ub_chebi_ids=None):
     # input_model
     input_doc = libsbml.SBMLReader().readSBML(in_sbml)
     input_model = input_doc.getModel()
 
-    log(verbose, "mapping species to ChEBI")
+    logging.info("mapping species to ChEBI")
     s_id2chebi_id = get_species_to_chebi(input_model, onto)
     ub_s_ids, _ = get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids)
 
-    save_as_comp_generalized_sbml(input_model, None, groups_sbml, {}, {}, ub_s_ids, onto, verbose)
+    save_as_comp_generalized_sbml(input_model, None, groups_sbml, {}, {}, ub_s_ids, onto)
     return s_id2chebi_id, ub_s_ids

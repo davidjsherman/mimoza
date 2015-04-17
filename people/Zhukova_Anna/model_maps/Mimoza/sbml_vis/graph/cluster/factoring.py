@@ -92,7 +92,7 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=Tru
         if n2xy:
             apply_node_coordinates(comp_graph, n2xy)
         else:
-            layout(comp_graph, 1, onto)
+            layout(comp_graph)
     root[NAME][comp_n] = c_name
     root[COMPARTMENT_ID][comp_n] = out_comp
     root[TYPE][comp_n] = TYPE_COMPARTMENT
@@ -108,21 +108,3 @@ def comp_to_meta_node(meta_graph, c_id, (go_id, c_name), out_comp, do_layout=Tru
         # todo: this is not True but will help with cycle detection
         root[REVERSIBLE][meta_e] = root[REVERSIBLE][sample_e] and not root[UBIQUITOUS][sample_e]
     return comp_n
-
-
-def mic(graph):
-    root = graph.getRoot()
-    compartment = root.getStringProperty(COMPARTMENT_ID)
-    ubiquitous = root.getBooleanProperty(UBIQUITOUS)
-    id_ = root.getStringProperty(ID)
-
-    id2unused = defaultdict(list)
-    for n in (n for n in graph.getNodes() if ubiquitous[n]):
-        comp = compartment[n]
-        # Check if it is connected to something inside this compartment
-        connected = next((m for m in graph.getInOutNodes(n) if comp == compartment[m]), None)
-        _id = comp, id_[n]
-        if not connected:
-            id2unused[_id].append(n)
-    for _id, unused_ns in id2unused.iteritems():
-        merge_nodes(graph, unused_ns)

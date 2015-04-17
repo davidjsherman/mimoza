@@ -8,7 +8,7 @@ CONJUGATE_BASE_OF = 'is_conjugate_base_of'
 
 
 # def getKey2Layout(graph):
-# 	root = graph.getRoot()
+#   root = graph.getRoot()
 # 	view_layout = root.getLayoutProperty("viewLayout")
 # 	ubiquitous = root.getBooleanProperty("ubiquitous")
 #
@@ -27,93 +27,94 @@ CONJUGATE_BASE_OF = 'is_conjugate_base_of'
 
 
 def apply_layout(graph, onto):
-	root = graph.getRoot()
-	view_layout = root.getLayoutProperty(VIEW_LAYOUT)
-	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
+    root = graph.getRoot()
+    view_layout = root.getLayoutProperty(VIEW_LAYOUT)
+    ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 
-	# before = len(key2coord)
-	for n in graph.getNodes():
-		if ubiquitous[n]:
-			continue
-			# if not graph.deg(n):
-			# 	continue
-			# r = graph.getInOutNodes(n).next()
-			# k = get_keys(n, graph, onto, True)[0]
-			# keys = ["{0}+{1}".format(k, l) for l in get_keys(r, graph, onto, True)]
-		else:
-			keys = get_keys(n, graph, onto, True)
-		if not keys:
-			continue
-		coord = next((key2coord[key] for key in keys if key in key2coord), None)
-		if coord:
-			view_layout[n] = tlp.Coord(coord[0], coord[1])
-		else:
-			for key in keys:
-				key2coord[key] = view_layout[n]
-	#if before < len(key2coord) : print key2coord
+    # before = len(key2coord)
+    for n in graph.getNodes():
+        if ubiquitous[n]:
+            continue
+        # if not graph.deg(n):
+        # 	continue
+        # r = graph.getInOutNodes(n).next()
+        # k = get_keys(n, graph, onto, True)[0]
+        # keys = ["{0}+{1}".format(k, l) for l in get_keys(r, graph, onto, True)]
+        else:
+            keys = get_keys(n, graph, onto, True)
+        if not keys:
+            continue
+        coord = next((key2coord[key] for key in keys if key in key2coord), None)
+        if coord:
+            view_layout[n] = tlp.Coord(coord[0], coord[1])
+        else:
+            for key in keys:
+                key2coord[key] = view_layout[n]
+            #if before < len(key2coord) : print key2coord
 
 
 def get_keys(n, graph, onto, primary=False):
-	root = graph.getRoot()
-	ancestor_chebi_id = root.getStringProperty(ANCESTOR_TERM)
-	chebi_id = root.getStringProperty(TERM)
-	name = root.getStringProperty(NAME)
-	ubiquitous = root.getBooleanProperty(UBIQUITOUS)
+    root = graph.getRoot()
+    ancestor_chebi_id = root.getStringProperty(ANCESTOR_TERM)
+    chebi_id = root.getStringProperty(TERM)
+    name = root.getStringProperty(NAME)
+    ubiquitous = root.getBooleanProperty(UBIQUITOUS)
 
-	if TYPE_REACTION == graph[TYPE][n]:
-		transform = lambda nds: "r_" + "_".join(sorted([get_keys(it, graph, onto, primary)[0] for it in nds]))
-		return [transform(graph.getInOutNodes(n)), transform(filter(lambda nd: not ubiquitous[nd], graph.getInOutNodes(n)))]
-	else:
-		key = None
-		if not primary:
-			key = ancestor_chebi_id[n]
-		if not key:
-			key = chebi_id[n]
-		if not key:
-			return [name[n]]
-		t = onto.get_term(key)
-		if t:
-			key = get_primary_id(t, onto)
-		return [key]
+    if TYPE_REACTION == graph[TYPE][n]:
+        transform = lambda nds: "r_" + "_".join(sorted([get_keys(it, graph, onto, primary)[0] for it in nds]))
+        return [transform(graph.getInOutNodes(n)),
+                transform(filter(lambda nd: not ubiquitous[nd], graph.getInOutNodes(n)))]
+    else:
+        key = None
+        if not primary:
+            key = ancestor_chebi_id[n]
+        if not key:
+            key = chebi_id[n]
+        if not key:
+            return [name[n]]
+        t = onto.get_term(key)
+        if t:
+            key = get_primary_id(t, onto)
+        return [key]
 
 
 def get_primary_id(term, onto):
-	terms = {term} | onto.get_equivalents(term, None, 0, {CONJUGATE_BASE_OF, CONJUGATE_ACID_OF})
-	return sorted([t.get_id() for t in terms])[0]
+    terms = {term} | onto.get_equivalents(term, None, 0, {CONJUGATE_BASE_OF, CONJUGATE_ACID_OF})
+    return sorted([t.get_id() for t in terms])[0]
 
 
 def apply_node_coordinates(graph, n2xy):
-	root = graph.getRoot()
-	for n in graph.getNodes():
-		n_id = root[ID][n]
-		if n_id in n2xy:
-			xy = n2xy[n_id]
-			if isinstance(xy, dict):
-				for r_id, (x, y) in xy.iteritems():
-					if root[CLONE_ID][n].find(r_id) != -1:
-						root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
-						break
-			else:
-				x, y = xy
-				root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
-		elif graph.isMetaNode(n):
-			x, y = 0, 0
-			count = 0
-			for m in root[VIEW_META_GRAPH][n].getNodes():
-				if root[ID][m] in n2xy:
-					xy_ = n2xy[root[ID][m]]
-					if isinstance(xy_, dict):
-						for r_id, (x_, y_) in xy_.iteritems():
-							if root[CLONE_ID][m].find(r_id) != -1:
-								x += x_
-								y += y_
-								count += 1
-								break
-					else:
-						x_, y_ = xy_
-						count += 1
-						x += x_
-						y += y_
-			if count:
-				root[VIEW_LAYOUT][n] = tlp.Coord(x / count, y / count)
-	root[VIEW_LAYOUT].setAllEdgeValue([])
+    root = graph.getRoot()
+    for n in graph.getNodes():
+        n_id = root[ID][n]
+        if n_id in n2xy:
+            xy = n2xy[n_id]
+            if isinstance(xy, dict):
+                for r_id, (x, y) in xy.iteritems():
+                    if root[CLONE_ID][n].find(r_id) != -1:
+                        root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
+                        break
+            else:
+                x, y = xy
+                root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
+        elif graph.isMetaNode(n):
+            x, y = 0, 0
+            count = 0
+            for m in root[VIEW_META_GRAPH][n].getNodes():
+                if root[ID][m] in n2xy:
+                    xy_ = n2xy[root[ID][m]]
+                    if isinstance(xy_, dict):
+                        for r_id, (x_, y_) in xy_.iteritems():
+                            if root[CLONE_ID][m].find(r_id) != -1:
+                                x += x_
+                                y += y_
+                                count += 1
+                                break
+                    else:
+                        x_, y_ = xy_
+                        count += 1
+                        x += x_
+                        y += y_
+            if count:
+                root[VIEW_LAYOUT][n] = tlp.Coord(x / count, y / count)
+    root[VIEW_LAYOUT].setAllEdgeValue([])

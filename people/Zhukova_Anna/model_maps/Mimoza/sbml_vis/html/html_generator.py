@@ -5,213 +5,205 @@ from sbml_vis.html import markup
 __author__ = 'anna'
 
 
-def normalize(organelle):
-	return organelle.lower().replace(' ', '_')
-
-
-def denormalize(organelle):
-	return organelle.replace('_', ' ')
-
-
 def add_header(model_id, model_name, page):
-	""" <h1 class="capitalize">
+    """ <h1 class="capitalize">
             <span id='comp'>Compartments</span> of <a href="http://www.ebi.ac.uk/biomodels-main/model_id">model_name</a>
         </h1> """
-	page.h1(class_='capitalize')
-	page.span('Visualization', id='comp')
-	page.span('&nbsp;of&nbsp;')
-	page.a(model_name, href='http://www.ebi.ac.uk/biomodels-main/{0}'.format(model_id))
-	page.h1.close()
+    page.h1(class_='capitalize')
+    page.span('Visualization', id='comp')
+    page.span('&nbsp;of&nbsp;')
+    page.a(model_name, href='http://www.ebi.ac.uk/biomodels-main/{0}'.format(model_id))
+    page.h1.close()
 
 
 def add_compartment_menu(page, c_id2name):
-	page.ul(class_='menu margin centre')
-	for c_id, c_name in c_id2name.iteritems():
-		page.li()
-		page.a(c_name, href='?id=%s' % c_id)
-		page.li.close()
-	page.ul.close()
+    page.ul(class_='menu margin centre')
+    for c_id, c_name in c_id2name.iteritems():
+        page.li()
+        page.a(c_name, href='?id=%s' % c_id)
+        page.li.close()
+    page.ul.close()
 
 
 def add_download_link(groups_sbml, archive_url, page):
-	page.ul(class_='menu margin centre')
-	if groups_sbml:
-		page.li('Download the <a href=%s download>generalized model</a>.' % groups_sbml, id='download')
-	if archive_url:
-		page.li('Download the <a href=%s download>COMBINE archive</a>.' % archive_url)
-	page.li('<a onclick="overlay()" href="#">Embed</a>')
-	page.ul.close()
+    page.ul(class_='menu margin centre')
+    if groups_sbml:
+        page.li('Download the <a href=%s download>generalized model</a>.' % groups_sbml, id='download')
+    if archive_url:
+        page.li('Download the <a href=%s download>COMBINE archive</a>.' % archive_url)
+    page.li('<a onclick="overlay()" href="#">Embed</a>')
+    page.ul.close()
 
 
 def add_search(page):
-	""" <div>
+    """ <div>
             <form name="search_form" onclick="search(map, name2popup);">
                 <label><input id="tags" type="text" name="search_input"></label>
                 <input type="button" value="Search" >
             </form>
         </div> """
-	page.div(class_='margin', id='search')
-	page.form(name="search_form", id="search_form")
-	page.label('  ')
-	page.input(id="tags", type="text", name="search_input")
-	page.label.close()
-	page.input(type="button", value="Search")
-	page.form.close()
-	page.div.close()
+    page.div(class_='margin', id='search')
+    page.form(name="search_form", id="search_form")
+    page.label('  ')
+    page.input(id="tags", type="text", name="search_input")
+    page.label.close()
+    page.input(type="button", value="Search")
+    page.form.close()
+    page.div.close()
 
 
 def add_explanations(page):
-	""" <div id="explanations" class="margin"><p>
+    """ <div id="explanations" class="margin"><p>
             <span class="pant">Zoom in</span> to see the more detailed model.
             <span class="pant">Zoom out</span> to see the generalized model.
             <span class="pant">Click</span> on species and reactions to see their annotations.
         </p></div> """
-	page.div(class_='margin', id='explanations')
-	page.p()
-	page.span('Zoom in', class_='pant')
-	page.span(' to see the detailed model. ')
-	page.span('Zoom out', class_='pant')
-	page.span(' to see the generalized model. ')
-	page.span('Click', class_='pant')
-	page.span(' on elements to see their annotations. ')
-	page.span('Adjust', class_='pant')
-	page.span(
-		' map settings <span class="explanation">(top right corner of the map view)</span> to show/hide ubiquitous metabolites and transport reactions.')
-	page.p.close()
+    page.div(class_='margin', id='explanations')
+    page.p()
+    page.span('Zoom in', class_='pant')
+    page.span(' to see the detailed model. ')
+    page.span('Zoom out', class_='pant')
+    page.span(' to see the generalized model. ')
+    page.span('Click', class_='pant')
+    page.span(' on elements to see their annotations. ')
+    page.span('Adjust', class_='pant')
+    page.span(
+        ' map settings <span class="explanation">(top right corner of the map view)</span> to show/hide ubiquitous metabolites and transport reactions.')
+    page.p.close()
 
-	page.p(
-		"%s - compartments; %s/%s - specific, but not generalized/ubiquitous metabolites; %s - specific, but not generalized reactions." % (
-			format_color(YELLOW),
-			format_color(RED), format_color(GREY),
-			format_color(BLUE)))
+    page.p(
+        "%s - compartments; %s/%s - specific, but not generalized/ubiquitous metabolites; %s - specific, but not generalized reactions." % (
+            format_color(YELLOW),
+            format_color(RED), format_color(GREY),
+            format_color(BLUE)))
 
-	page.div.close()
+    page.div.close()
 
 
 def format_color(color):
-	return '<span style="background-color:%s">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' % color
+    return '<span style="background-color:%s">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' % color
 
 
 def add_map(page, map_id):
-	""" <div class="margin" id="map" style="width: 1024px; height: 1024px"></div> """
-	page.div('', class_='margin map ui-widget-content', id=map_id)
+    """ <div class="margin" id="map" style="width: 1024px; height: 1024px"></div> """
+    page.div('', class_='margin map ui-widget-content', id=map_id)
 
 
 def add_model_description(model, page):
-	model_description = model.getNotes()
-	if model_description:
-		page.p(model_description.toXMLString(), class_='margin just', id='descr')
+    model_description = model.getNotes()
+    if model_description:
+        page.p(model_description.toXMLString(), class_='margin just', id='descr')
 
 
 def add_js(page, json_files, c_id2json_vars, map_id, comps, c_id2out_c_id):
-	for json in json_files:
-		page.script(src=json, type="text/javascript")
-		page.script.close()
-	page.script("L_PREFER_CANVAS = true;")
-	page.script('''
+    for json in json_files:
+        page.script(src=json, type="text/javascript")
+        page.script.close()
+    page.script("L_PREFER_CANVAS = true;")
+    page.script('''
         initializeMap({%s}, "%s", %s, {%s});
     ''' % (", ".join(("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems())),
-	       map_id, comps,
-	       ", ".join(("'%s': '%s'" % (c_id, out_c_id) for (c_id, out_c_id) in c_id2out_c_id.iteritems()))),
-	            type="text/javascript")
-	page.script('''$(function() {$( "#%s" ).resizable();});''' % map_id)
+           map_id, comps,
+           ", ".join(("'%s': '%s'" % (c_id, out_c_id) for (c_id, out_c_id) in c_id2out_c_id.iteritems()))),
+                type="text/javascript")
+    page.script('''$(function() {$( "#%s" ).resizable();});''' % map_id)
 
 
 def add_embed_button(page):
-	page.p(class_="margin")
-	page.button("Embed", type="button", onclick='overlay()')
-	page.p.close()
+    page.p(class_="margin")
+    page.button("Embed", type="button", onclick='overlay()')
+    page.p.close()
 
 
 def add_embedding_dialog(page, url):
-	page.div(id="overlay")
-	page.div()
-	page.a(class_="boxclose", id="boxclose", onclick='overlay()')
-	page.a.close()
-	page.span.close()
-	page.p(class_="margin")
-	page.span('Size: ')
-	page.input(class_="embed_size", id="embed-size-width", type="text", name="width", value="800")
-	page.span(" x ")
-	page.input(class_="embed_size", id="embed-size-height", type="text", name="height", value="400")
-	page.p.close()
-	page.p(class_="margin")
-	page.input(class_="embed_url", id="embed-html-snippet",
-	           value='<iframe src="%s" width="800" height="400" frameborder="0" style="border:0"></iframe>' % url,
-	           type="text", name="embedHtml")
-	page.p.close()
-	page.input(type="hidden", id="embed-url", name="url", value="%s" % url)
-	page.div.close()
-	page.div.close()
+    page.div(id="overlay")
+    page.div()
+    page.a(class_="boxclose", id="boxclose", onclick='overlay()')
+    page.a.close()
+    page.span.close()
+    page.p(class_="margin")
+    page.span('Size: ')
+    page.input(class_="embed_size", id="embed-size-width", type="text", name="width", value="800")
+    page.span(" x ")
+    page.input(class_="embed_size", id="embed-size-height", type="text", name="height", value="400")
+    page.p.close()
+    page.p(class_="margin")
+    page.input(class_="embed_url", id="embed-html-snippet",
+               value='<iframe src="%s" width="800" height="400" frameborder="0" style="border:0"></iframe>' % url,
+               type="text", name="embedHtml")
+    page.p.close()
+    page.input(type="hidden", id="embed-url", name="url", value="%s" % url)
+    page.div.close()
+    page.div.close()
 
 
 def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
                 scripts, css,
                 fav, map_id, c_id2out_c_id):
-	page = markup.page()
-	if not scripts:
-		scripts = []
+    page = markup.page()
+    if not scripts:
+        scripts = []
 
-	if not css:
-		css = []
+    if not css:
+        css = []
 
-	model_id = model.getId()
-	model_name = model.getName()
-	if not model_name:
-		model_name = model_id
-	c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments()}
-	page.init(title=model_name, css=css, script=scripts, fav=fav)
+    model_id = model.getId()
+    model_name = model.getName()
+    if not model_name:
+        model_name = model_id
+    c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments()}
+    page.init(title=model_name, css=css, script=scripts, fav=fav)
 
-	add_header(model_id, model_name, page)
+    add_header(model_id, model_name, page)
 
-	page.div(class_='centre', id='all')
-	add_compartment_menu(page, c_id2name)
+    page.div(class_='centre', id='all')
+    add_compartment_menu(page, c_id2name)
 
-	# add_embed_button(page)
-	add_search(page)
+    # add_embed_button(page)
+    add_search(page)
 
-	add_map(page, map_id)
+    add_map(page, map_id)
 
-	add_download_link(groups_sbml_url, archive_url, page)
+    add_download_link(groups_sbml_url, archive_url, page)
 
-	add_explanations(page)
+    add_explanations(page)
 
-	add_model_description(model, page)
+    add_model_description(model, page)
 
-	add_embedding_dialog(page, embed_url)
+    add_embedding_dialog(page, embed_url)
 
-	page.div.close()
+    page.div.close()
 
-	add_js(page, json_files, c_id2json_vars, map_id, c_id2name, c_id2out_c_id)
+    add_js(page, json_files, c_id2json_vars, map_id, c_id2name, c_id2out_c_id)
 
-	with open('%s/comp.html' % directory, 'w+') as f:
-		f.write(str(page))
-	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
+    with open('%s/comp.html' % directory, 'w+') as f:
+        f.write(str(page))
+    with open('%s/index.html' % directory, 'w+') as f:
+        f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
 
 
 def create_embedded_html(model, directory, json_files, json_vars, scripts, css, fav, map_id):
-	page = markup.page()
-	if not scripts:
-		scripts = []
+    page = markup.page()
+    if not scripts:
+        scripts = []
 
-	if not css:
-		css = []
+    if not css:
+        css = []
 
-	model_id = model.getId()
-	page.init(title=model_id, css=css, script=scripts, fav=fav)
+    model_id = model.getId()
+    page.init(title=model_id, css=css, script=scripts, fav=fav)
 
-	add_map(page, map_id)
+    add_map(page, map_id)
 
-	add_js(page, json_files, json_vars, map_id, {c.getId(): c.getName() for c in model.getListOfCompartments()},
-		{})
+    add_js(page, json_files, json_vars, map_id, {c.getId(): c.getName() for c in model.getListOfCompartments()},
+        {})
 
-	with open('%s/comp_min.html' % directory, 'w+') as f:
-		f.write(str(page))
+    with open('%s/comp_min.html' % directory, 'w+') as f:
+        f.write(str(page))
 
 
 def generate_redirecting_html(url, css, ico):
-	return '''Content-Type: text/html;charset=utf-8
+    return '''Content-Type: text/html;charset=utf-8
 Location: %s
 
 
@@ -221,8 +213,8 @@ Location: %s
         <link media="all" href="%s" type="text/css" rel="stylesheet" />
         <link href="%s" type="image/x-icon" rel="shortcut icon" />
         <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-		<meta http-equiv="Pragma" content="no-cache" />
-		<meta http-equiv="Expires" content="0" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="0" />
         <meta http-equiv="refresh" content="0;url=%s" />
         <title>Redirecting...</title>
     </head>
@@ -236,88 +228,46 @@ Location: %s
 </html>''' % (url, css, ico, url, url, url)
 
 
-def generate_generalization_error_html(url, css, ico, msg, contact):
-	return generate_error_html(css, ico, 'Processing Error', 'Oops, something went wrong...',
-	                           '''We tried hard, but did not manage to visualize your model. Sorry!
-                               <br>%s''' % ('The reason is: %s' % msg) if msg else '',
-	                           '''May be, try to <a href="%s">visualize another one</a>?
-                               <br>Or contact %s to complain about this problem.''' % (url, generate_contact(contact)))
-
-
 def generate_contact(contact):
-	return '<a href="mailto:%s">%s</a>' % (contact, contact)
-
-
-def generate_error_html(css, ico, title, h1, short_explanation, further_explanation):
-	return '''Content-Type: text/html;charset=utf-8
-
-
-        <html lang="en">
-
-          <head>
-            <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-			<meta http-equiv="Pragma" content="no-cache" />
-			<meta http-equiv="Expires" content="0" />
-            <link media="all" href="%s" type="text/css" rel="stylesheet" />
-            <link href="%s" type="image/x-icon" rel="shortcut icon" />
-            <title>%s</title>
-          </head>
-
-          %s
-
-        </html>''' % (css, ico, title, generate_error_html_body(h1, short_explanation, further_explanation))
-
-
-def generate_error_html_body(h1, short_explanation, further_explanation):
-	return '''<body>
-            <h1 class="capitalize">%s</h1>
-            <div class="indent" id="all">
-              <p>%s</p>
-              <p>%s</p>
-            </div>
-          </body>''' % (h1, short_explanation, further_explanation)
-
-
-def a_blank(href, text):
-	return '<a href="%s" target="_blank">%s</a>' % (href, text)
+    return '<a href="mailto:%s">%s</a>' % (contact, contact)
 
 
 def generate_uploaded_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, m_dir_id, progress_icon):
-	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to generalize!", '',
-	                           'Now let\'s generalize it: To start the generalization press the button below.',
-	                           '''<br>When the generalization is done, it will become available at <a href="%s">%s</a>.
+    return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to generalize!", '',
+                               'Now let\'s generalize it: To start the generalization press the button below.',
+                               '''<br>When the generalization is done, it will become available at <a href="%s">%s</a>.
                                <br>It might take some time (up to an hour for genome-scale models), so, please, be patient and do not lose hope :)''' % (
-		                           url, url),
-	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'generalize.py', False)
+                                   url, url),
+                               css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'generalize.py', False)
 
 
 def generate_uploaded_generalized_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, m_dir_id, progress_icon):
-	return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualize!", '',
-	                           '''Your model seems to be already generalized. Now let\'s visualize it: To start the visualization press the button below.<br>
+    return generate_model_html("%s Uploaded" % model_id, "Uploaded, time to visualize!", '',
+                               '''Your model seems to be already generalized. Now let\'s visualize it: To start the visualization press the button below.<br>
 	                           <i>(If your model contains <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/Layout_%28layout%29" target="_blank">SBML layout</a> information,
 	                           it will be used during the visualization.)</i>''',
 
-	                           '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
-		                           url, url),
-	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
+                               '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
+                                   url, url),
+                               css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
 
 def generate_generalized_html(css, js, ico, m_name, model_id, url, sbml, gen_sbml, m_dir_id, progress_icon):
-	return generate_model_html("%s Generalized" % model_id, "Generalized, time to visualize!", '',
-	                           '''Your model is successfully generalized. Now let\'s visualize it: To start the visualization press the button below.<br>
+    return generate_model_html("%s Generalized" % model_id, "Generalized, time to visualize!", '',
+                               '''Your model is successfully generalized. Now let\'s visualize it: To start the visualization press the button below.<br>
 	                           <i>(If your model contained <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/Layout_%28layout%29" target="_blank">SBML layout</a> information,
 	                           it will be used during the visualization.)</i>''',
-	                           '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
-		                           url, url),
-	                           css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
+                               '''<br>When the visualization is done, it will become available at <a href="%s">%s</a>.''' % (
+                                   url, url),
+                               css, js, ico, m_name, sbml, gen_sbml, m_dir_id, progress_icon, 'visualise.py', False)
 
 
 def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id, sbml, gen_sbml, m_dir_id,
                         progress_icon, action,
                         header=True):
-	scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in js])
-	h = "Content-Type: text/html;charset=utf-8" if header else "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>"
-	return '''%s
+    scripts = '\n'.join(['<script src="%s" type="text/javascript"></script>' % it for it in js])
+    h = "Content-Type: text/html;charset=utf-8" if header else "<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN'>"
+    return '''%s
 
 
     <html lang="en">
@@ -343,11 +293,11 @@ def generate_model_html(title, h1, text, expl, more_expl, css, js, ico, model_id
             </div>
         </body>
     </html>''' % (h, css, ico, scripts, title, h1, model_id, text, expl, more_expl,
-	              generate_visualisation_button(sbml, gen_sbml, m_dir_id, progress_icon, action))
+                  generate_visualisation_button(sbml, gen_sbml, m_dir_id, progress_icon, action))
 
 
 def generate_visualisation_button(sbml, gen_sbml, m_dir_id, progress_icon, action):
-	return '''
+    return '''
         <div class="centre margin" id="visualize_div">
             <form action="/cgi-bin/%s" method="POST" name="input_form" enctype="multipart/form-data">
                 <input type="hidden" name="sbml" value="%s" />
@@ -374,22 +324,22 @@ def generate_visualisation_button(sbml, gen_sbml, m_dir_id, progress_icon, actio
 
 
 def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, js, fav, img):
-	directory = '%s/%s' % (directory_prefix, m_dir_id)
-	m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
-	sbml = '%s/%s.xml' % (directory, m_id)
-	gen_sbml = '%s/%s_generalized.xml' % (directory, m_id)
+    directory = '%s/%s' % (directory_prefix, m_dir_id)
+    m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
+    sbml = '%s/%s.xml' % (directory, m_id)
+    gen_sbml = '%s/%s_generalized.xml' % (directory, m_id)
 
-	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_uploaded_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml, m_dir_id, img))
+    with open('%s/index.html' % directory, 'w+') as f:
+        f.write(generate_uploaded_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml, m_dir_id, img))
 
 
 def create_thanks_for_uploading_generalized_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, js, fav,
                                                  img, generate_html=generate_uploaded_generalized_html):
-	directory = '%s/%s' % (directory_prefix, m_dir_id)
-	m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
-	sbml = '%s/%s_with_groups.xml' % (directory, m_id)
-	gen_sbml = "%s/%s_generalized.xml" % (directory, m_id)
+    directory = '%s/%s' % (directory_prefix, m_dir_id)
+    m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
+    sbml = '%s/%s_with_groups.xml' % (directory, m_id)
+    gen_sbml = "%s/%s_generalized.xml" % (directory, m_id)
 
-	with open('%s/index.html' % directory, 'w+') as f:
-		f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml if os.path.exists(gen_sbml) else '',
-		                      m_dir_id, img))
+    with open('%s/index.html' % directory, 'w+') as f:
+        f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml if os.path.exists(gen_sbml) else '',
+                              m_dir_id, img))

@@ -3,8 +3,8 @@ from genericpath import isfile, exists
 from os import listdir, makedirs
 import os
 from shutil import copyfile
+import libsbml
 
-from libsbml import SBMLReader
 from sbml_generalization.utils.annotate_with_chebi import get_species_term
 from sbml_generalization.generalization.reaction_filters import get_reactants, get_products
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
@@ -86,7 +86,7 @@ def get_statistics():
         in_sbml = in_path + f
         if not isfile(in_sbml) or in_sbml.find(".xml") == -1:
             continue
-        reader = SBMLReader()
+        reader = libsbml.SBMLReader()
         input_doc = reader.readSBML(in_sbml)
         input_model = input_doc.getModel()
         res = count_fa_coa_oxidation(input_model, the_terms, ontology)

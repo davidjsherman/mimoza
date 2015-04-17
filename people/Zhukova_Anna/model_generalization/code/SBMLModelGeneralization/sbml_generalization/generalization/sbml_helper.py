@@ -4,7 +4,6 @@ import logging
 import libsbml
 
 from sbml_generalization.utils.annotate_with_chebi import get_term
-from sbml_generalization.utils.logger import log
 from sbml_generalization.utils.misc import invert_map
 from sbml_generalization.utils.obo_ontology import to_identifiers_org_format
 from rdf_annotation_helper import add_annotation, get_qualifier_values
@@ -28,59 +27,6 @@ SBO_MATERIAL_ENTITY = "SBO:0000240"
 PATHWAY_PREFIX = "SUBSYSTEM:"
 
 __author__ = 'anna'
-
-
-def copy_unit_definition(model, prototype, id_=None):
-    if prototype:
-        id_ = generate_unique_id(model, id_ if id_ else "u_new")
-        unit_def = libsbml.UnitDefinition(prototype)
-        unit_def.setId(id_)
-        model.addUnitDefinition(unit_def)
-
-
-def copy_compartment(model, prototype, compartment_id_old2new, id_=None):
-    if prototype:
-        id_ = generate_unique_id(model, id_ if id_ else "c_new")
-        comp = libsbml.Compartment(prototype)
-        comp.setId(id_)
-        if prototype.isSetOutside():
-            old_outside = prototype.getOutside()
-            if old_outside and old_outside in compartment_id_old2new:
-                comp.setOutside(compartment_id_old2new[old_outside])
-        model.addCompartment(comp)
-
-
-def copy_species(model, prototype, compartment_id, type_id=None, id_=None):
-    if prototype:
-        id_ = generate_unique_id(model, id_ if id_ else "s_new")
-
-        species = libsbml.Species(prototype)
-        species.setId(id_)
-        if compartment_id:
-            species.setCompartment(compartment_id)
-        if type_id:
-            species.setSpeciesType(type_id)
-        # TODO: improve
-        # To avoid errors derived from SBML version differences:
-        # In SBML Level 2 prior to Version 4 it is expected to refer to a participant physical type
-        # (i.e., terms derived from SBO:0000236, "participant physical type");
-        # in Versions 4 and above it is expected to refer to a material entity
-        # (i.e., terms derived from SBO:0000240, "material entity").
-        # we will just use SBO:0000240 for now
-        species.setSBOTerm(SBO_MATERIAL_ENTITY)
-
-        model.addSpecies(species)
-
-
-def copy_parameter(model, prototype, unit_id_old2new, id_=None):
-    if prototype:
-        id_ = generate_unique_id(model, id_ if id_ else "p_new")
-        param = libsbml.Parameter(prototype)
-        param.setId(id_)
-        old_unit_id = prototype.getUnits()
-        if old_unit_id and old_unit_id in unit_id_old2new:
-            param.setUnits(unit_id_old2new[old_unit_id])
-        model.addParameter(param)
 
 
 def copy_elements(input_model, output_model):
@@ -155,24 +101,6 @@ def generate_unique_id_increment(model, i, id_prefix):
     return i
 
 
-def copy_species_type(model, id_, prototype):
-    if prototype:
-        id_ = generate_unique_id(model, id_ if id_ else "t_new")
-        sp_type = libsbml.SpeciesType(prototype)
-        sp_type.setId(id_)
-        model.addSpeciesType(sp_type)
-
-
-def create_species_type(model, name, term_id=None, id_=None):
-    new_type = model.createSpeciesType()
-    id_ = generate_unique_id(model, id_ if id_ else "t_new")
-    new_type.setId(id_)
-    new_type.setName(name)
-    if term_id:
-        add_annotation(new_type, libsbml.BQB_IS, to_identifiers_org_format(term_id))
-    return new_type
-
-
 def create_compartment(model, name, outside=None, term_id=None, id_=None):
     new_comp = model.createCompartment()
     id_ = generate_unique_id(model, id_ if id_ else "c_new")
@@ -227,45 +155,6 @@ def create_reaction(model, reactants, products, name=None, id_=None):
     return reaction
 
 
-def _copy_species_reference(sp_ref, species_id_replacement_map):
-    sp_id = sp_ref.getSpecies()
-    new_sp_ref = libsbml.SpeciesReference(sp_ref)
-    new_sp_ref.setStoichiometry(sp_ref.getStoichiometry())
-    if sp_id in species_id_replacement_map:
-        new_sp_ref.setSpecies(species_id_replacement_map[sp_id])
-    return new_sp_ref
-
-
-def copy_reaction(model, prototype, species_id_old2new, param_id_old2new, unit_id_old2new, name=None, comp_id=None,
-                  id_=None):
-    new_reaction = libsbml.Reaction(prototype)
-    id_ = generate_unique_id(model, id_ if id_ else "r_new")
-    new_reaction.setId(id_)
-    if comp_id:
-        new_reaction.setCompartment(comp_id)
-    if name:
-        new_reaction.setName(name)
-
-    if new_reaction.isSetKineticLaw():
-        kin_law = new_reaction.getKineticLaw()
-        for iterable in kin_law.getListOfParameters(), kin_law.getListOfLocalParameters():
-            for param in iterable:
-                param_id = param.getId()
-                if param_id in param_id_old2new:
-                    param.setId(param_id_old2new[param_id])
-                if param.isSetUnits():
-                    old_unit_id = param.getUnits()
-                    if old_unit_id and old_unit_id in unit_id_old2new:
-                        param.setUnits(unit_id_old2new[old_unit_id])
-    for spRef_iterable in prototype.getListOfReactants(), prototype.getListOfProducts(), prototype.getListOfModifiers():
-        for spRef in spRef_iterable:
-            new_sp_ref = _copy_species_reference(spRef, species_id_old2new)
-            new_reaction.addReactant(new_sp_ref)
-
-    model.addReaction(new_reaction)
-    return new_reaction
-
-
 def remove_is_a_reactions(input_model):
     to_remove = []
     for reaction in input_model.getListOfReactions():
@@ -303,24 +192,6 @@ def convert_to_lev3_v1(model):
     return doc
 
 
-def convert_to_l2v4_with_species_types(sbml):
-    doc = libsbml.SBMLReader().readSBMLFromFile(sbml)
-    input_model = doc.getModel()
-    doc = libsbml.SBMLDocument(input_model.getSBMLNamespaces())
-    doc.setModel(input_model)
-    set_consistency_level(doc)
-    doc.checkL2v4Compatibility()
-    converted = doc.setLevelAndVersion(2, 4, False)
-    if not converted:
-        doc = libsbml.SBMLReader().readSBMLFromFile(sbml)
-    input_model = doc.getModel()
-    check_names(input_model)
-    if converted:
-        add_species_types(input_model)
-    check_compartments(input_model)
-    return doc
-
-
 def check_compartments(model):
     if not model.getListOfCompartments():
         cell_id = create_compartment(model, "cell", outside=None, term_id="GO:0005623").getId()
@@ -339,34 +210,8 @@ def check_names(model):
     name_setter(model.getListOfSpeciesTypes())
 
 
-def add_species_types(model):
-    name2species_type = {}
-    name2species = {}
-    for species in model.getListOfSpecies():
-        name = species.getName()
-        if species.isSetSpeciesType():
-            species_type = species.getSpeciesType()
-            name2species_type[name] = species_type
-        else:
-            if name in name2species:
-                name2species[name].append(species)
-            else:
-                name2species[name] = [species]
-    for name, species_list in name2species.iteritems():
-        s_t_id = name2species_type[name] if name in name2species_type else create_species_type(model, name)
-        species_type = model.getSpeciesType(s_t_id)
-        for species in species_list:
-            species.setSpeciesType(s_t_id)
-            if species.isSetAnnotation():
-                species_type.setAnnotation(species.getAnnotation())
-
-
-# def model_to_l3v1(sbml, model):
-# doc = convert_to_lev3_v1(Model(model))
-# # writeSBMLToFile(doc, sbml)
-
 def create_dimensions(width, height):
-    "Create a dimension object with given width and height"
+    """Create a dimension object with given width and height"""
     dim = libsbml.Dimensions()
     dim.setWidth(width)
     dim.setHeight(height)
@@ -374,32 +219,13 @@ def create_dimensions(width, height):
 
 
 def create_bounding_box(x, y, width, height):
-    "Create a bounding box object with given coordinates and dimensions"
+    """Create a bounding box object with given coordinates and dimensions"""
     bb = libsbml.BoundingBox()
     bb.setX(x - width / 2)
     bb.setY(y - height / 2)
     bb.setWidth(width)
     bb.setHeight(height)
     return bb
-
-
-def annotate_ubiquitous(groups_sbml, ub_sps, verbose=False):
-    if groups_sbml:
-        # log(verbose, "saving ubiquitous species annotations...")
-        doc = libsbml.SBMLReader().readSBMLFromFile(groups_sbml)
-        groups_model = doc.getModel()
-        groups_plugin = groups_model.getPlugin("groups")
-        if groups_plugin:
-            s_group = groups_plugin.createGroup()
-            s_group.setId("g_ubiquitous_sps")
-            s_group.setKind(libsbml.GROUP_KIND_COLLECTION)
-            s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
-            s_group.setName("ubiquitous species")
-            for s_id in ub_sps:
-                member = s_group.createMember()
-                member.setIdRef(s_id)
-            add_annotation(s_group, libsbml.BQB_IS_DESCRIBED_BY, GROUP_TYPE_UBIQUITOUS)
-            save_as_sbml(groups_model, groups_sbml, verbose)
 
 
 def add_label(label, layout, glyph, _id, w, h, x, y):
@@ -462,9 +288,8 @@ def create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, model):
                                      if s_id in ub_sps else libsbml.SPECIES_ROLE_PRODUCT)
 
 
-def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n2lo, (d_w, d_h), ub_sps,
-                        verbose):
-    log(verbose, "serializing layout")
+def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n2lo, (d_w, d_h), ub_sps):
+    logging.info("serializing layout")
 
     doc = convert_to_lev3_v1(groups_model)
     layout_model = doc.getModel()
@@ -472,7 +297,7 @@ def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n
 
     if layout_plugin:
         create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, groups_model)
-        save_as_sbml(layout_model, layout_sbml, verbose)
+        save_as_sbml(layout_model, layout_sbml)
 
     if gen_model:
         doc = convert_to_lev3_v1(gen_model)
@@ -480,7 +305,7 @@ def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n
         gen_layout_plugin = gen_layout_model.getPlugin("layout")
         if gen_layout_plugin:
             create_layout((d_w, d_h), n2lo, gen_layout_model, gen_layout_plugin, ub_sps, gen_model)
-            save_as_sbml(gen_layout_model, gen_layout_sbml, verbose)
+            save_as_sbml(gen_layout_model, gen_layout_sbml)
 
 
 def link_reaction_to_species(s_refs, r_glyph, l_id, r_id, n2lo, role):
@@ -494,16 +319,8 @@ def link_reaction_to_species(s_refs, r_glyph, l_id, r_id, n2lo, role):
         s_ref_glyph.setRole(role(s_id))
 
 
-def create_point(coords):
-    "Create a point object with given coordinates"
-    p = Point()
-    p.setX(coords[0])
-    p.setY(coords[1])
-    return p
-
-
-def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, clu2s_ids, ub_sps, onto, verbose):
-    log(verbose, "serializing generalization")
+def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, clu2s_ids, ub_sps, onto):
+    logging.info("serializing generalization")
     s_id_increment, r_id_increment = 0, 0
 
     if groups_sbml:
@@ -511,7 +328,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
         groups_model = doc.getModel()
         groups_plugin = groups_model.getPlugin("groups")
         if groups_plugin:
-            log(verbose, "  saving ubiquitous species annotations")
+            logging.info("  saving ubiquitous species annotations")
             s_group = groups_plugin.createGroup()
             s_group.setId("g_ubiquitous_sps")
             s_group.setKind(libsbml.GROUP_KIND_COLLECTION)
@@ -529,10 +346,10 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 
     r_id2g_eq, s_id2gr_id = {}, {}
     if not clu2s_ids:
-        log(verbose, "  nothing to serialize")
+        logging.info("  nothing to serialize")
     else:
         clu2r_ids = invert_map(r_id2clu)
-        log(verbose, "  creating species groups")
+        logging.info("  creating species groups")
         for ((c_id, t), s_ids) in clu2s_ids.iteritems():
             comp = input_model.getCompartment(c_id)
             if len(s_ids) > 1:
@@ -561,7 +378,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                     s_group.setSBOTerm(SBO_CHEMICAL_MACROMOLECULE)
                     g_name = "{0} [{1}]".format(t_name, comp.getName())
                     s_group.setName(g_name)
-                    # log(verbose, "%s: %d" % (g_name, len(s_ids)))
+                    # logging.info("%s: %d" % (g_name, len(s_ids)))
                     if t_id:
                         add_annotation(s_group, libsbml.BQB_IS, to_identifiers_org_format(t_id))
                     for s_id in s_ids:
@@ -571,7 +388,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
 
         generalize_species = lambda species_id: s_id2gr_id[species_id][0] if (species_id in s_id2gr_id) else species_id
         s_id_to_generalize = set(s_id2gr_id.iterkeys())
-        log(verbose, "  creating reaction groups")
+        logging.info("  creating reaction groups")
         for clu, r_ids in clu2r_ids.iteritems():
             representative = input_model.getReaction(list(r_ids)[0])
             r_name = "generalized %s" % representative.getName()
@@ -601,26 +418,26 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                     r_group.setKind(libsbml.GROUP_KIND_COLLECTION)
                     r_group.setSBOTerm(SBO_BIOCHEMICAL_REACTION)
                     r_group.setName(r_name)
-                    # log(verbose, "%s: %d" % (r_name, len(r_ids)))
+                    # logging.info("%s: %d" % (r_name, len(r_ids)))
                     for r_id in r_ids:
                         member = r_group.createMember()
                         member.setIdRef(r_id)
                     add_annotation(r_group, libsbml.BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
     if out_sbml:
         remove_unused_elements(generalized_model)
-        save_as_sbml(generalized_model, out_sbml, verbose)
+        save_as_sbml(generalized_model, out_sbml)
     if groups_sbml and groups_model:
-        save_as_sbml(groups_model, groups_sbml, verbose)
+        save_as_sbml(groups_model, groups_sbml)
 
-    log(verbose, "serialized to " + groups_sbml)
+    logging.info("serialized to " + groups_sbml)
     return r_id2g_eq, s_id2gr_id
 
 
-def save_as_sbml(input_model, out_sbml, verbose=True):
-    log(verbose, "saving to {0}".format(out_sbml))
+def save_as_sbml(input_model, out_sbml):
+    logging.info("saving to {0}".format(out_sbml))
     out_doc = libsbml.SBMLDocument(input_model.getSBMLNamespaces())
     out_doc.setModel(input_model)
-    result = libsbml.writeSBMLToFile(out_doc, out_sbml)
+    libsbml.writeSBMLToFile(out_doc, out_sbml)
 
 
 def parse_group_sbml(groups_sbml, chebi):

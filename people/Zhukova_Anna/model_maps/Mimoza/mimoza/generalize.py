@@ -12,8 +12,6 @@ from libsbml import SBMLReader
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.utils.obo_ontology import parse, get_chebi
-from sbml_generalization.utils.logger import log
-
 from mimoza.mimoza import *
 from sbml_vis.html.html_generator import create_thanks_for_uploading_generalized_html, generate_generalized_html
 
@@ -40,12 +38,12 @@ print '''Content-Type: text/html;charset=utf-8
 
           <head>
              <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-			<meta http-equiv="Pragma" content="no-cache" />
-			<meta http-equiv="Expires" content="0" />
-            <link media="all" href="../%s" type="text/css" rel="stylesheet" />
-            <link href="../%s" type="image/x-icon" rel="shortcut icon" />
-            %s
-            <title>Generalizing...</title>
+             <meta http-equiv="Pragma" content="no-cache" />
+             <meta http-equiv="Expires" content="0" />
+             <link media="all" href="../%s" type="text/css" rel="stylesheet" />
+             <link href="../%s" type="image/x-icon" rel="shortcut icon" />
+             %s
+             <title>Generalizing...</title>
           </head>
 
           <body>
@@ -61,9 +59,8 @@ directory = '../html/%s/' % m_dir_id
 log_file = '%s/log.log' % directory
 logging.basicConfig(level=logging.INFO, format='%(message)s', filename=log_file)
 
-# temp = os.dup(sys.stdout.fileno())
 try:
-    log(True, 'calling model_generalisation library')
+    logging.info('calling model_generalisation library')
     reader = SBMLReader()
     input_document = reader.readSBML(sbml)
     input_model = input_document.getModel()
@@ -75,19 +72,17 @@ try:
     if not os.path.exists(groups_sbml):
         chebi = parse(get_chebi(), EQUIVALENT_TERM_RELATIONSHIPS | {'has_role'})
         gen_sbml = "%s/%s_generalized.xml" % (sbml_directory, m_id)
-        r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, gen_sbml, sbml, chebi,
-                                                                              verbose=True)
+        r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, gen_sbml, sbml, chebi
+                                                                              )
     create_thanks_for_uploading_generalized_html(m_id, input_model.getName(), '../html/', m_dir_id,
                                                  MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
                                                  MIMOZA_FAVICON, PROGRESS_ICON, generate_generalized_html)
 
 except Exception as e:
-    log(True, e.message)
+    logging.info(e.message)
     url = MIMOZA_ERROR_URL
 
 sys.stdout.flush()
-# os.dup2(temp, 2)
-# sys.stdout = os.fdopen(2, 'w')
 
 print '''</div>
           </body>

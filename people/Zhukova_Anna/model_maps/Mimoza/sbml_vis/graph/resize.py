@@ -13,37 +13,37 @@ COMP_EDGE_SIZE = 6
 
 
 def get_n_length(graph, n):
-	return graph.getRoot()[VIEW_META_GRAPH][n].numberOfNodes() if graph.isMetaNode(n) else 1
+    return graph.getRoot()[VIEW_META_GRAPH][n].numberOfNodes() if graph.isMetaNode(n) else 1
 
 
 def _get_e_size(root, e):
-	if root.isMetaEdge(e):
-		return sum(_get_e_size(root, edg) for edg in root[VIEW_META_GRAPH][e])
-	return UBIQUITOUS_EDGE_SIZE if root[UBIQUITOUS][e] else EDGE_SIZE
+    if root.isMetaEdge(e):
+        return sum(_get_e_size(root, edg) for edg in root[VIEW_META_GRAPH][e])
+    return UBIQUITOUS_EDGE_SIZE if root[UBIQUITOUS][e] else EDGE_SIZE
 
 
 def get_mn_size(n, root):
-	bb = tlp.computeBoundingBox(root[VIEW_META_GRAPH][n])
-	return bb.width(), bb.height()
+    bb = tlp.computeBoundingBox(root[VIEW_META_GRAPH][n])
+    return bb.width(), bb.height()
 
 
 def get_n_size(graph, n):
-	root = graph.getRoot()
-	n_type = root[TYPE][n]
-	if TYPE_REACTION == n_type:
-		if root[FAKE][n]:
-			w = h = max(get_mn_size(n, root))
-		else:
-			w = h = REACTION_SIZE * get_n_length(graph, n)
-	elif TYPE_COMPARTMENT == n_type:
-		w, h = get_mn_size(n, root)
-	elif root[UBIQUITOUS][n]:
-		w = h = UBIQUITOUS_SPECIES_SIZE
-	else:
-		w = h = SPECIES_SIZE * get_n_length(graph, n)
-	return tlp.Size(w, h)
+    root = graph.getRoot()
+    n_type = root[TYPE][n]
+    if TYPE_REACTION == n_type:
+        if root[FAKE][n]:
+            w = h = max(get_mn_size(n, root))
+        else:
+            w = h = REACTION_SIZE * get_n_length(graph, n)
+    elif TYPE_COMPARTMENT == n_type:
+        w, h = get_mn_size(n, root)
+    elif root[UBIQUITOUS][n]:
+        w = h = UBIQUITOUS_SPECIES_SIZE
+    else:
+        w = h = SPECIES_SIZE * get_n_length(graph, n)
+    return tlp.Size(w, h)
 
 
 def get_e_size(graph, e):
-	sz = _get_e_size(graph.getRoot(), e)
-	return tlp.Size(sz, sz)
+    sz = _get_e_size(graph.getRoot(), e)
+    return tlp.Size(sz, sz)

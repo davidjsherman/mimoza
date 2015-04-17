@@ -10,8 +10,7 @@ from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM
 from sbml_generalization.generalization.sbml_generalizer import generalize_model, merge_models
 
 from sbml_generalization.utils.obo_ontology import get_chebi, parse
-from sbml_generalization.utils.usage import Usage
-from utils.misc import invert_map
+from sbml_generalization.utils.misc import invert_map
 
 
 __author__ = 'anna'
@@ -39,9 +38,9 @@ def main(argv=None):
         in_path = "/home/anna/Documents/Magnome/model_generalization/ThreeModelsFromCobraPy/"
         in_sbml_list = [(in_path + f) for f in listdir(in_path) if f.find(".xml") != -1]
         m_sbml = "/home/anna/Documents/Magnome/model_generalization/Merged.xml"
-        merge_models(in_sbml_list, m_sbml, verbose=False)
+        merge_models(in_sbml_list, m_sbml)
         groups_sbml = "/home/anna/Documents/Magnome/model_generalization/Merged_with_groups.xml"
-        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, None, m_sbml, ontology, verbose)
+        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, None, m_sbml, ontology)
         doc = libsbml.SBMLReader().readSBML(groups_sbml)
         model = doc.getModel()
         clu2r_ids = invert_map(r_id2clu)
@@ -101,6 +100,10 @@ def process_args(argv):
         raise Usage(help_message)
     return chebi, in_sbml, out_sbml, groups_sbml, shorten, verbose, log_file
 
+
+class Usage(Exception):
+    def __init__(self, msg):
+        self.msg = msg
 
 if __name__ == "__main__":
     sys.exit(main())

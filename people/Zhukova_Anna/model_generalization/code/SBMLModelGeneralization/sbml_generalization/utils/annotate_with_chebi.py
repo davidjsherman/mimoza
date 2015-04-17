@@ -35,15 +35,6 @@ def normalize(name):
     return name.strip()
 
 
-def get_names(entity):
-    name = normalize(entity.getName())
-    name_bis = name
-    end = name_bis.find("(")
-    if end != -1 and end != 0:
-        name_bis = name_bis[0:end].strip()
-    return name, name_bis
-
-
 def get_species_term(species, chebi, model):
     term = get_term(species, chebi)
     if not term:
