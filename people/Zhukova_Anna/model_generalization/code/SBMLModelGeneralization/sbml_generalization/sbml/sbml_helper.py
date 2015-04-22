@@ -1,9 +1,9 @@
 from collections import defaultdict
-from libsbml import _libsbml
 import logging
 
 import libsbml
 
+from sbml_generalization.sbml.sbgn_helper import scale, get_transformation_factors, shift, MARGIN
 from sbml_generalization.annotation.annotate_with_chebi import get_term
 from sbml_generalization.utils.misc import invert_map
 from sbml_generalization.onto.obo_ontology import to_identifiers_org_format
@@ -26,6 +26,8 @@ DIMENSIONLESS_UNIT = "dimensionless"
 SBO_MATERIAL_ENTITY = "SBO:0000240"
 
 PATHWAY_PREFIX = "SUBSYSTEM:"
+
+FORMULA_PREFIX = "FORMULA:"
 
 __author__ = 'anna'
 
@@ -237,17 +239,22 @@ def add_label(label, layout, glyph, _id, w, h, x, y):
     text_glyph.setGraphicalObjectId(glyph.getId())
 
 
-def create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, model):
+def create_layout(n2lo, layout_model, layout_plugin, ub_sps, model):
+    scale_factor, (x_shift, y_shift), (w, h) = get_transformation_factors(n2lo)
+    (w, h) = scale((w, h), scale_factor)
+    (x_shift, y_shift) = shift(scale((x_shift, y_shift), scale_factor), MARGIN, MARGIN)
+
     layout = layout_plugin.createLayout()
     layout.setId(generate_unique_id(layout_model, "l_0"))
     l_id = layout.getId()
-    layout.setDimensions(create_dimensions(d_w, d_h))
+    layout.setDimensions(create_dimensions(w + 2 * MARGIN, h + 2 * MARGIN))
 
     for comp in model.getListOfCompartments():
         c_id = comp.getId()
         c_name = comp.getName()
         if c_id in n2lo:
             (x, y), (w, h) = n2lo[c_id]
+            (x, y), (w, h) = shift(scale((x, y), scale_factor), x_shift, y_shift), scale((w, h), scale_factor)
             comp_glyph = layout.createCompartmentGlyph()
             comp_glyph.setId("cg_%s_%s" % (l_id, c_id))
             comp_glyph.setCompartmentId(c_id)
@@ -264,6 +271,7 @@ def create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, model):
                 elements = [(None, n2lo[s_id])]
             for r_id, [(x, y), (w, h)] in elements:
                 if not r_id or model.getReaction(r_id):
+                    (x, y), (w, h) = shift(scale((x, y), scale_factor), x_shift, y_shift), scale((w, h), scale_factor)
                     s_glyph = layout.createSpeciesGlyph()
                     s_glyph.setSpeciesId(s_id)
                     s_glyph_suffix = "%s_%s" % (s_id, r_id) if r_id else s_id
@@ -276,6 +284,7 @@ def create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, model):
         r_name = reaction.getName()
         if r_id in n2lo:
             (x, y), (w, h) = n2lo[r_id]
+            (x, y), (w, h) = shift(scale((x, y), scale_factor), x_shift, y_shift), scale((w, h), scale_factor)
             r_glyph = layout.createReactionGlyph()
             r_glyph.setReactionId(r_id)
             r_glyph.setId("rg_%s_%s" % (l_id, r_id))
@@ -289,7 +298,7 @@ def create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, model):
                                      if s_id in ub_sps else libsbml.SPECIES_ROLE_PRODUCT)
 
 
-def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n2lo, (d_w, d_h), ub_sps):
+def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n2lo, ub_sps):
     logging.info("serializing layout")
 
     doc = convert_to_lev3_v1(groups_model)
@@ -297,7 +306,7 @@ def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n
     layout_plugin = layout_model.getPlugin("layout")
 
     if layout_plugin:
-        create_layout((d_w, d_h), n2lo, layout_model, layout_plugin, ub_sps, groups_model)
+        create_layout(n2lo, layout_model, layout_plugin, ub_sps, groups_model)
         save_as_sbml(layout_model, layout_sbml)
 
     if gen_model:
@@ -305,7 +314,7 @@ def save_as_layout_sbml(groups_model, gen_model, layout_sbml, gen_layout_sbml, n
         gen_layout_model = doc.getModel()
         gen_layout_plugin = gen_layout_model.getPlugin("layout")
         if gen_layout_plugin:
-            create_layout((d_w, d_h), n2lo, gen_layout_model, gen_layout_plugin, ub_sps, gen_model)
+            create_layout(n2lo, gen_layout_model, gen_layout_plugin, ub_sps, gen_model)
             save_as_sbml(gen_layout_model, gen_layout_sbml)
 
 
@@ -534,6 +543,13 @@ def check_for_groups(groups_sbml, sbo_term, group_type):
             if sbo_term == gr_sbo and group_type == gr_type:
                 return True
     return False
+
+
+def get_formulas(species):
+    result = set()
+    node = species.getNotes()
+    _get_prefixed_notes_value(node, result, FORMULA_PREFIX)
+    return result
 
 
 def get_subsystem2r_ids(sbml=None, model=None):

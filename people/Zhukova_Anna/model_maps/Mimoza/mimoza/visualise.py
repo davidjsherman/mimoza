@@ -84,14 +84,14 @@ try:
         except LoPlError:
             n2xy = None
 
-        fc, (n2lo, (d_w, d_h)) = graph2geojson(c_id2info, c_id2outs, graph, chebi, n2xy)
+        fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, graph, chebi, n2xy)
 
         if not n2xy or gen_sbml:
             groups_document = reader.readSBML(groups_sbml)
             groups_model = groups_document.getModel()
             gen_document = reader.readSBML(gen_sbml)
             gen_model = gen_document.getModel()
-            save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, (d_w, d_h), ub_sps)
+            save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, ub_sps)
 
         serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
                   MIMOZA_FAVICON)

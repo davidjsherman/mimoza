@@ -1,33 +1,19 @@
 from collections import defaultdict
+from itertools import chain
 
+from sbml_generalization.annotation.kegg_manager import get_kegg_m_id
 from sbml_generalization.sbml.reaction_filters import get_formula
-from sbml_generalization.onto.obo_ontology import miriam_to_term_id, to_identifiers_org_format
-from sbml_generalization.annotation.rdf_annotation_helper import get_qualifier_values, add_annotation, \
-    get_is_qualifier, get_is_vo_qualifier
+from sbml_generalization.onto.obo_ontology import to_identifiers_org_format
+from sbml_generalization.annotation.rdf_annotation_helper import add_annotation, \
+    get_is_qualifier, get_is_annotations, get_is_vo_annotations
 
 
 __author__ = 'anna'
 
 
-def get_is_annotations(entity):
-    return get_annotations(entity, get_is_qualifier())
-
-
-def get_is_vo_annotations(entity):
-    return get_annotations(entity, get_is_vo_qualifier())
-
-
-def get_annotations(entity, qualifier):
-    return (miriam_to_term_id(it) for it in get_qualifier_values(entity, qualifier))
-
-
 def get_term(entity, chebi):
-    for is_annotation in get_is_annotations(entity):
+    for is_annotation in chain(get_is_annotations(entity), get_is_vo_annotations(entity)):
         term = chebi.get_term(is_annotation)
-        if term:
-            return term
-    for is_vo_annotation in get_is_vo_annotations(entity):
-        term = chebi.get_term(is_vo_annotation)
         if term:
             return term
     return None
@@ -46,13 +32,6 @@ def get_species_term(species, chebi, model):
             if s_type:
                 term = get_term(s_type, chebi)
     return term
-
-
-def get_kegg_m_id(m):
-    for annotation in get_annotations(m, get_is_qualifier()):
-        if annotation.find("kegg.compound") != -1:
-            return annotation.replace("kegg.compound:", '')
-    return None
 
 
 def find_term_id(entity, chebi):

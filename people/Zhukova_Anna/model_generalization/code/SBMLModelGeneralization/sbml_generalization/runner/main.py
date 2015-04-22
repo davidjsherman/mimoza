@@ -43,7 +43,8 @@ def main(argv=None):
                             if f.find(".xml") != -1 or f.find(".sbml") != -1]
             merge_models(in_sbml_list, merged_sbml)
             in_sbml = merged_sbml
-        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, out_sbml, in_sbml, ontology)
+            # return
+        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, out_sbml, in_sbml, ontology, ub_chebi_ids={'chebi:chebi'})
         doc = libsbml.SBMLReader().readSBML(groups_sbml)
         model = doc.getModel()
         clu2r_ids = invert_map(r_id2clu)

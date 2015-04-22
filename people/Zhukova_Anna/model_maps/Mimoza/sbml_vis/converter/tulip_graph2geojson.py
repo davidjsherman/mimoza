@@ -1,6 +1,5 @@
 from collections import defaultdict
 import logging
-from tulip import tlp
 
 import geojson
 
@@ -27,7 +26,7 @@ def update_level2features(feature, c_id2level2features, z, c_id):
     c_id2level2features[c_id][z].append(feature)
 
 
-def export_edges(c_id2level2features, c_id2outs, meta_graph, processed):
+def export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout):
     root = meta_graph.getRoot()
     # Let's call "our" compartment the one to which feature list
     # we are about to add the feature
@@ -53,22 +52,25 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed):
                                            comp_id in c_id2outs[s_c_id]]
                     # 1.1.1.a. between two inner compartments
                     if t_type == s_type:
-                        f = e2feature(meta_graph, e, e_id, True, True)
+                        f = e2feature(meta_graph, e, e_id, True, True, e2layout)
                         # for z in [1, 2]:
                         #     update_level2features(f, c_id2level2features, z, s_c_id)
                         update_level2features(f, c_id2level2features, 0, s_c_id)
                     # 1.1.1.b. between an inner compartment and a generalized reaction/species
                     elif meta_graph.isMetaNode(s) and meta_graph.isMetaNode(t):
-                        f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids)
+                        f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids,
+                                      e2layout)
                         update_level2features(f, c_id2level2features, 1, s_c_id)
                     # 1.1.1.c. between an inner compartment and a reaction/species
                     # that was generalized on the previous zoom level
                     elif root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]:
-                        f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids)
+                        f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids,
+                                      e2layout)
                         update_level2features(f, c_id2level2features, 2, s_c_id)
                     # 1.1.1.d. between an inner compartment and a non-generalizable reaction/species
                     else:
-                        f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids)
+                        f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids,
+                                      e2layout)
                         # for z in [1, 2]:
                         #     update_level2features(f, c_id2level2features, z, s_c_id)
                         update_level2features(f, c_id2level2features, 0, s_c_id)
@@ -83,7 +85,7 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed):
                     r = s if TYPE_REACTION == s_type else t
                     other_related_c_ids = [comp_id for comp_id in root[RELATED_COMPARTMENT_IDS][r] if
                                            comp_id in c_id2outs[s_c_id]]
-                    f = e2feature(meta_graph, e, e_id, root[TRANSPORT][r], not other_related_c_ids)
+                    f = e2feature(meta_graph, e, e_id, root[TRANSPORT][r], not other_related_c_ids, e2layout)
                     # 1.1.2.a. between a generalized reaction/species and some reaction/species
                     if meta_graph.isMetaNode(s) or meta_graph.isMetaNode(t):
                         update_level2features(f, c_id2level2features, 1, s_c_id)
@@ -101,7 +103,7 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed):
                 r = s if TYPE_REACTION == s_type else t
                 other_related_c_ids = [comp_id for comp_id in root[RELATED_COMPARTMENT_IDS][r] if
                                        comp_id in c_id2outs[s_c_id]]
-                f = e2feature(meta_graph, e, e_id, root[TRANSPORT][r], not other_related_c_ids)
+                f = e2feature(meta_graph, e, e_id, root[TRANSPORT][r], not other_related_c_ids, e2layout)
                 # 1.2.1. between a reaction/species that was generalized on the previous zoom level
                 # and something
                 if root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]:
@@ -131,7 +133,7 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed):
         # element = s if TYPE_COMPARTMENT != s_type else t
         # if root[ANCESTOR_ID][element]:
         # 	continue
-        # f = e2feature(meta_graph, e, True, False)
+        # f = e2feature(meta_graph, e, True, False, e2layout)
         # update_level2features(f, c_id2level2features, 0, comp_id)
 
         # 4. between some reaction and some species,
@@ -153,7 +155,7 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed):
                              if not ((c_id == s_c_id or c_id in c_id2outs[s_c_id])
                                      and (c_id == t_c_id or c_id in c_id2outs[t_c_id]))]
             for c_id in related_c_ids:
-                f = e2feature(meta_graph, e, e_id, True, False)
+                f = e2feature(meta_graph, e, e_id, True, False, e2layout)
                 # 4.1. it's a generalized edge
                 if meta_graph.isMetaEdge(e):
                     # 4.1.a. both the reaction and the species are outside our compartment
@@ -264,8 +266,8 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
                     #     update_level2features(f, c_id2level2features, z, c_id)
 
 
-def export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout):
-    export_edges(c_id2level2features, c_id2outs, meta_graph, processed)
+def export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout, e2layout):
+    export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout)
     export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout)
 
 
@@ -277,8 +279,7 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None):
     c_id2c_borders = {}
     get_id = lambda n: "%s_%s" % (root[ID][n], root[CLONE_ID][n])
     get_e_id = lambda e: "-".join(sorted([get_id(meta_graph.source(e)), get_id(meta_graph.target(e))]))
-    bb = tlp.computeBoundingBox(meta_graph)
-    n2layout, (d_w, d_h) = {}, (bb.width(), bb.height())
+    n2layout, e2layout = {}, {}
 
     while True:
         for c_id, sizes in c_id2c_borders.iteritems():
@@ -288,7 +289,7 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None):
         bend_edges(meta_graph)
         # bend_species_edges(meta_graph)
         color_edges(meta_graph)
-        export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout)
+        export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout, e2layout)
 
         metas = [n for n in meta_graph.getNodes() if meta_graph.isMetaNode(n) and TYPE_COMPARTMENT == root[TYPE][n]]
         if not metas:
@@ -310,16 +311,16 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None):
         comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, False, None, n2xy)
         bend_edges(meta_graph)
         color_edges(meta_graph)
-        export_edges(c_id2level2features, c_id2outs, meta_graph, processed)
+        export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout)
         metas = factor_nodes(meta_graph)
         bend_ubiquitous_edges(meta_graph, metas)
         bend_edges(meta_graph)
         metas.append(comp_n)
         color_edges(meta_graph)
-        export_edges(c_id2level2features, c_id2outs, meta_graph, processed)
+        export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout)
         open_meta_ns(meta_graph, metas)
 
-    return c_id2level2features, (n2layout, (d_w, d_h))
+    return c_id2level2features, (n2layout, e2layout)
 
 
 def get_reaction2reactants_products(root):
@@ -361,13 +362,13 @@ def graph2geojson(c_id2info, c_id2outs, graph, onto=None, n2xy=None, colorer=col
     color_edges(root)
 
     logging.info('tlp nodes -> geojson features')
-    c_id2level2features, (n2lo, (d_w, d_h)) = meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy)
+    c_id2level2features, (n2lo, e2lo) = meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy)
 
     geometry = geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])
     rescale(c_id2level2features)
     get_l2fs = lambda l2fs: {lev: geojson.FeatureCollection(features, geometry=geometry) for (lev, features) in
                              l2fs.iteritems()}
-    return {c_id: get_l2fs(l2fs) for (c_id, l2fs) in c_id2level2features.iteritems()}, (n2lo, (d_w, d_h))
+    return {c_id: get_l2fs(l2fs) for (c_id, l2fs) in c_id2level2features.iteritems()}, (n2lo, e2lo)
 
 
 def rescale(c_id2level2features):

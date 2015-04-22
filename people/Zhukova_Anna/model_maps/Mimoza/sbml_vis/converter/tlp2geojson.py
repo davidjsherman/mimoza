@@ -43,7 +43,7 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
         return transformation(x, other_x), transformation(y, other_y)
 
 
-def e2feature(graph, e, e_id, transport, inner):
+def e2feature(graph, e, e_id, transport, inner, e2layout):
     root = graph.getRoot()
     layout = root[VIEW_LAYOUT]
     s, t = graph.source(e), graph.target(e)
@@ -53,6 +53,7 @@ def e2feature(graph, e, e_id, transport, inner):
     s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), wh(s), root[TYPE][s])
     t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), wh(t),
                                 root[TYPE][t])
+    e2layout[e_id] = [[s_x, s_y]] + [[it[0], it[1]] for it in layout[e]] + [[t_x, t_y]]
     geom = geojson.MultiPoint([[s_x, s_y]] + [[it[0], it[1]] for it in layout[e]] + [[t_x, t_y]])
     generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 

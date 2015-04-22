@@ -65,7 +65,7 @@ def factor_nodes(graph, ns=None):
             for ub in root.getInOutNodes(meta_n):
                 if root[UBIQUITOUS][ub]:
                     clone_ids = set(root[CLONE_ID][ub].split(',')) if root[CLONE_ID][ub] else set()
-                    clone_ids |= set(root[CLONE_ID][meta_n].split(',')) if root[CLONE_ID][meta_n] else set()
+                    clone_ids.add(root[ID][meta_n])
                     root[CLONE_ID][ub] = ','.join(sorted(clone_ids))
         else:
             root[TERM][meta_n] = root[ANCESTOR_TERM][sample_n]

@@ -35,5 +35,5 @@ setup(name='SBMLModelGeneralization',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
       ],
-      requires=['libsbml', 'sympy']
+      requires=['libsbml', 'sympy', 'libsbgnpy']
 )

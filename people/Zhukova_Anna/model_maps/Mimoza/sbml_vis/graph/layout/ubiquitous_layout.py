@@ -167,12 +167,14 @@ def bend_edges(graph):
         if len(products) > 1:
             product_lo = get_bend_coord(products)
             for e in graph.getOutEdges(r):
-                root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
+                if not root[VIEW_LAYOUT][e] or product_lo != root[VIEW_LAYOUT][e][0]:
+                    root[VIEW_LAYOUT][e] = [product_lo] + root[VIEW_LAYOUT][e]
 
         if len(reactants) > 1:
             reactant_lo = get_bend_coord(reactants)
             for e in graph.getInEdges(r):
-                root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
+                if not root[VIEW_LAYOUT][e] or reactant_lo != root[VIEW_LAYOUT][e][-1]:
+                    root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
 
 
 def bend_edges_around_compartments(graph, es):

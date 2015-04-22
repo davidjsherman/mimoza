@@ -21,7 +21,7 @@ def add_equivalent_ub_chebi_ids(onto, ub_chebi_ids):
                   (reduce(lambda s1, s2: s1 | s2,
                           (it.get_all_ids() for it in onto.get_equivalents(t, relationships=EQUIVALENT_TERM_RELATIONSHIPS)),
                           t.get_all_ids())
-                   for t in (onto.get_term(ub_id) for ub_id in ub_chebi_ids)), ub_chebi_ids)
+                   for t in (it for it in (onto.get_term(ub_id) for ub_id in ub_chebi_ids) if it)), ub_chebi_ids)
 
 
 def get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids):

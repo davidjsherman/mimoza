@@ -1,4 +1,5 @@
 import libsbml
+from sbml_generalization.onto.obo_ontology import miriam_to_term_id
 
 __author__ = 'anna'
 
@@ -9,6 +10,18 @@ def get_is_qualifier():
 
 def get_is_vo_qualifier():
     return libsbml.BQB_IS_VERSION_OF
+
+
+def get_is_annotations(entity):
+    return get_annotations(entity, get_is_qualifier())
+
+
+def get_is_vo_annotations(entity):
+    return get_annotations(entity, get_is_vo_qualifier())
+
+
+def get_annotations(entity, qualifier):
+    return (miriam_to_term_id(it) for it in get_qualifier_values(entity, qualifier))
 
 
 def get_annotation_term_of_type(element, qualifier_type):
