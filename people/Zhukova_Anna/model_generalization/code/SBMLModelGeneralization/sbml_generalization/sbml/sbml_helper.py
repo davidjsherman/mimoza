@@ -3,7 +3,7 @@ import logging
 
 import libsbml
 
-from sbml_generalization.sbml.sbgn_helper import scale, get_layout_characteristics, shift, MARGIN
+from sbml_generalization.sbml.transformation_manager import scale, get_layout_characteristics, shift, MARGIN
 from sbml_generalization.annotation.annotate_with_chebi import get_term
 from sbml_generalization.utils.misc import invert_map
 from sbml_generalization.onto.obo_ontology import to_identifiers_org_format

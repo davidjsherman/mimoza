@@ -8,7 +8,12 @@ import cgitb
 import sys
 import libsbml
 
-from sbml_generalization.sbml.sbgn_helper import save_as_sbgn
+try:
+    from sbml_generalization.sbml.sbgn_helper import save_as_sbgn
+    sbgn_export_available = True
+except ImportError:
+    sbgn_export_available = False
+
 from sbml_generalization.sbml.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.sbml2tlp import import_sbml
@@ -22,7 +27,6 @@ cgitb.enable()
 # Windows needs stdio set for binary mode.
 try:
     import msvcrt
-
     msvcrt.setmode(0, os.O_BINARY)  # stdin  = 0
     msvcrt.setmode(1, os.O_BINARY)  # stdout = 1
 except ImportError:
@@ -95,19 +99,20 @@ try:
             gen_model = gen_document.getModel()
             save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, ub_sps)
 
-        logging.info('exporting as SBGN...')
-        try:
-            groups_document = reader.readSBML(groups_sbml)
-            groups_model = groups_document.getModel()
-            save_as_sbgn(n2lo, e2lo, groups_model, groups_sbgn)
-            logging.info('   exported as SBGN %s' % groups_sbgn)
-            if gen_sbml:
-                gen_document = reader.readSBML(gen_sbml)
-                gen_model = gen_document.getModel()
-                save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
-                logging.info('   exported as SBGN %s' % gen_sbgn)
-        except Exception as e:
-            logging.info(e.message)
+        if sbgn_export_available:
+            logging.info('exporting as SBGN...')
+            try:
+                groups_document = reader.readSBML(groups_sbml)
+                groups_model = groups_document.getModel()
+                save_as_sbgn(n2lo, e2lo, groups_model, groups_sbgn)
+                logging.info('   exported as SBGN %s' % groups_sbgn)
+                if gen_sbml:
+                    gen_document = reader.readSBML(gen_sbml)
+                    gen_model = gen_document.getModel()
+                    save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
+                    logging.info('   exported as SBGN %s' % gen_sbgn)
+            except Exception as e:
+                logging.info(e.message)
 
         serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
                   MIMOZA_FAVICON)
