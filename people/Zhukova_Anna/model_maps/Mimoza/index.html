@@ -28,18 +28,41 @@
         <div class="content_holder">
             <div id="tab-descr">
                 <div>
-                    <p><span class="pant">Mimoza</span> creates a 3-level representation of your model:
+                    <p><span class="pant">Mimoza</span> creates a 3-level representation of your metabolic network model:
                     </p>
                     <ul>
-                        <li><span class="pant">The most detailed view</span> represents the initial model with the
+                        <li><span class="pant">the most detailed view</span> represents the initial network with the
                             generalization-based layout (where similar metabolites and reactions are placed next to each
                             other).
-                        <li><span class="pant">The intermediate view</span> shows the <a
+                        <li><span class="pant">the intermediate view</span> shows the <a
                                 href="http://metamogen.gforge.inria.fr/" target="_blank">generalized</a> versions of
                             reactions and metabolites in each compartment;
-                        <li><span class="pant">The general view</span> represents the compartments of the model and
-                            the transport reactions between them;
+                        <li><span class="pant">the general view</span> represents the compartments and
+                            the transport reactions between them.
                     </ul>
+                    <p>You can browse you network map online or download it as a <a href="http://co.mbine.org/documents/archive" target="_blank">COMBINE archive</a>
+                    that will contain:</p>
+                    <ul>
+                        <li>all the files needed for offline browsing;
+                        <li><a href="http://sbml.org/" target="_blank">SBML</a> files
+                    with the <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups" target="_blank">groups</a>
+                    and <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/layout" target="_blank">layout</a> extensions,
+                    representing the initial and generalized versions of your model and their layout;
+                        <li><a href="http://www.sbgn.org/" target="_blank">SBGN</a> representation of your model.
+                    </ul>
+                </div>
+                <div>
+                    <p>
+                        <span class="pant">Mimoza</span> is powered by <a href="http://leafletjs.com/" target="_blank">Leaflet</a>,
+                        <a href="http://metamogen.gforge.inria.fr/" target="_blank">Model generalization library</a>,
+                        <a href="http://www.ebi.ac.uk/chebi/" target="_blank">ChEBI</a>,
+                        <a href="http://tulip.labri.fr/" target="_blank">Tulip</a>,
+                        <a href="http://geojson.org/" target="_blank">GeoJSON</a>,
+                        <a href="http://jquery.com/" target="_blank">jQuery</a>,
+                        <a href="http://www.python.org/" target="_blank">Python</a>,
+                        <a href="http://sbml.org/Software/libSBML" target="_blank">libSBML</a>,
+                        <a href="https://github.com/matthiaskoenig/libsbgn-python" target="_blank">Python API for libSBGN</a>,
+                        and <a href="http://www.jetbrains.com/pycharm/" target="_blank">PyCharm</a>.</p>
                 </div>
 
                 <p class="centre">
@@ -77,18 +100,6 @@
                                 target="_blank">Galaxy</a> tool (<a href="Mimoza.xml" download>download the config
                             file</a>).</p>
                     <p>The <i>README</i> file inside the <a href="Mimoza.zip" download>Mimoza.zip</a> archive provides the installation and usage instructions.</p>
-                </div>
-                <div>
-                    <p>
-                        <span class="pant">Mimoza</span> is powered by <a href="http://leafletjs.com/" target="_blank">Leaflet</a>,
-                        <a href="http://metamogen.gforge.inria.fr/" target="_blank">Model generalization library</a>,
-                        <a href="http://www.ebi.ac.uk/chebi/" target="_blank">ChEBI</a>,
-                        <a href="http://tulip.labri.fr/" target="_blank">Tulip</a>,
-                        <a href="http://geojson.org/" target="_blank">GeoJSON</a>,
-                        <a href="http://jquery.com/" target="_blank">jQuery</a>,
-                        <a href="http://www.python.org/" target="_blank">Python</a>,
-                        <a href="http://sbml.org/Software/libSBML" target="_blank">libSBML</a>,
-                        and <a href="http://www.jetbrains.com/pycharm/" target="_blank">PyCharm</a>.</p>
                 </div>
             </div>
             <div id="tab-examples">

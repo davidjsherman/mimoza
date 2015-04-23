@@ -6,9 +6,9 @@ import os
 import cgi
 import cgitb
 import sys
+import libsbml
 
-from libsbml import SBMLReader
-
+from sbml_generalization.sbml.sbgn_helper import save_as_sbgn
 from sbml_generalization.sbml.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.sbml2tlp import import_sbml
@@ -31,6 +31,8 @@ except ImportError:
 form = cgi.FieldStorage()
 groups_sbml = form['sbml'].value
 gen_sbml = form['gen_sbml'].value
+groups_sbgn = form['sbgn'].value
+gen_sbgn = form['gen_sbgn'].value
 m_dir_id = form['dir'].value
 directory = '../html/%s/' % m_dir_id
 log_file = '%s/log.log' % directory
@@ -66,7 +68,7 @@ try:
 
     if not os.path.exists('../html/%s/comp.html' % m_dir_id):
         chebi = parse(get_chebi())
-        reader = SBMLReader()
+        reader = libsbml.SBMLReader()
         input_document = reader.readSBML(groups_sbml)
         input_model = input_document.getModel()
 
@@ -92,6 +94,20 @@ try:
             gen_document = reader.readSBML(gen_sbml)
             gen_model = gen_document.getModel()
             save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, ub_sps)
+
+        logging.info('exporting as SBGN...')
+        try:
+            groups_document = reader.readSBML(groups_sbml)
+            groups_model = groups_document.getModel()
+            save_as_sbgn(n2lo, e2lo, groups_model, groups_sbgn)
+            logging.info('   exported as SBGN %s' % groups_sbgn)
+            if gen_sbml:
+                gen_document = reader.readSBML(gen_sbml)
+                gen_model = gen_document.getModel()
+                save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
+                logging.info('   exported as SBGN %s' % gen_sbgn)
+        except Exception as e:
+            logging.info(e.message)
 
         serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
                   MIMOZA_FAVICON)

@@ -8,7 +8,8 @@ MANIFEST = "http://identifiers.org/combine.specifications/omex-manifest"
 
 extension2format = {
     ".xml": "http://identifiers.org/combine.specifications/sbml",
-    ".sbml": "http://identifiers.org/combine.specifications/sbml"
+    ".sbml": "http://identifiers.org/combine.specifications/sbml",
+    ".sbgn": "http://identifiers.org/combine.specifications/sbgn"
 }
 
 
