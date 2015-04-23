@@ -3,7 +3,7 @@ import logging
 
 import libsbml
 
-from sbml_generalization.sbml.sbgn_helper import scale, get_transformation_factors, shift, MARGIN
+from sbml_generalization.sbml.sbgn_helper import scale, get_layout_characteristics, shift, MARGIN
 from sbml_generalization.annotation.annotate_with_chebi import get_term
 from sbml_generalization.utils.misc import invert_map
 from sbml_generalization.onto.obo_ontology import to_identifiers_org_format
@@ -90,11 +90,16 @@ def flatten(t):
 
 def generate_unique_id(model, id_=None):
     if not id_:
-        id_ = "new_id"
-    if not model.getElementBySId(id_):
-        return id_
-    id_ = normalize(id_)
-    i = generate_unique_id_increment(model, 0, id_)
+        id_ = "id_"
+    else:
+        id_ = ''.join(e for e in id_ if e.isalnum() or '_' == e)
+        if id_[0].isdigit():
+            id_ = 'id_%s' % id_
+        if not model.getElementBySId(id_):
+            return id_
+    i = 0
+    while model.getElementBySId("%s_%d" % (id_, i)):
+        i += 1
     return "%s_%d" % (id_, i)
 
 
@@ -106,7 +111,7 @@ def generate_unique_id_increment(model, i, id_prefix):
 
 def create_compartment(model, name, outside=None, term_id=None, id_=None):
     new_comp = model.createCompartment()
-    id_ = generate_unique_id(model, id_ if id_ else "c_new")
+    id_ = generate_unique_id(model, id_ if id_ else "c_")
     new_comp.setId(id_)
     new_comp.setName(name)
     if outside:
@@ -118,7 +123,7 @@ def create_compartment(model, name, outside=None, term_id=None, id_=None):
 
 def create_species(model, compartment_id, type_id=None, name=None, id_=None, sbo_id=None):
     new_species = model.createSpecies()
-    id_ = generate_unique_id(model, id_ if id_ else "s_new")
+    id_ = generate_unique_id(model, id_ if id_ else "s_")
     if libsbml.LIBSBML_OPERATION_SUCCESS != new_species.setId(id_):
         logging.error("species  %s creation error" % id_)
     if not name:
@@ -144,7 +149,7 @@ def create_species(model, compartment_id, type_id=None, name=None, id_=None, sbo
 
 def create_reaction(model, reactants, products, name=None, id_=None):
     reaction = model.createReaction()
-    id_ = generate_unique_id(model, id_ if id_ else "r_new")
+    id_ = generate_unique_id(model, id_ if id_ else "r_")
     if libsbml.LIBSBML_OPERATION_SUCCESS != reaction.setId(id_):
         logging.error("reaction  ", id_, " creation error")
     for sp_id in reactants:
@@ -240,12 +245,13 @@ def add_label(label, layout, glyph, _id, w, h, x, y):
 
 
 def create_layout(n2lo, layout_model, layout_plugin, ub_sps, model):
-    scale_factor, (x_shift, y_shift), (w, h) = get_transformation_factors(n2lo)
+    h_min, (x_shift, y_shift), (w, h) = get_layout_characteristics(n2lo)
+    scale_factor = MARGIN * 1.0 / h_min if h_min else 1
     (w, h) = scale((w, h), scale_factor)
     (x_shift, y_shift) = shift(scale((x_shift, y_shift), scale_factor), MARGIN, MARGIN)
 
     layout = layout_plugin.createLayout()
-    layout.setId(generate_unique_id(layout_model, "l_0"))
+    layout.setId(generate_unique_id(layout_model, "l_"))
     l_id = layout.getId()
     layout.setDimensions(create_dimensions(w + 2 * MARGIN, h + 2 * MARGIN))
 
@@ -268,13 +274,13 @@ def create_layout(n2lo, layout_model, layout_plugin, ub_sps, model):
             if isinstance(n2lo[s_id], dict):
                 elements = n2lo[s_id].iteritems()
             else:
-                elements = [(None, n2lo[s_id])]
-            for r_id, [(x, y), (w, h)] in elements:
-                if not r_id or model.getReaction(r_id):
+                elements = [('', n2lo[s_id])]
+            for r_ids, [(x, y), (w, h)] in elements:
+                if not r_ids or next((it for it in (model.getReaction(r_id) for r_id in r_ids) if it), False):
                     (x, y), (w, h) = shift(scale((x, y), scale_factor), x_shift, y_shift), scale((w, h), scale_factor)
                     s_glyph = layout.createSpeciesGlyph()
                     s_glyph.setSpeciesId(s_id)
-                    s_glyph_suffix = "%s_%s" % (s_id, r_id) if r_id else s_id
+                    s_glyph_suffix = "%s_%s" % (s_id, '_'.join(r_ids)) if r_ids else s_id
                     s_glyph.setId("sg_%s_%s" % (l_id, s_glyph_suffix))
                     s_glyph.setBoundingBox(create_bounding_box(x, y, w, h))
                     add_label(s_name, layout, s_glyph, s_id, w, h, x, y)
@@ -323,7 +329,11 @@ def link_reaction_to_species(s_refs, r_glyph, l_id, r_id, n2lo, role):
         s_id = s_ref.getSpecies()
         s_ref_glyph = r_glyph.createSpeciesReferenceGlyph()
         s_ref_glyph.setId("srg_%s_%s_%s" % (l_id, r_id, s_id))
-        s_glyph_id_suffix = "%s_%s" % (s_id, r_id) if isinstance(n2lo[s_id], dict) else s_id
+        s_glyph_id_suffix = s_id
+        if isinstance(n2lo[s_id], dict):
+            for r_ids in n2lo[s_id].iterkeys():
+                if r_id in r_ids:
+                    s_glyph_id_suffix = "%s_%s" % (s_id, '_'.join(r_ids))
         s_ref_glyph.setSpeciesGlyphId("sg_%s_%s" % (l_id, s_glyph_id_suffix))
         s_ref_glyph.setSpeciesReferenceId(s_ref.getId())
         s_ref_glyph.setRole(role(s_id))

@@ -195,8 +195,7 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
             if clone_ids:
                 if not root[ID][n] in n2layout:
                     n2layout[root[ID][n]] = {}
-                for clone_id in clone_ids:
-                    n2layout[root[ID][n]][clone_id] = [(x, y), (w, h)]
+                n2layout[root[ID][n]][tuple(clone_ids)] = [(x, y), (w, h)]
             else:
                 n2layout[root[ID][n]] = [(x, y), (w, h)]
         else:
