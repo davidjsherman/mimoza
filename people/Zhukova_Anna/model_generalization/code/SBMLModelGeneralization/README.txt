@@ -2,49 +2,92 @@
 Model Generalization
 ====================
 
-**Model Generalization** is a python library that provides a higher-level view of a metabolic model, by masking inessential details while preserving its essential structure. 
+**Model Generalization** is a Python library that compresses a metabolic network model
+using the knowledge-based model generalization method.
 
-It groups biochemical species in the model into semantically equivalent classes and generalizes them into their common parent in the `ChEBI ontology <http://www.ebi.ac.uk/chebi/>`_. The reactions between the same generalized species are factored together into generalized reactions.
+**Model generalization** takes a model in `SBML format <http://sbml.org/>`_ as input, and produces 2 SBML files as an output:
+  * SBML containing the generalized model
+  * SBML file with `groups extension <http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups>`_
+containing the initial model plus the groups representing similar metabolites and similar reactions.
 
-Model generalization takes a model in `SBML format <http://sbml.org/>`_ as input, and produces two SBML files as an output:
-* SBML containing the generalized model
-* SBML file with `groups extension <http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups>`_ containing the initial model plus the groups representing quotient species and reaction sets.
+Article
+=======
+
+**Model Generalization** is described in `Zhukova A, Sherman DJ. Knowledge-based generalization of metabolic models.
+J Comput Biol. 2014 Jul;21(7):534-47 <http://identifiers.org/doi/10.1089/cmb.2013.0143>`_.
 
 
-Installing libSBML
-==================
+Model Generalization Method
+===========================
 
-*Model Generalization* uses *libSBML* library for python with the groups extension. To install it, please download and extract the source files for *libSBML with extensions*, e.g. from `https://sourceforge.net/projects/sbml/files/libsbml/5.8.0/experimental/src/ <https://sourceforge.net/projects/sbml/files/libsbml/5.8.0/experimental/src/>`_. Make sure you have the following libraries installed:
-* libxml2-dev 
-* xml2 
-* libxml2 
-* cmake
+The **model generalization method** groups similar metabolites and reactions in the network
+based on its structure and the knowledge, extracted from the `ChEBI ontology <http://www.ebi.ac.uk/chebi/>`_.
+The reactions between the same generalized species are factored together into generalized reactions.
+A generalization is made specifically for a given model and is maximal with respect to the relations in the model;
+it respects semantic constraints such as reaction stoichiometry, connectivity, and transport between compartments;
+and it is performed through a heuristic method that is efficient in practice for genome-scale models.
 
-Then, build and install *libsbml* for python:
-* cd where_you_have_extracted_libsbml_archive
-* mkdir build
-* cd build
-* cmake -DENABLE_GROUPS=ON -DWITH_PYTHON=ON ..
-* make
-* export PYTHONPATH=where_you_have_extracted_libsbml_archive/build/src/bindings/python:$PYTHONPATH
+Each metabolite can be generalized up to one of its ancestors in ChEBI. If a ChEBI annotation for a metabolite
+is not present in the model, the method attempts to automatically deduce it by comparing metabolite’s name
+to ChEBI terms’ names and synonyms. Reactions that share the same generalized reactants and
+the same generalized products, are considered equivalent and are factored together into a generalized reaction.
 
+The appropriate level of abstraction for metabolites and reactions is defined by the network itself as
+the most general one that satisfies two restrictions:
+  (1) Stoichiometry preserving restriction: metabolites that participate in the same reaction cannot be grouped together;
+  (2) Metabolite diversity restriction: metabolites that do not participate in any pair of similar reactions are not
+  grouped together (as there is no evidence of their similarity in the network).
+
+Overall, the generalization method is composed of three modules:
+  (1) Aggressive reaction grouping based on the most general metabolite grouping (defined by ChEBI),
+in order to generate reaction grouping candidates;
+  (2) Ungrouping of some metabolites and reactions to correct for violation of the stoichiometry preserving restriction;
+  (3) Ungrouping of some metabolites (while keeping the reaction grouping intact) to correct for violation of
+the metabolite diversity restriction.
+
+For instance, (S)-3-hydroxydecanoyl-CoA, (S)-3-hydroxylauroyl-CoA and (S)-3-hydroxytetradecanoyl-CoA
+have a common ancestor hydroxy fatty acyl-CoA in ChEBI. They can be grouped and generalized into hydroxy fatty acyl-CoA,
+if in the network there is no reaction whose stoichiometry would be changed by such a generalization
+(stoichiometry preserving restriction), and exist similar reactions that consume or produce them
+(metabolite diversity restriction).
+
+
+Dependencies
+=======================
+
+**Model Generalization** uses `libSBML <http://sbml.org/Software/libSBML>`_ library for python with the groups and layout extensions.
+To install it:
+  * sudo pip install python-libsbml-experimental
+
+Make sure you also have the following libraries installed:
+  * libxml2-dev
+  * xml2
+  * libxml2
+  * cmake
+
+**Model Generalization** also uses `ChEBI Ontology <http://www.ebi.ac.uk/chebi/>`_, but you do not need to install it.
+
+**Model Generalization** was developed using `PyCharm <http://www.jetbrains.com/pycharm/>`_.
 
 Installing Model Generalization
 ===============================
 
 From the directory where you have extracted this archive, execute:
-* python setup.py
+  * python setup.py
+
+Do not forget to install the dependencies (see above).
 
 
 Running Model Generalization
 ============================
 
 Execute:
-* python ./main.py --model path_to_your_model.xml --verbose
+  * python ./main.py --model path_to_your_model.xml --verbose
 
 For example:
-python ./main.py --model ./MODEL1111190000.xml --verbose
+  * python ./main.py --model ./MODEL1111190000.xml --verbose
 
 The script will produce two SBML files, containing the generalized model:
-* path_to_your_model_generalized.xml
-* path_to_your_model_with_groups.xml
+  * path_to_your_model_generalized.xml -- SBML containing the generalized model
+  * path_to_your_model_with_groups.xml -- SBML file with groups extension containing the initial model
+  plus the groups representing similar metabolites and similar reactions.

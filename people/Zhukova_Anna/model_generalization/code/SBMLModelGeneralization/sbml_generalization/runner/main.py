@@ -6,14 +6,11 @@ import logging
 from os import listdir
 import sys
 
-import libsbml
-from merge.model_merger import merge_models
-
+from sbml_generalization.merge.model_merger import merge_models
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.onto.onto_getter import get_chebi
 from sbml_generalization.onto.obo_ontology import parse
-from sbml_generalization.utils.misc import invert_map
 
 
 __author__ = 'anna'
@@ -25,7 +22,7 @@ __author__ = 'anna'
 
 help_message = '''
 Generalizes the model.
-usage: main.py --model model.xml --chebi chebi.obo --verbose
+usage: main.py --model model.xml --verbose
 '''
 
 
@@ -34,26 +31,16 @@ def main(argv=None):
         argv = sys.argv
     try:
         chebi, in_sbml, in_path, out_sbml, groups_sbml, merged_sbml, verbose, log_file = process_args(argv)
-        # log(verbose, "parsing ChEBI...")
         if verbose:
             logging.basicConfig(level=logging.INFO)
+        logging.info("parsing ChEBI...")
         ontology = parse(chebi, EQUIVALENT_TERM_RELATIONSHIPS | {'has_role'})
         if not in_sbml and in_path:
             in_sbml_list = ['%s/%s' % (in_path, f) for f in listdir(in_path)
                             if f.find(".xml") != -1 or f.find(".sbml") != -1]
             merge_models(in_sbml_list, merged_sbml)
             in_sbml = merged_sbml
-            # return
-        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, out_sbml, in_sbml, ontology, ub_chebi_ids={'chebi:chebi'})
-        doc = libsbml.SBMLReader().readSBML(groups_sbml)
-        model = doc.getModel()
-        clu2r_ids = invert_map(r_id2clu)
-        clu2s_ids = invert_map(s_id2clu)
-        for s_ids in clu2s_ids.itervalues():
-            print(len(s_ids), [(s_id, model.getSpecies(s_id).getName()) for s_id in s_ids])
-        print('---------------------')
-        for r_ids in clu2r_ids.itervalues():
-            print(len(r_ids), [(r_id, model.getReaction(r_id).getName()) for r_id in r_ids])
+        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, out_sbml, in_sbml, ontology)
     except Usage, err:
         logging.error(sys.argv[0].split("/")[-1] + ": " + str(err.msg))
         logging.error(sys.stderr, "\t for help use --help")
