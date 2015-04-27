@@ -67,7 +67,8 @@ def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
             if ubiquitous_chebi_ids and s_id in s_id2term_id and s_id2term_id[s_id] in ubiquitous_chebi_ids:
                 ubiquitous.append(s_id2term_id[s_id])
             else:
-                specific.append(s_id2clu[s_id] if s_id in s_id2clu else s_id)
+                specific.append(s_id2clu[s_id] if s_id in s_id2clu
+                                else (s_id2term_id[s_id] if s_id in s_id2term_id else s_id))
         transform = lambda collection: tuple(sorted(collection))
         return transform(specific), transform(ubiquitous)
 

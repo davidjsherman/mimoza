@@ -244,6 +244,10 @@ class Term:
         return "{0}({1})".format(self.get_id(), self.get_name())
 
 
+def get_name_bis(name):
+    return ''.join(e for e in name if e.isalnum())
+
+
 class Ontology:
     def __init__(self):
         self.roots = set()
@@ -306,7 +310,9 @@ class Ontology:
         names.add(term.get_name())
         for name in names:
             name = name.lower().strip()
+            name_bis = get_name_bis(name)
             self.name2term_ids[name].add(t_id)
+            self.name2term_ids[name_bis].add(t_id)
         if not term.get_parent_ids():
             self.roots.add(term)
         for child in term.get_descendants():
@@ -345,10 +351,12 @@ class Ontology:
         names.add(term.get_name())
         for name in names:
             name = name.lower()
-            if name in self.name2term_ids:
-                self.name2term_ids[name] -= {t_id}
-                if not self.name2term_ids[name]:
-                    del self.name2term_ids[name]
+            name_bis = get_name_bis(name)
+            for it in [name, name_bis]:
+                if it in self.name2term_ids:
+                    self.name2term_ids[it] -= {t_id}
+                    if not self.name2term_ids[it]:
+                        del self.name2term_ids[it]
         for kegg in term.get_kegg_ids():
             if kegg in self.kegg2term_id:
                 del self.kegg2term_id[kegg]
@@ -533,7 +541,10 @@ class Ontology:
 
     def get_ids_by_name(self, name):
         name = name.lower()
-        return set(self.name2term_ids[name]) if name in self.name2term_ids else set()
+        name_bis = get_name_bis(name)
+        return (set(self.name2term_ids[name]) if name in self.name2term_ids else set()) \
+               | (set(self.name2term_ids[name_bis]) if name_bis in self.name2term_ids else set())
+
 
     def common_points(self, terms, depth=None):
         if not terms or depth is not None and depth <= 0:

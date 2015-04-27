@@ -114,10 +114,10 @@ def get_species_to_chebi(model, chebi, guess=True):
                 name = normalize(species.getName()).replace(c_name, '').strip()
             if not name:
                 continue
-            t_ids = chebi.get_ids_by_name(name)
+            t_ids = sorted(chebi.get_ids_by_name(name))
             if not t_ids:
                 continue
-            t_id = t_ids.pop()
+            t_id = t_ids[0]
             for species in species_list:
                 species2chebi[species.getId()] = t_id
                 add_annotation(species, get_is_qualifier(), to_identifiers_org_format(t_id, "obo.chebi"))

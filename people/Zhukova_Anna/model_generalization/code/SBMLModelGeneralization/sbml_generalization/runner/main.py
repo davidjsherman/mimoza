@@ -6,11 +6,18 @@ import logging
 from os import listdir
 import sys
 
+import libsbml
+import openpyxl
+
+from sbml_generalization.annotation.annotate_with_chebi import get_term
+from sbml_generalization.sbml.reaction_filters import get_r_formula, get_gene_association
 from sbml_generalization.merge.model_merger import merge_models
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.onto.onto_getter import get_chebi
 from sbml_generalization.onto.obo_ontology import parse
+from sbml_generalization.serialization.xslx_manager import add_values, HEADER_STYLE
+from sbml_generalization.utils.misc import invert_map
 
 
 __author__ = 'anna'
@@ -38,13 +45,82 @@ def main(argv=None):
         if not in_sbml and in_path:
             in_sbml_list = ['%s/%s' % (in_path, f) for f in listdir(in_path)
                             if f.find(".xml") != -1 or f.find(".sbml") != -1]
+            for sbml in in_sbml_list:
+                doc = libsbml.SBMLReader().readSBML(sbml)
+                model = doc.getModel()
+                print(sbml, model.getNumSpecies(), model.getNumReactions())
             merge_models(in_sbml_list, merged_sbml)
             in_sbml = merged_sbml
-        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, out_sbml, in_sbml, ontology)
+        r_id2clu, s_id2clu, _, _ = generalize_model(groups_sbml, out_sbml, in_sbml, ontology, ub_chebi_ids={'chebi:ch'})
+        if in_path:
+            serialize_generalization(r_id2clu, s_id2clu, groups_sbml, ontology, '%s/generalized.xlsx' % in_path)
     except Usage, err:
         logging.error(sys.argv[0].split("/")[-1] + ": " + str(err.msg))
         logging.error(sys.stderr, "\t for help use --help")
         return 2
+
+
+def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
+    doc = libsbml.SBMLReader().readSBML(sbml)
+    model = doc.getModel()
+    groups_plugin = model.getPlugin("groups")
+    clu2r_ids, clu2s_ids = invert_map(r_id2clu), invert_map(s_id2clu)
+    wb = openpyxl.Workbook()
+    ws = wb.create_sheet(0, "Metabolite Groups")
+    row = 1
+    add_values(ws, row, 1, ["Group Id", "Group Name", "Group CHEBI", "Id", "Name", "Compartment", "CHEBI"], HEADER_STYLE)
+    row += 1
+    processed_s_ids = set()
+    for (g_id, ch_term), s_ids in sorted(clu2s_ids.iteritems(), key=lambda ((g_id, _), s_ids): g_id):
+        group = groups_plugin.getGroup(g_id)
+        add_values(ws, row, 1, [g_id, group.getName(), ch_term.get_id() if ch_term else ''])
+        for s_id in sorted(s_ids, key=lambda s_id: s_id[s_id.find('__'):]):
+            species = model.getSpecies(s_id)
+            ch_term = get_term(species, chebi)
+            add_values(ws, row, 4, [s_id, species.getName(), model.getCompartment(species.getCompartment()).getName(),
+                                    ch_term.get_id() if ch_term else ''])
+            row += 1
+        processed_s_ids |= s_ids
+    ws = wb.create_sheet(1, "Ungrouped metabolites")
+    row = 1
+    add_values(ws, row, 1, ["Id", "Name", "Compartment", "CHEBI"], HEADER_STYLE)
+    row += 1
+    unm_l = 0
+    for species in sorted(model.getListOfSpecies(), key=lambda s: s.getId()[s.getId().find('__'):]):
+        if species.getId() not in processed_s_ids:
+            ch_term = get_term(species, chebi)
+            add_values(ws, row, 1, [species.getId(), species.getName(),
+                                    model.getCompartment(species.getCompartment()).getName(),
+                                    ch_term.get_id() if ch_term else ''])
+            row += 1
+            unm_l += 1
+    print unm_l
+
+    ws = wb.create_sheet(2, "Reaction Groups")
+    row = 1
+    add_values(ws, row, 1, ["Group Id", "Id", "Name", "Formula", "Gene Association"], HEADER_STYLE)
+    row += 1
+    processed_r_ids = set()
+    for (g_id, g_name), r_ids in sorted(clu2r_ids.iteritems(), key=lambda ((g_id, g_name), _): g_id):
+        add_values(ws, row, 1, [g_id])
+        for r_id in sorted(r_ids, key=lambda r_id: r_id[r_id.find('__'):]):
+            r = model.getReaction(r_id)
+            add_values(ws, row, 2, [r_id, r.getName(), get_r_formula(model, r), get_gene_association(r)])
+            row += 1
+        processed_r_ids |= r_ids
+    ws = wb.create_sheet(3, "Ungrouped reactions")
+    row = 1
+    add_values(ws, row, 1, ["Id", "Name", "Formula", "Gene Association"], HEADER_STYLE)
+    row += 1
+    unm_l = 0
+    for r in sorted(model.getListOfReactions(), key=lambda r: r.getId()[r.getId().find('__'):]):
+        if r.getId() not in processed_r_ids:
+            add_values(ws, row, 1, [r.getId(), r.getName(), get_r_formula(model, r), get_gene_association(r)])
+            row += 1
+            unm_l += 1
+    print unm_l
+
+    wb.save(path)
 
 
 def generate_out_sbml_name(in_sbml, in_path, out_sbml, groups_sbml, merged_sbml):

@@ -27,7 +27,6 @@ SBO_MATERIAL_ENTITY = "SBO:0000240"
 
 PATHWAY_PREFIX = "SUBSYSTEM:"
 
-FORMULA_PREFIX = "FORMULA:"
 
 __author__ = 'anna'
 
@@ -553,13 +552,6 @@ def check_for_groups(groups_sbml, sbo_term, group_type):
             if sbo_term == gr_sbo and group_type == gr_type:
                 return True
     return False
-
-
-def get_formulas(species):
-    result = set()
-    node = species.getNotes()
-    _get_prefixed_notes_value(node, result, FORMULA_PREFIX)
-    return result
 
 
 def get_subsystem2r_ids(sbml=None, model=None):

@@ -1,41 +1,47 @@
-from libsbml import _libsbml
 import logging
+
 import libsbml
-from annotation.rdf_annotation_helper import get_qualifier_values, add_annotation
-from sbml_generalization.annotation.compartment_positioner import get_comp2go, get_go_term
+from sbml_generalization.annotation.annotate_with_chebi import get_species_to_chebi
+from sbml_generalization.sbml.compartment_manager import need_boundary_compartment, separate_boundary_species
+
+from sbml_generalization.annotation.rdf_annotation_helper import get_qualifier_values, add_annotation
+from sbml_generalization.annotation.compartment_positioner import get_comp2go
 from sbml_generalization.onto.obo_ontology import parse
-from sbml_generalization.onto.onto_getter import get_go
+from sbml_generalization.onto.onto_getter import get_go, get_chebi
 from sbml_generalization.sbml.sbml_helper import set_consistency_level
+
 
 __author__ = 'anna'
 
 
-
-CYTOPLASM = 'GO:0005737'
-
-CYTOSOL = 'GO:0005829'
+CYTOPLASM = 'go:0005737'
+CYTOSOL = 'go:0005829'
 
 
-def update_model_element_ids(m_id, model, go2c_id, go):
+def update_model_element_ids(m_id, model, go2c_id, go, chebi):
     id2id = {}
+    s_id2chebi = get_species_to_chebi(model, chebi, guess=True)
+    if need_boundary_compartment(model, s_id2chebi):
+        separate_boundary_species(model)
+
     comp2go_term = get_comp2go(model, go)
+
     for c in model.getListOfCompartments():
         c_id = c.getId()
         go_id = comp2go_term[c_id]
         if not go_id:
-            c_name = c.getName()
-            if c_name:
-                go_id = c_name.lower()
-        elif go_id == CYTOSOL and CYTOSOL not in go2c_id and CYTOPLASM in go2c_id:
-            go_id = CYTOPLASM
-        elif go_id == CYTOPLASM and CYTOSOL in go2c_id and CYTOPLASM not in go2c_id:
-            go_id = CYTOSOL
+            go_id = c.getName()
         if go_id:
+            go_id = go_id.lower()
+            if go_id == CYTOSOL and (CYTOSOL not in go2c_id) and (CYTOPLASM in go2c_id):
+                go_id = CYTOPLASM
+            elif go_id == CYTOPLASM and (CYTOSOL in go2c_id) and (CYTOPLASM not in go2c_id):
+                go_id = CYTOSOL
             if go_id not in go2c_id:
-                go2c_id[go_id] = "%s__%s" % (m_id, c_id)
+                go2c_id[go_id] = "c_%s__%s" % (m_id, c_id)
             new_c_id = go2c_id[go_id]
         else:
-            new_c_id = "%s__%s" % (m_id, c_id)
+            new_c_id = "c_%s__%s" % (m_id, c_id)
         c.setId(new_c_id)
         id2id[c_id] = new_c_id
 
@@ -43,25 +49,19 @@ def update_model_element_ids(m_id, model, go2c_id, go):
         if c.getOutside():
             c.setOutside(id2id[c.getOutside()])
 
-    for s_t in model.getListOfSpeciesTypes():
-        old_id = s_t.getId()
-        new_id = "%s__%s" % (m_id, old_id)
-        s_t.setId(new_id)
-        id2id[old_id] = new_id
-
     for s in model.getListOfSpecies():
+        if s.getCompartment():
+            s.setCompartment(id2id[s.getCompartment()])
         old_id = s.getId()
-        new_id = "%s__%s" % (m_id, old_id)
+        new_id = "s_%s__%s" % (m_id, old_id)
         s.setId(new_id)
         id2id[old_id] = new_id
         if s.getSpeciesType():
-            s.setSpeciesType(id2id[s.getSpeciesType()])
-        if s.getCompartment():
-            s.setCompartment(id2id[s.getCompartment()])
+            s.unsetSpeciesType()
 
     for r in model.getListOfReactions():
         old_id = r.getId()
-        new_id = "%s__%s" % (m_id, old_id)
+        new_id = "r_%s__%s" % (m_id, old_id)
         r.setId(new_id)
         id2id[old_id] = new_id
         if r.getCompartment():
@@ -75,11 +75,11 @@ def update_model_element_ids(m_id, model, go2c_id, go):
 
 
 def get_model_id(i, m_ids, model):
-    m_id = model.getId() if model.getId() else "m"
+    m_id = ''.join(e for e in model.getId() if e.isalnum()) if model.getId() else "m"
     if m_id in m_ids:
-        while "%s_%d" % (m_id, i) in m_ids:
+        while "m_%s_%d" % (m_id, i) in m_ids:
             i += 1
-        m_id = "%s_%d" % (m_id, i)
+        m_id = "m_%s_%d" % (m_id, i)
         model.setId(m_id)
     m_ids.add(m_id)
     return m_id
@@ -115,20 +115,8 @@ def copy_species(e, model):
     new_e = model.createSpecies()
     new_e.setId(e.getId())
     new_e.setName(e.getName())
-    new_e.setSpeciesType(e.getSpeciesType())
     new_e.setCompartment(e.getCompartment())
     new_e.setBoundaryCondition(e.getBoundaryCondition())
-    for qualifier in [libsbml.BQB_IS, libsbml.BQB_IS_VERSION_OF]:
-        for annotation in get_qualifier_values(e, qualifier):
-            add_annotation(new_e, qualifier, annotation)
-    new_e.setNotes(e.getNotes())
-    return new_e
-
-
-def copy_species_type(e, model):
-    new_e = model.createSpeciesType()
-    new_e.setId(e.getId())
-    new_e.setName(e.getName())
     for qualifier in [libsbml.BQB_IS, libsbml.BQB_IS_VERSION_OF]:
         for annotation in get_qualifier_values(e, qualifier):
             add_annotation(new_e, qualifier, annotation)
@@ -152,8 +140,9 @@ def merge_models(in_sbml_list, out_sbml):
     if not in_sbml_list:
         raise ValueError('Provide SBML models to be merged')
     go = parse(get_go())
+    chebi = parse(get_chebi())
     i = 0
-    m_ids = set()
+    model_ids = set()
     go2c_id = {}
 
     doc = libsbml.SBMLDocument(2, 4)
@@ -168,18 +157,18 @@ def merge_models(in_sbml_list, out_sbml):
         o_doc.setLevelAndVersion(2, 4, False, True)
         o_model = o_doc.getModel()
         logging.info("Processing %s" % o_sbml)
-        m_id = get_model_id(i, m_ids, o_model)
-        update_model_element_ids(m_id, o_model, go2c_id, go)
+        model_id = get_model_id(i, model_ids, o_model)
+
+        update_model_element_ids(model_id, o_model, go2c_id, go, chebi)
         for e in o_model.getListOfCompartments():
             c_id = e.getId()
             if c_id not in m_c_ids:
                 if model.addCompartment(e):
                     copy_compartment(e, model)
                 m_c_ids.add(c_id)
-        for e in o_model.getListOfSpeciesTypes():
-            if model.addSpeciesType(e):
-                copy_species_type(e, model)
         for e in o_model.getListOfSpecies():
+            if model.getSpecies(e.getId()):
+                continue
             if model.addSpecies(e):
                 copy_species(e, model)
         for e in o_model.getListOfReactions():

@@ -250,6 +250,14 @@ def _get_prefixed_notes_value(notes, result, prefix):
         _get_prefixed_notes_value(child, result, prefix)
 
 
+def get_r_formula(model, r):
+    format_m = lambda m_id, st: "%s%s(%s)" % ("%g " % st if st != 1 else "", model.getSpecies(m_id).getName(), m_id)
+    formula = " + ".join([format_m(m_id, st) for (m_id, st) in sorted(get_reactants(r, True), key=lambda (m_id, st): m_id)]) + \
+              (" <=> " if r.getReversible() else "=>") + \
+              " + ".join([format_m(m_id, st) for (m_id, st) in sorted(get_products(r, True), key=lambda (m_id, st): m_id)])
+    return formula
+
+
 # ----------------------INFIX-TO-POSTFIX-NOTATION-CONVERSION--------------------------
 
 _is_operator = lambda s: s in ['&', '|']

@@ -138,8 +138,9 @@ def main(argv=None):
     gen_sbgn = '%s%s_generalized.sbgn' % (directory, model_id)
     save_as_sbgn(n2lo, e2lo, groups_model, groups_sbgn)
     logging.info('   exported as SBGN %s' % groups_sbgn)
-    save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
-    logging.info('   exported as SBGN %s' % gen_sbgn)
+    if gen_model:
+        save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
+        logging.info('   exported as SBGN %s' % gen_sbgn)
 
     serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc,
               c_id2out_c_id=c_id2out_c_id, groups_sbml=groups_sbml,

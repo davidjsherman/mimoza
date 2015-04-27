@@ -17,6 +17,8 @@ def compute_s_id2clu(unmapped_s_ids, model, species_id2term_id, term_id2clu):
     for s_id, t_id in species_id2term_id.iteritems():
         if t_id in term_id2clu:
             s_id2clu[s_id] = (model.getSpecies(s_id).getCompartment(), term_id2clu[t_id])
+        else:
+            s_id2clu[s_id] = (model.getSpecies(s_id).getCompartment(), t_id)
     for s_id in unmapped_s_ids:
         if s_id in term_id2clu:
             s_id2clu[s_id] = (model.getSpecies(s_id).getCompartment(), term_id2clu[s_id])

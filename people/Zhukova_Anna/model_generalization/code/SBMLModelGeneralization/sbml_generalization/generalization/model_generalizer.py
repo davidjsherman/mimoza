@@ -193,20 +193,20 @@ def fix_incompatibilities(unmapped_s_ids, model, onto, species_id2chebi_id, ubiq
     term_id2clu = cover_t_ids(model, species_id2chebi_id, ubiquitous_chebi_ids, chebi_ids, onto)
     onto.trim({it[0] for it in term_id2clu.itervalues()}, relationships=EQUIVALENT_TERM_RELATIONSHIPS)
     suggest_clusters(model, unmapped_s_ids, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
-    filter_clu_to_terms(term_id2clu)
+    # filter_clu_to_terms(term_id2clu)
     # log_clus(term_id2clu, onto, model)
 
     maximization_step(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, unmapped_s_ids)
-    filter_clu_to_terms(term_id2clu)
+    # filter_clu_to_terms(term_id2clu)
     # log_clus(term_id2clu, onto, model)
 
     logging.info("  preserving stoichiometry...")
     fix_stoichiometry(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids, onto)
-    filter_clu_to_terms(term_id2clu)
+    # filter_clu_to_terms(term_id2clu)
     # log_clus(term_id2clu, onto, model)
 
     maximization_step(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, unmapped_s_ids)
-    filter_clu_to_terms(term_id2clu)
+    # filter_clu_to_terms(term_id2clu)
     # log_clus(term_id2clu, onto, model)
 
     return term_id2clu
