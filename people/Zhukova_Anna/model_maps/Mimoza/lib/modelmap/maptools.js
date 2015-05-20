@@ -5,7 +5,8 @@
 var UB_LAYER_NAME = "<i>Ubiquitous metabolites</i>",
     OUT_TR_LAYER_NAME = "<i>Transport to outside</i>",
     IN_TR_LAYER_NAME = "<i>Inner transport</i>",
-    LEAFLET_POPUP_MARGIN = 10;
+    LEAFLET_POPUP_MARGIN = 10,
+    ALL_COMPARTMENTS = 'all_comp_view';
 
 function adjustMapSize(mapId) {
     "use strict";
@@ -104,7 +105,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         outCId = null,
         jsonData;
     if (compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0 && (cId == null || !compIds.hasOwnProperty(cId))) {
-        cId = Object.keys(compIds)[0];
+        cId = compIds.hasOwnProperty(ALL_COMPARTMENTS) ? ALL_COMPARTMENTS: Object.keys(compIds)[0];
     }
     if (cId != null) {
         cIds[cId] = compIds[cId];
@@ -128,7 +129,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     layers.push(ubLayer);
     layers.push(tiles);
     layers.push(compLayer);
-    // layers.push(outTransportLayer);
+    layers.push(outTransportLayer);
     layers.push(inTransportLayer);
     var map = L.map(mapId, {
         maxZoom: maxSpecificZoom,
@@ -178,7 +179,11 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     }
 
     updateMapBounds(coords, commonCoords, map);
+    if (commonCoords[2] != undefined) {
     map.setView(commonCoords[2], curZoom);
+    } else {
+    map.setView([0, 0], curZoom);
+    }
 
     var $map_div = $("#" + mapId);
     $map_div.bind('resize', function(){

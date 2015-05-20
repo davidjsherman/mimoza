@@ -7,15 +7,15 @@ MIMOZA_URL = 'http://mimoza.bordeaux.inria.fr'
 MIMOZA_ERROR_URL = '%s/error.html' % MIMOZA_URL
 MIMOZA_UPLOAD_ERROR_URL = '%s/upload_error.html' % MIMOZA_URL
 
-MIMOZA_JS = 'lib/modelmap/maptools.js'
-MIMOZA_POPUP_JS = 'lib/modelmap/popup_formatter.js'
-MIMOZA_GEOJSON_JS = 'lib/modelmap/geojson_manager.js'
-MIMOZA_CSS = 'lib/modelmap/modelmap.css'
+MIMOZA_JS = 'lib/modelmap/maptools.min.js'
+MIMOZA_POPUP_JS = 'lib/modelmap/popup_formatter.min.js'
+MIMOZA_GEOJSON_JS = 'lib/modelmap/geojson_manager.min.js'
+MIMOZA_CSS = 'lib/modelmap/modelmap.min.css'
 MIMOZA_FAVICON = 'lib/modelmap/fav.ico'
 
-JQUERY_JS = 'lib/jquery/jquery-1.10.2.js'
-JQUERY_UI_JS = 'lib/jquery/jquery-ui.js'
-JQUERY_UI_CSS = 'lib/jquery/jquery-ui.css'
+JQUERY_JS = 'lib/jquery/jquery-2.1.4.min.js'
+JQUERY_UI_JS = 'lib/jquery/jquery-ui.min.js'
+JQUERY_UI_CSS = 'lib/jquery/jquery-ui.min.css'
 
 LEAFLET_LABEL_JS = 'lib/leaflet_label/leaflet.label.js'
 LEAFLET_JS = 'lib/leaflet/leaflet.js'

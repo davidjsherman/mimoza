@@ -65,10 +65,6 @@ function getLabel(feature) {
 function highlightCircle(centre, r) {
     "use strict";
     return L.circle(centre, r, {
-        //name: feature.properties.name,
-        //title: feature.properties.name,
-        //alt: feature.properties.name,
-        //id: feature.properties.id,
         color: "#ac3131",
         fillColor: "#ac3131",
         fillOpacity: 0.7,

@@ -2,22 +2,20 @@
  * Created by anna on 6/17/14.
  */
 
-var MARGIN = 156;
-var MAP_DIMENSION_SIZE = 512;
-
-var EDGE = 0;
-
-var SPECIES = 1;
-var COMPARTMENT = 3;
-var REACTION = 2;
-
-var BG_SPECIES = 4;
-var BG_REACTION = 5;
-var BG_COMPARTMENT = 6;
-var BG = [BG_SPECIES, BG_REACTION, BG_COMPARTMENT];
-
-var TRANSPORT = "transport to outside";
-var INNER_TRANSPORT = "inside transport";
+var MARGIN = 156,
+    MAP_DIMENSION_SIZE = 512,
+    EDGE = 0,
+    SPECIES = 1,
+    COMPARTMENT = 3,
+    REACTION = 2,
+    BG_SPECIES = 4,
+    BG_REACTION = 5,
+    BG_COMPARTMENT = 6,
+    BG = [BG_SPECIES, BG_REACTION, BG_COMPARTMENT],
+    TRANSPORT = "transport to outside",
+    INNER_TRANSPORT = "inside transport",
+    MIN_LABEL_SIZE = 10,
+    MAX_LABEL_SIZE = 16;
 
 function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, minZoom, cId,
                    popupW, popupH, name2popup, name2zoom, name2selection) {
@@ -26,9 +24,7 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         scaleFactor = Math.pow(2, fromZoom),
         w = feature.properties.w;
     if (EDGE == feature.properties.type) {
-        return L.polyline(e.map(function (coord) {
-            return map.unproject(coord, 1);
-        }), {
+        var props = {
             color: feature.properties.color,
             opacity: 1,
             weight: w / 2,
@@ -37,8 +33,14 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             clickable: false,
             fill: false,
             zIndexOffset: 0,
-            riseOnHover: false
-        });
+            riseOnHover: false,
+        };
+        if (!feature.properties.direction) {
+	        props.dashArray =  "5, 5";
+	    }
+        return L.polyline(e.map(function (coord) {
+            return map.unproject(coord, 1);
+        }), props);
     }
     if (SPECIES == feature.properties.type || BG_SPECIES == feature.properties.type) {
         w /= Math.sqrt(2);
@@ -50,11 +52,11 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             title: feature.properties.name,
             alt: feature.properties.name,
             id: feature.properties.id,
-            color: 'white',
+            color: BG_COMPARTMENT != feature.properties.type ? 'white': feature.properties.color,
             fillColor: feature.properties.color,
-            fillOpacity: is_bg ? 0.3 : 1,
+            fillOpacity: BG_COMPARTMENT == feature.properties.type ? 0 : (is_bg ? 0.3: 1),
             opacity: 1,
-            weight: is_bg ? 0 : Math.min(1, w / 10 * scaleFactor),
+            weight: BG_COMPARTMENT != feature.properties.type ? (is_bg ? 0: Math.min(1, w / 10 * scaleFactor)): 4,
             fill: true,
             clickable: !is_bg,
             zIndexOffset: is_bg ? 0 : 6,
@@ -71,14 +73,14 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         || COMPARTMENT == feature.properties.type && cId == feature.properties.id) {
         coords[2] = centre;
     }
-    if (BG_REACTION == feature.properties.type || BG_COMPARTMENT == feature.properties.type) {
+    if (BG_REACTION == feature.properties.type) {
         return L.rectangle(bounds, props);
     }
     if (BG_SPECIES == feature.properties.type) {
         return L.circle(centre, r, props);
     }
     var node = null;
-    if (REACTION == feature.properties.type || COMPARTMENT == feature.properties.type) {
+    if (REACTION == feature.properties.type || COMPARTMENT == feature.properties.type || BG_COMPARTMENT == feature.properties.type) {
         node = L.rectangle(bounds, props);
     } else if (SPECIES == feature.properties.type) {
         node = L.circle(centre, r, props);
@@ -91,9 +93,7 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
     coords[1][1] = coords[1][1] == null ? ne.lng : Math.min(coords[1][1], ne.lng);
     node = L.featureGroup([node]);
 
-    var popup = getPopup(feature, popupW, popupH);
-    popup.setLatLng(centre);
-    node.bindPopup(popup);
+    var popup = undefined;
 
     function addSelectionCircles(key) {
         if (!name2selection.hasOwnProperty(key)) {
@@ -115,26 +115,31 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         });
     }
 
-    if (feature.properties.ub) {
-        addSelectionCircles(feature.properties.id, popup);
-    }
-    [feature.properties.name, feature.properties.id, feature.properties.t].forEach(function (key) {
-        if (key) {
-            //addSelectionCircles(key);
-            if (!name2popup.hasOwnProperty(key)) {
-                name2popup[key] = popup;
-            }
-            if (!name2zoom.hasOwnProperty(key)) {
-                name2zoom[key] = [fromZoom, toZoom];
-            }
-        }
-    });
-    node.bindLabel(getLabel(feature), {direction: "auto", opacity: 1});
+    if (BG_COMPARTMENT != feature.properties.type) {
+        popup = getPopup(feature, popupW, popupH);
+        popup.setLatLng(centre);
+        node.bindPopup(popup);
 
+        if (feature.properties.ub) {
+            addSelectionCircles(feature.properties.id, popup);
+        }
+        [feature.properties.name, feature.properties.id, feature.properties.t].forEach(function (key) {
+            if (key) {
+                //addSelectionCircles(key);
+                if (!name2popup.hasOwnProperty(key)) {
+                    name2popup[key] = popup;
+                }
+                if (!name2zoom.hasOwnProperty(key)) {
+                    name2zoom[key] = [fromZoom, toZoom];
+                }
+            }
+        });
+        node.bindLabel(getLabel(feature), {direction: "auto", opacity: 1});
+    }
     var z2label = {},
         wz = null,
         sz = null;
-    for (var z = fromZoom; z <= toZoom; z += 1) {
+    for (var z = fromZoom; z <= toZoom; z ++) {
         if (sz == null) {
             var scale = Math.pow(2, z);
             sz = h * scale;
@@ -143,21 +148,30 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             sz *= 2;
             wz *= 2;
         }
-        if (sz > 8) {
-            var size = Math.max(Math.round(sz / 4), 8);
-            z2label[z] = L.marker(centre,
+        if (sz >= MIN_LABEL_SIZE) {
+            var size = Math.min(Math.max(Math.round(sz / 2), MIN_LABEL_SIZE), MAX_LABEL_SIZE);
+            var marker = L.marker(centre,
                 {
                     icon: L.divIcon({
                         className: 'element-label',
-                        html: "<span style=\"font-size:" + size + "px;line-height:" + (size + 1) + "px\">"
-                        + feature.properties.name + "</span>",
-                        iconSize: [wz, sz - sz % (size + 1)],
+                        html: "<span style=\"font-size:" + size +
+                        "px;line-height:" + (size + 1) + "px;color:" +
+                        (BG_COMPARTMENT == feature.properties.type ? feature.properties.color : "black") + "\">"
+                        + (REACTION == feature.properties.type ? feature.properties.id : feature.properties.name) + "</span>",
+                        iconSize: [wz * 4, sz - sz % (size + 1)],
                         zIndexOffset: 0,
                         riseOnHover: false,
                         riseOffset: 0
                     })
                 }
             );
+            z2label[z] = marker;
+            if (size == 14) {
+                for (var zz = z + 1; zz <= toZoom; zz++) {
+                    z2label[zz] = marker;
+                }
+                break;
+            }
         }
     }
     if (typeof map.getZoom() !== 'undefined') {
@@ -199,7 +213,8 @@ function matchesCompartment(cId, feature) {
         return typeof feature.properties.tr !== 'undefined' && feature.properties.tr
             && (typeof feature.properties.inner !== 'undefined' && feature.properties.inner);
     }
-    return cId === feature.properties.c_id || cId === feature.properties.id;
+    return (typeof feature.properties.tr === 'undefined' || !feature.properties.tr)
+            && (typeof feature.properties.inner === 'undefined' || !feature.properties.inner);//cId === feature.properties.c_id || cId === feature.properties.id;
 }
 
 function getFilteredJson(map, compLayer, ubLayer, jsn, name2popup, name2zoom, fromZoom, toZoom, mapId, coords, minZoom,
