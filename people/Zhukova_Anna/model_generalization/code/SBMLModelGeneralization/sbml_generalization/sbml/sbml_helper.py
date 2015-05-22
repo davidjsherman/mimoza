@@ -6,7 +6,7 @@ import libsbml
 from sbml_generalization.sbml.transformation_manager import scale, get_layout_characteristics, shift, MARGIN
 from sbml_generalization.annotation.annotate_with_chebi import get_term
 from sbml_generalization.utils.misc import invert_map
-from sbml_generalization.onto.obo_ontology import to_identifiers_org_format
+from sbml_generalization.annotation.miriam_converter import to_identifiers_org_format
 from sbml_generalization.annotation.rdf_annotation_helper import add_annotation, get_qualifier_values
 from sbml_generalization.sbml.reaction_filters import get_products, get_reactants, get_participants
 

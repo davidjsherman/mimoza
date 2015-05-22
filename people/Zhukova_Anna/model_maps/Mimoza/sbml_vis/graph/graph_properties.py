@@ -3,6 +3,8 @@ TERM = 'term'
 T = 't'
 NAME = 'name'
 
+ALL_COMPARTMENTS = 'all_comp_view'
+
 ANCESTOR_ID = 'anc_id'
 ANCESTOR_TERM = 'anc_term'
 ANCESTOR_NAME = "anc_name"

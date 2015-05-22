@@ -121,7 +121,7 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
             props[T] = term
             props[TERM] = "<a href=\'http://www.ebi.ac.uk/QuickGO/GTerm?id=%s\' target=\'_blank\'>%s</a>" % (term, term)
 
-        props.update({HEIGHT: h, COLOR: get_compartment_color()})
+        props.update({HEIGHT: h, COLOR: get_compartment_color(color)})
     elif TYPE_SPECIES == node_type:
         ubiquitous = root[UBIQUITOUS][n]
         if ubiquitous:
@@ -160,6 +160,7 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
         if TYPE_BG_COMPARTMENT == node_type:
             bg_props[HEIGHT] = h
             bg_props[COMPARTMENT_ID] = root[ID][n]
+            bg_props[NAME] = root[NAME][n]
         bg_feature = geojson.Feature(id="%s_bg" % n_id, geometry=geom, properties=bg_props)
     return geojson.Feature(id=n_id, geometry=geojson.Point([x, y]), properties=props), bg_feature
 

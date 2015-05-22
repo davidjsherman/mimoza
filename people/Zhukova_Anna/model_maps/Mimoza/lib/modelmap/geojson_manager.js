@@ -91,9 +91,9 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
     coords[0][1] = coords[0][1] == null ? sw.lng : Math.max(coords[0][1], sw.lng);
     coords[1][0] = coords[1][0] == null ? ne.lat : Math.max(coords[1][0], ne.lat);
     coords[1][1] = coords[1][1] == null ? ne.lng : Math.min(coords[1][1], ne.lng);
-    node = L.featureGroup([node]);
 
-    var popup = undefined;
+    var popup = undefined,
+        label = undefined;
 
     function addSelectionCircles(key) {
         if (!name2selection.hasOwnProperty(key)) {
@@ -119,13 +119,11 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         popup = getPopup(feature, popupW, popupH);
         popup.setLatLng(centre);
         node.bindPopup(popup);
-
-        if (feature.properties.ub) {
-            addSelectionCircles(feature.properties.id, popup);
+        if (SPECIES == feature.properties.type) {
+            addSelectionCircles(feature.properties.id);
         }
         [feature.properties.name, feature.properties.id, feature.properties.t].forEach(function (key) {
             if (key) {
-                //addSelectionCircles(key);
                 if (!name2popup.hasOwnProperty(key)) {
                     name2popup[key] = popup;
                 }
@@ -134,8 +132,11 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
                 }
             }
         });
-        node.bindLabel(getLabel(feature), {direction: "auto", opacity: 1});
+        label = getLabel(feature);
+        node.bindLabel(label, {direction: "auto", opacity: 1});
     }
+
+    node = L.featureGroup([node]);
     var z2label = {},
         wz = null,
         sz = null;
@@ -158,13 +159,19 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
                         "px;line-height:" + (size + 1) + "px;color:" +
                         (BG_COMPARTMENT == feature.properties.type ? feature.properties.color : "black") + "\">"
                         + (REACTION == feature.properties.type ? feature.properties.id : feature.properties.name) + "</span>",
-                        iconSize: [wz * 4, sz - sz % (size + 1)],
+                        iconSize: [wz, sz - sz % (size + 1)],
                         zIndexOffset: 0,
                         riseOnHover: false,
                         riseOffset: 0
                     })
                 }
             );
+            if (popup != undefined) {
+                marker.bindPopup(popup);
+            }
+            if (label != undefined) {
+                marker.bindLabel(label, {direction: "auto", opacity: 1});
+            }
             z2label[z] = marker;
             if (size == 14) {
                 for (var zz = z + 1; zz <= toZoom; zz++) {
@@ -180,6 +187,12 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         }
     } else if (z2label.hasOwnProperty(fromZoom)) {
         node.addLayer(z2label[fromZoom]);
+    }
+    if (popup != undefined) {
+        node.bindPopup(popup);
+    }
+    if (label != undefined) {
+        node.bindLabel(label, {direction: "auto", opacity: 1});
     }
     map.on('zoomend', function (e) {
         for (z in z2label) {

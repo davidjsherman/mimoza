@@ -4,37 +4,9 @@ from collections import defaultdict
 
 from sbml_generalization.utils.misc import remove_from_map
 
-URN_MIRIAM = "urn:miriam:"
-
-IDENTIFIERS_ORG = "http://identifiers.org/"
-
 __author__ = 'anna'
 
 import os
-
-
-def miriam_to_term_id(urn):
-    urn = urn.strip()
-    miriam_prefix = URN_MIRIAM
-    identifiers_org_prefix = IDENTIFIERS_ORG
-    if 0 == urn.find(miriam_prefix):
-        urn = urn[len(miriam_prefix):]
-        start = urn.find(":")
-        if start != -1 and urn[start + 1:].find(":") != -1:
-            urn = urn[start + 1:]
-    elif 0 == urn.find(identifiers_org_prefix):
-        urn = urn[len(identifiers_org_prefix):]
-        start = urn.find("/")
-        if start != -1:
-            if urn[start + 1:].find(":") != -1:
-                urn = urn[start + 1:]
-            else:
-                urn = urn.replace("/", ":")
-    return urn.strip()
-
-
-def to_identifiers_org_format(t_id, prefix="obo.chebi"):
-    return "{0}{1}/{2}".format(IDENTIFIERS_ORG, prefix, t_id)
 
 
 def filter_ontology(onto, terms_collection, relationships=None, min_deepness=None):
@@ -272,14 +244,14 @@ class Ontology:
     # role: 0 for any, 1 for subj, 2 for obj
     def get_term_relationships(self, term_id, rel=None, role=0):
         if not (term_id in self.rel_map):
-            return set()
+            return iter(())
         relationships = set(self.rel_map[term_id])
         if rel:
-            relationships = {(subj, r, obj) for (subj, r, obj) in relationships if rel == r}
+            relationships = ((subj, r, obj) for (subj, r, obj) in relationships if rel == r)
         if 1 == role:
-            relationships = {(subj, r, obj) for (subj, r, obj) in relationships if term_id == subj}
+            relationships = ((subj, r, obj) for (subj, r, obj) in relationships if term_id == subj)
         if 2 == role:
-            relationships = {(subj, r, obj) for (subj, r, obj) in relationships if term_id == obj}
+            relationships = ((subj, r, obj) for (subj, r, obj) in relationships if term_id == obj)
         return relationships
 
     def get_relationship_participants(self, rel):
@@ -376,14 +348,13 @@ class Ontology:
                 child.parents |= parents
             if not child.parents:
                 self.roots.add(child)
-        relationships = self.get_term_relationships(t_id)
-        if relationships:
+        for (subj, rel, obj) in self.get_term_relationships(t_id):
+            if t_id == subj and t_id != obj:
+                remove_from_map(self.rel_map, obj, (subj, rel, obj))
+            elif t_id == obj:
+                remove_from_map(self.rel_map, subj, (subj, rel, obj))
+        if t_id in self.rel_map:
             del self.rel_map[t_id]
-            for (subj, rel, obj) in relationships:
-                if t_id == subj and t_id != obj:
-                    remove_from_map(self.rel_map, obj, (subj, rel, obj))
-                elif t_id == obj:
-                    remove_from_map(self.rel_map, subj, (subj, rel, obj))
 
     def get_term(self, term_id):
         if not term_id:
@@ -470,7 +441,7 @@ class Ontology:
         equals = set()
         for (subj, r, obj) in self.get_term_relationships(term_id, rel, direction):
             if not relationships or r in relationships:
-                equals |= {subj, obj} - {term_id}
+                equals.add(obj if subj == term_id else subj)
         return {self.get_term(t_id) for t_id in equals}
 
     def get_sub_tree(self, t, relationships=None):

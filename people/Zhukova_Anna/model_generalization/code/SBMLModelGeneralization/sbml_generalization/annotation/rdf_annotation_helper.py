@@ -1,5 +1,5 @@
 import libsbml
-from sbml_generalization.onto.obo_ontology import miriam_to_term_id
+from sbml_generalization.annotation.miriam_converter import miriam_to_term_id
 
 __author__ = 'anna'
 

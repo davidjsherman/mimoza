@@ -114,11 +114,6 @@ def main(argv=None):
     input_model = input_document.getModel()
 
     root, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml)
-    c_id2out_c_id = {}
-    for c_id, info in c_id2info.iteritems():
-        _, _, (_, out_c_id) = info
-        if out_c_id:
-            c_id2out_c_id[c_id] = out_c_id
 
     try:
         n2xy = parse_layout_sbml(sbml)
@@ -126,6 +121,13 @@ def main(argv=None):
         n2xy = None
 
     fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, chebi, n2xy)
+    c_id2out_c_id = {}
+    for c_id, info in c_id2info.iteritems():
+        if c_id not in fc:
+            continue
+        _, _, (_, out_c_id) = info
+        if out_c_id and out_c_id in fc:
+            c_id2out_c_id[c_id] = out_c_id
 
     groups_document = reader.readSBML(groups_sbml)
     groups_model = groups_document.getModel()

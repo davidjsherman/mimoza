@@ -64,15 +64,16 @@ def color(graph):
 
     s_keys = {get_key(n, graph) for n in graph.getNodes() if root[TYPE][n] == TYPE_REACTION}
     s_keys -= {(NOT_GENERALIZED, TYPE_SPECIES)}
+    i = len(s_keys)
+    colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
+    colors = [(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
+    key2color = dict(zip(s_keys, colors))
 
     r_keys = {get_key(n, graph) for n in graph.getNodes() if root[TYPE][n] == TYPE_SPECIES}
     r_keys -= {(NOT_GENERALIZED, TYPE_REACTION)}
-    i = max(len(s_keys), len(r_keys))
-
+    i = len(r_keys)
     colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
     colors = [(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
-
-    key2color = dict(zip(s_keys, colors))
     key2color.update(dict(zip(r_keys, colors)))
 
     key2color[(NOT_GENERALIZED, TYPE_SPECIES)] = RED_RGB
@@ -86,11 +87,18 @@ def color(graph):
     # colors = [tlp.Color(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
     # key2comp_color = dict(zip(organelles + [cyto], colors[1:]))
 
+    c_keys = {root[ID][n] for n in graph.getNodes() if root[TYPE][n] == TYPE_COMPARTMENT}
+    i = len(c_keys)
+    colors = [colorsys.hsv_to_rgb(x * 1.0 / i, 0.5, 0.8) for x in xrange(i)]
+    colors = [(int(255 * r), int(255 * g), int(255 * b)) for (r, g, b) in colors]
+    key2color.update(dict(zip(c_keys, colors)))
+
     for n in graph.getNodes():
         type_ = root[TYPE][n]
 
         if TYPE_COMPARTMENT == type_:
-            # view_color[n] = key2comp_color[root[NAME][n]] if root[NAME][n] in key2comp_color else TRANSPARENT_GRAY
+            r, g, b = key2color[root[ID][n]]
+            view_color[n] = tlp.Color(r, g, b)
             continue
         a = 255
         if TYPE_REACTION == type_:
@@ -98,7 +106,7 @@ def color(graph):
             if graph.isMetaNode(n):
                 a = 100
             view_color[n] = tlp.Color(r, g, b, a)
-        if TYPE_SPECIES == type_:
+        elif TYPE_SPECIES == type_:
             if root[UBIQUITOUS][n]:
                 r, g, b = 180, 180, 180
             else:

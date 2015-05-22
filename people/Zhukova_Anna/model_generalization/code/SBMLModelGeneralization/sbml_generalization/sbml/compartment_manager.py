@@ -6,7 +6,6 @@ import libsbml
 
 from sbml_generalization.sbml.sbml_helper import generate_unique_id
 
-
 BOUNDARY_C_NAME = 'Boundary'
 
 BOUNDARY_C_ID = 'Boundary'
@@ -46,6 +45,9 @@ def need_boundary_compartment(model, s_id2chebi):
                          (model.getSpecies(species_ref.getSpecies()) for species_ref in r.getListOfProducts()))
         chebi_id2ss = defaultdict(list)
         for s in elements:
+            if not s:
+                raise ValueError(
+                    "Your model includes undeclared metabolites in the reaction %s. Please, fix your model." % r.getid())
             if s.getId() in s_id2chebi:
                 chebi_id2ss[s_id2chebi[s.getId()]].append(s)
         for ss in chebi_id2ss.itervalues():

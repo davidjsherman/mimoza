@@ -1,17 +1,18 @@
-from os import walk
+from dircache import listdir
+import os
 import sys
 
 import libsbml
+from orangecontrib.bio.ontology import OBOOntology
 
 from sbml_generalization.onto.onto_getter import get_chebi
-from sbml_generalization.onto.obo_ontology import to_identifiers_org_format, parse
+from sbml_generalization.annotation.miriam_converter import to_identifiers_org_format
 from sbml_generalization.annotation.rdf_annotation_helper import add_annotation
 from sbml_generalization.sbml.sbml_helper import create_compartment, create_species, create_reaction, save_as_sbml
 
-
-RHEA_IN_DIR = "/Users/anna/Downloads/rd/"
-RHEA_OUT_FILE = "/Users/anna/Downloads/rhea.txt"
-RHEA_SBML_DIR = "/Users/anna/Downloads/sbml/"
+RHEA_IN_DIR = "/home/anna/Documents/IBGC/Models/rhea/rd/"
+RHEA_OUT_FILE = "/home/anna/Documents/IBGC/Models/rhea/rhea.txt"
+RHEA_SBML_DIR = "/home/anna/Documents/IBGC/Models/rhea/sbml/"
 RHEA_SBML = "rhea"
 
 __author__ = 'anna'
@@ -23,8 +24,9 @@ def normalize(line):
 
 def get_rhea_info():
     r2rsps = {}
-    (_, _, filenames) = walk(RHEA_IN_DIR).next()
-    for f in filenames:
+    for f in listdir(RHEA_IN_DIR):
+        if -1 == f.find('.rd'):
+            continue
         r_id = f[:f.find('.rd')]
         r_num, p_num = -1, -1
         rs, ps = [], []
@@ -69,10 +71,13 @@ def main(argv=None):
             r_id2rsps[r_id] = rs, ps
     r_ids = list(r_id2rsps.iterkeys())
     r_len = len(r_ids)
-    step = r_len / 3
+    step = r_len + 1
     start = 0
     iteration = 300
-    onto = parse(get_chebi())
+    # onto = parse(get_chebi())
+    onto = OBOOntology(get_chebi())
+    if not os.path.exists(RHEA_SBML_DIR):
+        os.makedirs(RHEA_SBML_DIR)
     while start < r_len:
         sbml = "%s%s_%d.xml" % (RHEA_SBML_DIR, RHEA_SBML, iteration)
         to_sbml(r_ids[start: min(start + step, r_len)], r_id2rsps, sbml, onto)
@@ -83,9 +88,9 @@ def main(argv=None):
 def to_sbml(r_ids, r2rsps, sbml, onto):
     doc = libsbml.SBMLDocument(2, 4)
     model = doc.createModel()
-    model.set_name("Rhea")
-    model.set_id("iRhea")
-    comp_id = create_compartment(model, "cell").get_id()
+    model.setName("Rhea")
+    model.setId("iRhea")
+    comp_id = create_compartment(model, "cell").getId()
     sps = set()
     for r_id in r_ids:
         rs, ps = r2rsps[r_id]
@@ -93,17 +98,17 @@ def to_sbml(r_ids, r2rsps, sbml, onto):
         sps |= set(ps)
     c_id2id = {}
     for c_id in sps:
-        term = onto.get_term(c_id)
-        name = term.get_name() if term else c_id
+        # term = onto.get_term(c_id)
+        name = onto.term(c_id).name if c_id in onto else c_id
         species = create_species(model, comp_id, None, name)
         add_annotation(species, libsbml.BQB_IS, to_identifiers_org_format(c_id))
-        c_id2id[c_id] = species.get_id()
+        c_id2id[c_id] = species.getId()
     for r_id in r_ids:
         rs, ps = r2rsps[r_id]
         reactants = [c_id2id[c_id] for c_id in rs]
         products = [c_id2id[c_id] for c_id in ps]
         reaction = create_reaction(model, reactants, products, r_id, "r_" + r_id)
-    # addAnnotation(reaction, BQB_IS, to_identifiers_org_format(r_id))
+        add_annotation(reaction, libsbml.BQB_IS, to_identifiers_org_format(r_id))
     if model:
         save_as_sbml(model, sbml)
 

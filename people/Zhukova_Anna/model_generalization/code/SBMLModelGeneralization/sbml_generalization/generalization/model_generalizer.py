@@ -233,6 +233,10 @@ def generalize_species(model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, thres
     if term_id2clu:
         term_id2clu = update(term_id2clu, onto)
         s_id2clu = compute_s_id2clu(unmapped_s_ids, model, s_id2chebi_id, term_id2clu)
+        clu2s_ids = invert_map(s_id2clu)
+        for s_ids in clu2s_ids.itervalues():
+            if len(s_ids) == 1:
+                del s_id2clu[s_ids.pop()]
     else:
         s_id2clu = {}
     if not ub_s_ids:

@@ -214,6 +214,9 @@ def duplicate_nodes(graph):
     root = graph.getRoot()
     for n in (n for n in graph.getNodes() if root[UBIQUITOUS][n]):
         clone_node(graph, n)
+    for n in (n for n in graph.getNodes() if TYPE_SPECIES == root[TYPE][n] and not root.isMetaNode(n) and
+            not root[UBIQUITOUS][n] and next((r for r in root.getInOutNodes(n) if root[TRANSPORT][r]), False)):
+        clone_node(graph, n, get_neighbour_nodes=lambda m, gr: (t for t in gr.getInOutNodes(m) if gr[TRANSPORT][t]))
 
 
 def mark_ancestors(graph, r_eq2clu, s2clu, c_id2info):

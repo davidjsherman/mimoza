@@ -1,4 +1,5 @@
 import os
+from sbml_vis.graph.graph_properties import ALL_COMPARTMENTS
 from sbml_vis.graph.color.colorer import *
 from sbml_vis.html import markup
 
@@ -18,7 +19,7 @@ def add_header(model_id, model_name, page):
 
 def add_compartment_menu(page, c_id2name):
     page.ul(class_='menu margin centre')
-    for c_id, c_name in c_id2name.iteritems():
+    for c_id, c_name in sorted(c_id2name.iteritems(), key=lambda (_, c_name): c_name):
         page.li()
         page.a(c_name, href='?id=%s' % c_id)
         page.li.close()
@@ -72,10 +73,11 @@ def add_explanations(page):
     page.p.close()
 
     page.p(
-        "%s - compartments; %s/%s - specific, but not generalized/ubiquitous metabolites; %s - specific, but not generalized reactions." % (
-            format_color(YELLOW),
+        "%s/%s - specific, but not generalized/ubiquitous metabolites; %s - specific, but not generalized reactions." % (
             format_color(RED), format_color(GREY),
             format_color(BLUE)))
+
+    page.p("Reactant edges are dashed, product edges are solid lines.")
 
     page.div.close()
 
@@ -151,7 +153,9 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
     model_name = model.getName()
     if not model_name:
         model_name = model_id
-    c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments()}
+    c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments() if c.getId() in c_id2json_vars}
+    if ALL_COMPARTMENTS in c_id2name:
+        c_id2name[ALL_COMPARTMENTS] = "All compartment view"
     page.init(title=model_name, css=css, script=scripts, fav=fav)
 
     add_header(model_id, model_name, page)

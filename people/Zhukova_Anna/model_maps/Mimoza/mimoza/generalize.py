@@ -6,8 +6,7 @@ import cgi
 import cgitb
 from os.path import dirname, abspath
 import sys
-
-from libsbml import SBMLReader
+import libsbml
 
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
@@ -62,7 +61,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s', filename=log_file)
 
 try:
     logging.info('calling model_generalisation library')
-    reader = SBMLReader()
+    reader = libsbml.SBMLReader()
     input_document = reader.readSBML(sbml)
     input_model = input_document.getModel()
     m_id = input_model.getId()

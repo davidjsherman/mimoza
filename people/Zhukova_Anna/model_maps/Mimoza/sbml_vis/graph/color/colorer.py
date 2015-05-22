@@ -41,6 +41,8 @@ def get_bg_color(type, transport, color=None):
             return color
         return TURQUOISE if transport else GREEN
     if TYPE_BG_COMPARTMENT == type:
+        if color:
+            return color
         return YELLOW
     return None
 
@@ -59,5 +61,7 @@ def get_reaction_color(generalized, transport, color=None):
     return VIOLET if transport else BLUE
 
 
-def get_compartment_color():
+def get_compartment_color(color=None):
+    if color:
+        return color
     return YELLOW

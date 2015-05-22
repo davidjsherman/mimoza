@@ -9,13 +9,15 @@ from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, me
 from sbml_vis.converter.tlp2geojson import e2feature, n2feature
 from sbml_vis.graph.graph_properties import ID, COMPARTMENT_ID, \
     TYPE_COMPARTMENT, TYPE, TYPE_REACTION, STOICHIOMETRY, RELATED_COMPARTMENT_IDS, TYPE_SPECIES, ANCESTOR_ID, TRANSPORT, \
-    CLONE_ID, WIDTH, HEIGHT, VIEW_LAYOUT, VIEW_SIZE, UBIQUITOUS
+    CLONE_ID, WIDTH, HEIGHT, VIEW_LAYOUT, VIEW_SIZE, UBIQUITOUS, ALL_COMPARTMENTS
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges, layout_inner_elements, \
     get_comp_borders, bend_edges_around_compartments, layout, open_meta_ns
 
 
 DIMENSION = 512
+MAX_FEATURE_NUMBER = 5000
+MAX_TOTAL_FEATURE_NUMBER = 10000
 
 __author__ = 'anna'
 
@@ -53,27 +55,21 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout
                     # 1.1.1.a. between two inner compartments
                     if t_type == s_type:
                         f = e2feature(meta_graph, e, e_id, True, True, e2layout)
-                        # for z in [1, 2]:
-                        #     update_level2features(f, c_id2level2features, z, s_c_id)
                         update_level2features(f, c_id2level2features, 0, s_c_id)
-                    # 1.1.1.b. between an inner compartment and a generalized reaction/species
-                    elif meta_graph.isMetaNode(s) and meta_graph.isMetaNode(t):
-                        f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids,
-                                      e2layout)
-                        update_level2features(f, c_id2level2features, 1, s_c_id)
-                    # 1.1.1.c. between an inner compartment and a reaction/species
-                    # that was generalized on the previous zoom level
-                    elif root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]:
-                        f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids,
-                                      e2layout)
-                        update_level2features(f, c_id2level2features, 2, s_c_id)
-                    # 1.1.1.d. between an inner compartment and a non-generalizable reaction/species
                     else:
                         f = e2feature(meta_graph, e, e_id, True, TYPE_SPECIES == other_type or not other_related_c_ids,
                                       e2layout)
-                        # for z in [1, 2]:
-                        #     update_level2features(f, c_id2level2features, z, s_c_id)
-                        update_level2features(f, c_id2level2features, 0, s_c_id)
+                        # 1.1.1.b. between an inner compartment and a generalized reaction/species
+                        if meta_graph.isMetaNode(s) and meta_graph.isMetaNode(t):
+                            z = 1
+                        # 1.1.1.c. between an inner compartment and a reaction/species
+                        # that was generalized on the previous zoom level
+                        elif root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]:
+                            z = 2
+                        # 1.1.1.d. between an inner compartment and a non-generalizable reaction/species
+                        else:
+                            z = 0
+                        update_level2features(f, c_id2level2features, z, s_c_id)
                 # 1.1.2. between a reaction and a species
                 else:
                     # let's check that if one of the species/reaction pair is simple but generalizable,
@@ -86,34 +82,36 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout
                     other_related_c_ids = [comp_id for comp_id in root[RELATED_COMPARTMENT_IDS][r] if
                                            comp_id in c_id2outs[s_c_id]]
                     f = e2feature(meta_graph, e, e_id, root[TRANSPORT][r], not other_related_c_ids, e2layout)
+                    all_f = e2feature(meta_graph, e, e_id, root[TRANSPORT][r], True, {})
                     # 1.1.2.a. between a generalized reaction/species and some reaction/species
                     if meta_graph.isMetaNode(s) or meta_graph.isMetaNode(t):
-                        update_level2features(f, c_id2level2features, 1, s_c_id)
+                        z = 1
                     # 1.1.2.b. between a reaction/species that was generalized on the previous zoom level
                     # and something
                     elif root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]:
-                        update_level2features(f, c_id2level2features, 2, s_c_id)
+                        z = 2
                     # 1.1.2.c. between a non-generalizable reaction and a non-generalizable species
                     else:
-                        # for z in [1, 2]:
-                        #     update_level2features(f, c_id2level2features, z, s_c_id)
-                        update_level2features(f, c_id2level2features, 0, s_c_id)
+                        z = 0
+                    update_level2features(f, c_id2level2features, z, s_c_id)
+                    update_level2features(all_f, c_id2level2features, z, ALL_COMPARTMENTS)
             # 1.2. it's a simple edge
             else:
                 r = s if TYPE_REACTION == s_type else t
                 other_related_c_ids = [comp_id for comp_id in root[RELATED_COMPARTMENT_IDS][r] if
                                        comp_id in c_id2outs[s_c_id]]
                 f = e2feature(meta_graph, e, e_id, root[TRANSPORT][r], not other_related_c_ids, e2layout)
+                all_f = e2feature(meta_graph, e, e_id, root[TRANSPORT][r], True, {})
                 # 1.2.1. between a reaction/species that was generalized on the previous zoom level
                 # and something
                 if root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]:
-                    update_level2features(f, c_id2level2features, 2, s_c_id)
+                    z = 2
                 # 1.2.2. it's a simple edge
                 # between a non-generalizable reaction and a non-generalizable species
                 else:
-                    # for z in [1, 2]:
-                    #     update_level2features(f, c_id2level2features, z, s_c_id)
-                    update_level2features(f, c_id2level2features, 0, s_c_id)
+                    z = 0
+                update_level2features(f, c_id2level2features, z, s_c_id)
+                update_level2features(all_f, c_id2level2features, z, ALL_COMPARTMENTS)
         # 2. the edge is between two compartments that are not inside the same compartment
         # (if they are then we've already processed them during the step 1.1.1.a.)
         # => no our compartment would need it
@@ -123,19 +121,6 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout
         # 3. between our closed compartment and something outside
         if comp_id:
             pass
-        # # Let's check that this "something outside" is not inside
-        # other_c_id = t_c_id if comp_id == root[ID][s] else s_c_id
-        # if other_c_id == comp_id or comp_id in c_id2outs[other_c_id]:
-        # continue
-        #
-        # # then this something outside shouldn't be an opened generalizable reaction/species
-        # # (not for our compartment's feature list)
-        # element = s if TYPE_COMPARTMENT != s_type else t
-        # if root[ANCESTOR_ID][element]:
-        # 	continue
-        # f = e2feature(meta_graph, e, True, False, e2layout)
-        # update_level2features(f, c_id2level2features, 0, comp_id)
-
         # 4. between some reaction and some species,
         # at least one of which is outside of our compartment
         else:
@@ -154,27 +139,21 @@ def export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout
             related_c_ids = [c_id for c_id in related_c_ids
                              if not ((c_id == s_c_id or c_id in c_id2outs[s_c_id])
                                      and (c_id == t_c_id or c_id in c_id2outs[t_c_id]))]
+            # 4.1. it's a generalized edge
+            if meta_graph.isMetaEdge(e):
+                z = 1
+            # 4.2. it's a simple edge but at least one of our reaction-species pair
+            # was generalized on the previous zoom level
+            elif root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]:
+                z = 2
+            # 4.3. it's a simple edge between a non-generalizable reaction and a non-generalizable species
+            else:
+                z = 0
             for c_id in related_c_ids:
                 f = e2feature(meta_graph, e, e_id, True, False, e2layout)
-                # 4.1. it's a generalized edge
-                if meta_graph.isMetaEdge(e):
-                    # 4.1.a. both the reaction and the species are outside our compartment
-                    if t_c_id != c_id and s_c_id != c_id:
-                        update_level2features(f, c_id2level2features, 1, c_id)
-                    # 4.1.b. only one of them is outside
-                    # (its ancestor on the previous zoom level was
-                    # an edge between our compartment and this outside element)
-                    else:
-                        update_level2features(f, c_id2level2features, 1, c_id)
-                # 4.2. it's a simple edge but at least one of our reaction-species pair
-                # was generalized on the previous zoom level
-                elif root[ANCESTOR_ID][s] or root[ANCESTOR_ID][t]:
-                    update_level2features(f, c_id2level2features, 2, c_id)
-                # 4.3. it's a simple edge between a non-generalizable reaction and a non-generalizable species
-                else:
-                    # for z in [1, 2] if (c_id != s_c_id and c_id != t_c_id) else [1, 2]:
-                    #     update_level2features(f, c_id2level2features, z, c_id)
-                    update_level2features(f, c_id2level2features, 0, c_id)
+                update_level2features(f, c_id2level2features, z, c_id)
+            all_f = e2feature(meta_graph, e, e_id, True, True, {})
+            update_level2features(all_f, c_id2level2features, z, ALL_COMPARTMENTS)
 
 
 def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout):
@@ -209,15 +188,13 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
             # then it's parent needs its feature
             if c_id:
                 f, _ = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps, False, False)
-                # for z in [1, 2]:
-                #     update_level2features(f, c_id2level2features, z, c_id)
                 update_level2features(f, c_id2level2features, 0, c_id)
             # add its background to its own collection
             c_id = root[ID][n]
             _, bg = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps, False, False)
-            # for z in [1, 2]:
-            #     update_level2features(bg, c_id2level2features, z, c_id)
+            _, all_bg = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps, False, False)
             update_level2features(bg, c_id2level2features, 0, c_id)
+            update_level2features(all_bg, c_id2level2features, 0, ALL_COMPARTMENTS)
         # 2. it's a reaction or a species
         elif n_type in [TYPE_REACTION, TYPE_SPECIES]:
             # only those (our) compartments for which this element is outside of them will need it
@@ -225,16 +202,17 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
             other_related_c_ids = [comp_id for comp_id in root[RELATED_COMPARTMENT_IDS][n] if
                                    comp_id in c_id2outs[c_id]]
             # 2.1. it's generalized
-            # is_transport = root[TRANSPORT][n] if TYPE_REACTION == n_type \
-            # else next(
-            # 	(1 for it in root.getInOutNodes(n) if TYPE_COMPARTMENT == root[TYPE][it] or root[TRANSPORT][it]), None)
             if meta_graph.isMetaNode(n):
                 f, bg = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps,
                                   root[TRANSPORT][n] if TYPE_REACTION == n_type else False,
                                   not other_related_c_ids)
+                all_f, all_bg = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps,
+                                  root[TRANSPORT][n] if TYPE_REACTION == n_type else False, True)
                 # add features to it's own compartment
                 update_level2features(f, c_id2level2features, 1, c_id)
                 update_level2features(bg, c_id2level2features, 2, c_id)
+                update_level2features(all_f, c_id2level2features, 1, ALL_COMPARTMENTS)
+                update_level2features(all_bg, c_id2level2features, 2, ALL_COMPARTMENTS)
                 # add features to the compartments for that it's outside
                 for o_c_id in related_c_ids:
                     f, bg = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps, True, False)
@@ -245,24 +223,17 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
                 f, _ = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps,
                                  root[TRANSPORT][n] if TYPE_REACTION == n_type else False,
                                  not other_related_c_ids)
+                all_f, _ = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps,
+                                 root[TRANSPORT][n] if TYPE_REACTION == n_type else False, True)
                 # add features to it's own compartment
-                # (level depends on whether it was generalized on the previous zoom or not)
-                # for z in [2] if root[ANCESTOR_ID][n] else [1, 2]:
-                #     update_level2features(f, c_id2level2features, z, c_id)
-                if root[ANCESTOR_ID][n]:
-                    update_level2features(f, c_id2level2features, 2, c_id)
-                else:
-                    update_level2features(f, c_id2level2features, 0, c_id)
+                z = 2 if root[ANCESTOR_ID][n] else 0
+                update_level2features(f, c_id2level2features, z, c_id)
+                update_level2features(all_f, c_id2level2features, z, ALL_COMPARTMENTS)
                 # add features to the compartments for that it's outside
                 # (level depends on whether it was generalized on the previous zoom or not)
                 for c_id in related_c_ids:
                     f, _ = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps, True, False)
-                    if root[ANCESTOR_ID][n]:
-                        update_level2features(f, c_id2level2features, 2, c_id)
-                    else:
-                        update_level2features(f, c_id2level2features, 0, c_id)
-                    # for z in [2] if root[ANCESTOR_ID][n] else [1, 2]:
-                    #     update_level2features(f, c_id2level2features, z, c_id)
+                    update_level2features(f, c_id2level2features, z, c_id)
 
 
 def export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout, e2layout):
@@ -308,6 +279,8 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None):
     for c_id in c_id2info.iterkeys():
         (name, go, (l, out_c_id)) = c_id2info[c_id]
         comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, False, None, n2xy)
+        if not comp_n:
+            continue
         bend_edges(meta_graph)
         color_edges(meta_graph)
         export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout)
@@ -364,14 +337,33 @@ def graph2geojson(c_id2info, c_id2outs, graph, onto=None, n2xy=None, colorer=col
     c_id2level2features, (n2lo, e2lo) = meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy)
 
     geometry = geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])
+
+    filter_features(c_id2level2features)
     rescale(c_id2level2features)
     get_l2fs = lambda l2fs: {lev: geojson.FeatureCollection(features, geometry=geometry) for (lev, features) in
                              l2fs.iteritems()}
     return {c_id: get_l2fs(l2fs) for (c_id, l2fs) in c_id2level2features.iteritems()}, (n2lo, e2lo)
 
 
+def filter_features(c_id2level2features):
+    c_ids = c_id2level2features.keys()
+    for c_id in c_ids:
+        l2fs = c_id2level2features[c_id]
+        total_f_number = 0
+        levels = l2fs.keys()
+        f_num = (len(l2fs[0]) if 0 in l2fs else 0) + (len(l2fs[2]) if 2 in l2fs else 0)
+        if f_num > MAX_FEATURE_NUMBER:
+            for l in levels:
+                l2fs[l] = [f for f in l2fs[l] if (UBIQUITOUS not in f.properties) or not f.properties[UBIQUITOUS]]
+                total_f_number += len(l2fs)
+        if total_f_number > MAX_TOTAL_FEATURE_NUMBER:
+            del c_id2level2features[c_id]
+
+
 def rescale(c_id2level2features):
     for c_id, lev2fs in c_id2level2features.iteritems():
+        if ALL_COMPARTMENTS == c_id:
+            continue
         fs = []
         if 1 in lev2fs:
             fs += lev2fs[1]

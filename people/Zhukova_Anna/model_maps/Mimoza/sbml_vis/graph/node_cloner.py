@@ -3,18 +3,18 @@ from sbml_vis.graph.graph_properties import CLONE_ID, ID
 __author__ = 'anna'
 
 
-def clone_node(graph, n):
+def clone_node(graph, n, get_neighbour_nodes=lambda m, gr: gr.getInOutNodes(m)):
     root = graph.getRoot()
 
     graphs_to_update = get_graphs_by_node(n, root)
 
-    used_n = False
-    for r in root.getInOutNodes(n):
+    # used_n = False
+    for r in get_neighbour_nodes(n, root):
         clone_id = root[ID][r]
-        if not used_n:
-            root[CLONE_ID][n] = clone_id
-            used_n = True
-            continue
+        # if not used_n:
+        #     root[CLONE_ID][n] = clone_id
+        #     used_n = True
+        #     continue
         # duplicate node
         dup = root.addNode()
         for prop_name in root.getProperties():
