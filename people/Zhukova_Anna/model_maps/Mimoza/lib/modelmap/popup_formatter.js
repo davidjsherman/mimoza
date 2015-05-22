@@ -65,8 +65,8 @@ function getLabel(feature) {
 function highlightCircle(centre, r) {
     "use strict";
     return L.circle(centre, r, {
-        color: "#ac3131",
-        fillColor: "#ac3131",
+        color: "#fff700",
+        fillColor: "#fff700",
         fillOpacity: 0.7,
         opacity: 1,
         weight: 2,
