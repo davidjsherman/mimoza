@@ -239,9 +239,10 @@ class StoichiometryFixingThread(threading.Thread):
         self.term_id2clu = term_id2clu
         self.conflicts = conflicts
 
-    def get_common_roots(self):
+    def get_common_roots(self, relationships=None):
         # the least common ancestors, or roots if there are none
-        common_ancestor_terms = self.onto.common_points({self.onto.get_term(t) for t in self.term_ids}, 3)
+        common_ancestor_terms = self.onto.common_points({self.onto.get_term(t) for t in self.term_ids}, 3,
+                                                        relationships=relationships)
         if not common_ancestor_terms:
             terms = (self.onto.get_term(t) for t in self.term_ids)
             common_ancestor_terms = \

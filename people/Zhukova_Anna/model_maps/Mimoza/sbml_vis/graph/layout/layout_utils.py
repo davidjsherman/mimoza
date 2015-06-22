@@ -23,7 +23,7 @@ def get_distance(qo):
         neighbour_sizes = {n2size[m] for m in qo.getOutNodes(n) if m in n2size}
         return max(neighbour_sizes) if neighbour_sizes else 0
 
-    return max(min(n2size[n], get_neighbour_size(n)) for n in n2size.iterkeys())
+    return max(n2size[n] + get_neighbour_size(n) for n in n2size.iterkeys()) / 2
 
 
 def layout_hierarchically(qo, margin=1):
@@ -32,7 +32,7 @@ def layout_hierarchically(qo, margin=1):
     if qo.numberOfNodes() > 1:
         # looks like there is a bug in Tulip and it uses the 'layer spacing' value
         # instead of the 'node spacing' one and visa versa
-        d = 2 * SPECIES_SIZE + margin #get_distance(qo)
+        d = SPECIES_SIZE + margin #get_distance(qo)
         ds["layer spacing"] = d
         ds["node spacing"] = d
         ds["layer distance"] = d
@@ -73,7 +73,7 @@ def remove_overlaps(graph, margin=1):
     graph.applyLayoutAlgorithm(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
-def layout_components(graph, cycle_number_threshold=40, node_number_threshold=75, margin=5):
+def layout_components(graph, cycle_number_threshold=70, node_number_threshold=200, margin=5):
     root = graph.getRoot()
     comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
     for ns in comp_list:
@@ -97,6 +97,8 @@ def layout_components(graph, cycle_number_threshold=40, node_number_threshold=75
         if gr.numberOfNodes() < node_number_threshold and not next(
                 (n for n in gr.getNodes() if root[TYPE][n] == TYPE_COMPARTMENT), False):
             layout_hierarchically(gr)
+            # layout_force(gr, margin)
+            # remove_overlaps(gr, margin)
         else:
             layout_force(gr, margin)
             remove_overlaps(gr, margin)

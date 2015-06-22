@@ -12,7 +12,7 @@ from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.onto.obo_ontology import parse
 from sbml_generalization.onto.onto_getter import get_chebi
-from mimoza.mimoza import *
+from mimoza.mimoza_path import *
 from sbml_vis.html.html_generator import create_thanks_for_uploading_generalized_html, generate_generalized_html
 
 

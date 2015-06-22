@@ -16,8 +16,30 @@ __author__ = 'anna'
 
 SKIP_UBS = False
 
+def get_short_name(name, ch_id, onto, comp_name):
+    short_name = name
 
-def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
+    # remove compartment from the name,
+    # e.g. H2O [peroxisome] --> H2O
+    if comp_name:
+        short_name.replace("[%s]" % comp_name, '').strip()
+
+    # replace with a chebi name
+    # if it is shorter
+    if ch_id:
+        term = onto.get_term(ch_id)
+        if term:
+            alts = [term.get_name()]
+            # alts.extend(term.get_synonyms())
+            if not short_name:
+                short_name = term.get_name()
+            for alt in alts:
+                if alt and len(alt) < len(short_name):
+                    short_name = alt
+    return short_name
+
+
+def species2nodes(graph, input_model, species_id2chebi_id, ub_sps, chebi=None):
     id2n = {}
     for s in input_model.getListOfSpecies():
         _id = s.getId()
@@ -32,12 +54,16 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
         graph[COMPARTMENT_ID][n] = comp.getId()
         graph[ID][n] = _id
         id2n[_id] = n
+        chebi_id = None
+        if _id in species_id2chebi_id:
+            chebi_id = species_id2chebi_id[_id]
+            graph[TERM][n] = chebi_id
         name = s.getName()
+        if chebi:
+            name = get_short_name(name, chebi_id, chebi, comp.getName())
         graph[NAME][n] = name
         graph[TYPE][n] = TYPE_SPECIES
         graph[UBIQUITOUS][n] = ub
-        if _id in species_id2chebi_id:
-            graph[TERM][n] = species_id2chebi_id[_id]
         graph[VIEW_SHAPE][n] = SPECIES_SHAPE
         graph[VIEW_SIZE][n] = get_n_size(graph, n)
     return id2n
@@ -162,7 +188,7 @@ def import_sbml(input_model, sbml_file):
     create_props(graph)
 
     logging.info('adding species nodes')
-    id2n = species2nodes(graph, input_model, species_id2chebi_id, ub_sps)
+    id2n = species2nodes(graph, input_model, species_id2chebi_id, ub_sps, chebi)
 
     logging.info('adding reaction nodes')
     reactions2nodes(get_r_comp, graph, id2n, input_model)
@@ -212,11 +238,19 @@ def create_props(graph):
 
 def duplicate_nodes(graph):
     root = graph.getRoot()
-    for n in (n for n in graph.getNodes() if root[UBIQUITOUS][n]):
-        clone_node(graph, n)
+    duplicate_ub_nodes(graph, root)
+    # duplicate_tr_nodes(graph, root)
+
+
+def duplicate_tr_nodes(graph, root):
     for n in (n for n in graph.getNodes() if TYPE_SPECIES == root[TYPE][n] and not root.isMetaNode(n) and
             not root[UBIQUITOUS][n] and next((r for r in root.getInOutNodes(n) if root[TRANSPORT][r]), False)):
         clone_node(graph, n, get_neighbour_nodes=lambda m, gr: (t for t in gr.getInOutNodes(m) if gr[TRANSPORT][t]))
+
+
+def duplicate_ub_nodes(graph, root):
+    for n in (n for n in graph.getNodes() if root[UBIQUITOUS][n]):
+        clone_node(graph, n)
 
 
 def mark_ancestors(graph, r_eq2clu, s2clu, c_id2info):

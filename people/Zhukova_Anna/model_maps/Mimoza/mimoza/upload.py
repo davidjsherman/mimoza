@@ -8,12 +8,11 @@ import cgitb
 from shutil import copytree
 import sys
 import base64
-
-from libsbml import SBMLReader, writeSBMLToFile
+import libsbml
 
 from sbml_vis.html.html_generator import create_thanks_for_uploading_html, create_thanks_for_uploading_generalized_html
 from sbml_vis.file.md5_checker import check_md5
-from mimoza.mimoza import *
+from mimoza.mimoza_path import *
 from sbml_generalization.sbml.sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
 
 
@@ -72,7 +71,7 @@ def upload_file():
 
 
 def process_file(sbml_file):
-    reader = SBMLReader()
+    reader = libsbml.SBMLReader()
     doc = reader.readSBML(sbml_file)
     model = doc.getModel()
     if not model:
@@ -104,14 +103,14 @@ def process_file(sbml_file):
     if check_for_groups(sbml_file, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
         new_sbml_file = '%s%s_with_groups.xml' % (directory, model_id)
         if sbml_file != new_sbml_file:
-            if not writeSBMLToFile(doc, new_sbml_file):
+            if not libsbml.writeSBMLToFile(doc, new_sbml_file):
                 return NOT_MODEL, None
             os.remove(sbml_file)
         return ALREADY_GENERALIZED, (model_id, model.getName(), m_id)
 
     new_sbml_file = '%s%s.xml' % (directory, model_id)
     if sbml_file != new_sbml_file:
-        if not writeSBMLToFile(doc, new_sbml_file):
+        if not libsbml.writeSBMLToFile(doc, new_sbml_file):
             return NOT_MODEL, None
         os.remove(sbml_file)
     return OK, (model_id, model.getName(), m_id)

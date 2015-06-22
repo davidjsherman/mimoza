@@ -20,42 +20,53 @@ def layout_outer_elements(graph):
 
     comps = [c for c in graph.getNodes() if TYPE_COMPARTMENT == root[TYPE][c]]
     for c in comps:
-        c_bottom_x, c_bottom_y, c_top_x, c_top_y = get_comp_borders(c, root)
-        c_w, c_h = (c_top_x - c_bottom_x) / 2, (c_top_y - c_bottom_y) / 2
+        c_left_x, c_bottom_y, c_right_x, c_top_y = get_comp_borders(c, root)
+        c_w, c_h = (c_right_x - c_left_x) / 2, (c_top_y - c_bottom_y) / 2
         rs = sorted([r for r in graph.getInOutNodes(c)
                      if len([s for s in graph.getInOutNodes(r) if not ub_or_single(s, graph)]) == 1],
                     key=lambda r: -get_n_length(root, r))
         comp_mg = root[VIEW_META_GRAPH][c]
-        m_x = min(root[VIEW_LAYOUT][s].getX() - root[VIEW_SIZE][s].getW() / 2 for s in comp_mg.getNodes())
-        m_y = min(root[VIEW_LAYOUT][s].getY() - root[VIEW_SIZE][s].getH() / 2 for s in comp_mg.getNodes())
+        min_inner_node_x = min(root[VIEW_LAYOUT][s].getX() - root[VIEW_SIZE][s].getW() / 2 for s in comp_mg.getNodes())
+        min_inner_node_y = min(root[VIEW_LAYOUT][s].getY() - root[VIEW_SIZE][s].getH() / 2 for s in comp_mg.getNodes())
         coords = set()
+        h_jump, v_jump = True, True
         for r in rs:
             r_w, r_h = root[VIEW_SIZE][r].getW() * 3, root[VIEW_SIZE][r].getH() * 3
-            ss = [s for s in root.getInOutNodes(r) if comp_mg.isElement(s)]
-            ss_not_ub = [s for s in ss if not ub_or_single(s, comp_mg)]
-            if ss_not_ub:
-                ss = ss_not_ub
+            inner_r_metabolite_ns = [s for s in root.getInOutNodes(r) if comp_mg.isElement(s)]
+            inner_r_metabolite_ns_not_ub = [s for s in inner_r_metabolite_ns if not ub_or_single(s, comp_mg)]
+            if inner_r_metabolite_ns_not_ub:
+                inner_r_metabolite_ns = inner_r_metabolite_ns_not_ub
             else:
-                ss_not_ub = [s for s in ss if not root[UBIQUITOUS][s]]
-                if ss_not_ub:
-                    ss = ss_not_ub
-            s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() - m_x for s in ss) / len(ss), sum(
-                root[VIEW_LAYOUT][s].getY() - m_y for s in ss) / len(ss)
-            x = c_bottom_x - r_w if s_x < c_w else c_top_x + r_h
-            y = c_bottom_y - r_h if s_y < c_h else c_top_y + r_h
+                inner_r_metabolite_ns_not_ub = [s for s in inner_r_metabolite_ns if not root[UBIQUITOUS][s]]
+                if inner_r_metabolite_ns_not_ub:
+                    inner_r_metabolite_ns = inner_r_metabolite_ns_not_ub
+            avg_inner_r_metabolite_x, avg_inner_r_metabolite_y = \
+                sum(root[VIEW_LAYOUT][s].getX() - min_inner_node_x for s in inner_r_metabolite_ns) / len(inner_r_metabolite_ns), \
+                sum(root[VIEW_LAYOUT][s].getY() - min_inner_node_y for s in inner_r_metabolite_ns) / len(inner_r_metabolite_ns)
+            x = c_left_x - r_w if avg_inner_r_metabolite_x < c_w else c_right_x + r_h
+            y = c_bottom_y - r_h if avg_inner_r_metabolite_y < c_h else c_top_y + r_h
 
-            if abs(c_bottom_x + s_x - x) > abs(c_bottom_y + s_y - y):
-                r_x = c_bottom_x + s_x
+            # if we are closer to the compartment from bottom or top rather than from left or right
+            if abs(c_left_x + avg_inner_r_metabolite_x - x) > abs(c_bottom_y + avg_inner_r_metabolite_y - y):
+                # stay below/above of the inner metabolites
+                r_x = c_left_x + avg_inner_r_metabolite_x
                 r_y = y
-                while (r_x, r_y) in coords:
-                    r_x += r_w if s_x < c_w else -r_w
-                coords.add((r_x, r_y))
+                while (r_x - r_x % REACTION_SIZE, r_y - r_y % REACTION_SIZE) in coords:
+                    r_x += 3 * r_w if avg_inner_r_metabolite_x < c_w else -3 * r_w
+                    if v_jump:
+                        r_y -= r_h if avg_inner_r_metabolite_y < c_h else r_h
+                    v_jump = not v_jump
+            # we are closer to the compartment from left or right rather than from bottom or top
             else:
-                r_y = c_bottom_y + s_y
+                # stay to the left/right of the inner metabolites
+                r_y = c_bottom_y + avg_inner_r_metabolite_y
                 r_x = x
-                while (r_x, r_y) in coords:
-                    r_y += r_h if s_y < c_h else -r_h
-                coords.add((r_x, r_y))
+                while (r_x - r_x % REACTION_SIZE, r_y - r_y % REACTION_SIZE) in coords:
+                    r_y += 3 * r_h if avg_inner_r_metabolite_y < c_h else -3 * r_h
+                    if h_jump:
+                        r_x -= r_w if avg_inner_r_metabolite_x < c_w else r_w
+                    h_jump = not h_jump
+            coords.add((r_x - r_x % REACTION_SIZE, r_y - r_y % REACTION_SIZE))
             root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
 
 
@@ -65,7 +76,7 @@ def get_comp_borders(c, root):
     return c_x - c_w, c_y - c_h, c_x + c_w, c_y + c_h
 
 
-def layout_inner_elements(graph, c_id, (c_bottom_x, c_bottom_y, c_top_x, c_top_y)):
+def layout_inner_elements(graph, c_id, (c_left_x, c_bottom_y, c_right_x, c_top_y)):
     root = graph.getRoot()
 
     neighbours_outside_comp = lambda r: [n for n in graph.getInOutNodes(r) if root[COMPARTMENT_ID][n] != c_id]
@@ -76,48 +87,58 @@ def layout_inner_elements(graph, c_id, (c_bottom_x, c_bottom_y, c_top_x, c_top_y
                  and neighbours_outside_comp(r)], key=lambda r: -get_n_length(root, r))
 
     coords = set()
+    h_jump, v_jump = True, True
     for r in rs:
         r_w, r_h = root[VIEW_SIZE][r].getW(), root[VIEW_SIZE][r].getH()
-        ss = neighbours_outside_comp(r)
-        ss_not_ub = [s for s in ss if not ub_or_single(s, graph)]
-        if ss_not_ub:
-            ss = ss_not_ub
-        s_x, s_y = sum(root[VIEW_LAYOUT][s].getX() for s in ss) / len(ss), sum(
-            root[VIEW_LAYOUT][s].getY() for s in ss) / len(ss)
+        outside_r_metabolites = neighbours_outside_comp(r)
+        outside_r_metabolites_not_ub = [s for s in outside_r_metabolites if not ub_or_single(s, graph)]
+        if outside_r_metabolites_not_ub:
+            outside_r_metabolites = outside_r_metabolites_not_ub
+        avg_outside_r_metabolite_x, avg_outside_r_metabolite_y = \
+            sum(root[VIEW_LAYOUT][s].getX() for s in outside_r_metabolites) / len(outside_r_metabolites), \
+            sum(root[VIEW_LAYOUT][s].getY() for s in outside_r_metabolites) / len(outside_r_metabolites)
 
-        inside_y = c_bottom_y + r_h <= s_y <= c_top_y - r_h
-        inside_x = c_bottom_x + r_w <= s_x <= c_top_x - r_w
+        inside_y = c_bottom_y + r_h <= avg_outside_r_metabolite_y <= c_top_y - r_h
+        inside_x = c_left_x + r_w <= avg_outside_r_metabolite_x <= c_right_x - r_w
 
+        closer_to_the_compartment_bottom = \
+            abs(avg_outside_r_metabolite_y - c_bottom_y) < abs(avg_outside_r_metabolite_y - c_top_y)
+        closer_to_the_left_comp_border = \
+            abs(avg_outside_r_metabolite_x - c_left_x) < abs(avg_outside_r_metabolite_x - c_right_x)
         if inside_x:
-            r_x = s_x
-            r_y = c_bottom_y + r_h if abs(s_y - c_bottom_y) < abs(s_y - c_top_y) else c_top_y - r_h
-            right = abs(s_x - c_bottom_x) < abs(s_x - c_top_x)
-            while (r_x, r_y) in coords:
-                if right:
+            # stay above/below outside metabolites
+            r_x = avg_outside_r_metabolite_x
+            r_y = c_bottom_y + r_h if closer_to_the_compartment_bottom else c_top_y - r_h
+            while (r_x - r_x % REACTION_SIZE, r_y - r_y % REACTION_SIZE) in coords:
+                if closer_to_the_left_comp_border:
                     r_x += 3 * r_w
                 else:
                     r_x -= 3 * r_w
-            coords.add((r_x, r_y))
+                if v_jump:
+                    r_y += -r_w if closer_to_the_compartment_bottom else r_w
+                v_jump = not v_jump
         elif inside_y:
-            r_y = s_y
-            r_x = c_bottom_x + r_w if abs(s_x - c_bottom_x) < abs(s_x - c_top_x) else c_top_x - r_w
-            top = abs(s_y - c_bottom_y) < abs(s_y - c_top_y)
-            while (r_x, r_y) in coords:
-                if top:
+            # stay to the left/right of the outside metabolites
+            r_y = avg_outside_r_metabolite_y
+            r_x = c_left_x + r_w if closer_to_the_left_comp_border else c_right_x - r_w
+            while (r_x - r_x % REACTION_SIZE, r_y - r_y % REACTION_SIZE) in coords:
+                if closer_to_the_compartment_bottom:
                     r_y += 3 * r_h
                 else:
                     r_y -= 3 * r_h
-            coords.add((r_x, r_y))
+                if h_jump:
+                    r_x += -r_h if closer_to_the_left_comp_border else r_h
+                h_jump = not h_jump
         else:
             i = 1
             while True:
-                r_x = max(c_bottom_x + i * r_w, min(s_x, c_top_x - i * r_w))
-                r_y = max(c_bottom_y + i * r_h, min(s_y, c_top_y - i * r_h))
-                if (r_x, r_y) in coords:
+                r_x = max(c_left_x + i * r_w, min(avg_outside_r_metabolite_x, c_right_x - i * r_w))
+                r_y = max(c_bottom_y + i * r_h, min(avg_outside_r_metabolite_y, c_top_y - i * r_h))
+                if (r_x - r_x % REACTION_SIZE, r_y - r_y % REACTION_SIZE) in coords:
                     i += 1
                 else:
-                    coords.add((r_x, r_y))
                     break
+        coords.add((r_x - r_x % REACTION_SIZE, r_y - r_y % REACTION_SIZE))
 
         root[VIEW_LAYOUT][r] = tlp.Coord(r_x, r_y)
 

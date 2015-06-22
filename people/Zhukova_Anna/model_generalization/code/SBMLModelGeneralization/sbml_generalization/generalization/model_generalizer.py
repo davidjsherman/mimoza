@@ -50,7 +50,7 @@ def cover_t_ids(model, species_id2term_id, ubiquitous_chebi_ids, t_ids, onto, cl
     term_id2clu = {}
     real_terms = {onto.get_term(t_id) for t_id in t_ids if onto.get_term(t_id)}
     unmapped_s_ids = {s_id for s_id in t_ids if not onto.get_term(s_id)}
-    roots = onto.common_points(real_terms)
+    roots = onto.common_points(real_terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS)
     if roots:
         root_id = roots[0].get_id()
         new_clu = clu + (root_id, ) if clu else (root_id, )
@@ -79,7 +79,7 @@ def update_onto(onto, term_id2clu):
             continue
         terms = {onto.get_term(t_id) for t_id in t_ids if onto.get_term(t_id)}
         if terms:
-            ancestors.extend(set(onto.common_points(terms)))
+            ancestors.extend(set(onto.common_points(terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS)))
     removed_something = False
     count = Counter(ancestors)
     for t in (t for t in count.keys() if count[t] > 1):
@@ -138,7 +138,7 @@ def update(term_id2clu, onto):
     i = 0
     for clu, term_ids in clu2term_ids.iteritems():
         terms = {onto.get_term(t) for t in term_ids if onto.get_term(t)}
-        common_ancestors = {t for t in onto.common_points(terms)} if terms else set()
+        common_ancestors = {t for t in onto.common_points(terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS)} if terms else set()
         options = common_ancestors - used
         if options:
             common_ancestor_term = options.pop()

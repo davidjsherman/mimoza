@@ -517,17 +517,20 @@ class Ontology:
                | (set(self.name2term_ids[name_bis]) if name_bis in self.name2term_ids else set())
 
 
-    def common_points(self, terms, depth=None):
+    def common_points(self, terms, depth=None, relationships=None):
         if not terms or depth is not None and depth <= 0:
             return None
         terms = set(terms)
         first = terms.pop()
-        common = self.get_generalized_ancestors(first, False, set(), None, depth) | self.get_equivalents(first) | {
+        common = self.get_generalized_ancestors(term=first, direct=False, checked=set(), depth=depth, relationships=relationships) | \
+                 self.get_equivalents(first, relationships=relationships) | {
             first}
         for t in terms:
-            common &= self.get_generalized_ancestors(t, False, set(), None, depth) | self.get_equivalents(t) | {t}
+            common &= self.get_generalized_ancestors(t, False, set(), depth=depth, relationships=relationships) | \
+                      self.get_equivalents(t, relationships=relationships) | {t}
         result = set(common)
-        return [it for it in common if not self.get_generalized_descendants(it, False, set()) & result]
+        return [it for it in common
+                if not self.get_generalized_descendants(it, False, set(), relationships=relationships) & result]
 
     def remove_relationships(self, relationships, brutally=False):
         for (subj_id, r, o_id) in relationships:

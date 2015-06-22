@@ -192,9 +192,12 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
             # add its background to its own collection
             c_id = root[ID][n]
             _, bg = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps, False, False)
-            _, all_bg = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps, False, False)
             update_level2features(bg, c_id2level2features, 0, c_id)
-            update_level2features(all_bg, c_id2level2features, 0, ALL_COMPARTMENTS)
+            # If it's not the root compartment, add it to all compartments view
+            # Get outside compartment from c_id2info: c_id -> (name, go, (level, out_c_id))
+            if c_id2info[c_id][2][1]:
+                _, all_bg = n2feature(meta_graph, n, n_id, c_id2info, r2rs_ps, False, False)
+                update_level2features(all_bg, c_id2level2features, 0, ALL_COMPARTMENTS)
         # 2. it's a reaction or a species
         elif n_type in [TYPE_REACTION, TYPE_SPECIES]:
             # only those (our) compartments for which this element is outside of them will need it
@@ -357,6 +360,7 @@ def filter_features(c_id2level2features):
                 l2fs[l] = [f for f in l2fs[l] if (UBIQUITOUS not in f.properties) or not f.properties[UBIQUITOUS]]
                 total_f_number += len(l2fs)
         if total_f_number > MAX_TOTAL_FEATURE_NUMBER:
+            logging.info("deleting compartment %s view, as it's too big" % c_id)
             del c_id2level2features[c_id]
 
 

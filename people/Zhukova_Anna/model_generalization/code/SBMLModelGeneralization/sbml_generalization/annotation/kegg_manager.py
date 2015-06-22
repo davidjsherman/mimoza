@@ -1,5 +1,4 @@
-from sbml_generalization.annotation.rdf_annotation_helper import get_is_annotations, get_is_vo_annotations
-
+from sbml_generalization.annotation.rdf_annotation_helper import get_is_annotations
 
 __author__ = 'anna'
 

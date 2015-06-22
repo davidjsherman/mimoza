@@ -154,7 +154,7 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
     if not model_name:
         model_name = model_id
     c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments() if c.getId() in c_id2json_vars}
-    if ALL_COMPARTMENTS in c_id2name:
+    if ALL_COMPARTMENTS in c_id2json_vars:
         c_id2name[ALL_COMPARTMENTS] = "All compartment view"
     page.init(title=model_name, css=css, script=scripts, fav=fav)
 
