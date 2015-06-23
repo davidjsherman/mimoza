@@ -1,6 +1,6 @@
 __author__ = 'anna'
 
-CONTACT_EMAIL = 'anna.zhukova@inria.fr'
+CONTACT_EMAIL = 'zhutchok@gmail.com'
 
 MIMOZA_URL = 'http://mimoza.bordeaux.inria.fr'
 
@@ -19,8 +19,14 @@ JQUERY_UI_CSS = 'lib/jquery/jquery-ui.min.css'
 
 LEAFLET_LABEL_JS = 'lib/leaflet_label/leaflet.label.js'
 LEAFLET_JS = 'lib/leaflet/leaflet.js'
+FUSE_JS = 'lib/leaflet/fuse.min.js'
+LEAFLET_SEARCH_JS = 'lib/leaflet/leaflet.fusesearch.min.js'
 LEAFLET_LABEL_CSS = 'lib/leaflet_label/leaflet.label.css'
 LEAFLET_CSS = 'lib/leaflet/leaflet.css'
+LEAFLET_SEARCH_CSS = 'lib/leaflet/leaflet.fusesearch.min.css'
+
+TABS_JS = 'lib/onlinehtmltools/skinable_tabs.min.js'
+TABS_CSS = 'lib/onlinehtmltools/skins/skin11/top.css'
 
 PROGRESS_ICON = 'lib/modelmap/ajax-loader.gif'
 LOADER_ICON = 'lib/modelmap/loader.gif'
@@ -28,5 +34,6 @@ METHOD_ICON = 'lib/modelmap/method.gif'
 
 SBML_ORG = "http://sbml.org"
 
-JS_SCRIPTS = [LEAFLET_JS, LEAFLET_LABEL_JS, JQUERY_JS, MIMOZA_JS, MIMOZA_POPUP_JS, MIMOZA_GEOJSON_JS, JQUERY_UI_JS]
-CSS_SCRIPTS = [MIMOZA_CSS, LEAFLET_CSS, LEAFLET_LABEL_CSS, JQUERY_UI_CSS]
+JS_SCRIPTS = [LEAFLET_JS, LEAFLET_LABEL_JS, FUSE_JS, LEAFLET_SEARCH_JS, JQUERY_JS, MIMOZA_JS, MIMOZA_POPUP_JS,
+              MIMOZA_GEOJSON_JS, JQUERY_UI_JS, TABS_JS]
+CSS_SCRIPTS = [MIMOZA_CSS, LEAFLET_CSS, LEAFLET_LABEL_CSS, LEAFLET_SEARCH_CSS, JQUERY_UI_CSS, TABS_CSS]

@@ -27,17 +27,14 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         var props = {
             color: feature.properties.color,
             opacity: 1,
-            weight: w / 2,
+            weight: Math.min(Math.min(w / 2, 10), 4),
             lineCap: 'round',
             lineJoin: 'round',
             clickable: false,
             fill: false,
             zIndexOffset: 0,
-            riseOnHover: false,
+            riseOnHover: false
         };
-        if (!feature.properties.direction) {
-	        props.dashArray =  "5, 5";
-	    }
         return L.polyline(e.map(function (coord) {
             return map.unproject(coord, 1);
         }), props);
@@ -244,6 +241,9 @@ function getFilteredJson(map, compLayer, ubLayer, jsn, name2popup, name2zoom, fr
         },
         filter: function (feature, layer) {
             return filterFunction(feature);
+        },
+        onEachFeature: function(feature, layer) {
+            feature.layer = layer;
         }
     });
 }

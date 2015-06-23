@@ -12,7 +12,7 @@ function adjustMapSize(mapId) {
     "use strict";
     var VIEWPORT_MARGIN = 50,
         MIN_DIMENTION_SIZE = 256,
-        width = Math.max(MIN_DIMENTION_SIZE, ($(window).width() - VIEWPORT_MARGIN)),
+        width = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).width() - VIEWPORT_MARGIN) * 0.8)),
         height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() - VIEWPORT_MARGIN) * 0.7));
     return adjustMapDivSize(mapId, width, height);
 }
@@ -88,6 +88,20 @@ function updateMapBounds(coords, commonCoords, map) {
     map.setMaxBounds(coords);
 }
 
+function addAttribution(map) {
+    var attrControl = L.control.attribution({
+        position: 'bottomleft',
+        prefix: false
+    });
+    attrControl.addAttribution(
+        //'<p><span style="background-color:#E37B6F">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>/<span style="background-color:#B4B4B4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> - not generalized/ubiquitous metabolites; <span style="background-color:#79A8C9">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> - not generalized reactions.</p>' +
+        '<p><b>Zoom in/out</b> to see more/less details.</p>' +
+        '<p><b>Click</b> on elements to see their annotations.</p>' +
+        '<p><b>Show/Hide</b> elements in the map settings <span class="explanation">(on top right)</span>.</p>'
+    );
+    attrControl.addTo(map);
+}
+
 function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     "use strict";
     var size = adjustMapSize(mapId),
@@ -110,10 +124,16 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     if (cId != null) {
         cIds[cId] = compIds[cId];
         jsonData = cId2jsonData[cId];
-        $("#comp").html(compIds[cId]);
+        //$("#comp").html(compIds[cId]);
         if (cId in cId2outside) {
             outCId = cId2outside[cId];
         }
+        var $c_menu = $("#menu_" + cId);
+        console.log($c_menu);
+        $c_menu.css("font-weight","Bold");
+        $c_menu.click(function () {return false;});
+
+$('.my-link').unbind('click');
     }
     if (inZoom != null && !compIds.hasOwnProperty(inZoom)) {
         inZoom = null;
@@ -140,6 +160,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         layers: layers,
         crs: L.CRS.Simple
     });
+    //addAttribution(map);
     handlePopUpClosing(map);
     var name2popup = {},
         name2zoom = {},
@@ -158,8 +179,26 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         outJSON = false,
         jsonArray;
 
+
+    //var searchCtrl = L.control.fuseSearch({
+    //    position : 'topright',
+    //    title : '',
+    //    placeholder : 'Search',
+    //    maxResultLength : 1,
+    //    showInvisibleFeatures : false,
+    //    showResultFct: function(feature, container) {
+    //        var props = feature.properties;
+    //        var name = L.DomUtil.create('b', null, container);
+    //        name.innerHTML = props.name;
+    //        container.appendChild(L.DomUtil.create('br', null, container));
+    //        container.appendChild(document.createTextNode(props.details));
+    //    }
+    //});
+    //searchCtrl.addTo(map);
+
     function loadElements(json, fromZoom, toZoom, coords) {
         jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minGeneralizedZoom, inZoom);
+
         ubJSON |= jsonArray[1];
         jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minGeneralizedZoom, inZoom);
         ubJSON |= jsonArray[1];
@@ -167,6 +206,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minGeneralizedZoom, inZoom);
         ubJSON |= jsonArray[1];
         inJSON |= jsonArray[0] || jsonArray[1];
+        //searchCtrl.indexFeatures(json.features, ['name', 'id']);
     }
 
     // load common elements

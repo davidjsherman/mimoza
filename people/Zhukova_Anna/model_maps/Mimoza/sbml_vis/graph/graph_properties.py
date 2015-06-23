@@ -13,8 +13,6 @@ COMPARTMENT_ID = "c_id"
 COMPARTMENT_NAME = "c_name"
 RELATED_COMPARTMENT_IDS = "rel_c_ids"
 
-DIRECTION = 'direction'
-
 VIEW_COLOR = "viewColor"
 
 VIEW_SHAPE = "viewShape"

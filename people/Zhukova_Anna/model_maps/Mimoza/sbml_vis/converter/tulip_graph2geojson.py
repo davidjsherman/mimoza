@@ -25,7 +25,10 @@ __author__ = 'anna'
 def update_level2features(feature, c_id2level2features, z, c_id):
     if c_id not in c_id2level2features:
         c_id2level2features[c_id] = defaultdict(list)
-    c_id2level2features[c_id][z].append(feature)
+    if not isinstance(feature, list):
+        feature = [feature]
+    for f in feature:
+        c_id2level2features[c_id][z].append(f)
 
 
 def export_edges(c_id2level2features, c_id2outs, meta_graph, processed, e2layout):

@@ -262,6 +262,9 @@ a.boxclose{
     padding: 11px 3px;
     text-decoration:none;
 }
+a:disabled{
+    color: #773131;
+}
 .boxclose:before {
     content: "x";
 }

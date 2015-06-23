@@ -1,6 +1,6 @@
 import os
+
 from sbml_vis.graph.graph_properties import ALL_COMPARTMENTS
-from sbml_vis.graph.color.colorer import *
 from sbml_vis.html import markup
 
 __author__ = 'anna'
@@ -10,9 +10,7 @@ def add_header(model_id, model_name, page):
     """ <h1 class="capitalize">
             <span id='comp'>Compartments</span> of <a href="http://www.ebi.ac.uk/biomodels-main/model_id">model_name</a>
         </h1> """
-    page.h1(class_='capitalize')
-    page.span('Visualization', id='comp')
-    page.span('&nbsp;of&nbsp;')
+    page.h1()
     page.a(model_name, href='http://www.ebi.ac.uk/biomodels-main/{0}'.format(model_id))
     page.h1.close()
 
@@ -21,19 +19,17 @@ def add_compartment_menu(page, c_id2name):
     page.ul(class_='menu margin centre')
     for c_id, c_name in sorted(c_id2name.iteritems(), key=lambda (_, c_name): c_name):
         page.li()
-        page.a(c_name, href='?id=%s' % c_id)
+        page.a(c_name, href='?id=%s' % c_id, id='menu_%s' % c_id)
         page.li.close()
     page.ul.close()
 
 
 def add_download_link(groups_sbml, archive_url, page):
-    page.ul(class_='menu margin centre')
     if groups_sbml:
-        page.li('Download the <a href=%s download>generalized model</a>.' % groups_sbml, id='download')
+        page.p('Download the <a href=%s download>generalized model</a>.' % groups_sbml, id='download')
     if archive_url:
-        page.li('Download the <a href=%s download>COMBINE archive</a>.' % archive_url)
-    page.li('<a onclick="overlay()" href="#">Embed</a>')
-    page.ul.close()
+        page.p('Download everything as a <a href=%s download>COMBINE archive</a>.' % archive_url)
+    page.p('Embed the <a onclick="overlay()" href="#">Mimoza view</a> into your page')
 
 
 def add_search(page):
@@ -61,23 +57,19 @@ def add_explanations(page):
         </p></div> """
     page.div(class_='margin', id='explanations')
     page.p()
-    page.span('Zoom in', class_='pant')
-    page.span(' to see the detailed model. ')
-    page.span('Zoom out', class_='pant')
-    page.span(' to see the generalized model. ')
+    page.span('Zoom in/out', class_='pant')
+    page.span(' to see more/less details. ')
     page.span('Click', class_='pant')
     page.span(' on elements to see their annotations. ')
-    page.span('Adjust', class_='pant')
+    page.span('Show/Hide', class_='pant')
     page.span(
-        ' map settings <span class="explanation">(top right corner of the map view)</span> to show/hide ubiquitous metabolites and transport reactions.')
+        ' elements in the map settings <span class="explanation">(top right of the map view)</span>.')
     page.p.close()
 
-    page.p(
-        "%s/%s - specific, but not generalized/ubiquitous metabolites; %s - specific, but not generalized reactions." % (
-            format_color(RED), format_color(GREY),
-            format_color(BLUE)))
-
-    page.p("Reactant edges are dashed, product edges are solid lines.")
+    # page.p(
+    #     "%s/%s - not generalized/ubiquitous metabolites; %s - not generalized reactions." % (
+    #         format_color(RED), format_color(GREY),
+    #         format_color(BLUE)))
 
     page.div.close()
 
@@ -88,13 +80,13 @@ def format_color(color):
 
 def add_map(page, map_id):
     """ <div class="margin" id="map" style="width: 1024px; height: 1024px"></div> """
-    page.div('', class_='margin map ui-widget-content', id=map_id)
+    page.div('', class_='map ui-widget-content', id=map_id)
 
 
 def add_model_description(model, page):
     model_description = model.getNotes()
-    if model_description:
-        page.p(model_description.toXMLString(), class_='margin just', id='descr')
+    page.p(model_description.toXMLString() if model_description
+           else 'No information about this model was provided in its SBML :(', class_='margin just', id='descr')
 
 
 def add_js(page, json_files, c_id2json_vars, map_id, comps, c_id2out_c_id):
@@ -109,6 +101,8 @@ def add_js(page, json_files, c_id2json_vars, map_id, comps, c_id2out_c_id):
            ", ".join(("'%s': '%s'" % (c_id, out_c_id) for (c_id, out_c_id) in c_id2out_c_id.iteritems()))),
                 type="text/javascript")
     page.script('''$(function() {$( "#%s" ).resizable();});''' % map_id)
+    page.script('''$(function() {$( "#content_holder" ).resizable();});''')
+    page.script('''$(function() {$( "#tabs_holder" ).resizable();});''')
 
 
 def add_embed_button(page):
@@ -160,25 +154,47 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
 
     add_header(model_id, model_name, page)
 
-    page.div(class_='centre', id='all')
-    add_compartment_menu(page, c_id2name)
+    page.div(class_='tabs_holder')
+    page.ul()
+    page.li()
+    page.a('Model Description', href='#tab-descr')
+    page.li.close()
+    page.li(class_="tab_selected")
+    page.a('Model Visualization', href='#tab-viz')
+    page.li.close()
+    page.li()
+    page.a('Embed or Download', href='#tab-down')
+    page.li.close()
+    page.ul.close()
 
-    # add_embed_button(page)
-    add_search(page)
+    page.div(class_="content_holder")
 
-    add_map(page, map_id)
-
-    add_download_link(groups_sbml_url, archive_url, page)
-
-    add_explanations(page)
-
+    page.div(id="tab-descr")
     add_model_description(model, page)
+    page.div.close()  # tab-descr
 
+    page.div(id="tab-viz", class_="centre")
+    add_compartment_menu(page, c_id2name)
+    add_search(page)
+    add_map(page, map_id)
+    add_explanations(page)
+    page.div.close()  # tab-viz
+
+    page.div(id="tab-down", class_="centre", style="min-height: 200px;")
     add_embedding_dialog(page, embed_url)
+    add_download_link(groups_sbml_url, archive_url, page)
+    page.div.close()  # tab-viz
 
-    page.div.close()
+    page.div.close()  # content_holder
+    page.div.close()  # tabs_holder
 
     add_js(page, json_files, c_id2json_vars, map_id, c_id2name, c_id2out_c_id)
+    page.script('''
+        $('.tabs_holder').skinableTabs({
+        effect: 'basic_display',
+        skin: 'skin11',
+        position: 'top'
+    });''', type="text/javascript")
 
     with open('%s/comp.html' % directory, 'w+') as f:
         f.write(str(page))

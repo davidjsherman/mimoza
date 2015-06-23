@@ -1,8 +1,9 @@
-from math import degrees
+from math import degrees, radians, cos, sin
 
 from sympy import to_cnf, atan2
 from sympy.logic.boolalg import disjuncts, conjuncts
 import geojson
+import math
 
 from sbml_vis.graph.color.colorer import get_edge_color, get_reaction_color, get_compartment_color, get_species_color, \
     get_bg_color
@@ -65,8 +66,6 @@ def e2feature(graph, e, e_id, transport, inner, e2layout):
     color = triplet(root[VIEW_COLOR][real_e])
     props = {WIDTH: get_e_size(root, e).getW(), TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
              COLOR: get_edge_color(ubiquitous, generalized, transport, color)}
-    if TYPE_REACTION == root[TYPE][root.source(real_e)]:
-        props[DIRECTION] = True
     if not transport:
         props[COMPARTMENT_ID] = root[COMPARTMENT_ID][s]
     else:
@@ -76,7 +75,38 @@ def e2feature(graph, e, e_id, transport, inner, e2layout):
             props[INNER] = True
     if ubiquitous:
         props[UBIQUITOUS] = True
-    return geojson.Feature(id=e_id, geometry=geom, properties=props)
+    features = [geojson.Feature(id=e_id, geometry=geom, properties=props)]
+
+    # Draw an arrow if it's a edge between a reaction and a product or between a reversible reaction and a reactant
+    t_reaction = root.target(real_e) if TYPE_REACTION == root[TYPE][root.target(real_e)] else None
+    s_reaction = root.source(real_e) if TYPE_REACTION == root[TYPE][root.source(real_e)] else None
+    p_x, p_y = None, None
+    st_x, st_y = None, None
+    if t_reaction and root[REVERSIBLE][t_reaction]:
+        p_x, p_y = s_x, s_y
+        st_x, st_y = (layout[e][0][0], layout[e][0][1]) if layout[e] else (t_x, t_y)
+    elif s_reaction:
+        p_x, p_y = t_x, t_y
+        st_x, st_y = (layout[e][-1][0], layout[e][-1][1]) if layout[e] else (s_x, s_y)
+    if p_x is not None and p_y is not None:
+        alpha = atan2(p_y - st_y, p_x - st_x)
+        beta_up = 15 * math.pi / 16
+        beta_down = 17 * math.pi / 16
+        l = .4
+        # point (l, 0)
+        # rotate alpha +- beta
+        # move p_x, p_y
+        up_x_y = [p_x + l * cos(alpha + beta_up), p_y + l * sin(alpha + beta_up)]
+        down_x_y = [p_x + l * cos(alpha + beta_down), p_y + l * sin(alpha + beta_down)]
+        arrow_up = geojson.Feature(id=e_id + "_up",
+                                     geometry=geojson.MultiPoint([[p_x, p_y], up_x_y]),
+                                     properties=props.copy())
+        arrow_down = geojson.Feature(id=e_id + "_down",
+                                     geometry=geojson.MultiPoint([[p_x, p_y], down_x_y]),
+                                     properties=props.copy())
+        features.append(arrow_down)
+        features.append(arrow_up)
+    return features
 
 
 def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
