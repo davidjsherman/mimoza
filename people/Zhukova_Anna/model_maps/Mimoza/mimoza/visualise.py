@@ -85,7 +85,7 @@ try:
         except LoPlError:
             n2xy = None
 
-        fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, graph, chebi, n2xy)
+        fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, graph, n2xy)
         c_id2out_c_id = {}
         for c_id, info in c_id2info.iteritems():
             if c_id not in fc:

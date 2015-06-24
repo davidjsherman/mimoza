@@ -14,8 +14,7 @@ __author__ = 'anna'
 
 
 def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_id, groups_sbml, main_url, scripts, css,
-              fav,
-              map_id=None):
+              fav, map_id=None):
     if not map_id:
         map_id = m_dir_id
 
@@ -52,4 +51,4 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     if os.path.exists(temp_copy):
         archive(temp_copy, archive_path)
         shutil.rmtree(temp_copy)
-    return archive_path
+    return geojson_files, c_id2geojson_names

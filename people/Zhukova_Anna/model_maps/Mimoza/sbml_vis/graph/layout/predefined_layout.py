@@ -88,33 +88,41 @@ def apply_node_coordinates(graph, n2xy):
     for n in graph.getNodes():
         n_id = root[ID][n]
         if n_id in n2xy:
-            xy = n2xy[n_id]
-            if isinstance(xy, dict):
-                for r_id, (x, y) in xy.iteritems():
+            xywh = n2xy[n_id]
+            if isinstance(xywh, dict):
+                for r_id, ((x, y), (w, h)) in xywh.iteritems():
                     if root[CLONE_ID][n].find(r_id) != -1:
                         root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
+                        root[VIEW_SIZE][n] = tlp.Size(w, h)
                         break
             else:
-                x, y = xy
+                (x, y), (w, h) = xywh
                 root[VIEW_LAYOUT][n] = tlp.Coord(x, y)
+                root[VIEW_SIZE][n] = tlp.Size(w, h)
         elif graph.isMetaNode(n):
             x, y = 0, 0
+            w, h = 0, 0
             count = 0
             for m in root[VIEW_META_GRAPH][n].getNodes():
                 if root[ID][m] in n2xy:
-                    xy_ = n2xy[root[ID][m]]
-                    if isinstance(xy_, dict):
-                        for r_id, (x_, y_) in xy_.iteritems():
+                    xywh_ = n2xy[root[ID][m]]
+                    if isinstance(xywh_, dict):
+                        for r_id, ((x_, y_), (w_, h_)) in xywh_.iteritems():
                             if root[CLONE_ID][m].find(r_id) != -1:
                                 x += x_
                                 y += y_
+                                w += w_
+                                h += h_
                                 count += 1
                                 break
                     else:
-                        x_, y_ = xy_
+                        (x_, y_), (w_, h_) = xywh_
                         count += 1
                         x += x_
                         y += y_
+                        w += w_
+                        h += h_
             if count:
                 root[VIEW_LAYOUT][n] = tlp.Coord(x / count, y / count)
+                root[VIEW_SIZE][n] = tlp.Size(w, h)
     root[VIEW_LAYOUT].setAllEdgeValue([])

@@ -261,6 +261,9 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None):
         for c_id, sizes in c_id2c_borders.iteritems():
             layout_inner_elements(meta_graph, c_id, sizes)
 
+        if n2xy:
+            apply_node_coordinates(meta_graph, n2xy)
+
         bend_edges_around_compartments(meta_graph, (e for e in meta_graph.getEdges() if not get_e_id(e) in processed))
         bend_edges(meta_graph)
         # bend_species_edges(meta_graph)
@@ -279,12 +282,10 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None):
         else:
             c_id2c_borders = {root[ID][c]: get_comp_borders(c, root) for c in metas}
         open_meta_ns(meta_graph, metas)
-        if n2xy:
-            apply_node_coordinates(meta_graph, n2xy)
 
     for c_id in c_id2info.iterkeys():
         (name, go, (l, out_c_id)) = c_id2info[c_id]
-        comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, False, None, n2xy)
+        comp_n = comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, False, n2xy)
         if not comp_n:
             continue
         bend_edges(meta_graph)
@@ -321,7 +322,7 @@ def calculate_related_compartments(root):
         root[RELATED_COMPARTMENT_IDS][s] = list(result - {root[COMPARTMENT_ID][s]})
 
 
-def graph2geojson(c_id2info, c_id2outs, graph, onto=None, n2xy=None, colorer=color):
+def graph2geojson(c_id2info, c_id2outs, graph, n2xy=None, colorer=color):
     root = graph.getRoot()
 
     logging.info('generalized species/reactions -> metanodes')
@@ -332,7 +333,7 @@ def graph2geojson(c_id2info, c_id2outs, graph, onto=None, n2xy=None, colorer=col
     meta_graph = graph.inducedSubGraph([n for n in graph.getNodes()])
 
     logging.info('compartments -> metanodes')
-    process_compartments(c_id2info, meta_graph, onto, n2xy)
+    process_compartments(c_id2info, meta_graph, n2xy)
 
     calculate_related_compartments(root)
 
@@ -414,7 +415,7 @@ def rescale(c_id2level2features):
                     f.properties[HEIGHT] *= scale_coefficient
 
 
-def process_compartments(c_id2info, meta_graph, onto=None, n2xy=None):
+def process_compartments(c_id2info, meta_graph, n2xy=None):
     # root = meta_graph.getRoot()
     factor_nodes(meta_graph)
 
@@ -425,7 +426,7 @@ def process_compartments(c_id2info, meta_graph, onto=None, n2xy=None):
             if current_zoom_level == l:
                 # ns = [n for n in meta_graph.getNodes() if root[COMPARTMENT_ID][n] == c_id]
                 # factor_nodes(meta_graph, ns)
-                comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, True, onto, n2xy)
+                comp_to_meta_node(meta_graph, c_id, (go, name), out_c_id, True, n2xy)
         current_zoom_level -= 1
         if n2xy:
             apply_node_coordinates(meta_graph, n2xy)

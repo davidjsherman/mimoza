@@ -4,6 +4,7 @@ from os.path import dirname, abspath
 from shutil import copytree
 
 import libsbml
+from sbml_vis.graph.resize import REACTION_SIZE
 
 from sbml_vis.converter.sbml2tlp import import_sbml
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
@@ -17,6 +18,7 @@ from sbml_generalization.onto.onto_getter import get_chebi
 from sbml_generalization.sbml.sbgn_helper import save_as_sbgn
 from sbml_generalization.sbml.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml, check_for_groups, \
     SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
+from sbml_generalization.sbml.transformation_manager import scale
 
 __author__ = 'anna'
 
@@ -74,9 +76,24 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
             c_id2out_c_id[c_id] = out_c_id
     try:
         n2xy = parse_layout_sbml(sbml)
+        if n2xy:
+            r_size = next((n2xy[r.getId()][1][0] for r in input_model.getListOfReactions() if r.getId() in n2xy), None)
+            if r_size:
+                scale_factor = REACTION_SIZE / r_size
+                if scale_factor != 1:
+                    keys = n2xy.keys()
+                    for n_id in keys:
+                        value = n2xy[n_id]
+                        if isinstance(value, dict):
+                            value = {r_id: (scale(xy, scale_factor), scale(wh, scale_factor))
+                                     for (r_id, (xy, wh)) in value.iteritems()}
+                        else:
+                            xy, wh = value
+                            value = scale(xy, scale_factor), scale(wh, scale_factor)
+                        n2xy[n_id] = value
     except LoPlError:
         n2xy = None
-    fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, chebi, n2xy)
+    fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, n2xy)
     groups_document = reader.readSBML(groups_sbml)
     groups_model = groups_document.getModel()
     if gen_sbml:
@@ -93,7 +110,10 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
     if gen_model:
         save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
 
-    serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc,
-              c_id2out_c_id=c_id2out_c_id, groups_sbml=groups_sbml,
-              main_url=MIMOZA_URL, scripts=JS_SCRIPTS, css=CSS_SCRIPTS, fav=MIMOZA_FAVICON)
+    geojson_files, c_id2geojson_names = serialize(directory=directory, m_dir_id=m_id, input_model=input_model,
+                                                  c_id2level2features=fc, c_id2out_c_id=c_id2out_c_id,
+                                                  groups_sbml=groups_sbml, main_url=MIMOZA_URL, scripts=JS_SCRIPTS,
+                                                  css=CSS_SCRIPTS, fav=MIMOZA_FAVICON)
+
+    return geojson_files, c_id2geojson_names, c_id2out_c_id, m_id, directory, groups_sbml
 

@@ -1,4 +1,5 @@
 import os
+import libsbml
 
 from sbml_vis.graph.graph_properties import ALL_COMPARTMENTS
 from sbml_vis.html import markup
@@ -134,8 +135,7 @@ def add_embedding_dialog(page, url):
 
 
 def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
-                scripts, css,
-                fav, map_id, c_id2out_c_id):
+                scripts, css, fav, map_id, c_id2out_c_id):
     page = markup.page()
     if not scripts:
         scripts = []
@@ -200,6 +200,61 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
         f.write(str(page))
     with open('%s/index.html' % directory, 'w+') as f:
         f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
+
+
+def create_multi_html(model_data, title, statistics, directory, scripts, css, fav):
+    page = markup.page()
+    if not scripts:
+        scripts = []
+    if not css:
+        css = []
+    page.init(title=title, css=css, script=scripts, fav=fav)
+    page.h1(title)
+    page.div(class_='tabs_holder')
+    page.ul()
+    page.li(class_="tab_selected")
+    page.a('Statistics', href='#tab-stat')
+    page.li.close()
+    for (header, _, _, _, _, map_id) in model_data:
+        page.li()
+        page.a(header, href='#tab-%s' % map_id)
+        page.li.close()
+    page.ul.close()
+
+    page.div(class_="content_holder")
+
+    page.div(id="tab-stat", class_="centre")
+    page.p(statistics)
+    page.div.close()
+
+    for m_data in model_data:
+        (title, sbml, json_files, c_id2json_vars, c_id2out_c_id, map_id) = m_data
+        doc = libsbml.SBMLReader().readSBML(sbml)
+        model = doc.getModel()
+        c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments() if c.getId() in c_id2json_vars}
+        if ALL_COMPARTMENTS in c_id2json_vars:
+            c_id2name[ALL_COMPARTMENTS] = "All compartment view"
+
+        page.div(id="tab-%s" % map_id, class_="centre")
+        add_compartment_menu(page, c_id2name)
+        add_search(page)
+        add_map(page, map_id)
+        add_explanations(page)
+        page.div.close()
+
+        add_js(page, json_files, c_id2json_vars, map_id, c_id2name, c_id2out_c_id)
+
+    page.div.close()  # content_holder
+    page.div.close()  # tabs_holder
+    page.script('''
+        $('.tabs_holder').skinableTabs({
+        effect: 'basic_display',
+        skin: 'skin11',
+        position: 'top'
+    });''', type="text/javascript")
+
+    with open('%s/index.html' % directory, 'w+') as f:
+        f.write(str(page))
 
 
 def create_embedded_html(model, directory, json_files, json_vars, scripts, css, fav, map_id):

@@ -245,7 +245,7 @@ def add_label(label, layout, glyph, _id, w, h, x, y):
 
 def create_layout(n2lo, layout_model, layout_plugin, ub_sps, model):
     h_min, (x_shift, y_shift), (w, h) = get_layout_characteristics(n2lo)
-    scale_factor = MARGIN * 1.0 / h_min if h_min else 1
+    scale_factor = MARGIN * 1.0 / (h_min if h_min else 1)
     (w, h) = scale((w, h), scale_factor)
     (x_shift, y_shift) = shift(scale((x_shift, y_shift), scale_factor), MARGIN, MARGIN)
 
@@ -518,22 +518,20 @@ def parse_layout_sbml(layout_sbml):
                     s_glyph_id = s_glyph_id[suffix_start + len(prefix):]
                     if s_glyph_id and s_glyph_id[0] == '_':
                         r_id = s_glyph_id[1:]
-                (x, y), _ = get_layout(s_glyph)
-
-                if r_id and model.getReaction(r_id):
-                    if s_id not in n2xy:
-                        n2xy[s_id] = {}
-                    n2xy[s_id][r_id] = (x, y)
+                lo = get_layout(s_glyph)
+                if r_id:
+                    if model.getReaction(r_id):
+                        if s_id not in n2xy:
+                            n2xy[s_id] = {}
+                        n2xy[s_id][r_id] = lo
                 else:
-                    n2xy[s_id] = (x, y)
+                    n2xy[s_id] = lo
             for r_glyph in layout.getListOfReactionGlyphs():
                 r_id = r_glyph.getReactionId()
-                (x, y), _ = get_layout(r_glyph)
-                n2xy[r_id] = (x, y)
+                n2xy[r_id] = get_layout(r_glyph)
             for c_glyph in layout.getListOfCompartmentGlyphs():
                 c_id = c_glyph.getCompartmentId()
-                (x, y), _ = get_layout(c_glyph)
-                n2xy[c_id] = (x, y)
+                n2xy[c_id] = get_layout(c_glyph)
     else:
         raise LoPlError()
     return n2xy
