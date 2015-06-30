@@ -12,8 +12,8 @@ function adjustMapSize(mapId) {
     "use strict";
     var VIEWPORT_MARGIN = 50,
         MIN_DIMENTION_SIZE = 256,
-        width = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).width() - VIEWPORT_MARGIN) * 0.8)),
-        height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() - VIEWPORT_MARGIN) * 0.7));
+        width = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).width() - 4 * VIEWPORT_MARGIN))),
+        height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() - 4 * VIEWPORT_MARGIN)));
     return adjustMapDivSize(mapId, width, height);
 }
 
@@ -128,12 +128,9 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         if (cId in cId2outside) {
             outCId = cId2outside[cId];
         }
-        var $c_menu = $("#menu_" + cId);
-        console.log($c_menu);
+        var $c_menu = $(".menu_" + cId);
         $c_menu.css("font-weight","Bold");
         $c_menu.click(function () {return false;});
-
-$('.my-link').unbind('click');
     }
     if (inZoom != null && !compIds.hasOwnProperty(inZoom)) {
         inZoom = null;
@@ -219,10 +216,15 @@ $('.my-link').unbind('click');
     }
 
     updateMapBounds(coords, commonCoords, map);
-    if (commonCoords[2] != undefined) {
-    map.setView(commonCoords[2], curZoom);
+    if (commonCoords[0] != undefined && commonCoords[1] != undefined) {
+        if (commonCoords[2] != undefined) {
+            map.setView(commonCoords[2], curZoom);
+        } else {
+            var c = new L.LatLngBounds(commonCoords[0], commonCoords[1]).getCenter();
+            map.setView(c, curZoom);
+        }
     } else {
-    map.setView([0, 0], curZoom);
+        map.setView([0, 0], curZoom);
     }
 
     var $map_div = $("#" + mapId);
@@ -257,7 +259,7 @@ $('.my-link').unbind('click');
         control = L.control.layers(baseLayers, overlays);
     control.addTo(map);
 
-    initializeAutocomplete(name2popup, name2zoom, map);
+    initializeAutocomplete(name2popup, name2zoom, map, mapId);
 
     map.on('zoomend', function (e) {
         if (outCId != null && map.getZoom() == map.getMinZoom()) {
@@ -285,18 +287,18 @@ $('.my-link').unbind('click');
                 control.addTo(map);
             }
             maxLoadedZoom = maxSpecificZoom;
-            initializeAutocomplete(name2popup, name2zoom, map);
+            initializeAutocomplete(name2popup, name2zoom, map, mapId);
         }
     });
     return map;
 }
 
 
-function initializeAutocomplete(name2popup, name2zoom, map) {
+function initializeAutocomplete(name2popup, name2zoom, map, mapId) {
     "use strict";
-    var searchForm = document.getElementById('search_form');
+    var searchForm = document.getElementById('search_form_' + mapId);
     if (searchForm !== null) {
-        var $tags = $("#tags");
+        var $tags = $("#tags_" + mapId);
         $tags.autocomplete({
             source: Object.keys(name2popup),
             autoFocus: true
@@ -304,12 +306,12 @@ function initializeAutocomplete(name2popup, name2zoom, map) {
         $tags.keypress(function (e) {
             var code = e.keyCode || e.which;
             if (code === $.ui.keyCode.ENTER) {
-                search(map, name2popup, name2zoom);
+                search(map, name2popup, name2zoom, mapId);
                 e.preventDefault();
             }
         });
         searchForm.onclick = function () {
-            search(map, name2popup, name2zoom);
+            search(map, name2popup, name2zoom, mapId);
         };
     }
 }

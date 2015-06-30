@@ -18,7 +18,7 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     if not map_id:
         map_id = m_dir_id
 
-    geojson_files, c_id2geojson_names = [], defaultdict(list)
+    c_id2geojson_files, c_id2geojson_names = defaultdict(list), defaultdict(list)
     for c_id, level2features in c_id2level2features.iteritems():
         for level in [0, 1, 2]:
             features = level2features[level] if level in level2features else geojson.FeatureCollection([],
@@ -28,7 +28,7 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
             json_url = '%s.json' % json_name
             with open(json_file, 'w+') as f:
                 f.write("var %s = %s" % (json_name, geojson.dumps(features).replace('"id": null', '')))
-            geojson_files.append(json_url)
+            c_id2geojson_files[c_id].append(json_url)
             c_id2geojson_names[c_id].append(json_name)
 
     logging.info('create html')
@@ -38,6 +38,7 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     redirect_url = 'comp.html'
     archive_url = "%s.zip" % m_dir_id
 
+    geojson_files = reduce(lambda l1, l2: l1 + l2, c_id2geojson_files.itervalues(), [])
     create_html(input_model, directory, embed_url, redirect_url, geojson_files, c_id2geojson_names, groups_sbml_url,
                 archive_url, scripts,
                 css, fav, map_id, c_id2out_c_id)
@@ -51,4 +52,4 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     if os.path.exists(temp_copy):
         archive(temp_copy, archive_path)
         shutil.rmtree(temp_copy)
-    return geojson_files, c_id2geojson_names
+    return c_id2geojson_files, c_id2geojson_names

@@ -94,26 +94,26 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
     except LoPlError:
         n2xy = None
     fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, n2xy)
-    groups_document = reader.readSBML(groups_sbml)
-    groups_model = groups_document.getModel()
-    if gen_sbml:
-        gen_document = reader.readSBML(gen_sbml)
-        gen_model = gen_document.getModel()
-    else:
-        gen_model = False
-    save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, ub_sps)
+    if n2lo:
+        groups_document = reader.readSBML(groups_sbml)
+        groups_model = groups_document.getModel()
+        if gen_sbml:
+            gen_document = reader.readSBML(gen_sbml)
+            gen_model = gen_document.getModel()
+        else:
+            gen_model = False
+        save_as_layout_sbml(groups_model, gen_model, groups_sbml, gen_sbml, n2lo, ub_sps)
+        groups_sbgn = os.path.join(directory, '%s.sbgn' % model_id)
+        gen_sbgn = os.path.join(directory, '%s_generalized.sbgn' % model_id)
+        save_as_sbgn(n2lo, e2lo, groups_model, groups_sbgn)
+        logging.info('   exported as SBGN %s' % groups_sbgn)
+        if gen_model:
+            save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
 
-    groups_sbgn = os.path.join(directory, '%s.sbgn' % model_id)
-    gen_sbgn = os.path.join(directory, '%s_generalized.sbgn' % model_id)
-    save_as_sbgn(n2lo, e2lo, groups_model, groups_sbgn)
-    logging.info('   exported as SBGN %s' % groups_sbgn)
-    if gen_model:
-        save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
-
-    geojson_files, c_id2geojson_names = serialize(directory=directory, m_dir_id=m_id, input_model=input_model,
+    c_id2geojson_files, c_id2geojson_names = serialize(directory=directory, m_dir_id=m_id, input_model=input_model,
                                                   c_id2level2features=fc, c_id2out_c_id=c_id2out_c_id,
                                                   groups_sbml=groups_sbml, main_url=MIMOZA_URL, scripts=JS_SCRIPTS,
                                                   css=CSS_SCRIPTS, fav=MIMOZA_FAVICON)
 
-    return geojson_files, c_id2geojson_names, c_id2out_c_id, m_id, directory, groups_sbml
+    return c_id2geojson_files, c_id2geojson_names, c_id2out_c_id, m_id, directory, groups_sbml
 

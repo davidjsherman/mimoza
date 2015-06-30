@@ -252,7 +252,7 @@ def get_formula(graph, r, r2rs_ps, reversible):
         for [r, st] in rs:
             res += '<tr><td class="main">%s&nbsp;</td><td>%s</td></tr>' % (st, r)
     res += '</table></td>'
-    res += '<th class="centre" width="10%%">%s</th>' % "&#8596;" if reversible else "&#65515;"
+    res += '<th class="centre" width="10%%">%s</th>' % ("&#8596;" if reversible else "&#8594;")
     res += '<td  width="45%"><table border="0">'
     if ps:
         for [p, st] in ps:

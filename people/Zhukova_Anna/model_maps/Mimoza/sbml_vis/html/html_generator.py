@@ -17,12 +17,13 @@ def add_header(model_id, model_name, page):
 
 
 def add_compartment_menu(page, c_id2name):
-    page.ul(class_='menu margin centre')
-    for c_id, c_name in sorted(c_id2name.iteritems(), key=lambda (_, c_name): c_name):
-        page.li()
-        page.a(c_name, href='?id=%s' % c_id, id='menu_%s' % c_id)
-        page.li.close()
-    page.ul.close()
+    if len(c_id2name) > 1:
+        page.ul(class_='menu margin centre')
+        for c_id, c_name in sorted(c_id2name.iteritems(), key=lambda (_, c_name): c_name):
+            page.li()
+            page.a(c_name, href='?id=%s' % c_id, class_='menu_%s' % c_id)
+            page.li.close()
+        page.ul.close()
 
 
 def add_download_link(groups_sbml, archive_url, page):
@@ -33,7 +34,7 @@ def add_download_link(groups_sbml, archive_url, page):
     page.p('Embed the <a onclick="overlay()" href="#">Mimoza view</a> into your page')
 
 
-def add_search(page):
+def add_search(page, m_id):
     """ <div>
             <form name="search_form" onclick="search(map, name2popup);">
                 <label><input id="tags" type="text" name="search_input"></label>
@@ -41,9 +42,9 @@ def add_search(page):
             </form>
         </div> """
     page.div(class_='margin', id='search')
-    page.form(name="search_form", id="search_form")
+    page.form(name="search_form", id="search_form_%s" % m_id)
     page.label('  ')
-    page.input(id="tags", type="text", name="search_input")
+    page.input(id="tags_%s" % m_id, type="text", name="search_input")
     page.label.close()
     page.input(type="button", value="Search")
     page.form.close()
@@ -101,9 +102,12 @@ def add_js(page, json_files, c_id2json_vars, map_id, comps, c_id2out_c_id):
            map_id, comps,
            ", ".join(("'%s': '%s'" % (c_id, out_c_id) for (c_id, out_c_id) in c_id2out_c_id.iteritems()))),
                 type="text/javascript")
-    page.script('''$(function() {$( "#%s" ).resizable();});''' % map_id)
-    page.script('''$(function() {$( "#content_holder" ).resizable();});''')
-    page.script('''$(function() {$( "#tabs_holder" ).resizable();});''')
+    add_resizable_js(page, ["#%s" % map_id])
+
+
+def add_resizable_js(page, ids):
+    for it in ids:
+        page.script('''$(function() {$("%s").resizable();});''' % it)
 
 
 def add_embed_button(page):
@@ -175,7 +179,7 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
 
     page.div(id="tab-viz", class_="centre")
     add_compartment_menu(page, c_id2name)
-    add_search(page)
+    add_search(page, map_id)
     add_map(page, map_id)
     add_explanations(page)
     page.div.close()  # tab-viz
@@ -196,13 +200,15 @@ def create_html(model, directory, embed_url, redirect_url, json_files, c_id2json
         position: 'top'
     });''', type="text/javascript")
 
+    add_resizable_js(page, ['.tabs_holder', '#tab_viz'])
+
     with open('%s/comp.html' % directory, 'w+') as f:
         f.write(str(page))
     with open('%s/index.html' % directory, 'w+') as f:
         f.write(generate_redirecting_html(redirect_url, css[0] if css else '', fav))
 
 
-def create_multi_html(model_data, title, statistics, directory, scripts, css, fav):
+def create_multi_html(model_data, title, description, directory, scripts, css, fav):
     page = markup.page()
     if not scripts:
         scripts = []
@@ -210,25 +216,24 @@ def create_multi_html(model_data, title, statistics, directory, scripts, css, fa
         css = []
     page.init(title=title, css=css, script=scripts, fav=fav)
     page.h1(title)
+    page.p(description, class_='center')
     page.div(class_='tabs_holder')
     page.ul()
-    page.li(class_="tab_selected")
-    page.a('Statistics', href='#tab-stat')
-    page.li.close()
-    for (header, _, _, _, _, map_id) in model_data:
-        page.li()
+    selected = False
+    for (header, _, _, _, _, map_id, _) in model_data:
+        if selected:
+            page.li()
+        else:
+            page.li(class_="tab_selected")
+            selected = True
         page.a(header, href='#tab-%s' % map_id)
         page.li.close()
     page.ul.close()
 
     page.div(class_="content_holder")
 
-    page.div(id="tab-stat", class_="centre")
-    page.p(statistics)
-    page.div.close()
-
     for m_data in model_data:
-        (title, sbml, json_files, c_id2json_vars, c_id2out_c_id, map_id) = m_data
+        (title, sbml, json_files, c_id2json_vars, c_id2out_c_id, map_id, description) = m_data
         doc = libsbml.SBMLReader().readSBML(sbml)
         model = doc.getModel()
         c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments() if c.getId() in c_id2json_vars}
@@ -236,28 +241,31 @@ def create_multi_html(model_data, title, statistics, directory, scripts, css, fa
             c_id2name[ALL_COMPARTMENTS] = "All compartment view"
 
         page.div(id="tab-%s" % map_id, class_="centre")
+        page.div(description)
         add_compartment_menu(page, c_id2name)
-        add_search(page)
+        add_search(page, map_id)
         add_map(page, map_id)
         add_explanations(page)
         page.div.close()
-
         add_js(page, json_files, c_id2json_vars, map_id, c_id2name, c_id2out_c_id)
+        add_resizable_js(page, ['#tab-%s' % map_id])
 
     page.div.close()  # content_holder
     page.div.close()  # tabs_holder
     page.script('''
         $('.tabs_holder').skinableTabs({
-        effect: 'basic_display',
-        skin: 'skin11',
-        position: 'top'
-    });''', type="text/javascript")
+            effect: 'basic_display',
+            skin: 'skin11',
+            position: 'top'
+        });
+    ''', type="text/javascript")
+    add_resizable_js(page, ['.tabs_holder'])
 
     with open('%s/index.html' % directory, 'w+') as f:
         f.write(str(page))
 
 
-def create_embedded_html(model, directory, json_files, json_vars, scripts, css, fav, map_id):
+def create_embedded_html(model, directory, json_files, c_id2json_vars, scripts, css, fav, map_id):
     page = markup.page()
     if not scripts:
         scripts = []
@@ -270,8 +278,10 @@ def create_embedded_html(model, directory, json_files, json_vars, scripts, css, 
 
     add_map(page, map_id)
 
-    add_js(page, json_files, json_vars, map_id, {c.getId(): c.getName() for c in model.getListOfCompartments()},
-        {})
+    c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments() if c.getId() in c_id2json_vars}
+    if ALL_COMPARTMENTS in c_id2json_vars:
+        c_id2name[ALL_COMPARTMENTS] = "All compartment view"
+    add_js(page, json_files, c_id2json_vars, map_id, c_id2name, {})
 
     with open('%s/comp_min.html' % directory, 'w+') as f:
         f.write(str(page))

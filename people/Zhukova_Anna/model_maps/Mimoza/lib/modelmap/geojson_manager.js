@@ -56,7 +56,7 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             weight: BG_COMPARTMENT != feature.properties.type ? (is_bg ? 0: Math.min(1, w / 10 * scaleFactor)): 4,
             fill: true,
             clickable: !is_bg,
-            zIndexOffset: is_bg ? 0 : 6,
+            zIndexOffset: is_bg ? 6 : 0,
             riseOnHover: !is_bg
         },
         h = (BG_COMPARTMENT == feature.properties.type || COMPARTMENT == feature.properties.type) ?
@@ -65,10 +65,12 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         centre = map.unproject([x, y], 1),
         ne = bounds.getNorthEast(),
         sw = bounds.getSouthWest(),
-        r = w * 40075000 * Math.cos(centre.lat * (Math.PI / 180)) / Math.pow(2, minZoom + 8);
-    if (BG_COMPARTMENT == feature.properties.type && cId == feature.properties.c_id
-        || COMPARTMENT == feature.properties.type && cId == feature.properties.id) {
-        coords[2] = centre;
+        r = 2 * w * 40075000 * Math.cos(centre.lat * (Math.PI / 180)) / Math.pow(2, minZoom + 8);
+    if (BG_COMPARTMENT == feature.properties.type || COMPARTMENT == feature.properties.type) {
+        if (coords[2] == null || (BG_COMPARTMENT == feature.properties.type && cId == feature.properties.c_id
+            || COMPARTMENT == feature.properties.type && cId == feature.properties.id)) {
+            coords[2] = centre;
+        }
     }
     if (BG_REACTION == feature.properties.type) {
         return L.rectangle(bounds, props);

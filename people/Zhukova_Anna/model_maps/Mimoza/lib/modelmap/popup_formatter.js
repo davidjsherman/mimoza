@@ -75,9 +75,9 @@ function highlightCircle(centre, r) {
     });
 }
 
-function search(map, name2popup, name2zoom) {
+function search(map, name2popup, name2zoom, mapId) {
     "use strict";
-    var srch = document.search_form.search_input.value;
+    var srch = $("#tags_" + mapId).val();
     if (srch && name2popup.hasOwnProperty(srch)) {
         var zoom = map.getZoom(),
             zooms = name2zoom[srch];

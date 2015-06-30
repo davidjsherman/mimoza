@@ -293,9 +293,9 @@ def layout_ub_sps(graph, r_ns=None, c_id=None):
 
     for r in r_ns:
         x1, y1 = view_layout[r].getX(), view_layout[r].getY()
-        for (get_reactants, get_reaction_edges, get_products, direction) in [
-            (graph.getInNodes, graph.getOutEdges, graph.getOutNodes, 1),
-            (graph.getOutNodes, graph.getInEdges, graph.getInNodes, -1)]:
+        for (get_reactants, get_reaction_edges, get_products, direction) \
+                in [(graph.getInNodes, graph.getOutEdges, graph.getOutNodes, 1),
+                    (graph.getOutNodes, graph.getInEdges, graph.getInNodes, -1)]:
 
             ubiquitous_reactants = [n for n in get_reactants(r) if ub_or_single(n, graph)
                                     and (not c_id or root[COMPARTMENT_ID][n] == c_id)]
@@ -308,12 +308,9 @@ def layout_ub_sps(graph, r_ns=None, c_id=None):
             specific_reactants = [n for n in get_reactants(r) if not ub_or_single(n, graph)]
             r_radius = get_reaction_r(r, root)
             size = sum(root[VIEW_SIZE][ub].getW() for ub in ubiquitous_reactants) / len(ubiquitous_reactants)
-            edge_len = size * max(ub_reactants_len / 2, 3)
             if specific_reactants:
                 specific_reactant_example = specific_reactants[0]
                 x2, y2 = view_layout[specific_reactant_example].getX(), view_layout[specific_reactant_example].getY()
-                species_size = view_size[specific_reactant_example].getW() / 2
-                edge_len = (sqrt(pow(x1 - x2, 2) + pow(y2 - y1, 2)) - r_radius - species_size)
             else:
                 specific_products = [n for n in get_products(r) if not ub_or_single(n, graph)]
                 if specific_products:
@@ -324,44 +321,28 @@ def layout_ub_sps(graph, r_ns=None, c_id=None):
                     x2, y2 = x1 + view_size[r].getW() + size * ub_reactants_len * direction, y1
 
             # beta is the max angle between the ubiquitous and the specific edges
-            gap = 2 * min(100, max(60, ub_reactants_len * 20))
-            beta0 = radians(gap / 2)
-            beta = beta0
+            gap = 2 * min(60, max(22.5, ub_reactants_len * 20))
+            beta = radians(gap / 2)
             d_beta = radians(gap / (ub_reactants_len - 1))
 
-            # distance from reaction to the edge bent
-            bent = min(size / 2, edge_len / 2)
-            s0 = r_radius + bent
-            s = s0
-            ds = min(2 * (edge_len - bent - size / 2) / ub_reactants_len, size)
-            # s += ds * ub_reactants_len / 2
-
-            # angle between the horizontal line and the reaction-specific-species edge
+            # alpha is the angle between the horizontal line and the reaction-specific-species edge
             alpha = atan2(y2 - y1, x2 - x1)
 
-            dc = 0
-            towards_edge = -1
+            # length of an ubiquitous edge
+            ub_edge_r = size * 1.5 + r_radius
+            d_ub_edge_r = size
+
             for ub in ubiquitous_reactants:
-                # it is the only edge as ubiquitous species are duplicated
-                e = get_reaction_edges(ub).next()
-                x0, y0 = x1 + s * cos(alpha), y1 + s * sin(alpha)
-                view_layout[e] = [tlp.Coord(x0, y0)]
-
-                gamma = alpha + beta
-                # edge-after-bent length
-                c = min(edge_len - s0 + dc + r_radius - size, 2 * size)
-
-                x3, y3 = x0 + c * cos(gamma), y0 + c * sin(gamma)
+                # point (ub_edge_r, 0)
+                # rotate alpha - beta
+                # move x1, y1
+                x3, y3 = x1 + ub_edge_r * cos(alpha - beta), y1 + ub_edge_r * sin(alpha - beta)
                 view_layout[ub] = tlp.Coord(x3, y3)
-                if degrees(beta) * degrees(beta + towards_edge * d_beta) < 0:
-                    beta = -beta0
-                    towards_edge = 1
-                    s = s0
-                    dc = 0
-                else:
-                    beta += towards_edge * d_beta
-                    s += ds / 3
-                    dc += ds
+                if beta < 0 or (beta - d_beta > 0):
+                    ub_edge_r += (d_ub_edge_r if beta > 0 else -d_ub_edge_r)
+                beta -= d_beta
+                if beta == 0:
+                    beta -= d_beta
 
 
 def layout(graph):

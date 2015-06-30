@@ -137,6 +137,17 @@ p.popup table {
     margin:0;
     padding:0;
 }
+
+.tabs_holder {
+    margin: 0;
+    padding: 0;
+}
+
+.tabs_content {
+    margin: 0;
+    padding: 0;
+}
+
 p.popup table td.main {
     max-width: 45%;
     overflow: hidden;
@@ -168,7 +179,7 @@ div.map {
     width: inherit;
     height: inherit;
     border: 1px solid #ac3131;
-    margin: 5px;
+    margin: 0;
 }
 span.pant {
     /*text-color: #ac3131;*/

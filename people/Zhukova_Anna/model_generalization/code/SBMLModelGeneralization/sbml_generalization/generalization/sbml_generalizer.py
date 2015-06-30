@@ -34,9 +34,9 @@ def get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids):
         ub_chebi_ids = add_equivalent_ub_chebi_ids(onto, ub_chebi_ids)
     else:
         ub_chebi_ids = add_equivalent_ub_chebi_ids(onto, ub_chebi_ids)
-        if not ub_s_ids:
-            ub_s_ids = {s.getId() for s in input_model.getListOfSpecies() if
-                        s.getId() in s_id2chebi_id and s_id2chebi_id[s.getId()] in ub_chebi_ids}
+    if not ub_s_ids:
+        ub_s_ids = {s.getId() for s in input_model.getListOfSpecies() if
+                    s.getId() in s_id2chebi_id and s_id2chebi_id[s.getId()] in ub_chebi_ids}
     return ub_s_ids, ub_chebi_ids
 
 
