@@ -55,16 +55,17 @@ From the directory where you have extracted it, execute:
   * make
   * sudo make install
 
-*Mimoza* uses `SymPy <http://www.sympy.org/>`_ and `Python bindings for geojson <https://pypi.python.org/pypi/geojson/>`_:
+*Mimoza* uses `SymPy <http://www.sympy.org/>`_, `Python bindings for geojson <https://pypi.python.org/pypi/geojson/>`_
+and `Jinja2 <http://jinja.pocoo.org/>`_:
   * sudo pip install sympy
   * sudo pip install geojson
+  * sudo pip install Jinja2
 
 If you want to have export of your maps in `SBGN PD<http://www.sbgn.org/>`_, install `libSBGN bindings for Python <https://github.com/matthiaskoenig/libsbgn-python>`_:
   * sudo pip install libsbgnpy
 
-*Mimoza* also uses `markup.py <http://markup.sourceforge.net/>`_, `Leaflet <http://leafletjs.com/>`_,
-`ChEBI Ontology <http://www.ebi.ac.uk/chebi/>`_, and `the Gene Ontology <http://geneontology.org/>`_,
-but you do not need to install them.
+*Mimoza* also uses `Leaflet <http://leafletjs.com/>`_, `ChEBI Ontology <http://www.ebi.ac.uk/chebi/>`_,
+and `the Gene Ontology <http://geneontology.org/>`_, but you do not need to install them.
 
 *Mimoza* was developed using `PyCharm <http://www.jetbrains.com/pycharm/>`_.
 

@@ -70,7 +70,7 @@ temp = os.dup(sys.stdout.fileno())
 try:
     url = '/%s/comp.html' % m_dir_id
 
-    if not os.path.exists('../html/%s/comp.html' % m_dir_id):
+    if not os.path.exists(os.path.join('..', 'html', m_dir_id, 'comp.html')):
         chebi = parse(get_chebi())
         reader = libsbml.SBMLReader()
         input_document = reader.readSBML(groups_sbml)
@@ -116,8 +116,7 @@ try:
             except Exception as e:
                 logging.info(e.message)
 
-        serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, groups_sbml, MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS,
-                  MIMOZA_FAVICON)
+        serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, groups_sbml, MIMOZA_URL)
 
 except Exception as e:
     logging.info(e.message)

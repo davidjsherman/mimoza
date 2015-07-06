@@ -112,8 +112,7 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
 
     c_id2geojson_files, c_id2geojson_names = serialize(directory=directory, m_dir_id=m_id, input_model=input_model,
                                                   c_id2level2features=fc, c_id2out_c_id=c_id2out_c_id,
-                                                  groups_sbml=groups_sbml, main_url=MIMOZA_URL, scripts=JS_SCRIPTS,
-                                                  css=CSS_SCRIPTS, fav=MIMOZA_FAVICON)
+                                                  groups_sbml=groups_sbml, main_url=MIMOZA_URL)
 
     return c_id2geojson_files, c_id2geojson_names, c_id2out_c_id, m_id, directory, groups_sbml
 

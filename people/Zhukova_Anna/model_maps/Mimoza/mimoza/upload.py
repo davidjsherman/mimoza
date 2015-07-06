@@ -10,7 +10,7 @@ import sys
 import base64
 import libsbml
 
-from sbml_vis.html.html_generator import create_thanks_for_uploading_html, create_thanks_for_uploading_generalized_html
+from sbml_vis.html.html_t_generator import create_thanks_for_uploading_html, generate_uploaded_generalized_sbml_html
 from sbml_vis.file.md5_checker import check_md5
 from mimoza.mimoza_path import *
 from sbml_generalization.sbml.sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
@@ -56,10 +56,10 @@ def upload_file():
         safe_fn = base64.urlsafe_b64encode(file_name)
         sfn = "%s" % safe_fn
         i = 0
-        while os.path.exists("../uploads/%s" % sfn):
+        while os.path.exists(os.path.join('..', 'uploads', sfn)):
             sfn = '%s_%d' % (safe_fn, i)
             i += 1
-        f_path = '../uploads/%s' % sfn
+        f_path = os.path.join('..', 'uploads', sfn)
         f = open(f_path, 'wb', 10000)
         # Read the file in chunks
         for chunk in file_buffer(file_item.file):
@@ -83,17 +83,17 @@ def process_file(sbml_file):
         model_id = sbml_name
 
     m_id = check_md5(sbml_file)
-    directory = '../html/%s/' % m_id
+    directory = os.path.join('..', 'html', m_id)
     if os.path.exists(directory):
-        if os.path.exists('%sindex.html' % directory):
+        if os.path.exists(os.path.join(directory, 'index.html')):
             return ALREADY_EXISTS, (model_id, m_id)
     else:
         os.makedirs(directory)
-        copytree(LIB, '%s/lib' % directory)
+        copytree(LIB, os.path.join(directory, 'lib'))
 
     log_file = None
     try:
-        log_file = '%s/log.log' % directory
+        log_file = os.path.join(directory, 'log.log')
         with open(log_file, "w+"):
             pass
     except:
@@ -101,14 +101,14 @@ def process_file(sbml_file):
     logging.basicConfig(level=logging.INFO, format='%(message)s', filename=log_file)
 
     if check_for_groups(sbml_file, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS):
-        new_sbml_file = '%s%s_with_groups.xml' % (directory, model_id)
+        new_sbml_file = os.path.join(directory, '%s_with_groups.xml' % model_id)
         if sbml_file != new_sbml_file:
             if not libsbml.writeSBMLToFile(doc, new_sbml_file):
                 return NOT_MODEL, None
             os.remove(sbml_file)
         return ALREADY_GENERALIZED, (model_id, model.getName(), m_id)
 
-    new_sbml_file = '%s%s.xml' % (directory, model_id)
+    new_sbml_file = os.path.join(directory, '%s.xml' % model_id)
     if sbml_file != new_sbml_file:
         if not libsbml.writeSBMLToFile(doc, new_sbml_file):
             return NOT_MODEL, None
@@ -143,16 +143,16 @@ url = MIMOZA_UPLOAD_ERROR_URL
 
 if OK == result:
     (m_id, m_name, m_dir_id) = args
-    create_thanks_for_uploading_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
-                                       MIMOZA_FAVICON, PROGRESS_ICON)
+    create_thanks_for_uploading_html(m_id, m_name, os.path.join('..', 'html'), m_dir_id, MIMOZA_URL, 'comp.html',
+                                     PROGRESS_ICON)
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 elif ALREADY_EXISTS == result:
     model_id, m_dir_id = args
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 elif ALREADY_GENERALIZED == result:
     (m_id, m_name, m_dir_id) = args
-    create_thanks_for_uploading_generalized_html(m_id, m_name, '../html/', m_dir_id, MIMOZA_URL, 'comp.html', MIMOZA_CSS, JS_SCRIPTS,
-                                       MIMOZA_FAVICON, PROGRESS_ICON)
+    create_thanks_for_uploading_html(m_id, m_name, os.path.join('..', 'html'), m_dir_id, MIMOZA_URL, 'comp.html',
+                                     PROGRESS_ICON, generate_uploaded_generalized_sbml_html)
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 
 
