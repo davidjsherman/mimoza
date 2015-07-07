@@ -2,15 +2,16 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 		<title>Mimoza: metabolic model visualization and navigation system.</title>
 		<meta name="description" content="Mimoza: metabolic model visualization and navigation system." />
 		<meta name="keywords" content="metabolic models, visualization, navigation, knowledge-based generalization" />
 		<meta name="author" content="Anna Zhukova" />
 		<link rel="shortcut icon" href="lib/modelmap/fav.ico">
-		<link rel="stylesheet" type="text/css" href="lib/FullWidthTabs/component.min.css" />
-        <link rel="stylesheet" type="text/css" href="lib/FullWidthTabs/demo.min.css" />
+		<link rel="stylesheet" type="text/css" href="lib/FullWidthTabs/component.css" />
+        <link rel="stylesheet" type="text/css" href="lib/FullWidthTabs/demo.css" />
+        <link rel="stylesheet" type="text/css" href="lib/icomoon/style.css" />
 		<!--[if IE]>
   		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
@@ -49,6 +50,8 @@
                                 <form name="input_form" enctype="multipart/form-data" action="/cgi-bin/upload.py" method="POST">
                                     <input type="file" name="file_input" id="model_file"
                                            accept="text/xml, text/sbml, .sbml, .xml" onchange="return checkSBML(this)"/>
+
+                                    <div class="cbp-mc-submit-wrap"><input class="cbp-mc-submit" type="submit" value="Send your data" /></div>
                                     <input class="ui-button" type="submit" value="Submit" onclick="progress()">
                                 </form>
                             </div>
@@ -106,6 +109,8 @@
                                     allowfullscreen></iframe>
                         </div>
                     </section>
+
+
                     <section id="tab-download">
                         <div class="just">
                             <p><a href="Mimoza.zip" download>Mimoza.zip</a> - download the <span class="emph">Mimoza</span> code.
@@ -137,11 +142,10 @@
                     <a href="http://sbml.org/Software/libSBML" target="_blank">libSBML</a>,
                     <a href="https://github.com/matthiaskoenig/libsbgn-python" target="_blank">Python API for libSBGN</a>,
                     <a href="http://www.codrops.com" target="_blank">Codrops</a>,
-                    <a href="https://icomoon.io" target="_blank">IcoMoon</a>,
                     and <a href="http://www.jetbrains.com/pycharm/" target="_blank">PyCharm</a>.
             </p>
 		</div>
-		<script src="lib/FullWidthTabs/cbpFWTabs.min.js"></script>
+		<script src="lib/FullWidthTabs/cbpFWTabs.js"></script>
 		<script>new CBPFWTabs(document.getElementById('tabs'));</script>
 	</body>
 </html>

@@ -20,7 +20,7 @@ def create_html(model, directory, embed_url, json_files, c_id2json_vars, groups_
         ("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems()))
     page = template.render(model=model,
                            notes=model.getNotes().toXMLString().decode('utf-8')
-                           if model.getNotes() and model.getNotes().toXMLString() else '',
+                           if model.getNotes() and model.getNotes().toXMLString().strip() else False,
                            json_files=json_files,
                            c_id2json_vars=c_id2json_vars,
                            groups_sbml_url=groups_sbml_url, archive_url=archive_url, map_id=map_id,
@@ -52,7 +52,7 @@ def create_multi_html(model_data, title, description, directory):
                    json_files,
                    '{%s}' % ", ".join(("'%s':[%s]" % (c_id, ", ".join(json_vars))
                                        for (c_id, json_vars) in c_id2json_vars.iteritems())),
-                   c_id2out_c_id, map_id, descr)
+                   {} if ALL_COMPARTMENTS in c_id2json_vars else c_id2out_c_id, map_id, descr)
                   for (t, sbml, json_files, c_id2json_vars, c_id2out_c_id, map_id, descr) in model_data]
 
     env = Environment(loader=PackageLoader('sbml_vis.html', 'templates'))

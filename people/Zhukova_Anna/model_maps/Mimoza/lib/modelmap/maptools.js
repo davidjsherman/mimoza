@@ -12,8 +12,8 @@ function adjustMapSize(mapId) {
     "use strict";
     var VIEWPORT_MARGIN = 50,
         MIN_DIMENTION_SIZE = 256,
-        width = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).width() - 4 * VIEWPORT_MARGIN))),
-        height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() - 4 * VIEWPORT_MARGIN)));
+        width = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).width() * 0.7))),
+        height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() * 0.6)));
     return adjustMapDivSize(mapId, width, height);
 }
 
@@ -104,6 +104,7 @@ function addAttribution(map) {
 
 function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     "use strict";
+    console.log(mapId);
     var size = adjustMapSize(mapId),
         layers = [],
         minGeneralizedZoom = Math.max(1, Math.round(size / MAP_DIMENSION_SIZE)),
