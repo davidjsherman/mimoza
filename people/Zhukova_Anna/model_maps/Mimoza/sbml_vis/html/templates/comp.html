@@ -43,7 +43,9 @@
             <nav>
                 <ul>
                     <li><a href="#tab-viz" class="icon-happy"><span>Visualization</span></a></li>
-                    <li><a href="#tab-descr" class="icon-quill"><span>Description</span></a></li>
+                    {% if notes %}
+                        <li><a href="#tab-descr" class="icon-quill"><span>Description</span></a></li>
+                    {% endif %}
                     <li><a href="#tab-down" class="icon-floppy-disk"><span>Download/Embed</span></a></li>
                 </ul>
             </nav>
@@ -72,15 +74,13 @@
                     </div>
                 </section>
 
-                <section id="tab-descr">
-                    <div class="just">
-                        {% if notes %}
+                {% if notes %}
+                    <section id="tab-descr">
+                        <div class="just">
                             {{ notes }}
-                        {% else %}
-                            <p>No information about this model was provided in its SBML :(</p>
-                        {% endif %}
-                    </div>
-                </section>
+                        </div>
+                    </section>
+                {% endif %}
 
                 <section style="min-height: 200px;" id="tab-down">
                     <div id="overlay">

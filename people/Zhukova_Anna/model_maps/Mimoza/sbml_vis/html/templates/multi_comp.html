@@ -29,11 +29,7 @@
     <!--[if IE]>
     <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    {% for (_, _, json_files, _, _, _, _) in model_data %}
-        {% for json in json_files %}
-            <script src="{{json}}" type="text/javascript"></script>
-        {% endfor %}
-    {% endfor %}
+    <script>L_PREFER_CANVAS = true;</script>
 </head>
 <body>
     <div class="container">
@@ -43,12 +39,12 @@
                 <!--<a href="http://mimoza.bordeaux.inria.fr" class="icon-home3" data-info="Mimoza home"><span>Home</span></a>-->
             <!--</nav>-->
         </header>
-        <div class="info">{{description}}</div>
+        <div class="indent just">{{description}}</div>
         <div id="tabs" class="tabs">
             <nav>
                 <ul>
                     {% for (header, _, _, _, _, map_id, _) in model_data %}
-                        <li><a href="#tab-{{map_id}}" class="icon-quill"><span>{{header}}</span></a></li>
+                        <li><a href="#tab-{{map_id}}" class="icon-quill" id="a-{{map_id}}"><span>{{header}}</span></a></li>
                     {% endfor %}
                 </ul>
             </nav>
@@ -77,13 +73,16 @@
     </div>
     <script src="lib/FullWidthTabs/cbpFWTabs.min.js"></script>
     <script>new CBPFWTabs(document.getElementById('tabs'));</script>
-    <script>L_PREFER_CANVAS = true;</script>
     {% for (title, c_id2name, json_files, c_id2json_vars, c_id2out_c_id, map_id, description) in model_data %}
+        {% for json in json_files %}
+            <script src="{{json}}" type="text/javascript"></script>
+        {% endfor %}
         <script type="text/javascript">
             initializeMap({{c_id2json_vars}}, "{{map_id}}", {{c_id2name}}, {{c_id2out_c_id}});
+            $(function() {$("#{{map_id}}").resizable();});
         </script>
-        <script>$(function() {$("#{{map_id}}").resizable();});</script>
-        <script>$(function() {$("#tab-{{map_id}}").resizable();});</script>
+
+        <!--<script>$(function() {$("#tab-{{map_id}}").resizable();});</script>-->
     {% endfor %}
 </body>
 </html>

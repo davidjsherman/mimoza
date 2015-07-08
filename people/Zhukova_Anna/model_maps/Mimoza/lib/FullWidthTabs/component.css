@@ -54,13 +54,17 @@
 	content: "\e9df";
 }
 
+span {
+    font-weight: normal;
+}
+
 
 .tabs {
 	position: relative;
 	width: 100%;
 	overflow: hidden;
 	margin: 1em 0 2em;
-	font-weight: 300;
+	font-weight: normal;
 }
 
 /* Nav */

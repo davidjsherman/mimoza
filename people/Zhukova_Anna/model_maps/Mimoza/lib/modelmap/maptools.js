@@ -104,7 +104,6 @@ function addAttribution(map) {
 
 function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     "use strict";
-    console.log(mapId);
     var size = adjustMapSize(mapId),
         layers = [],
         minGeneralizedZoom = Math.max(1, Math.round(size / MAP_DIMENSION_SIZE)),
@@ -158,6 +157,7 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         layers: layers,
         crs: L.CRS.Simple
     });
+
     //addAttribution(map);
     handlePopUpClosing(map);
     var name2popup = {},
@@ -291,6 +291,13 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
             initializeAutocomplete(name2popup, name2zoom, map, mapId);
         }
     });
+
+    $('#a-' + mapId).on('click',function(){
+        window.setTimeout(function () {
+            map.invalidateSize();
+        });
+    });
+
     return map;
 }
 
