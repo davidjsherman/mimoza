@@ -29,7 +29,7 @@
     {% endfor %}
     <script>L_PREFER_CANVAS = true;</script>
     <script type="text/javascript">
-        initializeMap({{c_id2json_vars}}, "{{map_id}}", {{c_id2name}}, {{c_id2out_c_id}});
+        initializeMap({{c_id2json_vars}}, "{{map_id}}", {{c_id2name}}, {{c_id2out_c_id}}, {{layer2mask}});
     </script>
     <script>$(function() {$("#{{map_id}}").resizable();});</script>
 </body>

@@ -6,7 +6,7 @@ import geojson
 from sbml_vis.graph.layout.predefined_layout import apply_node_coordinates
 from sbml_vis.graph.color.color import color, color_edges
 from sbml_vis.graph.cluster.factoring import factor_nodes, comp_to_meta_node, merge_ubs_for_similar_reactions
-from sbml_vis.converter.tlp2geojson import e2feature, n2feature
+from sbml_vis.converter.tlp2geojson import e2feature, n2feature, UBIQUITOUS_MASK, LAYER
 from sbml_vis.graph.graph_properties import ID, COMPARTMENT_ID, \
     TYPE_COMPARTMENT, TYPE, TYPE_REACTION, STOICHIOMETRY, RELATED_COMPARTMENT_IDS, TYPE_SPECIES, ANCESTOR_ID, TRANSPORT, \
     CLONE_ID, WIDTH, HEIGHT, VIEW_LAYOUT, VIEW_SIZE, UBIQUITOUS, ALL_COMPARTMENTS
@@ -17,7 +17,7 @@ from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_
 
 DIMENSION = 512
 MAX_FEATURE_NUMBER = 5000
-MAX_TOTAL_FEATURE_NUMBER = 10000
+MAX_TOTAL_FEATURE_NUMBER = 8000
 
 __author__ = 'anna'
 
@@ -361,7 +361,7 @@ def filter_features(c_id2level2features):
         f_num = (len(l2fs[0]) if 0 in l2fs else 0) + (len(l2fs[2]) if 2 in l2fs else 0)
         if f_num > MAX_FEATURE_NUMBER:
             for l in levels:
-                l2fs[l] = [f for f in l2fs[l] if (UBIQUITOUS not in f.properties) or not f.properties[UBIQUITOUS]]
+                l2fs[l] = [f for f in l2fs[l] if 0 == (UBIQUITOUS_MASK & f.properties[LAYER])]
                 total_f_number += len(l2fs)
         if total_f_number > MAX_TOTAL_FEATURE_NUMBER:
             logging.info("deleting compartment %s view, as it's too big" % c_id)

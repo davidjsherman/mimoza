@@ -15,7 +15,10 @@ var MARGIN = 156,
     TRANSPORT = "transport to outside",
     INNER_TRANSPORT = "inside transport",
     MIN_LABEL_SIZE = 10,
-    MAX_LABEL_SIZE = 16;
+    MAX_LABEL_SIZE = 16,
+    TRANSPORT_MASK = 1,
+    INNER_TRANSPORT_MASK = 1 + (1 << 1),
+    UBIQUITOUS_MASK = 1 << 2;
 
 function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, minZoom, cId,
                    popupW, popupH, name2popup, name2zoom, name2selection) {
@@ -218,15 +221,14 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
 function matchesCompartment(cId, feature) {
     "use strict";
     if (TRANSPORT === cId) {
-        return typeof feature.properties.tr !== 'undefined' && feature.properties.tr
-            && (typeof feature.properties.inner === 'undefined' || !feature.properties.inner);
+        return (0 != (feature.properties.layer & TRANSPORT_MASK))
+            && (0 == (feature.properties.layer & INNER_TRANSPORT_MASK));
     }
     if (INNER_TRANSPORT === cId) {
-        return typeof feature.properties.tr !== 'undefined' && feature.properties.tr
-            && (typeof feature.properties.inner !== 'undefined' && feature.properties.inner);
+        return (0 != (feature.properties.layer & INNER_TRANSPORT_MASK));
     }
-    return (typeof feature.properties.tr === 'undefined' || !feature.properties.tr)
-            && (typeof feature.properties.inner === 'undefined' || !feature.properties.inner);//cId === feature.properties.c_id || cId === feature.properties.id;
+    return (0 == (feature.properties.layer & TRANSPORT_MASK))
+            && (0 == (feature.properties.layer & INNER_TRANSPORT_MASK));//cId === feature.properties.c_id || cId === feature.properties.id;
 }
 
 function getFilteredJson(map, compLayer, ubLayer, jsn, name2popup, name2zoom, fromZoom, toZoom, mapId, coords, minZoom,
@@ -250,50 +252,99 @@ function getFilteredJson(map, compLayer, ubLayer, jsn, name2popup, name2zoom, fr
     });
 }
 
-function loadGeoJson(map, json, fromZoom, toZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minZoom, inZoom) {
+function loadGeoJson(map, json, fromZoom, toZoom, ubLayer, compLayer, superLayer, mapId, cId, name2popup, name2zoom, coords,
+                     minZoom, inZoom, mask) {
     "use strict";
     var specificJson = getFilteredJson(map, compLayer, ubLayer, json, name2popup, name2zoom, fromZoom, toZoom, mapId,
             coords, minZoom, inZoom == null ? cId: inZoom,
             function (feature) {
-                return (typeof feature.properties.ub === 'undefined' || !feature.properties.ub) && matchesCompartment(cId, feature);
+                return (0 != (feature.properties.layer & mask)) &&
+                    (0 == (feature.properties.layer & UBIQUITOUS_MASK))
+                    && matchesCompartment(cId, feature);
             }
         ),
         ubiquitousJson = getFilteredJson(map, compLayer, ubLayer, json, name2popup, name2zoom, fromZoom, toZoom, mapId,
             coords, minZoom, inZoom == null ? cId: inZoom,
             function (feature) {
-                return (typeof feature.properties.ub !== 'undefined' && feature.properties.ub)
+                return (0 != (feature.properties.layer & mask)) &&
+                    (0 != (feature.properties.layer & UBIQUITOUS_MASK))
                     && matchesCompartment(cId, feature);
             }
         );
     if (typeof map.getZoom() === 'undefined' && fromZoom <= minZoom && minZoom <= toZoom
         || fromZoom <= map.getZoom() && map.getZoom() <= toZoom) {
-        compLayer.addLayer(specificJson);
-        if (map.hasLayer(ubLayer)) {
-            compLayer.addLayer(ubiquitousJson);
+        if (superLayer != null) {
+            if (map.hasLayer(compLayer)) {
+                superLayer.addLayer(specificJson);
+                if (map.hasLayer(ubLayer)) {
+                    superLayer.addLayer(ubiquitousJson);
+                }
+            }
+        } else {
+            compLayer.addLayer(specificJson);
+            if (map.hasLayer(ubLayer)) {
+                compLayer.addLayer(ubiquitousJson);
+            }
         }
     }
     if (fromZoom > minZoom || toZoom < map.getMaxZoom()) {
         map.on('zoomend', function (e) {
             // if we are about to zoom in/out to this geojson
             if (fromZoom <= map.getZoom() && map.getZoom() <= toZoom) {
-                compLayer.addLayer(specificJson);
-                if (map.hasLayer(ubLayer)) {
-                    compLayer.addLayer(ubiquitousJson);
+                if (superLayer != null) {
+                    if (map.hasLayer(compLayer)) {
+                        superLayer.addLayer(specificJson);
+                        if (map.hasLayer(ubLayer)) {
+                            superLayer.addLayer(ubiquitousJson);
+                        }
+                    }
+                } else {
+                    compLayer.addLayer(specificJson);
+                    if (map.hasLayer(ubLayer)) {
+                        compLayer.addLayer(ubiquitousJson);
+                    }
                 }
             } else {
-                compLayer.removeLayer(specificJson);
-                compLayer.removeLayer(ubiquitousJson);
+                if (superLayer != null) {
+                    superLayer.removeLayer(specificJson);
+                    superLayer.removeLayer(ubiquitousJson);
+                } else {
+                    compLayer.removeLayer(specificJson);
+                    compLayer.removeLayer(ubiquitousJson);
+                }
             }
         });
     }
     map.on('overlayadd', function(e) {
-        if (e.layer === ubLayer && (fromZoom <= map.getZoom() && map.getZoom() <= toZoom)) {
-            compLayer.addLayer(ubiquitousJson);
+        if (fromZoom <= map.getZoom() && map.getZoom() <= toZoom) {
+            if (e.layer === ubLayer) {
+                if (superLayer != null) {
+                    if (map.hasLayer(compLayer)) {
+                        superLayer.addLayer(ubiquitousJson);
+                    }
+                } else {
+                    compLayer.addLayer(ubiquitousJson);
+                }
+            } else if (superLayer != null && e.layer === compLayer) {
+                superLayer.addLayer(specificJson);
+                if (map.hasLayer(ubLayer)) {
+                    superLayer.addLayer(ubiquitousJson);
+                }
+            }
         }
     });
     map.on('overlayremove', function(e) {
-        if (e.layer === ubLayer && (fromZoom <= map.getZoom() && map.getZoom() <= toZoom)) {
-            compLayer.removeLayer(ubiquitousJson);
+        if (fromZoom <= map.getZoom() && map.getZoom() <= toZoom) {
+            if (e.layer === ubLayer) {
+                if (superLayer != null) {
+                    superLayer.removeLayer(ubiquitousJson);
+                } else {
+                    compLayer.removeLayer(ubiquitousJson);
+                }
+            } else if (superLayer != null && e.layer === compLayer) {
+                superLayer.removeLayer(specificJson);
+                superLayer.removeLayer(ubiquitousJson);
+            }
         }
     });
     return [specificJson.getLayers().length > 0, ubiquitousJson.getLayers().length > 0];

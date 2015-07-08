@@ -1,13 +1,16 @@
-from math import degrees, radians, cos, sin
-
+from math import degrees, cos, sin
 from sympy import to_cnf, atan2
 from sympy.logic.boolalg import disjuncts, conjuncts
-import geojson
 import math
+
+import geojson
 
 from sbml_vis.graph.color.colorer import get_edge_color, get_reaction_color, get_compartment_color, get_species_color, \
     get_bg_color
-from sbml_vis.graph.graph_properties import *
+from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE_COMPARTMENT, TYPE_REACTION, VIEW_SIZE, VIEW_LAYOUT, TYPE, \
+    VIEW_META_GRAPH, UBIQUITOUS, VIEW_COLOR, TYPE_EDGE, STOICHIOMETRY, WIDTH, COLOR, COMPARTMENT_ID, REVERSIBLE, TERM, \
+    FORMULA, HEIGHT, T, COMPARTMENT_NAME, TYPE_2_BG_TYPE, ID, TRANSPORT, TYPE_BG_REACTION, TYPE_BG_COMPARTMENT, NAME, \
+    ANCESTOR_NAME
 from sbml_vis.graph.resize import get_e_size
 
 __author__ = 'anna'
@@ -16,6 +19,14 @@ _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
 LOWERCASE, UPPERCASE = 'x', 'X'
 
+LAYER = 'layer'
+TRANSPORT_MASK = 1
+INNER_TRANSPORT_MASK = 1 + (1 << 1)
+UBIQUITOUS_MASK = 1 << 2
+DEFAULT_LAYER = 'default'
+DEFAULT_MASK = 1 << 3
+
+DEFAULT_LAYER2MASK = {DEFAULT_LAYER: DEFAULT_MASK}
 
 def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
     if n_type == TYPE_REACTION:
@@ -44,7 +55,7 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
         return transformation(x, other_x), transformation(y, other_y)
 
 
-def e2feature(graph, e, e_id, transport, inner, e2layout):
+def e2feature(graph, e, e_id, transport, inner, e2layout, layer=DEFAULT_LAYER, layer2mask=DEFAULT_LAYER2MASK):
     root = graph.getRoot()
     layout = root[VIEW_LAYOUT]
     s, t = graph.source(e), graph.target(e)
@@ -65,16 +76,19 @@ def e2feature(graph, e, e_id, transport, inner, e2layout):
     ubiquitous = root[UBIQUITOUS][real_e]
     color = triplet(root[VIEW_COLOR][real_e])
     props = {WIDTH: get_e_size(root, e).getW(), TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
-             COLOR: get_edge_color(ubiquitous, generalized, transport, color)}
+             COLOR: get_edge_color(ubiquitous, generalized, transport, color), LAYER: layer2mask[layer]}
     if not transport:
         props[COMPARTMENT_ID] = root[COMPARTMENT_ID][s]
     else:
         # let's not store unneeded False
-        props[TRANSPORT] = True
+        # props[TRANSPORT] = True
+        props[LAYER] |= TRANSPORT_MASK
         if inner:
-            props[INNER] = True
+            # props[INNER] = True
+            props[LAYER] |= INNER_TRANSPORT_MASK
     if ubiquitous:
-        props[UBIQUITOUS] = True
+        # props[UBIQUITOUS] = True
+        props[LAYER] |= UBIQUITOUS_MASK
     features = [geojson.Feature(id=e_id, geometry=geom, properties=props)]
 
     # Draw an arrow if it's a edge between a reaction and a product or between a reversible reaction and a reactant
@@ -109,7 +123,8 @@ def e2feature(graph, e, e_id, transport, inner, e2layout):
     return features
 
 
-def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
+def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, layer=DEFAULT_LAYER,
+              layer2mask=DEFAULT_LAYER2MASK):
     root = graph.getRoot()
 
     x, y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
@@ -119,14 +134,15 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
     node_type = root[TYPE][n]
     generalized = graph.isMetaNode(n)
     props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n],
-             NAME: root[NAME][n]}  # LABEL: get_short_name(graph, n, onto)}
+             NAME: root[NAME][n], LAYER: layer2mask[layer]}  # LABEL: get_short_name(graph, n, onto)}
     color = triplet(root[VIEW_COLOR][n])
     if TYPE_REACTION == node_type:
         # ins, outs = get_formula(graph, n, r2rs_ps)
         formula = get_formula(graph, n, r2rs_ps, root[REVERSIBLE][n])
         genes = get_gene_association_list(root[TERM][n])
         if not next((m for m in root.getInOutNodes(n) if TYPE_SPECIES == root[TYPE][m] and not root[UBIQUITOUS][m]), False):
-            props[UBIQUITOUS] = True
+            # props[UBIQUITOUS] = True
+            props[LAYER] |= UBIQUITOUS_MASK
         if genes:
             props[TERM] = genes
         # if ins:
@@ -139,9 +155,11 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
         if transport:
             del props[COMPARTMENT_ID]
             # let's not store unneeded False
-            props[TRANSPORT] = True
+            # props[TRANSPORT] = True
+            props[LAYER] |= TRANSPORT_MASK
             if inner:
-                props[INNER] = True
+                # props[INNER] = True
+                props[LAYER] |= INNER_TRANSPORT_MASK
             # if root[REVERSIBLE][n]:
             # 	props[REVERSIBLE] = True
     elif TYPE_COMPARTMENT == node_type:
@@ -156,9 +174,11 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
         ubiquitous = root[UBIQUITOUS][n]
         if ubiquitous:
             # let's not store unneeded False
-            props[UBIQUITOUS] = True
+            # props[UBIQUITOUS] = True
+            props[LAYER] |= UBIQUITOUS_MASK
         if transport and not inner:
-            props[TRANSPORT] = True
+            # props[TRANSPORT] = True
+            props[LAYER] |= TRANSPORT_MASK
         # even if a species participates in inner transport,
         # we need to always show it inside its compartment
         # if inner and ubiquitous:
@@ -179,12 +199,15 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner):
     # if generalized:
     if generalized:
         node_type = TYPE_2_BG_TYPE[node_type]
-        bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport, color)}
+        bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport, color),
+                    LAYER: layer2mask[layer]}
         if TRANSPORT in props:
             # let's not store unneeded False
-            bg_props[TRANSPORT] = True
+            # bg_props[TRANSPORT] = True
+            bg_props[LAYER] |= TRANSPORT_MASK
             if inner and TYPE_BG_REACTION == node_type:
-                bg_props[INNER] = True
+                # bg_props[INNER] = True
+                bg_props[LAYER] |= INNER_TRANSPORT_MASK
         if COMPARTMENT_ID in props:
             bg_props[COMPARTMENT_ID] = root[COMPARTMENT_ID][n]
         if TYPE_BG_COMPARTMENT == node_type:

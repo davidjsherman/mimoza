@@ -3,12 +3,19 @@ import os
 
 from jinja2 import Environment, PackageLoader
 import libsbml
+from sbml_vis.converter.tlp2geojson import DEFAULT_LAYER2MASK
 from sbml_vis.graph.graph_properties import ALL_COMPARTMENTS
 
 __author__ = 'anna'
 
 def create_html(model, directory, embed_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
                 map_id, c_id2out_c_id):
+    m_name = model.getName()
+    if not m_name:
+        m_name = model.getId()
+    if not m_name:
+        m_name = 'an anonymous model'
+    model.setName(m_name)
 
     c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments() if c.getId() in c_id2json_vars}
     if ALL_COMPARTMENTS in c_id2json_vars:
@@ -27,7 +34,7 @@ def create_html(model, directory, embed_url, json_files, c_id2json_vars, groups_
                            c_id2out_c_id=c_id2out_c_id, embed_url=embed_url,
                            comp_c_id2name=sorted(c_id2name.iteritems(), key=lambda (_, c_name): c_name)
                            if len(c_id2name) > 1 else None,
-                           c_id2name=c_id2name)
+                           c_id2name=c_id2name, layer2mask=DEFAULT_LAYER2MASK)
     with io.open(os.path.join(directory, 'comp.html'), 'w+', encoding='utf-8') as f:
         f.write(page)
 
@@ -38,7 +45,8 @@ def create_html(model, directory, embed_url, json_files, c_id2json_vars, groups_
 
     template = env.get_template('comp_min.html')
     page = template.render(model=model, json_files=json_files, c_id2json_vars=c_id2json_vars,
-                           map_id=map_id, c_id2out_c_id=c_id2out_c_id, c_id2name=c_id2name)
+                           map_id=map_id, c_id2out_c_id=c_id2out_c_id, c_id2name=c_id2name,
+                           layer2mask=DEFAULT_LAYER2MASK)
     with io.open(os.path.join(directory, 'comp_min.html'), 'w+', encoding='utf-8') as f:
         f.write(page)
 

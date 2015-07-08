@@ -6,12 +6,12 @@ var UB_LAYER_NAME = "<i>Ubiquitous metabolites</i>",
     OUT_TR_LAYER_NAME = "<i>Transport to outside</i>",
     IN_TR_LAYER_NAME = "<i>Inner transport</i>",
     LEAFLET_POPUP_MARGIN = 10,
-    ALL_COMPARTMENTS = 'all_comp_view';
+    ALL_COMPARTMENTS = 'all_comp_view',
+    DEFAULT_LAYER = 'default';
 
 function adjustMapSize(mapId) {
     "use strict";
-    var VIEWPORT_MARGIN = 50,
-        MIN_DIMENTION_SIZE = 256,
+    var MIN_DIMENTION_SIZE = 256,
         width = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).width() * 0.7))),
         height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() * 0.6)));
     return adjustMapDivSize(mapId, width, height);
@@ -102,7 +102,7 @@ function addAttribution(map) {
     attrControl.addTo(map);
 }
 
-function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
+function initializeMap(cId2jsonData, mapId, compIds, cId2outside, layer2mask) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
@@ -111,6 +111,8 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         minSpecificZoom = maxGeneralizedZoom + 1,
         maxSpecificZoom = minSpecificZoom + 5,
         ubLayer = L.layerGroup(),
+        outTransportLayer = L.layerGroup(),
+        inTransportLayer = L.layerGroup(),
         overlays = {},
         cIds = {},
         cId = getParameter("id"),
@@ -140,12 +142,14 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     }
     var tiles = getTiles("lib/modelmap/white.jpg", minGeneralizedZoom, maxSpecificZoom),
         grayTiles = getTiles("lib/modelmap/gray.jpg", minGeneralizedZoom, maxSpecificZoom),
-        outTransportLayer = L.layerGroup(),
-        inTransportLayer = L.layerGroup(),
-        compLayer = L.layerGroup();
+        name2layer = {};
+    for (var l_name in layer2mask) {
+        var l = L.layerGroup();
+        name2layer[l_name] = l;
+        layers.push(l);
+    }
     layers.push(ubLayer);
     layers.push(tiles);
-    layers.push(compLayer);
     layers.push(outTransportLayer);
     layers.push(inTransportLayer);
     var map = L.map(mapId, {
@@ -195,16 +199,23 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     //searchCtrl.addTo(map);
 
     function loadElements(json, fromZoom, toZoom, coords) {
-        jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, compLayer, mapId, cId, name2popup, name2zoom, coords, minGeneralizedZoom, inZoom);
+        for (l_name in layer2mask) {
+            l = name2layer[l_name];
+            var mask = layer2mask[l_name];
+            jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, l, null, mapId, cId,
+                name2popup, name2zoom, coords, minGeneralizedZoom, inZoom, mask);
 
-        ubJSON |= jsonArray[1];
-        jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, outTransportLayer, mapId, TRANSPORT, name2popup, name2zoom, coords, minGeneralizedZoom, inZoom);
-        ubJSON |= jsonArray[1];
-        outJSON |= jsonArray[0] || jsonArray[1];
-        jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, inTransportLayer, mapId, INNER_TRANSPORT, name2popup, name2zoom, coords, minGeneralizedZoom, inZoom);
-        ubJSON |= jsonArray[1];
-        inJSON |= jsonArray[0] || jsonArray[1];
-        //searchCtrl.indexFeatures(json.features, ['name', 'id']);
+            ubJSON |= jsonArray[1];
+            jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, outTransportLayer, l, mapId, TRANSPORT,
+                name2popup, name2zoom, coords, minGeneralizedZoom, inZoom, mask);
+            ubJSON |= jsonArray[1];
+            outJSON |= jsonArray[0] || jsonArray[1];
+            jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, inTransportLayer, l, mapId, INNER_TRANSPORT,
+                name2popup, name2zoom, coords, minGeneralizedZoom, inZoom, mask);
+            ubJSON |= jsonArray[1];
+            inJSON |= jsonArray[0] || jsonArray[1];
+            //searchCtrl.indexFeatures(json.features, ['name', 'id']);
+        }
     }
 
     // load common elements
@@ -217,8 +228,8 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
     }
 
     updateMapBounds(coords, commonCoords, map);
-    if (commonCoords[0] != undefined && commonCoords[1] != undefined) {
-        if (commonCoords[2] != undefined) {
+    if (commonCoords[0][0] != null && commonCoords[1][0] != null) {
+        if (commonCoords[2] != null) {
             map.setView(commonCoords[2], curZoom);
         } else {
             var c = new L.LatLngBounds(commonCoords[0], commonCoords[1]).getCenter();
@@ -244,6 +255,13 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside) {
         map.setView(map.getCenter(), map.getZoom());
     });
 
+    if (Object.keys(layer2mask).length > 1) {
+        for (l_name in layer2mask) {
+            if (l_name != DEFAULT_LAYER) {
+                overlays[l_name] = name2layer[l_name];
+            }
+        }
+    }
     if (ubJSON) {
         overlays[UB_LAYER_NAME] = ubLayer;
     }
