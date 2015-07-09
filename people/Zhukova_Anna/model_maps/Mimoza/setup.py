@@ -18,7 +18,7 @@ setup(name='Mimoza',
       url='http://mimoza.bordeaux.inria.fr/',
       version='1.0',
       packages=find_packages(),
-      package_data={'sbml_vis.html': ['templates/', 'templates/*.html']},
+      package_data={'sbml_vis.html': ['templates/*.html']},
       include_package_data=True,
       license='LICENSE.txt',
       platform=['MacOS', 'Linux', 'Windows'],
@@ -34,4 +34,5 @@ setup(name='Mimoza',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
       ], requires=['tulip', 'sympy', 'geojson', 'jinja2']
+
 )

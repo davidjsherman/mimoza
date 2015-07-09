@@ -29,7 +29,6 @@ except ImportError:
 form = cgi.FieldStorage()
 sbml = form['sbml'].value
 m_dir_id = form['dir'].value
-scripts = '\n'.join(['<script src="../%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
 
 print '''Content-Type: text/html;charset=utf-8
 
@@ -40,17 +39,22 @@ print '''Content-Type: text/html;charset=utf-8
              <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
              <meta http-equiv="Pragma" content="no-cache" />
              <meta http-equiv="Expires" content="0" />
-             <link media="all" href="../%s" type="text/css" rel="stylesheet" />
-             <link href="../%s" type="image/x-icon" rel="shortcut icon" />
-             %s
+             <link media="all" href="http://mimoza.bordeaux.inria.fr/lib/modelmap/modelmap.min.css" type="text/css" rel="stylesheet" />
+             <link rel="stylesheet" type="text/css" href="http://mimoza.bordeaux.inria.fr/lib/FullWidthTabs/component.min.css" />
+             <link rel="stylesheet" type="text/css" href="http://mimoza.bordeaux.inria.fr/lib/FullWidthTabs/demo.min.css" />
+             <link media="all" href="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-ui.min.css" type="text/css" rel="stylesheet" />
+
+             <link href="http://mimoza.bordeaux.inria.fr/lib/modelmap/fav.ico" type="image/x-icon" rel="shortcut icon" />
+
+             <script src="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-2.1.4.min.js" type="text/javascript"></script>
+             <script src="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-ui.min.js" type="text/javascript"></script>
              <title>Generalizing...</title>
           </head>
 
           <body>
           <p class="centre indent">Please, be patient while we are generalizing your model...</p>
-          <img class="img-centre" src="../%s" id="img" />
-          <div id="hidden" style="visibility:hidden;height:0px;">''' % (
-    MIMOZA_CSS, MIMOZA_FAVICON, scripts, METHOD_ICON)
+          <img class="img-centre" src="http://mimoza.bordeaux.inria.fr/lib/modelmap/method.gif" id="img" />
+          <div id="hidden" style="visibility:hidden;height:0px;">'''
 
 sys.stdout.flush()
 url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
@@ -74,8 +78,8 @@ try:
         gen_sbml = os.path.join(sbml_directory, '%s_generalized.xml' % m_id)
         r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, gen_sbml, sbml, chebi
                                                                               )
-    create_thanks_for_uploading_html(m_id, input_model.getName(), os.path.join('..', 'html'), m_dir_id,
-                                     MIMOZA_URL, 'comp.html', PROGRESS_ICON, generate_generalization_finished_html)
+    create_thanks_for_uploading_html(m_id, input_model.getName(), '../html', m_dir_id,
+                                     MIMOZA_URL, 'comp.html', generate_generalization_finished_html)
 
 except Exception as e:
     logging.info(e.message)

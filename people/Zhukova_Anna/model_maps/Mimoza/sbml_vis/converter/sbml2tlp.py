@@ -43,7 +43,7 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps, chebi=None):
     id2n = {}
     for s in input_model.getListOfSpecies():
         _id = s.getId()
-        ub = _id in ub_sps
+        ub = (_id in ub_sps)
 
         # todo
         if SKIP_UBS and ub:
@@ -55,6 +55,7 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps, chebi=None):
         graph[ID][n] = _id
         id2n[_id] = n
         chebi_id = None
+
         if _id in species_id2chebi_id:
             chebi_id = species_id2chebi_id[_id]
             graph[TERM][n] = chebi_id
@@ -127,7 +128,8 @@ def get_quotient_maps(chebi, input_model, sbml_file):
         r_id2g_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
         species_id2chebi_id = get_species_to_chebi(input_model, chebi, False) if (r_id2g_id or ub_sps) else {}
         return r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
-    except GrPlError:
+    except GrPlError as e:
+        logging.error("Could not parse the groups SBML %s: %s" % (sbml_file, e.msg))
         return None, None, None, None
 
 

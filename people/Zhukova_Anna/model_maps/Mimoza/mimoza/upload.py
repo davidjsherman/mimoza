@@ -115,8 +115,6 @@ def process_file(sbml_file):
         os.remove(sbml_file)
     return OK, (model_id, model.getName(), m_id)
 
-scripts = '\n'.join(['<script src="../%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
-
 print '''Content-Type: text/html;charset=utf-8
 
 
@@ -126,16 +124,22 @@ print '''Content-Type: text/html;charset=utf-8
             <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
             <meta http-equiv="Pragma" content="no-cache" />
             <meta http-equiv="Expires" content="0" />
-            <link media="all" href="../%s" type="text/css" rel="stylesheet" />
-            <link href="../%s" type="image/x-icon" rel="shortcut icon" />
-            %s
+            <link media="all" href="http://mimoza.bordeaux.inria.fr/lib/modelmap/modelmap.min.css" type="text/css" rel="stylesheet" />
+            <link rel="stylesheet" type="text/css" href="http://mimoza.bordeaux.inria.fr/lib/FullWidthTabs/component.min.css" />
+            <link rel="stylesheet" type="text/css" href="http://mimoza.bordeaux.inria.fr/lib/FullWidthTabs/demo.min.css" />
+            <link media="all" href="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-ui.min.css" type="text/css" rel="stylesheet" />
+
+            <link href="http://mimoza.bordeaux.inria.fr/lib/modelmap/fav.ico" type="image/x-icon" rel="shortcut icon" />
+
+            <script src="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-2.1.4.min.js" type="text/javascript"></script>
+            <script src="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-ui.min.js" type="text/javascript"></script>
             <title>Checking...</title>
           </head>
 
           <body>
-          <p class="centre indent">We are checking your model now...</p>
-          <img class="img-centre" src="../%s" id="img" />
-          <div id="hidden" style="visibility:hidden;height:0px;">''' % (MIMOZA_CSS, MIMOZA_FAVICON, scripts, LOADER_ICON)
+          <p class="info">We are checking your model now...</p>
+          <img class="img-centre" src="http://mimoza.bordeaux.inria.fr/lib/modelmap/loader.gif" id="img" />
+          <div id="hidden" style="visibility:hidden;height:0px;">'''
 sys.stdout.flush()
 
 result, args = upload_file()
@@ -143,16 +147,15 @@ url = MIMOZA_UPLOAD_ERROR_URL
 
 if OK == result:
     (m_id, m_name, m_dir_id) = args
-    create_thanks_for_uploading_html(m_id, m_name, os.path.join('..', 'html'), m_dir_id, MIMOZA_URL, 'comp.html',
-                                     PROGRESS_ICON)
+    create_thanks_for_uploading_html(m_id, m_name, '../html', m_dir_id, MIMOZA_URL, 'comp.html', groups_suffix='')
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 elif ALREADY_EXISTS == result:
     model_id, m_dir_id = args
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 elif ALREADY_GENERALIZED == result:
     (m_id, m_name, m_dir_id) = args
-    create_thanks_for_uploading_html(m_id, m_name, os.path.join('..', 'html'), m_dir_id, MIMOZA_URL, 'comp.html',
-                                     PROGRESS_ICON, generate_uploaded_generalized_sbml_html)
+    create_thanks_for_uploading_html(m_id, m_name, '../html', m_dir_id, MIMOZA_URL, 'comp.html',
+                                     generate_uploaded_generalized_sbml_html)
     url = '%s/%s/index.html' % (MIMOZA_URL, m_dir_id)
 
 

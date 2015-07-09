@@ -3,6 +3,7 @@ import os
 
 from jinja2 import Environment, PackageLoader
 import libsbml
+from mimoza.mimoza_path import PROGRESS_ICON
 from sbml_vis.converter.tlp2geojson import DEFAULT_LAYER2MASK
 from sbml_vis.graph.graph_properties import ALL_COMPARTMENTS
 
@@ -81,60 +82,51 @@ def generate_model_html(title, h1, text, expl, more_expl, model_id, sbml, gen_sb
 
 
 def generate_uploaded_sbml_html(m_name, m_id, m_url, sbml, gen_sbml, sbgn, gen_sbgn, m_dir_id, progress_icon):
-    return generate_model_html("%s Uploaded" % m_id, "Uploaded, time to generalize!", '',
-                               'Now let\'s generalize it: To start the generalization press the button below.',
-                               '''<br>When the generalization is done, it will become available at <a href="%s">%s</a>.
-                               <br>It might take some time (up to an hour for genome-scale models), so, please, be patient and do not lose hope :)'''
-                               % (m_url, m_url),
-                               m_name, sbml, gen_sbml, sbgn, gen_sbgn, m_dir_id, progress_icon, 'generalize.py')
+    return generate_model_html(title="%s Uploaded" % (m_name if m_name else m_id), h1="Uploaded, time to generalize!",
+                               text='',
+                               expl='Now let\'s generalize it: To start the generalization press the button below.',
+                               more_expl='''<br>When the generalization is done,
+                               it will become available at <a href="%s">%s</a>.
+                               <br>It might take some time (up to an hour for genome-scale models),
+                               so, please, be patient and do not lose hope :)'''% (m_url, m_url),
+                               model_id=m_id, sbml=sbml, gen_sbml=gen_sbml, sbgn=sbgn, gen_sbgn=gen_sbgn,
+                               m_dir_id=m_dir_id, progress_icon=progress_icon, action='generalize.py')
 
 
 def generate_uploaded_generalized_sbml_html(m_name, m_id, m_url, sbml, gen_sbml, sbgn, gen_sbgn, m_dir_id, progress_icon):
-    return generate_model_html("%s Uploaded" % m_id, "Uploaded, time to visualize!", '',
-                               '''Your model seems to be already generalized. Now let\'s visualize it: To start the visualization press the button below.<br>
-                               <i>(If your model contains <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/Layout_%28layout%29" target="_blank">SBML layout</a> information,
+    return generate_model_html(title="%s Uploaded" % (m_name if m_name else m_id), h1="Uploaded, time to visualize!",
+                               text='', expl='''Your model seems to be already generalized.
+                               Now let\'s visualize it: To start the visualization press the button below.<br>
+                               <i>(If your model contains
+                               <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/Layout_%28layout%29"
+                               target="_blank">SBML layout</a> information,
                                it will be used during the visualization.)</i>''',
-                               '<br>When the visualization is done, it will become available at <a href="%s">%s</a>.'
-                               % (m_url, m_url),
-                               m_name, sbml, gen_sbml, sbgn, gen_sbgn, m_dir_id, progress_icon,
-                               'visualise.py')
+                               more_expl='''<br>When the visualization is done,
+                               it will become available at <a href="%s">%s</a>.''' % (m_url, m_url),
+                               model_id=m_id, sbml=sbml, gen_sbml=gen_sbml, sbgn=sbgn, gen_sbgn=gen_sbgn,
+                               m_dir_id=m_dir_id, progress_icon=progress_icon, action='visualise.py')
 
 
 def generate_generalization_finished_html(m_name, m_id, m_url, sbml, gen_sbml, sbgn, gen_sbgn, m_dir_id, progress_icon):
-    return generate_model_html("%s Generalized" % m_id, "Generalized, time to visualize!", '',
-                               '''Your model is successfully generalized. Now let\'s visualize it: To start the visualization press the button below.<br>
-                               <i>(If your model contained <a href="http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/Layout_%28layout%29" target="_blank">SBML layout</a> information,
-                               it will be used during the visualization.)</i>''',
-                               '<br>When the visualization is done, it will become available at <a href="%s">%s</a>.'
-                               % (m_url, m_url),
-                               m_name, sbml, gen_sbml, sbgn, gen_sbgn, m_dir_id, progress_icon,
-                               'visualise.py')
+    return generate_model_html(title="%s Generalized" % (m_name if m_name else m_id),
+                               h1="Generalized, time to visualize!",
+                               text='', expl='''Your model is successfully generalized.
+                               Now let\'s visualize it: To start the visualization press the button below.''',
+                               more_expl='''<br>When the visualization is done,
+                               it will become available at <a href="%s">%s</a>.''' % (m_url, m_url),
+                               model_id=m_id, sbml=sbml, gen_sbml=gen_sbml, sbgn=sbgn, gen_sbgn=gen_sbgn,
+                               m_dir_id=m_dir_id, progress_icon=progress_icon, action='visualise.py')
 
-def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, img,
-                                     generate_html=generate_uploaded_sbml_html):
+def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end,
+                                     generate_html=generate_uploaded_sbml_html, groups_suffix='_with_groups'):
     directory = os.path.join(directory_prefix, m_dir_id)
     m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
-    sbml = os.path.join(directory, '%s.xml' % m_id)
+    sbml = os.path.join(directory, '%s%s.xml' % (m_id, groups_suffix))
     gen_sbml = os.path.join(directory, '%s_generalized.xml' % m_id)
     sbgn = os.path.join(directory, '%s_initial_model.sbgn' % m_id)
     gen_sbgn = os.path.join(directory, '%s_generalized.sbgn' % m_id)
 
     with open(os.path.join(directory, 'index.html'), 'w+') as f:
-        page = generate_html(gen_sbgn, gen_sbml if os.path.exists(gen_sbml) else '',
-                             img, m_dir_id, m_id, m_name, m_url, sbgn, sbml)
+        page = generate_html(m_name, m_id, m_url, sbml, gen_sbml, sbgn, gen_sbgn, m_dir_id, PROGRESS_ICON)
         f.write(page)
-
-
-def create_thanks_for_uploading_generalized_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end, css, js, fav,
-                                                 img, generate_html=generate_uploaded_generalized_sbml_html):
-    directory = os.path.join(directory_prefix, m_dir_id)
-    m_url = '%s/%s/%s' % (url, m_dir_id, url_end)
-    sbml = os.path.join(directory, '%s.xml' % m_id)
-    gen_sbml = os.path.join(directory, '%s_generalized.xml' % m_id)
-    sbgn = os.path.join(directory, '%s_initial_model.sbgn' % m_id)
-    gen_sbgn = os.path.join(directory, '%s_generalized.sbgn' % m_id)
-
-    with open('%s/index.html' % directory, 'w+') as f:
-        f.write(generate_html(css, js, fav, m_name, m_id, m_url, sbml, gen_sbml if os.path.exists(gen_sbml) else '',
-                              sbgn, gen_sbgn, m_dir_id, img))
 

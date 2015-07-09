@@ -41,7 +41,6 @@ m_dir_id = form['dir'].value
 directory = '../html/%s/' % m_dir_id
 log_file = '%s/log.log' % directory
 logging.basicConfig(level=logging.INFO, format='%(message)s', filename=log_file)
-scripts = '\n'.join(['<script src="../%s" type="text/javascript"></script>' % it for it in JS_SCRIPTS])
 
 print '''Content-Type: text/html;charset=utf-8
 
@@ -52,17 +51,22 @@ print '''Content-Type: text/html;charset=utf-8
             <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
             <meta http-equiv="Pragma" content="no-cache" />
             <meta http-equiv="Expires" content="0" />
-            <link media="all" href="../%s" type="text/css" rel="stylesheet" />
-            <link href="../%s" type="image/x-icon" rel="shortcut icon" />
-            %s
+            <link media="all" href="http://mimoza.bordeaux.inria.fr/lib/modelmap/modelmap.min.css" type="text/css" rel="stylesheet" />
+            <link rel="stylesheet" type="text/css" href="http://mimoza.bordeaux.inria.fr/lib/FullWidthTabs/component.min.css" />
+            <link rel="stylesheet" type="text/css" href="http://mimoza.bordeaux.inria.fr/lib/FullWidthTabs/demo.min.css" />
+            <link media="all" href="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-ui.min.css" type="text/css" rel="stylesheet" />
+
+            <link href="http://mimoza.bordeaux.inria.fr/lib/modelmap/fav.ico" type="image/x-icon" rel="shortcut icon" />
+
+            <script src="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-2.1.4.min.js" type="text/javascript"></script>
+            <script src="http://mimoza.bordeaux.inria.fr/lib/jquery/jquery-ui.min.js" type="text/javascript"></script>
             <title>Visualizing...</title>
           </head>
 
           <body>
           <p class="centre indent">We are visualizing your model now...</p>
-          <img class="img-centre" src="../%s" id="img" />
-          <div id="hidden" style="visibility:hidden;height:0px;">''' % (
-    MIMOZA_CSS, MIMOZA_FAVICON, scripts, PROGRESS_ICON)
+          <img class="img-centre" src="http://mimoza.bordeaux.inria.fr/lib/modelmap/ajax-loader.gif" id="img" />
+          <div id="hidden" style="visibility:hidden;height:0px;">'''
 
 sys.stdout.flush()
 
@@ -70,7 +74,7 @@ temp = os.dup(sys.stdout.fileno())
 try:
     url = '/%s/comp.html' % m_dir_id
 
-    if not os.path.exists(os.path.join('..', 'html', m_dir_id, 'comp.html')):
+    if not os.path.exists(os.path.join('..', m_dir_id, 'comp.html')):
         chebi = parse(get_chebi())
         reader = libsbml.SBMLReader()
         input_document = reader.readSBML(groups_sbml)
