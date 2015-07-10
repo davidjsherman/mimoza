@@ -25,7 +25,7 @@ function getPopup(feature, popupW, popupH) {
     if (EDGE == feature.properties.type) {
         return;
     }
-    var content = "<h2>" + feature.properties.name + "</h2>" + p(i("id: ") + feature.properties.id);
+    var content = "<p class='emph centre'>" + feature.properties.name + "</p>" + p(i("id: ") + feature.properties.id);
     if (REACTION == feature.properties.type) {
         var transport = feature.properties.tr ? p(i("Is a transport reaction.")) : "",
             ga_res = feature.properties.term ? p(feature.properties.term) : "",
@@ -48,7 +48,7 @@ function getLabel(feature) {
     if (EDGE == feature.properties.type) {
         return null;
     }
-    var label = "<h2>" + feature.properties.name + "</h2>" + p(i("id: ") + feature.properties.id);
+    var label = "<p class='emph centre'>" + feature.properties.name + "</p>" + p(i("id: ") + feature.properties.id);
     if (REACTION == feature.properties.type) {
         var transport = feature.properties.tr ? p(i("Is a transport reaction.")) : "",
             formula = feature.properties.f ? p(feature.properties.f) : ""; //p(formatFormula(feature.properties.rev, feature.properties.rs, feature.properties.ps));

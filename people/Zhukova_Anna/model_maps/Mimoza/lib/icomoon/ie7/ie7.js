@@ -17,6 +17,8 @@
 		'icon-quill': '&#xe907;',
 		'icon-stack': '&#xe92e;',
 		'icon-floppy-disk': '&#xe962;',
+		'icon-stats-dots': '&#xe99b;',
+		'icon-download3': '&#xe9c7;',
 		'icon-happy': '&#xe9df;',
 		'0': 0
 		},

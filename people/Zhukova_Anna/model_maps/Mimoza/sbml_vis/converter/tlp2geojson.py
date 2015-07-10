@@ -21,7 +21,7 @@ LOWERCASE, UPPERCASE = 'x', 'X'
 
 LAYER = 'layer'
 TRANSPORT_MASK = 1
-INNER_TRANSPORT_MASK = 1 + (1 << 1)
+INNER_TRANSPORT_MASK = 1 << 1
 UBIQUITOUS_MASK = 1 << 2
 DEFAULT_LAYER = 'default'
 DEFAULT_MASK = 1 << 3
@@ -55,7 +55,7 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
         return transformation(x, other_x), transformation(y, other_y)
 
 
-def e2feature(graph, e, e_id, transport, inner, e2layout, layer=DEFAULT_LAYER, layer2mask=DEFAULT_LAYER2MASK):
+def e2feature(graph, e, e_id, transport, inner, e2layout, mask=DEFAULT_LAYER2MASK[DEFAULT_LAYER]):
     root = graph.getRoot()
     layout = root[VIEW_LAYOUT]
     s, t = graph.source(e), graph.target(e)
@@ -76,7 +76,7 @@ def e2feature(graph, e, e_id, transport, inner, e2layout, layer=DEFAULT_LAYER, l
     ubiquitous = root[UBIQUITOUS][real_e]
     color = triplet(root[VIEW_COLOR][real_e])
     props = {WIDTH: get_e_size(root, e).getW(), TYPE: TYPE_EDGE, STOICHIOMETRY: graph[STOICHIOMETRY][e],
-             COLOR: get_edge_color(ubiquitous, generalized, transport, color), LAYER: layer2mask[layer]}
+             COLOR: get_edge_color(ubiquitous, generalized, transport, color), LAYER: mask}
     if not transport:
         props[COMPARTMENT_ID] = root[COMPARTMENT_ID][s]
     else:
@@ -123,8 +123,7 @@ def e2feature(graph, e, e_id, transport, inner, e2layout, layer=DEFAULT_LAYER, l
     return features
 
 
-def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, layer=DEFAULT_LAYER,
-              layer2mask=DEFAULT_LAYER2MASK):
+def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, mask=DEFAULT_LAYER):
     root = graph.getRoot()
 
     x, y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
@@ -134,7 +133,7 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, layer=DEFAUL
     node_type = root[TYPE][n]
     generalized = graph.isMetaNode(n)
     props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n],
-             NAME: root[NAME][n], LAYER: layer2mask[layer]}  # LABEL: get_short_name(graph, n, onto)}
+             NAME: root[NAME][n], LAYER: mask}  # LABEL: get_short_name(graph, n, onto)}
     color = triplet(root[VIEW_COLOR][n])
     if TYPE_REACTION == node_type:
         # ins, outs = get_formula(graph, n, r2rs_ps)
@@ -200,7 +199,7 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, layer=DEFAUL
     if generalized:
         node_type = TYPE_2_BG_TYPE[node_type]
         bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport, color),
-                    LAYER: layer2mask[layer]}
+                    LAYER: mask}
         if TRANSPORT in props:
             # let's not store unneeded False
             # bg_props[TRANSPORT] = True
@@ -225,7 +224,7 @@ def get_gene_association_list(ga):
     try:
         res = to_cnf(gene_association, False)
         gene_association = [[str(it) for it in disjuncts(cjs)] for cjs in conjuncts(res)]
-        result = '''<table border="0" width="100%%">
+        result = '''<table class="p_table" border="0" width="100%%">
 						<tr class="centre"><th colspan="%d" class="centre">Gene association</th></tr>
 						<tr>''' % (2 * len(gene_association) - 1)
         first = True
@@ -270,7 +269,7 @@ def get_formula(graph, r, r2rs_ps, reversible):
     rs, ps = r2rs_ps[r]
     rs, ps = sorted(formatter(it, name_prop) for it in rs), sorted(formatter(it, name_prop) for it in ps)
 
-    res = '<table border="0" width="100%"><tr><td width="45%"><table border="0">'
+    res = '<table class="p_table" border="0" width="100%"><tr><td width="45%"><table border="0">'
     if rs:
         for [r, st] in rs:
             res += '<tr><td class="main">%s&nbsp;</td><td>%s</td></tr>' % (st, r)

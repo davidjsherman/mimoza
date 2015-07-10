@@ -33,6 +33,10 @@
 			'layers': '&#xe92e;',
 			'floppy-disk': '&#xe962;',
 			'save2': '&#xe962;',
+			'stats-dots': '&#xe99b;',
+			'stats2': '&#xe99b;',
+			'download3': '&#xe9c7;',
+			'save5': '&#xe9c7;',
 			'happy': '&#xe9df;',
 			'emoticon': '&#xe9df;',
 			'0': 0

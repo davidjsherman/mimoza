@@ -143,9 +143,9 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside, layer2mask) {
     var tiles = getTiles("lib/modelmap/white.jpg", minGeneralizedZoom, maxSpecificZoom),
         grayTiles = getTiles("lib/modelmap/gray.jpg", minGeneralizedZoom, maxSpecificZoom),
         name2layer = {};
-    for (var l_name in layer2mask) {
+    for (var i = 0; i < layer2mask.length; i++) {
         var l = L.layerGroup();
-        name2layer[l_name] = l;
+        name2layer[layer2mask[i][0]] = l;
         layers.push(l);
     }
     layers.push(ubLayer);
@@ -199,9 +199,9 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside, layer2mask) {
     //searchCtrl.addTo(map);
 
     function loadElements(json, fromZoom, toZoom, coords) {
-        for (l_name in layer2mask) {
-            l = name2layer[l_name];
-            var mask = layer2mask[l_name];
+        for (var i = 0; i < layer2mask.length; i++) {
+            l = name2layer[layer2mask[i][0]];
+            var mask = layer2mask[i][1];
             jsonArray = loadGeoJson(map, json, fromZoom, toZoom, ubLayer, l, null, mapId, cId,
                 name2popup, name2zoom, coords, minGeneralizedZoom, inZoom, mask);
 
@@ -255,8 +255,9 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside, layer2mask) {
         map.setView(map.getCenter(), map.getZoom());
     });
 
-    if (Object.keys(layer2mask).length > 1) {
-        for (l_name in layer2mask) {
+    if (layer2mask.length > 1) {
+        for (var i = 0; i < layer2mask.length; i++) {
+            var l_name = layer2mask[i][0];
             if (l_name != DEFAULT_LAYER) {
                 overlays[l_name] = name2layer[l_name];
             }

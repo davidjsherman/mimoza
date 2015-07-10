@@ -9,9 +9,12 @@
 	font-style: normal;
 } /* Icons created with icomoon.io/app */
 
-
 .icon-home3:after {
 	content: "\e902";
+}
+
+.small {
+	font-size: 1em;
 }
 
 .bp-icon:after {
@@ -48,7 +51,10 @@
 	content: "\e92e";
 }
 .icon-floppy-disk:before {
-	content: "\e962";
+	content: "\e9c7";
+}
+.icon-stats-dots:before {
+	content: "\e99b";
 }
 .icon-happy:before {
 	content: "\e9df";

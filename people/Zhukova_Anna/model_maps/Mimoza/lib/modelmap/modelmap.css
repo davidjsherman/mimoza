@@ -26,8 +26,6 @@
     text-transform:capitalize;
 }
 p {
-    font-size: 13px;
-    line-height: 17px;
     vertical-align: middle;
 }
 th {
@@ -64,7 +62,7 @@ div[class*='bibo\:'] {
     text-align: justify;
 }
 td a, p.popup a {
-    font-size: 10px;
+    font-size: .9em;
     text-decoration: none;
     text-color: #773131;
     color: #773131;
@@ -79,10 +77,10 @@ p.popup {
     font-weight: 400;
 }
 p.popup table {
-    width:auto;
+    width: auto;
     max-width: 90%;
-    font-size: 13px;
 }
+
 .example {
     display:block;
     max-width:100%;
@@ -92,6 +90,10 @@ p.popup table {
     padding:0;
 }
 
+.p_table table {
+    font-size: 1em
+}
+
 p.popup table td.main {
     max-width: 45%;
     overflow: hidden;
@@ -99,6 +101,7 @@ p.popup table td.main {
     white-space: nowrap;
 }
 p.popup table td {
+    font-size: .9em;
     max-width: 10%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -132,7 +135,7 @@ ul.menu li
     text-transform:capitalize;
 }
 .leaflet-popup-close-button {
-    display:none;
+    /*display:none;*/
 }
 .leaflet-label-overlay {
     line-height:0px;
@@ -148,7 +151,7 @@ ul.menu li
     vertical-align: middle;
     display: table-cell;
     /*overflow:hidden;*/
-    font-size:14px;
+    font-size:.6em;
     line-height: 18px;
     /*text-overflow: clip;*/
     vertical-align: text-top;

@@ -4,14 +4,15 @@ from os.path import dirname, abspath
 from shutil import copytree
 
 import libsbml
-from sbml_vis.graph.resize import REACTION_SIZE
 
+from sbml_vis.converter.tlp2geojson import DEFAULT_LAYER2MASK
+from sbml_vis.graph.resize import REACTION_SIZE
 from sbml_vis.converter.sbml2tlp import import_sbml
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
 from sbml_vis.file.md5_checker import check_md5
 from sbml_vis.file.serializer import serialize
 from sbml_generalization.generalization.sbml_generalizer import generalize_model, ubiquitize_model
-from mimoza.mimoza_path import MIMOZA_URL, JS_SCRIPTS, CSS_SCRIPTS, MIMOZA_FAVICON
+from mimoza.mimoza_path import MIMOZA_URL
 import mimoza
 from sbml_generalization.onto.obo_ontology import parse
 from sbml_generalization.onto.onto_getter import get_chebi
@@ -25,7 +26,8 @@ __author__ = 'anna'
 def get_lib():
     return os.path.join(os.path.dirname(os.path.abspath(mimoza.mimoza_path.__file__)), '..', 'lib')
 
-def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_file=None):
+def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_file=None,
+                 id2mask=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None):
     reader = libsbml.SBMLReader()
     doc = reader.readSBML(sbml)
     model = doc.getModel()
@@ -93,7 +95,7 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
                         n2xy[n_id] = value
     except LoPlError:
         n2xy = None
-    fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, n2xy)
+    fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, n2xy, id2mask=id2mask)
     if n2lo:
         groups_document = reader.readSBML(groups_sbml)
         groups_model = groups_document.getModel()
@@ -111,8 +113,9 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
             save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
 
     c_id2geojson_files, c_id2geojson_names = serialize(directory=directory, m_dir_id=m_id, input_model=input_model,
-                                                  c_id2level2features=fc, c_id2out_c_id=c_id2out_c_id,
-                                                  groups_sbml=groups_sbml, main_url=MIMOZA_URL)
+                                                       c_id2level2features=fc, c_id2out_c_id=c_id2out_c_id,
+                                                       groups_sbml=groups_sbml, main_url=MIMOZA_URL,
+                                                       layer2mask=layer2mask, tab2html=tab2html, title=title)
 
     return c_id2geojson_files, c_id2geojson_names, c_id2out_c_id, m_id, directory, groups_sbml
 
