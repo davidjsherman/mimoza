@@ -16,8 +16,11 @@ from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from sbml_generalization.onto.onto_getter import get_chebi
 from sbml_generalization.onto.obo_ontology import parse
-from sbml_generalization.serialization.xslx_manager import add_values, HEADER_STYLE
 from sbml_generalization.utils.misc import invert_map
+import openpyxl
+import openpyxl.styles
+from openpyxl.styles import Style, Font
+from openpyxl.styles.colors import Color
 
 
 __author__ = 'anna'
@@ -31,6 +34,10 @@ help_message = '''
 Generalizes the model.
 usage: main.py --model model.xml --verbose
 '''
+
+BASIC_STYLE = Style(font=Font(color=openpyxl.styles.colors.BLACK, sz=8))
+BOLD_STYLE = Style(font=Font(bold=True, sz=8))
+HEADER_STYLE = BOLD_STYLE
 
 
 def main(argv=None):
@@ -58,6 +65,14 @@ def main(argv=None):
         logging.error(sys.argv[0].split("/")[-1] + ": " + str(err.msg))
         logging.error(sys.stderr, "\t for help use --help")
         return 2
+
+
+def add_values(ws, row, col, values, style=BASIC_STYLE):
+    j = col
+    for v in values:
+        ws.cell(row=row, column=j).value = v
+        ws.cell(row=row, column=j).style = style
+        j += 1
 
 
 def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
