@@ -65,32 +65,38 @@
                             {% set i = i + 1 %}
                         {% endfor %}
                     {% endif %}
-                    <li><a href="#tab-down" class="icon-floppy-disk"><span>Download/Embed</span></a></li>
+                    {% if model.getNumReactions() > 0 %}
+                        <li><a href="#tab-down" class="icon-floppy-disk"><span>Download/Embed</span></a></li>
+                    {% endif %}
                 </ul>
             </nav>
             <div class="content">
                 <section id="tab-viz">
-                    {% if comp_c_id2name %}
-                        <ul class="menu margin centre">
-                        {% for (c_id, c_name) in comp_c_id2name %}
-                            <li><a href="?id={{c_id}}" class='menu_{{c_id}}'>{{c_name}}</a></li>
-                        {% endfor %}
-                        </ul>
+                    {% if model.getNumReactions() > 0 %}
+                        {% if comp_c_id2name %}
+                            <ul class="menu margin centre">
+                            {% for (c_id, c_name) in comp_c_id2name %}
+                                <li><a href="?id={{c_id}}" class='menu_{{c_id}}'>{{c_name}}</a></li>
+                            {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <div id="search">
+                            <form id="search_form_{{map_id}}" name="search_form">
+                            <label><input type="text" name="search_input" id="tags_{{map_id}}" /></label>
+                            <input type="button" value="Search" />
+                            </form>
+                        </div>
+                        <div class="map ui-widget-content" id="{{map_id}}"></div>
+                        <div id="explanations">
+                            <p class="info">
+                                <span class="emph">Zoom in/out</span> to see more/less details.
+                                <span class="emph">Click</span> on elements to see their annotations.
+                                <span class="emph">Show/Hide</span> elements in the map settings <span class="explanation">(top right of the map view)</span>.
+                            </p>
+                        </div>
+                    {% else %}
+                        <p class="centre">Your model does not contain any reactions and thus could not be visualized.</p>
                     {% endif %}
-                    <div id="search">
-                        <form id="search_form_{{map_id}}" name="search_form">
-                        <label><input type="text" name="search_input" id="tags_{{map_id}}" /></label>
-                        <input type="button" value="Search" />
-                        </form>
-                    </div>
-                    <div class="map ui-widget-content" id="{{map_id}}"></div>
-                    <div id="explanations">
-                        <p class="info">
-                            <span class="emph">Zoom in/out</span> to see more/less details.
-                            <span class="emph">Click</span> on elements to see their annotations.
-                            <span class="emph">Show/Hide</span> elements in the map settings <span class="explanation">(top right of the map view)</span>.
-                        </p>
-                    </div>
                 </section>
 
                 {% if notes %}
@@ -109,26 +115,28 @@
                     {% endfor %}
                 {% endif %}
 
-                <section style="min-height: 200px;" id="tab-down">
-                    <div id="overlay">
-                        <div>
-                            <a class="boxclose" id="boxclose" onclick="overlay()"></a>
-                        <p class="margin">
-                            <span>Size: </span>
-                            <input class="embed_size" type="text" name="width" value="800" id="embed-size-width" />
-                            <span> x </span>
-                            <input class="embed_size" type="text" name="height" value="400" id="embed-size-height" />
-                        </p>
-                        <p class="margin">
-                            <input class="embed_url" type="text" name="embedHtml" value="&lt;iframe src=&quot;http://mimoza.bordeaux.inria.fr/{{map_id}}/comp_min.html&quot; width=&quot;800&quot; height=&quot;400&quot; frameborder=&quot;0&quot; style=&quot;border:0&quot;&gt;&lt;/iframe&gt;" id="embed-html-snippet" />
-                        </p>
-                            <input type="hidden" name="url" value="http://mimoza.bordeaux.inria.fr/{{map_id}}/comp_min.html" id="embed-url" />
+                {% if model.getNumReactions() > 0 %}
+                    <section style="min-height: 200px;" id="tab-down">
+                        <div id="overlay">
+                            <div>
+                                <a class="boxclose" id="boxclose" onclick="overlay()"></a>
+                            <p class="margin">
+                                <span>Size: </span>
+                                <input class="embed_size" type="text" name="width" value="800" id="embed-size-width" />
+                                <span> x </span>
+                                <input class="embed_size" type="text" name="height" value="400" id="embed-size-height" />
+                            </p>
+                            <p class="margin">
+                                <input class="embed_url" type="text" name="embedHtml" value="&lt;iframe src=&quot;http://mimoza.bordeaux.inria.fr/{{map_id}}/comp_min.html&quot; width=&quot;800&quot; height=&quot;400&quot; frameborder=&quot;0&quot; style=&quot;border:0&quot;&gt;&lt;/iframe&gt;" id="embed-html-snippet" />
+                            </p>
+                                <input type="hidden" name="url" value="http://mimoza.bordeaux.inria.fr/{{map_id}}/comp_min.html" id="embed-url" />
+                            </div>
                         </div>
-                    </div>
-                    <p id="download">Download the <a href={{groups_sbml}} download>generalized model</a>.</p>
-                    <p>Download everything as a <a href={{archive_url}} download>COMBINE archive</a>.</p>
-                    <p>Embed the <a onclick="overlay()" href="#">Mimoza view</a> into your page</p>
-                </section>
+                        <p id="download">Download the <a href={{groups_sbml}} download>generalized model</a>.</p>
+                        <p>Download everything as a <a href={{archive_url}} download>COMBINE archive</a>.</p>
+                        <p>Embed the <a onclick="overlay()" href="#">Mimoza view</a> into your page</p>
+                    </section>
+                {% endif %}
             </div><!-- /content -->
         </div><!-- /tabs -->
     </div>

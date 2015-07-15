@@ -120,13 +120,13 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside, layer2mask) {
         curZoom = inZoom == null ? maxGeneralizedZoom : minSpecificZoom,
         outCId = null,
         jsonData;
-    if (compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0 && (cId == null || !compIds.hasOwnProperty(cId))) {
+    if (compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0
+        && (cId == null || !compIds.hasOwnProperty(cId))) {
         cId = compIds.hasOwnProperty(ALL_COMPARTMENTS) ? ALL_COMPARTMENTS: Object.keys(compIds)[0];
     }
     if (cId != null) {
         cIds[cId] = compIds[cId];
         jsonData = cId2jsonData[cId];
-        //$("#comp").html(compIds[cId]);
         if (cId in cId2outside) {
             outCId = cId2outside[cId];
         }
