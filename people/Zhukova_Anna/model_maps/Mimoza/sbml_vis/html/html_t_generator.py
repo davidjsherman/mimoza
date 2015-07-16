@@ -9,6 +9,7 @@ from sbml_vis.graph.graph_properties import ALL_COMPARTMENTS
 
 __author__ = 'anna'
 
+
 def create_html(model, directory, embed_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
                 map_id, c_id2out_c_id, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=''):
     m_name = model.getName()
@@ -80,7 +81,6 @@ def generate_model_html(title, h1, text, expl, more_expl, model_id, sbml, gen_sb
                            m_dir_id=m_dir_id, progress_icon=progress_icon, action=action)
 
 
-
 def generate_uploaded_sbml_html(m_name, m_id, m_url, sbml, gen_sbml, sbgn, gen_sbgn, m_dir_id, progress_icon):
     return generate_model_html(title="%s Uploaded" % (m_name if m_name else m_id), h1="Uploaded, time to generalize!",
                                text='',
@@ -116,6 +116,7 @@ def generate_generalization_finished_html(m_name, m_id, m_url, sbml, gen_sbml, s
                                it will become available at <a href="%s">%s</a>.''' % (m_url, m_url),
                                model_id=m_id, sbml=sbml, gen_sbml=gen_sbml, sbgn=sbgn, gen_sbgn=gen_sbgn,
                                m_dir_id=m_dir_id, progress_icon=progress_icon, action='visualise.py')
+
 
 def create_thanks_for_uploading_html(m_id, m_name, directory_prefix, m_dir_id, url, url_end,
                                      generate_html=generate_uploaded_sbml_html, groups_suffix='_with_groups'):

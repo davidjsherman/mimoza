@@ -3,11 +3,12 @@ import os
 import sys
 
 import libsbml
+
 from orangecontrib.bio.ontology import OBOOntology
 
-from sbml_generalization.onto.onto_getter import get_chebi
-from sbml_generalization.annotation.miriam_converter import to_identifiers_org_format
-from sbml_generalization.annotation.rdf_annotation_helper import add_annotation
+from mod_sbml.onto.onto_getter import get_chebi
+from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
+from mod_sbml.annotation.rdf_annotation_helper import add_annotation
 from sbml_generalization.sbml.sbml_helper import create_compartment, create_species, create_reaction, save_as_sbml
 
 RHEA_IN_DIR = "/home/anna/Documents/IBGC/Models/rhea/rd/"

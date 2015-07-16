@@ -1,7 +1,7 @@
 import libsbml
 
-from sbml_generalization.annotation.miriam_converter import miriam_to_term_id
-from sbml_generalization.annotation.rdf_annotation_helper import get_qualifier_values
+from mod_sbml.annotation.miriam_converter import miriam_to_term_id
+from mod_sbml.annotation.rdf_annotation_helper import get_qualifier_values
 from sbml_generalization.sbml.sbml_helper import create_compartment
 
 

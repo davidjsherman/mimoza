@@ -6,15 +6,15 @@ import cgi
 import cgitb
 from os.path import dirname, abspath
 import sys
+
 import libsbml
 
 from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
-from sbml_generalization.onto.obo_ontology import parse
-from sbml_generalization.onto.onto_getter import get_chebi
+from mod_sbml.onto.obo_ontology import parse
+from mod_sbml.onto.onto_getter import get_chebi
 from mimoza.mimoza_path import *
 from sbml_vis.html.html_t_generator import create_thanks_for_uploading_html, generate_generalization_finished_html
-
 
 cgitb.enable()
 # Windows needs stdio set for binary mode.

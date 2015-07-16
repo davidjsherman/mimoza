@@ -2,15 +2,13 @@ import logging
 
 import libsbml
 
-from sbml_generalization.annotation.mark_ubiquitous import UBIQUITOUS_THRESHOLD, get_cofactors, COMMON_UB_IDS
-
+from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD, get_cofactors, COMMON_UB_IDS
 from sbml_generalization.sbml.sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, \
     remove_unused_elements
-from sbml_generalization.generalization.model_generalizer import generalize_species, generalize_reactions, \
-    EQUIVALENT_TERM_RELATIONSHIPS
-from sbml_generalization.annotation.annotate_with_chebi import get_species_to_chebi
-from sbml_generalization.onto.obo_ontology import filter_ontology
-from sbml_generalization.utils.misc import invert_map
+from sbml_generalization.generalization.model_generalizer import generalize_species, generalize_reactions
+from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi, EQUIVALENT_RELATIONSHIPS
+from mod_sbml.onto.obo_ontology import filter_ontology
+from mod_sbml.utils.misc import invert_map
 
 
 __author__ = 'anna'
@@ -19,7 +17,7 @@ __author__ = 'anna'
 def add_equivalent_ub_chebi_ids(onto, ub_chebi_ids):
     return reduce(lambda s1, s2: s1 | s2,
                   (reduce(lambda s1, s2: s1 | s2,
-                          (it.get_all_ids() for it in onto.get_equivalents(t, relationships=EQUIVALENT_TERM_RELATIONSHIPS)),
+                          (it.get_all_ids() for it in onto.get_equivalents(t, relationships=EQUIVALENT_RELATIONSHIPS)),
                           t.get_all_ids())
                    for t in (it for it in (onto.get_term(ub_id) for ub_id in ub_chebi_ids) if it)), ub_chebi_ids)
 
@@ -53,7 +51,7 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, ub_s_ids=None, ub_che
     ub_s_ids, ub_chebi_ids = get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids)
 
     terms = (onto.get_term(t_id) for t_id in s_id2chebi_id.itervalues())
-    filter_ontology(onto, terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS, min_deepness=5)
+    filter_ontology(onto, terms, relationships=EQUIVALENT_RELATIONSHIPS, min_deepness=5)
 
     threshold = min(max(3, int(0.1 * input_model.getNumReactions())), UBIQUITOUS_THRESHOLD)
     s_id2clu, ub_s_ids = generalize_species(input_model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, threshold)

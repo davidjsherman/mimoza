@@ -2,10 +2,9 @@ from collections import defaultdict, Counter
 from itertools import chain
 import threading
 
-from sbml_generalization.sbml.reaction_filters import get_reactants, get_products
 from sbml_generalization.generalization.vertical_key import get_vk2r_ids, vk2s_vk, get_vertical_key, get_r_compartments
-from sbml_generalization.utils.misc import invert_map
-
+from mod_sbml.utils.misc import invert_map
+from mod_sbml.sbml.sbml_manager import get_metabolites
 
 __author__ = 'anna'
 
@@ -77,7 +76,7 @@ def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitou
             s_id2r_ids[s_id].append(r_id)
 
     for r in model.getListOfReactions():
-        if r.getId() in processed_r_ids or not unmapped_s_ids & (get_reactants(r) | get_products(r)):
+        if r.getId() in processed_r_ids or not unmapped_s_ids & get_metabolites(r):
             continue
         ub_rs, ub_ps, rs, ps = get_vertical_key(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
         vk = (ub_rs, ub_ps, rs, ps), get_r_compartments(model, r)
@@ -164,7 +163,7 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
         return False
 
     for r in model.getListOfReactions():
-        if r.getId() in processed_r_ids or not unmapped_s_ids & (get_reactants(r) | get_products(r)):
+        if r.getId() in processed_r_ids or not unmapped_s_ids & get_metabolites(r):
             continue
         ub_rs, ub_ps, rs, ps = get_vertical_key(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
         vk = (ub_rs, ub_ps, rs, ps), get_r_compartments(model, r)

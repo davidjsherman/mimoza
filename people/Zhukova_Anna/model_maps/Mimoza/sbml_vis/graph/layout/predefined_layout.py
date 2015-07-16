@@ -1,10 +1,7 @@
 from tulip import tlp
+from mod_sbml.annotation.chebi.chebi_annotator import CONJUGATE_ACID_BASE_RELATIONSHIPS
 from sbml_vis.graph.color.color_keys import key2coord
 from sbml_vis.graph.graph_properties import *
-
-
-CONJUGATE_ACID_OF = 'is_conjugate_acid_of'
-CONJUGATE_BASE_OF = 'is_conjugate_base_of'
 
 
 # def getKey2Layout(graph):
@@ -79,7 +76,7 @@ def get_keys(n, graph, onto, primary=False):
 
 
 def get_primary_id(term, onto):
-    terms = {term} | onto.get_equivalents(term, None, 0, {CONJUGATE_BASE_OF, CONJUGATE_ACID_OF})
+    terms = {term} | onto.get_equivalents(term, None, 0, CONJUGATE_ACID_BASE_RELATIONSHIPS)
     return sorted([t.get_id() for t in terms])[0]
 
 

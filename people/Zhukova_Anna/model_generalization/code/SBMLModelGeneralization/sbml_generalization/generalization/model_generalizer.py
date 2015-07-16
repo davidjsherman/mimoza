@@ -1,19 +1,17 @@
 from collections import Counter
 from itertools import chain
 import logging
+from mod_sbml.annotation.chebi.chebi_annotator import EQUIVALENT_RELATIONSHIPS
 
 from sbml_generalization.generalization.MaximizingThread import MaximizingThread
 from sbml_generalization.generalization.StoichiometryFixingThread import StoichiometryFixingThread, compute_s_id2clu, \
     infer_clusters, suggest_clusters
 from sbml_generalization.generalization.vertical_key import get_vk2r_ids
-from sbml_generalization.utils.misc import invert_map
-from sbml_generalization.onto.obo_ontology import Term
-from sbml_generalization.annotation.mark_ubiquitous import UBIQUITOUS_THRESHOLD
-
+from mod_sbml.utils.misc import invert_map
+from mod_sbml.onto.obo_ontology import Term
+from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD
 
 __author__ = 'anna'
-
-EQUIVALENT_TERM_RELATIONSHIPS = {'is_conjugate_base_of', 'is_conjugate_acid_of', 'is_tautomer_of'}
 
 
 def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
@@ -50,7 +48,7 @@ def cover_t_ids(model, species_id2term_id, ubiquitous_chebi_ids, t_ids, onto, cl
     term_id2clu = {}
     real_terms = {onto.get_term(t_id) for t_id in t_ids if onto.get_term(t_id)}
     unmapped_s_ids = {s_id for s_id in t_ids if not onto.get_term(s_id)}
-    roots = onto.common_points(real_terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS)
+    roots = onto.common_points(real_terms, relationships=EQUIVALENT_RELATIONSHIPS)
     if roots:
         root_id = roots[0].get_id()
         new_clu = clu + (root_id, ) if clu else (root_id, )
@@ -79,16 +77,16 @@ def update_onto(onto, term_id2clu):
             continue
         terms = {onto.get_term(t_id) for t_id in t_ids if onto.get_term(t_id)}
         if terms:
-            ancestors.extend(set(onto.common_points(terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS)))
+            ancestors.extend(set(onto.common_points(terms, relationships=EQUIVALENT_RELATIONSHIPS)))
     removed_something = False
     count = Counter(ancestors)
     for t in (t for t in count.keys() if count[t] > 1):
         # if this term has been already removed as an ancestor/equivalent of another term
         if not onto.get_term(t.get_id()):
             continue
-        for it in onto.get_generalized_ancestors(t, relationships=EQUIVALENT_TERM_RELATIONSHIPS):
+        for it in onto.get_generalized_ancestors(t, relationships=EQUIVALENT_RELATIONSHIPS):
             onto.remove_term(it, True)
-        for it in onto.get_equivalents(t, relationships=EQUIVALENT_TERM_RELATIONSHIPS):
+        for it in onto.get_equivalents(t, relationships=EQUIVALENT_RELATIONSHIPS):
             onto.remove_term(it, True)
         onto.remove_term(t, True)
         removed_something = True
@@ -138,7 +136,7 @@ def update(term_id2clu, onto):
     i = 0
     for clu, term_ids in clu2term_ids.iteritems():
         terms = {onto.get_term(t) for t in term_ids if onto.get_term(t)}
-        common_ancestors = {t for t in onto.common_points(terms, relationships=EQUIVALENT_TERM_RELATIONSHIPS)} if terms else set()
+        common_ancestors = {t for t in onto.common_points(terms, relationships=EQUIVALENT_RELATIONSHIPS)} if terms else set()
         options = common_ancestors - used
         if options:
             common_ancestor_term = options.pop()
@@ -191,7 +189,7 @@ def fix_incompatibilities(unmapped_s_ids, model, onto, species_id2chebi_id, ubiq
 
     logging.info("  aggressive metabolite grouping...")
     term_id2clu = cover_t_ids(model, species_id2chebi_id, ubiquitous_chebi_ids, chebi_ids, onto)
-    onto.trim({it[0] for it in term_id2clu.itervalues()}, relationships=EQUIVALENT_TERM_RELATIONSHIPS)
+    onto.trim({it[0] for it in term_id2clu.itervalues()}, relationships=EQUIVALENT_RELATIONSHIPS)
     suggest_clusters(model, unmapped_s_ids, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
     # filter_clu_to_terms(term_id2clu)
     # log_clus(term_id2clu, onto, model)

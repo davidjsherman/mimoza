@@ -5,9 +5,8 @@ import sys
 
 import libsbml
 
-from sbml_generalization.annotation.rdf_annotation_helper import get_taxonomy
+from mod_sbml.sbml.sbml_manager import get_taxonomy
 from sbml_generalization.runner.path2models.main import ROOT_DIR
-
 
 __author__ = 'anna'
 

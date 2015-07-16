@@ -6,6 +6,7 @@ import os
 import cgi
 import cgitb
 import sys
+
 import libsbml
 
 try:
@@ -19,8 +20,8 @@ from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.sbml2tlp import import_sbml
 from mimoza.mimoza_path import *
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
-from sbml_generalization.onto.obo_ontology import parse
-from sbml_generalization.onto.onto_getter import get_chebi
+from mod_sbml.onto.obo_ontology import parse
+from mod_sbml.onto.onto_getter import get_chebi
 
 
 cgitb.enable()

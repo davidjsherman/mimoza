@@ -33,6 +33,6 @@ setup(name='Mimoza',
           'Operating System :: POSIX',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
-      ], requires=['tulip', 'sympy', 'geojson', 'jinja2']
+      ], requires=['tulip', 'sympy', 'geojson', 'jinja2', 'mod_sbml']
 
 )

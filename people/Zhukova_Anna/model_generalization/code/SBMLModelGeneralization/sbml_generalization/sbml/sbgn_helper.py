@@ -1,7 +1,7 @@
 import libsbgnpy.libsbgn as libsbgn
 from libsbgnpy.libsbgnTypes import Language, GlyphClass, ArcClass
 
-from sbml_generalization.sbml.transformation_manager import scale, get_layout_characteristics, shift, MARGIN, transform
+from sbml_vis.graph.transformation_manager import scale, get_layout_characteristics, shift, MARGIN, transform
 
 SBO_2_GLYPH_TYPE = {'SBO:0000247': GlyphClass.SIMPLE_CHEMICAL, 'SBO:0000245': GlyphClass.MACROMOLECULE,
                     'SBO:0000421': GlyphClass.SIMPLE_CHEMICAL_MULTIMER,

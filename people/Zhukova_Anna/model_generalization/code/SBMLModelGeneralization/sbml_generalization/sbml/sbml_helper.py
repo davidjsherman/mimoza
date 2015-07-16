@@ -3,13 +3,12 @@ import logging
 
 import libsbml
 
-from sbml_generalization.sbml.transformation_manager import scale, get_layout_characteristics, shift, MARGIN
-from sbml_generalization.annotation.annotate_with_chebi import get_term
-from sbml_generalization.utils.misc import invert_map
-from sbml_generalization.annotation.miriam_converter import to_identifiers_org_format
-from sbml_generalization.annotation.rdf_annotation_helper import add_annotation, get_qualifier_values
-from sbml_generalization.sbml.reaction_filters import get_products, get_reactants, get_participants
-
+from sbml_vis.graph.transformation_manager import scale, get_layout_characteristics, shift, MARGIN
+from mod_sbml.annotation.chebi.chebi_annotator import get_term
+from mod_sbml.utils.misc import invert_map
+from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
+from mod_sbml.annotation.rdf_annotation_helper import add_annotation, get_qualifier_values
+from mod_sbml.sbml.sbml_manager import get_products, get_reactants, get_metabolites
 
 GROUP_TYPE_EQUIV = "equivalent"
 
@@ -49,7 +48,7 @@ def copy_elements(input_model, output_model):
 def remove_unused_elements(output_model):
     species_to_keep = []
     for reaction in output_model.getListOfReactions():
-        species_to_keep.extend(get_participants(reaction))
+        species_to_keep.extend(get_metabolites(reaction, include_modifiers=True))
     sp_list = list(output_model.getListOfSpecies())
     for species in sp_list:
         species_id = species.getId()
@@ -412,8 +411,8 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
             representative = input_model.getReaction(list(r_ids)[0])
             r_name = "generalized %s" % representative.getName()
             if out_sbml:
-                reactants = get_reactants(representative)
-                products = get_products(representative)
+                reactants = set(get_reactants(representative))
+                products = set(get_products(representative))
                 if (len(r_ids) == 1) and not ((reactants | products) & s_id_to_generalize):
                     generalized_model.addReaction(representative)
                     continue

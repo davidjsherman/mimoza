@@ -1,8 +1,6 @@
 from collections import defaultdict
 from itertools import chain
-
-from sbml_generalization.sbml.reaction_filters import get_reactants, get_products
-
+from mod_sbml.sbml.sbml_manager import get_products, get_reactants
 
 __author__ = 'anna'
 
@@ -59,7 +57,6 @@ def is_reactant(t_id, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
 
 
 def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
-    reactants, products = get_reactants(r), get_products(r)
 
     def classify(s_ids):
         specific, ubiquitous = [], []
@@ -72,7 +69,7 @@ def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
         transform = lambda collection: tuple(sorted(collection))
         return transform(specific), transform(ubiquitous)
 
-    specific_reactant_classes, ubiquitous_reactants = classify(reactants)
-    specific_product_classes, ubiquitous_products = classify(products)
+    specific_reactant_classes, ubiquitous_reactants = classify(get_reactants(r))
+    specific_product_classes, ubiquitous_products = classify(get_products(r))
     return ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes
 

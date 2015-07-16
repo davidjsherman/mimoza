@@ -8,20 +8,18 @@ import sys
 
 import libsbml
 import openpyxl
-
-from sbml_generalization.annotation.annotate_with_chebi import get_term
-from sbml_generalization.sbml.reaction_filters import get_r_formula, get_gene_association
-from sbml_generalization.merge.model_merger import merge_models
-from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
-from sbml_generalization.generalization.sbml_generalizer import generalize_model
-from sbml_generalization.onto.onto_getter import get_chebi
-from sbml_generalization.onto.obo_ontology import parse
-from sbml_generalization.utils.misc import invert_map
-import openpyxl
 import openpyxl.styles
 from openpyxl.styles import Style, Font
 from openpyxl.styles.colors import Color
 
+from mod_sbml.annotation.chebi.chebi_annotator import get_term, EQUIVALENT_RELATIONSHIPS
+from mod_sbml.sbml.sbml_manager import get_gene_association
+from sbml_generalization.merge.model_merger import merge_models
+from sbml_generalization.generalization.sbml_generalizer import generalize_model
+from mod_sbml.onto.onto_getter import get_chebi
+from mod_sbml.onto.obo_ontology import parse
+from mod_sbml.utils.misc import invert_map
+from mod_sbml.serialization.serialization_manager import get_sbml_r_formula
 
 __author__ = 'anna'
 
@@ -48,7 +46,7 @@ def main(argv=None):
         if verbose:
             logging.basicConfig(level=logging.INFO)
         logging.info("parsing ChEBI...")
-        ontology = parse(chebi, EQUIVALENT_TERM_RELATIONSHIPS | {'has_role'})
+        ontology = parse(chebi, EQUIVALENT_RELATIONSHIPS | {'has_role'})
         if not in_sbml and in_path:
             in_sbml_list = ['%s/%s' % (in_path, f) for f in listdir(in_path)
                             if f.find(".xml") != -1 or f.find(".sbml") != -1]
@@ -120,7 +118,8 @@ def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
         add_values(ws, row, 1, [g_id])
         for r_id in sorted(r_ids, key=lambda r_id: r_id[r_id.find('__'):]):
             r = model.getReaction(r_id)
-            add_values(ws, row, 2, [r_id, r.getName(), get_r_formula(model, r), get_gene_association(r)])
+            add_values(ws, row, 2, [r_id, r.getName(), get_sbml_r_formula(model, r, comp=True, id=True),
+                                    get_gene_association(r)])
             row += 1
         processed_r_ids |= r_ids
     ws = wb.create_sheet(3, "Ungrouped reactions")
@@ -130,7 +129,8 @@ def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
     unm_l = 0
     for r in sorted(model.getListOfReactions(), key=lambda r: r.getId()[r.getId().find('__'):]):
         if r.getId() not in processed_r_ids:
-            add_values(ws, row, 1, [r.getId(), r.getName(), get_r_formula(model, r), get_gene_association(r)])
+            add_values(ws, row, 1, [r.getId(), r.getName(), get_sbml_r_formula(model, r, comp=True, id=True),
+                                    get_gene_association(r)])
             row += 1
             unm_l += 1
     print unm_l

@@ -18,7 +18,6 @@ setup(name='SBMLModelGeneralization',
       url='https://team.inria.fr/magnome/software/',
       version='1.0',
       packages=find_packages(exclude=['sbml_generalization/runner/', 'sbml_generalization/runner/path2models']),
-      package_data={'': ['sbml_generalization/data/', 'sbml_generalization/data/*.obo']},
       include_package_data=True,
       license='LICENSE.txt',
       platform=['MacOS', 'Linux', 'Windows'],
@@ -34,5 +33,5 @@ setup(name='SBMLModelGeneralization',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
       ],
-      requires=['libsbml', 'sympy', 'libsbgnpy', 'openpyxl']
+      requires=['libsbml', 'sympy', 'libsbgnpy', 'openpyxl', 'mod_sbml']
 )

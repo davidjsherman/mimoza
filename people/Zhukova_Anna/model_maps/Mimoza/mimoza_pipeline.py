@@ -14,12 +14,12 @@ from sbml_vis.file.serializer import serialize
 from sbml_generalization.generalization.sbml_generalizer import generalize_model, ubiquitize_model
 from mimoza.mimoza_path import MIMOZA_URL
 import mimoza
-from sbml_generalization.onto.obo_ontology import parse
-from sbml_generalization.onto.onto_getter import get_chebi
+from mod_sbml.onto.obo_ontology import parse
+from mod_sbml.onto.onto_getter import get_chebi
 from sbml_generalization.sbml.sbgn_helper import save_as_sbgn
 from sbml_generalization.sbml.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml, check_for_groups, \
     SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
-from sbml_generalization.sbml.transformation_manager import scale
+from sbml_vis.graph.transformation_manager import scale
 
 __author__ = 'anna'
 
