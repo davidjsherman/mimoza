@@ -14,13 +14,13 @@ setup(name='Mimoza',
       description='SBML zoomable visualization utilities.',
       long_description=open('README.txt').read(),
       author='Anna Zhukova',
-      author_email='anna.zhukova@inria.fr',
+      author_email='zhutchok@gmail.com',
       url='http://mimoza.bordeaux.inria.fr/',
       version='1.0',
       packages=find_packages(),
       package_data={'sbml_vis.html': ['templates/*.html']},
       include_package_data=True,
-      license='LICENSE.txt',
+      license='LICENSE',
       platform=['MacOS', 'Linux', 'Windows'],
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -33,6 +33,8 @@ setup(name='Mimoza',
           'Operating System :: POSIX',
           'Topic :: Systems Biology',
           'Topic :: Software Development',
-      ], requires=['tulip', 'sympy', 'geojson', 'jinja2', 'mod_sbml']
+      ],
+      download_url='http://mimoza.bordeaux.inria.fr/',
+      requires=['tulip', 'sympy', 'geojson', 'jinja2', 'mod_sbml']
 
 )

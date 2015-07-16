@@ -4,7 +4,7 @@ import logging
 
 import libsbml
 
-from sbml_generalization.sbml.sbml_helper import generate_unique_id
+from mod_sbml.sbml.sbml_manager import generate_unique_id
 
 BOUNDARY_C_NAME = 'Boundary'
 

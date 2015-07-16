@@ -8,7 +8,7 @@ from mod_sbml.annotation.chebi.chebi_annotator import get_term
 from mod_sbml.utils.misc import invert_map
 from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
 from mod_sbml.annotation.rdf_annotation_helper import add_annotation, get_qualifier_values
-from mod_sbml.sbml.sbml_manager import get_products, get_reactants, get_metabolites
+from mod_sbml.sbml.sbml_manager import get_products, get_reactants, get_metabolites, generate_unique_id
 
 GROUP_TYPE_EQUIV = "equivalent"
 
@@ -84,27 +84,6 @@ def flatten(t):
         return ()
     else:
         return flatten(t[0]) + flatten(t[1:])
-
-
-def generate_unique_id(model, id_=None):
-    if not id_:
-        id_ = "id_"
-    else:
-        id_ = ''.join(e for e in id_ if e.isalnum() or '_' == e)
-        if id_[0].isdigit():
-            id_ = 'id_%s' % id_
-        if not model.getElementBySId(id_):
-            return id_
-    i = 0
-    while model.getElementBySId("%s_%d" % (id_, i)):
-        i += 1
-    return "%s_%d" % (id_, i)
-
-
-def generate_unique_id_increment(model, i, id_prefix):
-    while model.getElementBySId("%s_%d" % (id_prefix, i)):
-        i += 1
-    return i
 
 
 def create_compartment(model, name, outside=None, term_id=None, id_=None):
@@ -383,8 +362,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                     new_s_id = new_species.getId()
                 else:
                     s_id_increment += 1
-                    s_id_increment = generate_unique_id_increment(input_model, s_id_increment, "s_generalized")
-                    new_s_id = "s_generalized_%d" % s_id_increment
+                    new_s_id = generate_unique_id(input_model, "s_g_", s_id_increment)
                 for s_id in s_ids:
                     s_id2gr_id[s_id] = new_s_id, t
 
@@ -423,8 +401,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                 new_r_id = new_reaction.getId()
             elif len(r_ids) > 1:
                 r_id_increment += 1
-                r_id_increment = generate_unique_id_increment(input_model, r_id_increment, "r_gen")
-                new_r_id = "r_gen_%d" % r_id_increment
+                new_r_id = generate_unique_id(input_model, "r_g_", r_id_increment)
 
             if len(r_ids) > 1:
                 for r_id in r_ids:

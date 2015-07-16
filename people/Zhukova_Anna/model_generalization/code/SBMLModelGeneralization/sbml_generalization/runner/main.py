@@ -118,7 +118,7 @@ def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
         add_values(ws, row, 1, [g_id])
         for r_id in sorted(r_ids, key=lambda r_id: r_id[r_id.find('__'):]):
             r = model.getReaction(r_id)
-            add_values(ws, row, 2, [r_id, r.getName(), get_sbml_r_formula(model, r, comp=True, id=True),
+            add_values(ws, row, 2, [r_id, r.getName(), get_sbml_r_formula(model, r, show_compartments=True, show_metabolite_ids=True),
                                     get_gene_association(r)])
             row += 1
         processed_r_ids |= r_ids
@@ -129,7 +129,7 @@ def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
     unm_l = 0
     for r in sorted(model.getListOfReactions(), key=lambda r: r.getId()[r.getId().find('__'):]):
         if r.getId() not in processed_r_ids:
-            add_values(ws, row, 1, [r.getId(), r.getName(), get_sbml_r_formula(model, r, comp=True, id=True),
+            add_values(ws, row, 1, [r.getId(), r.getName(), get_sbml_r_formula(model, r, show_compartments=True, show_metabolite_ids=True),
                                     get_gene_association(r)])
             row += 1
             unm_l += 1

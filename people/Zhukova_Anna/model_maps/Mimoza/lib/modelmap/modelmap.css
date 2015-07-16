@@ -138,7 +138,7 @@ ul.menu li
     /*display:none;*/
 }
 .leaflet-label-overlay {
-    line-height:0px;
+    line-height:0;
     margin-top: 5px;
     position:absolute;
 }
@@ -146,7 +146,7 @@ ul.menu li
     padding: 0;
     margin: 0;
     position: relative;
-    border:0px solid #ac3131;
+    border:0 solid #ac3131;
     text-align: center;
     vertical-align: middle;
     display: table-cell;
@@ -154,7 +154,6 @@ ul.menu li
     font-size:.6em;
     line-height: 18px;
     /*text-overflow: clip;*/
-    vertical-align: text-top;
 }
 #overlay {
     visibility: hidden;

@@ -31,16 +31,16 @@ def get_edge_color(ubiquitous, generalized, transport, color=None):
     return VIOLET if transport else BLUE
 
 
-def get_bg_color(type, transport, color=None):
-    if TYPE_BG_SPECIES == type:
+def get_bg_color(node_type, transport, color=None):
+    if TYPE_BG_SPECIES == node_type:
         if color:
             return color
         return ORANGE
-    if TYPE_BG_REACTION == type:
+    if TYPE_BG_REACTION == node_type:
         if color:
             return color
         return TURQUOISE if transport else GREEN
-    if TYPE_BG_COMPARTMENT == type:
+    if TYPE_BG_COMPARTMENT == node_type:
         if color:
             return color
         return YELLOW

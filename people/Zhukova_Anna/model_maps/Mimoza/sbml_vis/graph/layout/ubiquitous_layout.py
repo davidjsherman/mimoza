@@ -1,5 +1,4 @@
-from collections import defaultdict
-from math import sqrt, radians, degrees, cos, sin, atan2
+from math import sqrt, radians, cos, sin, atan2
 from tulip import tlp
 
 from sbml_vis.graph.layout.layout_utils import pack_cc, layout_components

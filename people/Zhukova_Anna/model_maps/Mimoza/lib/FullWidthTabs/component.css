@@ -18,7 +18,7 @@
 }
 
 .bp-icon:after {
-	font-family: 'icomoon';
+	font-family: 'icomoon', serif;
 	speak: none;
 	font-style: normal;
 	font-weight: normal;
@@ -142,7 +142,7 @@ span {
 	text-transform: none;
 	font-weight: normal;
 	font-variant: normal;
-	font-family: 'icomoon';
+	font-family: 'icomoon', serif;
 	line-height: 1;
 	speak: none;
 	-webkit-font-smoothing: antialiased;
@@ -236,7 +236,6 @@ span {
 	}
 
 	.mediabox p {
-		margin-left: 40%;
 		margin-left: calc(40% + 25px);
 	}
 
@@ -259,7 +258,6 @@ span {
 	}
 
 	.tabs nav ul li {
-		width: 20%;
 		width: calc(20% + 1px);
 		margin: 0 0 0 -1px;
 	}

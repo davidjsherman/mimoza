@@ -8,7 +8,7 @@ import libsbml
 
 from mod_sbml.annotation.chebi.chebi_annotator import get_species_term
 from mod_sbml.sbml.sbml_manager import get_reactants, get_products, get_metabolites
-from sbml_generalization.generalization.model_generalizer import EQUIVALENT_TERM_RELATIONSHIPS
+from mod_sbml.annotation.chebi.chebi_annotator import EQUIVALENT_RELATIONSHIPS
 from mod_sbml.onto.obo_ontology import parse
 from sbml_generalization.runner.path2models.main import ROOT_DIR
 
@@ -70,13 +70,13 @@ def get_statistics():
     ontology = parse(chebi)
     # FA-CoA, trans A-CoA, hydroxy FA-CoA, oxo A-CoA
     the_ids = ['chebi:37554', 'chebi:51006', 'chebi:61902', 'chebi:15489']
-    the_terms = [{term} | ontology.getEquivalentTerms(term, relationships=EQUIVALENT_TERM_RELATIONSHIPS)
-                 | ontology.getAnyChildren(term, False, set(), relationships=EQUIVALENT_TERM_RELATIONSHIPS)
+    the_terms = [{term} | ontology.getEquivalentTerms(term, relationships=EQUIVALENT_RELATIONSHIPS)
+                 | ontology.getAnyChildren(term, False, set(), relationships=EQUIVALENT_RELATIONSHIPS)
                  for term in [ontology.getTerm(t_id) for t_id in the_ids]]
     # hydroxy A-CoA
     h_term = ontology.getTerm('chebi:62618')
-    the_terms[2] |= {h_term} | ontology.getEquivalentTerms(h_term, relationships=EQUIVALENT_TERM_RELATIONSHIPS) \
-                    | ontology.getAnyChildren(h_term, False, set(), relationships=EQUIVALENT_TERM_RELATIONSHIPS)
+    the_terms[2] |= {h_term} | ontology.getEquivalentTerms(h_term, relationships=EQUIVALENT_RELATIONSHIPS) \
+                    | ontology.getAnyChildren(h_term, False, set(), relationships=EQUIVALENT_RELATIONSHIPS)
     the_terms[0] -= (the_terms[3] | the_terms[1] | the_terms[2])
     #result = {}
     #model2key = {}
