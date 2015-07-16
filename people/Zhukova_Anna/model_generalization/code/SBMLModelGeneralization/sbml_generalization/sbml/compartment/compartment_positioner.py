@@ -2,6 +2,7 @@ import libsbml
 
 from mod_sbml.annotation.miriam_converter import miriam_to_term_id
 from mod_sbml.annotation.rdf_annotation_helper import get_qualifier_values
+from mod_sbml.onto.obo_ontology import is_a
 from sbml_generalization.sbml.sbml_helper import create_compartment
 
 
@@ -20,7 +21,7 @@ __author__ = 'anna'
 
 partOfCheck = lambda it, t_id, onto: onto.part_of(it, [t_id])
 partOf = lambda t_id, onto, candidates: {it for it in candidates if partOfCheck(it.get_id(), t_id, onto)}
-isACheck = lambda it, t_id, onto: onto.is_a(it, onto.get_term(t_id)) or (t_id.lower() == it.get_id().lower())
+isACheck = lambda it, t_id, onto: is_a(it, onto.get_term(t_id)) or (t_id.lower() == it.get_id().lower())
 isA = lambda t_id, onto, candidates: {it for it in candidates if isACheck(it, t_id, onto)}
 isAorPartOf = lambda t_id, onto, candidates: {it for it in candidates if
                                               isACheck(it, t_id, onto) or partOfCheck(it.get_id(), t_id, onto)}
@@ -323,7 +324,7 @@ def get_inner_most(onto, matches):
         it = matches.pop()
         no_better_candidate = True
         for m in matches:
-            if onto.is_a(onto.get_term(m), onto.get_term(it)) or onto.part_of(m, [it]):
+            if is_a(onto.get_term(m), onto.get_term(it)) or onto.part_of(m, [it]):
                 no_better_candidate = False
                 break
         if no_better_candidate:
@@ -341,7 +342,7 @@ def get_outer_most(onto, matches):
         it = matches.pop()
         no_better_candidate = True
         for m in matches:
-            if onto.is_a(onto.get_term(it), onto.get_term(m)) or onto.part_of(it, [m]):
+            if is_a(onto.get_term(it), onto.get_term(m)) or onto.part_of(it, [m]):
                 no_better_candidate = False
                 break
         if no_better_candidate:

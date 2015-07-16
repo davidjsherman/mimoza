@@ -9,7 +9,8 @@ from sbml_generalization.generalization.StoichiometryFixingThread import Stoichi
 from sbml_generalization.generalization.vertical_key import get_vk2r_ids
 from mod_sbml.utils.misc import invert_map
 from mod_sbml.onto.obo_ontology import Term
-from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD
+from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD, get_frequent_term_ids, \
+    select_metabolite_ids_by_term_ids
 
 __author__ = 'anna'
 
@@ -192,37 +193,22 @@ def fix_incompatibilities(unmapped_s_ids, model, onto, species_id2chebi_id, ubiq
     onto.trim({it[0] for it in term_id2clu.itervalues()}, relationships=EQUIVALENT_RELATIONSHIPS)
     suggest_clusters(model, unmapped_s_ids, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
     # filter_clu_to_terms(term_id2clu)
-    # log_clus(term_id2clu, onto, model)
+    # _log_clusters(term_id2clu, onto, model)
 
     maximization_step(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, unmapped_s_ids)
     # filter_clu_to_terms(term_id2clu)
-    # log_clus(term_id2clu, onto, model)
+    # _log_clusters(term_id2clu, onto, model)
 
     logging.info("  preserving stoichiometry...")
     fix_stoichiometry(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids, onto)
     # filter_clu_to_terms(term_id2clu)
-    # log_clus(term_id2clu, onto, model)
+    # _log_clusters(term_id2clu, onto, model)
 
     maximization_step(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, unmapped_s_ids)
     # filter_clu_to_terms(term_id2clu)
-    # log_clus(term_id2clu, onto, model)
+    # _log_clusters(term_id2clu, onto, model)
 
     return term_id2clu
-
-
-def log_clus(term_id2clu, onto, model):
-    clu2term = invert_map(term_id2clu)
-    blueprint = []
-    msg = ''
-    for clu in sorted(clu2term.iterkeys(), key=lambda k: -len(clu2term[k])):
-        term_ids = clu2term[clu]
-        if len(term_ids) == 1:
-            continue
-        blueprint.append(len(term_ids))
-        msg += "(%s) <-> %s\n" % (len(term_ids), [
-            onto.get_term(it).get_name() if onto.get_term(it) else model.getSpecies(
-                it).getName() if model.getSpecies(it) else it for it in term_ids])
-    logging.info("    quotient species sets: %s\n%s\n\n" % (sorted(blueprint), msg))
 
 
 def generalize_species(model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, threshold=UBIQUITOUS_THRESHOLD):
@@ -238,20 +224,26 @@ def generalize_species(model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, thres
     else:
         s_id2clu = {}
     if not ub_s_ids:
-        s_id2deg = Counter()
-        for r in model.getListOfReactions():
-            for s_id in (species_ref.getSpecies() for species_ref in
-                         chain(r.getListOfReactants(), r.getListOfProducts())):
-                s_id2deg.update({s_id: 1})
-        chebi_id2s_id = invert_map(s_id2chebi_id)
-        for chebi_id, s_ids in chebi_id2s_id.iteritems():
-            count = max(s_id2deg[s_id] for s_id in s_ids)
-            for s_id in s_ids:
-                s_id2deg[s_id] = count
-        ub_s_ids = {s.getId() for s in model.getListOfSpecies() if
-                    (s.getId() not in s_id2clu) and
-                    (s_id2deg[s.getId()] >= threshold
-                     or (s.getId() in s_id2chebi_id and s_id2chebi_id[s.getId()] in ub_chebi_ids))}
+        frequent_ch_ids = get_frequent_term_ids(model, s_id2chebi_id, threshold)
+        ub_s_ids = select_metabolite_ids_by_term_ids(model, frequent_ch_ids, s_id2chebi_id) - set(s_id2clu.iterkeys())
     # unmapped_s_ids = {s_id for s_id in unmapped_s_ids if s_id not in s_id2clu}
     # infer_clusters(model, unmapped_s_ids, s_id2clu, species_id2chebi_id, ub_chebi_ids)
     return s_id2clu, ub_s_ids
+
+
+# =============================================================
+
+
+def _log_clusters(term_id2clu, onto, model):
+    clu2term = invert_map(term_id2clu)
+    blueprint = []
+    logging.info("-------------------\nquotient species sets:\n-------------------")
+    for clu in sorted(clu2term.iterkeys(), key=lambda k: -len(clu2term[k])):
+        term_ids = clu2term[clu]
+        if len(term_ids) == 1:
+            continue
+        blueprint.append(len(term_ids))
+        logging.info("(%d)\t%s\n" % (len(term_ids), [
+            onto.get_term(it).get_name() if onto.get_term(it) else model.getSpecies(
+                it).getName() if model.getSpecies(it) else it for it in term_ids]))
+    logging.info("Cluster sizes: %s\n-------------------\n\n" % sorted(blueprint, key=lambda s: -s))

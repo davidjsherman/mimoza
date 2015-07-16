@@ -2,11 +2,12 @@ import logging
 
 import libsbml
 
-from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD, get_cofactors, COMMON_UB_IDS
+from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD, select_metabolite_ids_by_term_ids, get_ubiquitous_chebi_ids
 from sbml_generalization.sbml.sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, \
     remove_unused_elements
 from sbml_generalization.generalization.model_generalizer import generalize_species, generalize_reactions
-from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi, EQUIVALENT_RELATIONSHIPS
+from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi, EQUIVALENT_RELATIONSHIPS, \
+    add_equivalent_chebi_ids
 from mod_sbml.onto.obo_ontology import filter_ontology
 from mod_sbml.utils.misc import invert_map
 
@@ -14,27 +15,17 @@ from mod_sbml.utils.misc import invert_map
 __author__ = 'anna'
 
 
-def add_equivalent_ub_chebi_ids(onto, ub_chebi_ids):
-    return reduce(lambda s1, s2: s1 | s2,
-                  (reduce(lambda s1, s2: s1 | s2,
-                          (it.get_all_ids() for it in onto.get_equivalents(t, relationships=EQUIVALENT_RELATIONSHIPS)),
-                          t.get_all_ids())
-                   for t in (it for it in (onto.get_term(ub_id) for ub_id in ub_chebi_ids) if it)), ub_chebi_ids)
-
-
 def get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids):
     if ub_s_ids:
         if not ub_chebi_ids:
             ub_chebi_ids = set()
         ub_chebi_ids |= {s_id2chebi_id[s_id] for s_id in ub_s_ids if s_id in s_id2chebi_id}
-    if not ub_chebi_ids:
-        ub_chebi_ids = get_cofactors(onto) | COMMON_UB_IDS
-        ub_chebi_ids = add_equivalent_ub_chebi_ids(onto, ub_chebi_ids)
     else:
-        ub_chebi_ids = add_equivalent_ub_chebi_ids(onto, ub_chebi_ids)
-    if not ub_s_ids:
-        ub_s_ids = {s.getId() for s in input_model.getListOfSpecies() if
-                    s.getId() in s_id2chebi_id and s_id2chebi_id[s.getId()] in ub_chebi_ids}
+        if not ub_chebi_ids:
+            ub_chebi_ids = get_ubiquitous_chebi_ids(add_common=True, add_cofactors=True, add_frequent=False, onto=onto)
+        else:
+            ub_chebi_ids = add_equivalent_chebi_ids(onto, ub_chebi_ids)
+        ub_s_ids = select_metabolite_ids_by_term_ids(input_model, ub_chebi_ids, s_id2chebi_id)
     return ub_s_ids, ub_chebi_ids
 
 
@@ -66,7 +57,6 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, ub_s_ids=None, ub_che
 
 
 def ubiquitize_model(groups_sbml, in_sbml, onto, ub_s_ids=None, ub_chebi_ids=None):
-    # input_model
     input_doc = libsbml.SBMLReader().readSBML(in_sbml)
     input_model = input_doc.getModel()
 
