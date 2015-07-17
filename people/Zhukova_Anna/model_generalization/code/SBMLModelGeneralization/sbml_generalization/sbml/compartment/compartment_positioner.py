@@ -2,7 +2,6 @@ import libsbml
 
 from mod_sbml.annotation.miriam_converter import miriam_to_term_id
 from mod_sbml.annotation.rdf_annotation_helper import get_qualifier_values
-from mod_sbml.onto.obo_ontology import is_a
 from sbml_generalization.sbml.sbml_helper import create_compartment
 
 
@@ -21,7 +20,7 @@ __author__ = 'anna'
 
 partOfCheck = lambda it, t_id, onto: onto.part_of(it, [t_id])
 partOf = lambda t_id, onto, candidates: {it for it in candidates if partOfCheck(it.get_id(), t_id, onto)}
-isACheck = lambda it, t_id, onto: is_a(it, onto.get_term(t_id)) or (t_id.lower() == it.get_id().lower())
+isACheck = lambda it, t_id, onto: onto.is_a(it.get_id(), t_id) or (t_id.lower() == it.get_id())
 isA = lambda t_id, onto, candidates: {it for it in candidates if isACheck(it, t_id, onto)}
 isAorPartOf = lambda t_id, onto, candidates: {it for it in candidates if
                                               isACheck(it, t_id, onto) or partOfCheck(it.get_id(), t_id, onto)}
@@ -160,13 +159,12 @@ def nest_compartments_with_gene_ontology(t_ids, onto):
 
     populated = {org for org in organelle2parts.iterkeys() if lambda org: organelle2parts[org]}
     # organelle
-    organelle = onto.get_term(GO_ORGANELLE)
-    organelle_ids = {it.get_id() for it in organelle.get_descendants(False)} | {GO_ORGANELLE.lower()}
+    organelle_ids = onto.get_descendants(GO_ORGANELLE, False) | {GO_ORGANELLE.lower()}
     for it in no_organelle_parts:
         if it in organelles:
             if it in populated:
                 continue
-            parents = set(onto.get_descendants(it, False)) & populated
+            parents = {onto.get_term(t) for t in onto.get_descendants(it, False)} & populated
             if parents:
                 organelle2parts[parents.pop()].add(it)
                 continue
@@ -324,7 +322,7 @@ def get_inner_most(onto, matches):
         it = matches.pop()
         no_better_candidate = True
         for m in matches:
-            if is_a(onto.get_term(m), onto.get_term(it)) or onto.part_of(m, [it]):
+            if onto.is_a(m, it) or onto.part_of(m, [it]):
                 no_better_candidate = False
                 break
         if no_better_candidate:
@@ -342,7 +340,7 @@ def get_outer_most(onto, matches):
         it = matches.pop()
         no_better_candidate = True
         for m in matches:
-            if is_a(onto.get_term(it), onto.get_term(m)) or onto.part_of(it, [m]):
+            if onto.is_a(it, m) or onto.part_of(it, [m]):
                 no_better_candidate = False
                 break
         if no_better_candidate:

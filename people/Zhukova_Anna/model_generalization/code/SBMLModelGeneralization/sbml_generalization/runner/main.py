@@ -12,12 +12,12 @@ import openpyxl.styles
 from openpyxl.styles import Style, Font
 from openpyxl.styles.colors import Color
 
-from mod_sbml.annotation.chebi.chebi_annotator import get_term, EQUIVALENT_RELATIONSHIPS
+from mod_sbml.annotation.chebi.chebi_annotator import get_term
 from mod_sbml.sbml.sbml_manager import get_gene_association
 from sbml_generalization.merge.model_merger import merge_models
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
-from mod_sbml.onto.onto_getter import get_chebi
-from mod_sbml.onto.obo_ontology import parse
+from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
+from mod_sbml.onto import parse_simple
 from mod_sbml.utils.misc import invert_map
 from mod_sbml.serialization.serialization_manager import get_sbml_r_formula
 
@@ -46,7 +46,7 @@ def main(argv=None):
         if verbose:
             logging.basicConfig(level=logging.INFO)
         logging.info("parsing ChEBI...")
-        ontology = parse(chebi, EQUIVALENT_RELATIONSHIPS | {'has_role'})
+        ontology = parse_simple(chebi)
         if not in_sbml and in_path:
             in_sbml_list = ['%s/%s' % (in_path, f) for f in listdir(in_path)
                             if f.find(".xml") != -1 or f.find(".sbml") != -1]

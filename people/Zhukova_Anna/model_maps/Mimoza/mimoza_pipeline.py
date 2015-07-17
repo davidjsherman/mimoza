@@ -14,8 +14,8 @@ from sbml_vis.file.serializer import serialize
 from sbml_generalization.generalization.sbml_generalizer import generalize_model, ubiquitize_model
 from mimoza.mimoza_path import MIMOZA_URL
 import mimoza
-from mod_sbml.onto.obo_ontology import parse
-from mod_sbml.onto.onto_getter import get_chebi
+from mod_sbml.onto import parse_simple
+from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from sbml_generalization.sbml.sbgn_helper import save_as_sbgn
 from sbml_generalization.sbml.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml, check_for_groups, \
     SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
@@ -23,8 +23,10 @@ from sbml_vis.graph.transformation_manager import scale
 
 __author__ = 'anna'
 
+
 def get_lib():
     return os.path.join(os.path.dirname(os.path.abspath(mimoza.mimoza_path.__file__)), '..', 'lib')
+
 
 def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_file=None,
                  id2mask=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None):
@@ -58,7 +60,7 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
             if not libsbml.SBMLWriter().writeSBMLToFile(doc, groups_sbml):
                 raise Exception("Could not write your model to %s" % groups_sbml)
     else:
-        chebi = parse(get_chebi())
+        chebi = parse_simple(get_chebi())
         if generalize:
             generalize_model(groups_sbml, gen_sbml, sbml, chebi, ub_chebi_ids=ub_ch_ids)
         else:

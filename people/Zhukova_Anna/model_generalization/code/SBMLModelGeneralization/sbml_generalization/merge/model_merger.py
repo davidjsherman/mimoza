@@ -3,12 +3,13 @@ import logging
 import libsbml
 
 from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi
+from mod_sbml.annotation.gene_ontology.go_serializer import get_go
 from sbml_generalization.sbml.compartment.compartment_manager import need_boundary_compartment, \
     separate_boundary_species
 from mod_sbml.annotation.rdf_annotation_helper import get_qualifier_values, add_annotation
 from sbml_generalization.sbml.compartment.compartment_positioner import get_comp2go
-from mod_sbml.onto.obo_ontology import parse
-from mod_sbml.onto.onto_getter import get_go, get_chebi
+from mod_sbml.onto import parse_simple
+from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from sbml_generalization.sbml.sbml_helper import set_consistency_level
 
 
@@ -140,8 +141,8 @@ def copy_compartment(e, model):
 def merge_models(in_sbml_list, out_sbml):
     if not in_sbml_list:
         raise ValueError('Provide SBML models to be merged')
-    go = parse(get_go())
-    chebi = parse(get_chebi())
+    go = parse_simple(get_go())
+    chebi = parse_simple(get_chebi())
     i = 0
     model_ids = set()
     go2c_id = {}

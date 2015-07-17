@@ -8,7 +8,7 @@ from sbml_generalization.generalization.StoichiometryFixingThread import Stoichi
     infer_clusters, suggest_clusters
 from sbml_generalization.generalization.vertical_key import get_vk2r_ids
 from mod_sbml.utils.misc import invert_map
-from mod_sbml.onto.obo_ontology import Term
+from mod_sbml.onto.term import Term
 from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD, get_frequent_term_ids, \
     select_metabolite_ids_by_term_ids
 
@@ -57,7 +57,7 @@ def cover_t_ids(model, species_id2term_id, ubiquitous_chebi_ids, t_ids, onto, cl
     roots = set()
     for term in real_terms:
         roots |= onto.get_generalized_ancestors_of_level(term, set(), None, 4)
-    psi = {tuple(sorted(t.id for t in onto.get_sub_tree(root))): root.id for root in roots}
+    psi = {tuple(sorted(t.get_id() for t in onto.get_sub_tree(root))): root.get_id() for root in roots}
     for t_set, root_id in greedy({t.get_id() for t in real_terms}, psi, {it: 1 for it in psi}):
         new_clu = clu + (root_id, ) if clu else (root_id, )
         term_id2clu.update({t_id: new_clu for t_id in t_set})
@@ -143,7 +143,7 @@ def update(term_id2clu, onto):
             common_ancestor_term = options.pop()
         else:
             name = common_ancestors.pop().get_name() + " (another)" if common_ancestors else 'fake term'
-            common_ancestor_term = Term(t_id="chebi:unknown_{0}".format(i), name=name)
+            common_ancestor_term = Term(onto=onto, t_id="chebi:unknown_{0}".format(i), name=name)
             onto.add_term(common_ancestor_term)
             i += 1
         used.add(common_ancestor_term)

@@ -6,7 +6,7 @@ import libsbml
 
 from orangecontrib.bio.ontology import OBOOntology
 
-from mod_sbml.onto.onto_getter import get_chebi
+from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
 from mod_sbml.annotation.rdf_annotation_helper import add_annotation
 from sbml_generalization.sbml.sbml_helper import create_compartment, create_species, create_reaction, save_as_sbml

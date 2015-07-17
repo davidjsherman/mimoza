@@ -9,7 +9,7 @@ import libsbml
 from mod_sbml.annotation.chebi.chebi_annotator import get_species_term
 from mod_sbml.sbml.sbml_manager import get_reactants, get_products, get_metabolites
 from mod_sbml.annotation.chebi.chebi_annotator import EQUIVALENT_RELATIONSHIPS
-from mod_sbml.onto.obo_ontology import parse
+from mod_sbml.onto import parse_simple
 from sbml_generalization.runner.path2models.main import ROOT_DIR
 
 __author__ = 'anna'
@@ -67,7 +67,7 @@ def test_acyl_coa_number(model, acyl_coa_terms, chebi):
 
 def get_statistics():
     chebi = os.getcwd() + "/../../data/chebi.obo"
-    ontology = parse(chebi)
+    ontology = parse_simple(chebi)
     # FA-CoA, trans A-CoA, hydroxy FA-CoA, oxo A-CoA
     the_ids = ['chebi:37554', 'chebi:51006', 'chebi:61902', 'chebi:15489']
     the_terms = [{term} | ontology.getEquivalentTerms(term, relationships=EQUIVALENT_RELATIONSHIPS)

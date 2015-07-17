@@ -3,8 +3,10 @@ from tulip import tlp
 
 from sbml_generalization.sbml.sbml_helper import check_names, check_compartments, parse_group_sbml, GrPlError
 from sbml_generalization.sbml.compartment.compartment_positioner import get_comp2go, comp2level
-from mod_sbml.onto.obo_ontology import parse, Term
-from mod_sbml.onto.onto_getter import get_chebi, get_go
+from mod_sbml.onto import parse_simple
+from mod_sbml.onto.term import Term
+from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
+from mod_sbml.annotation.gene_ontology.go_serializer import get_go
 from mod_sbml.sbml.sbml_manager import get_gene_association
 from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi
 from sbml_vis.graph.node_cloner import clone_node
@@ -156,7 +158,7 @@ def compute_c_id2info(c_id2level, comp2go_term, input_model):
 
 def import_sbml(input_model, sbml_file):
     logging.info('parsing ChEBI')
-    chebi = parse(get_chebi())
+    chebi = parse_simple(get_chebi())
 
     logging.info('reading generalized model from %s' % sbml_file)
     r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = get_quotient_maps(chebi, input_model, sbml_file)
@@ -166,7 +168,7 @@ def import_sbml(input_model, sbml_file):
     check_compartments(input_model)
 
     logging.info('annotating with GO')
-    go = parse(get_go())
+    go = parse_simple(get_go())
     comp2go_term = get_comp2go(input_model, go)
     c_id2level = comp2level(input_model, go)
     c_id2info, c_id2outs = compute_c_id2info(c_id2level, comp2go_term, input_model)

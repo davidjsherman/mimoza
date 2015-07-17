@@ -8,10 +8,10 @@ from os.path import dirname, abspath
 import sys
 
 import libsbml
-from mod_sbml.annotation.chebi.chebi_annotator import EQUIVALENT_RELATIONSHIPS
+
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
-from mod_sbml.onto.obo_ontology import parse
-from mod_sbml.onto.onto_getter import get_chebi
+from mod_sbml.onto import parse_simple
+from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from mimoza.mimoza_path import *
 from sbml_vis.html.html_t_generator import create_thanks_for_uploading_html, generate_generalization_finished_html
 
@@ -73,7 +73,7 @@ try:
     groups_sbml = os.path.join(sbml_directory, '%s_with_groups.xml' % m_id)
 
     if not os.path.exists(groups_sbml):
-        chebi = parse(get_chebi(), EQUIVALENT_RELATIONSHIPS | {'has_role'})
+        chebi = parse_simple(get_chebi())
         gen_sbml = os.path.join(sbml_directory, '%s_generalized.xml' % m_id)
         r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = generalize_model(groups_sbml, gen_sbml, sbml, chebi
                                                                               )

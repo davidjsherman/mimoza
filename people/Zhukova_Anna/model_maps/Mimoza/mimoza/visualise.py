@@ -20,8 +20,8 @@ from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.sbml2tlp import import_sbml
 from mimoza.mimoza_path import *
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
-from mod_sbml.onto.obo_ontology import parse
-from mod_sbml.onto.onto_getter import get_chebi
+from mod_sbml.onto import parse_simple
+from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 
 
 cgitb.enable()
@@ -76,7 +76,7 @@ try:
     url = '/%s/comp.html' % m_dir_id
 
     if not os.path.exists(os.path.join('..', m_dir_id, 'comp.html')):
-        chebi = parse(get_chebi())
+        chebi = parse_simple(get_chebi())
         reader = libsbml.SBMLReader()
         input_document = reader.readSBML(groups_sbml)
         input_model = input_document.getModel()
