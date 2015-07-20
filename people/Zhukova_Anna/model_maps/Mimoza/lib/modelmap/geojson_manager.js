@@ -13,11 +13,10 @@ var MARGIN = 156,
     BG_COMPARTMENT = 6,
     BG = [BG_SPECIES, BG_REACTION, BG_COMPARTMENT],
     TRANSPORT = "transport to outside",
-    INNER_TRANSPORT = "inside transport",
     MIN_LABEL_SIZE = 10,
     MAX_LABEL_SIZE = 16,
     TRANSPORT_MASK = 1,
-    INNER_TRANSPORT_MASK = 1 + (1 << 1),
+    NON_TRANSPORT_MASK = 1 << 1,
     UBIQUITOUS_MASK = 1 << 2;
 
 function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, minZoom, cId,
@@ -38,8 +37,7 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             zIndexOffset: 0,
             riseOnHover: false
         };
-        if ((0 != (feature.properties.layer & TRANSPORT_MASK))
-            || (0 != (feature.properties.layer & INNER_TRANSPORT_MASK))) {
+        if (0 != (feature.properties.layer & TRANSPORT_MASK)) {
             props.dashArray = '2, 2';
             props.weight = Math.max(Math.min(w / 4, 10), 1)
         }
@@ -131,7 +129,7 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         }
         [feature.properties.name, feature.properties.id, feature.properties.t, feature.properties.lbl].forEach(function (key) {
             if (key) {
-                key = key.replace('<sub>', '').replace('</sub>', '');
+                key = key.replace(new RegExp('(<sub>)|(</sub>)', 'g'), '');
                 if (!name2popup.hasOwnProperty(key)) {
                     name2popup[key] = popup;
                 }
@@ -159,11 +157,11 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             {
                 icon: L.divIcon({
                     className: 'element-label',
-                    html: "<p class=\"label-span\" style=\"font-size:" + size +
+                    html: "<span class=\"label-span\" style=\"font-size:" + size +
                     "px;line-height:" + (size + 2) + "px;color:" +
                     (BG_COMPARTMENT == feature.properties.type ? feature.properties.color : "black") + "\">"
-                    + lbl + "</p>",
-                    iconSize: [w * Math.pow(2, minLabelZoom + 1), h * Math.pow(2, minLabelZoom + 1)],
+                    + lbl + "</span>",
+                    iconSize: [w * Math.pow(2, minLabelZoom + 1), (size + 3)],
                     zIndexOffset: 0,
                     riseOnHover: false,
                     riseOffset: 0
@@ -217,14 +215,10 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
 function matchesCompartment(cId, feature) {
     "use strict";
     if (TRANSPORT === cId) {
-        return (0 != (feature.properties.layer & TRANSPORT_MASK))
-            && (0 == (feature.properties.layer & INNER_TRANSPORT_MASK));
+        return (0 == (feature.properties.layer & NON_TRANSPORT_MASK))
+            && (0 != (feature.properties.layer & TRANSPORT_MASK));
     }
-    if (INNER_TRANSPORT === cId) {
-        return (0 != (feature.properties.layer & INNER_TRANSPORT_MASK));
-    }
-    return (0 == (feature.properties.layer & TRANSPORT_MASK))
-            && (0 == (feature.properties.layer & INNER_TRANSPORT_MASK));//cId === feature.properties.c_id || cId === feature.properties.id;
+    return (0 == (feature.properties.layer & TRANSPORT_MASK)) || (0 != (feature.properties.layer & NON_TRANSPORT_MASK));
 }
 
 function getFilteredJson(map, compLayer, ubLayer, jsn, name2popup, name2zoom, fromZoom, toZoom, mapId, coords, minZoom,

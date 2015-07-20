@@ -26,8 +26,7 @@ function getPopup(feature, popupW, popupH) {
         return;
     }
     var content = "<p class='emph centre'>" + feature.properties.name + "</p>" + p(i("id: ") + feature.properties.id),
-        tr = (0 != (feature.properties.layer & TRANSPORT_MASK))
-            || (0 != (feature.properties.layer & INNER_TRANSPORT_MASK));
+        tr = (0 != (feature.properties.layer & TRANSPORT_MASK));
     if (REACTION == feature.properties.type) {
         var transport = tr ? p(i("Is a transport reaction.")) : "",
             ga_res = feature.properties.term ? p(feature.properties.term) : "",
@@ -54,8 +53,7 @@ function getLabel(feature) {
         return null;
     }
     var label = "<p class='emph centre'>" + feature.properties.name + "</p>" + p(i("id: ") + feature.properties.id),
-        tr = (0 != (feature.properties.layer & TRANSPORT_MASK))
-            || (0 != (feature.properties.layer & INNER_TRANSPORT_MASK));
+        tr = (0 != (feature.properties.layer & TRANSPORT_MASK));
     if (REACTION == feature.properties.type) {
         var transport = tr ? p(i("Is a transport reaction.")) : "",
             formula = feature.properties.f ? p(feature.properties.f) : ""; //p(formatFormula(feature.properties.rev, feature.properties.rs, feature.properties.ps));
