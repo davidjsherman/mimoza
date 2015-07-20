@@ -4,13 +4,14 @@ from sympy.logic.boolalg import disjuncts, conjuncts
 import math
 
 import geojson
+from sbml_vis.graph.rename import get_short_name, convert_formula_to_html
 
 from sbml_vis.graph.color.colorer import get_edge_color, get_reaction_color, get_compartment_color, get_species_color, \
     get_bg_color
 from sbml_vis.graph.graph_properties import TYPE_SPECIES, TYPE_COMPARTMENT, TYPE_REACTION, VIEW_SIZE, VIEW_LAYOUT, TYPE, \
     VIEW_META_GRAPH, UBIQUITOUS, VIEW_COLOR, TYPE_EDGE, STOICHIOMETRY, WIDTH, COLOR, COMPARTMENT_ID, REVERSIBLE, TERM, \
     FORMULA, HEIGHT, T, COMPARTMENT_NAME, TYPE_2_BG_TYPE, ID, TRANSPORT, TYPE_BG_REACTION, TYPE_BG_COMPARTMENT, NAME, \
-    ANCESTOR_NAME
+    ANCESTOR_NAME, LABEL
 from sbml_vis.graph.resize import get_e_size
 
 __author__ = 'anna'
@@ -27,6 +28,7 @@ DEFAULT_LAYER = 'default'
 DEFAULT_MASK = 1 << 3
 
 DEFAULT_LAYER2MASK = {DEFAULT_LAYER: DEFAULT_MASK}
+
 
 def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
     if n_type == TYPE_REACTION:
@@ -123,7 +125,7 @@ def e2feature(graph, e, e_id, transport, inner, e2layout, mask=DEFAULT_LAYER2MAS
     return features
 
 
-def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, mask=DEFAULT_LAYER):
+def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, mask=DEFAULT_LAYER, onto=None):
     root = graph.getRoot()
 
     x, y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
@@ -133,7 +135,7 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, mask=DEFAULT
     node_type = root[TYPE][n]
     generalized = graph.isMetaNode(n)
     props = {WIDTH: w, TYPE: node_type, COMPARTMENT_ID: c_id, ID: root[ID][n],
-             NAME: root[NAME][n], LAYER: mask}  # LABEL: get_short_name(graph, n, onto)}
+             NAME: root[NAME][n], LAYER: mask}
     color = triplet(root[VIEW_COLOR][n])
     if TYPE_REACTION == node_type:
         # ins, outs = get_formula(graph, n, r2rs_ps)
@@ -170,6 +172,10 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, mask=DEFAULT
 
         props.update({HEIGHT: h, COLOR: get_compartment_color(color)})
     elif TYPE_SPECIES == node_type:
+        props[LABEL] = get_short_name(graph, n, onto)
+        if root[FORMULA][n]:
+            props[FORMULA] = convert_formula_to_html(root[FORMULA][n])
+        props[LABEL] = get_short_name(graph, n, onto)
         ubiquitous = root[UBIQUITOUS][n]
         if ubiquitous:
             # let's not store unneeded False
@@ -200,6 +206,8 @@ def n2feature(graph, n, n_id, c_id2info, r2rs_ps, transport, inner, mask=DEFAULT
         node_type = TYPE_2_BG_TYPE[node_type]
         bg_props = {ID: root[ID][n], WIDTH: w, TYPE: node_type, COLOR: get_bg_color(node_type, transport, color),
                     LAYER: mask}
+        if LABEL in props:
+            bg_props[LABEL] = props[LABEL]
         if TRANSPORT in props:
             # let's not store unneeded False
             # bg_props[TRANSPORT] = True

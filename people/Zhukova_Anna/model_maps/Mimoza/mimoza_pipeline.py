@@ -97,7 +97,7 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
                         n2xy[n_id] = value
     except LoPlError:
         n2xy = None
-    fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, n2xy, id2mask=id2mask)
+    fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, n2xy, id2mask=id2mask, onto=chebi)
     if n2lo:
         groups_document = reader.readSBML(groups_sbml)
         groups_model = groups_document.getModel()

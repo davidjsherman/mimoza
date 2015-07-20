@@ -30,7 +30,7 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         var props = {
             color: feature.properties.color,
             opacity: 1,
-            weight: Math.min(Math.min(w / 2, 10), 4),
+            weight: Math.max(Math.min(w / 2, 10), 1),
             lineCap: 'round',
             lineJoin: 'round',
             clickable: false,
@@ -38,6 +38,11 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             zIndexOffset: 0,
             riseOnHover: false
         };
+        if ((0 != (feature.properties.layer & TRANSPORT_MASK))
+            || (0 != (feature.properties.layer & INNER_TRANSPORT_MASK))) {
+            props.dashArray = '2, 2';
+            props.weight = Math.max(Math.min(w / 4, 10), 1)
+        }
         return L.polyline(e.map(function (coord) {
             return map.unproject(coord, 1);
         }), props);
@@ -124,8 +129,9 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         if (SPECIES == feature.properties.type) {
             addSelectionCircles(feature.properties.id);
         }
-        [feature.properties.name, feature.properties.id, feature.properties.t].forEach(function (key) {
+        [feature.properties.name, feature.properties.id, feature.properties.t, feature.properties.lbl].forEach(function (key) {
             if (key) {
+                key = key.replace('<sub>', '').replace('</sub>', '');
                 if (!name2popup.hasOwnProperty(key)) {
                     name2popup[key] = popup;
                 }
@@ -139,72 +145,62 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
     }
 
     node = L.featureGroup([node]);
-    var z2label = {},
-        wz = null,
-        sz = null;
-    for (var z = fromZoom; z <= toZoom; z ++) {
-        if (sz == null) {
-            var scale = Math.pow(2, z);
-            sz = h * scale;
-            wz = w * scale;
-        } else {
-            sz *= 2;
-            wz *= 2;
+
+
+    var lbl = (REACTION == feature.properties.type ? feature.properties.id :
+                (SPECIES == feature.properties.type ? feature.properties.lbl : feature.properties.name)),
+        minLabelZoom = Math.max(fromZoom,
+            Math.ceil(Math.log(Math.max(MIN_LABEL_SIZE / h, lbl.length / (2 * w))) / Math.LN2)
+        );
+    if (minLabelZoom <= toZoom) {
+        var size = Math.min(Math.max(Math.round(w * Math.pow(2, minLabelZoom - 1)), MIN_LABEL_SIZE), MAX_LABEL_SIZE);
+
+        var marker = L.marker(centre,
+            {
+                icon: L.divIcon({
+                    className: 'element-label',
+                    html: "<p class=\"label-span\" style=\"font-size:" + size +
+                    "px;line-height:" + (size + 2) + "px;color:" +
+                    (BG_COMPARTMENT == feature.properties.type ? feature.properties.color : "black") + "\">"
+                    + lbl + "</p>",
+                    iconSize: [w * Math.pow(2, minLabelZoom + 1), h * Math.pow(2, minLabelZoom + 1)],
+                    zIndexOffset: 0,
+                    riseOnHover: false,
+                    riseOffset: 0
+                })
+            }
+        );
+        if (popup != undefined) {
+            marker.bindPopup(popup);
         }
-        if (sz >= MIN_LABEL_SIZE) {
-            var size = Math.min(Math.max(Math.round(sz / 2), MIN_LABEL_SIZE), MAX_LABEL_SIZE);
-            var marker = L.marker(centre,
-                {
-                    icon: L.divIcon({
-                        className: 'element-label',
-                        html: "<span style=\"font-size:" + size +
-                        "px;line-height:" + (size + 1) + "px;color:" +
-                        (BG_COMPARTMENT == feature.properties.type ? feature.properties.color : "black") + "\">"
-                        + (REACTION == feature.properties.type ? feature.properties.id : feature.properties.name) + "</span>",
-                        iconSize: [wz, sz - sz % (size + 1)],
-                        zIndexOffset: 0,
-                        riseOnHover: false,
-                        riseOffset: 0
-                    })
+        if (label != undefined) {
+            marker.bindLabel(label, {direction: "auto", opacity: 1});
+        }
+
+        if (typeof map.getZoom() !== 'undefined') {
+            if (map.getZoom() >= minLabelZoom && map.getZoom() <= toZoom) {
+                node.addLayer(marker);
+            }
+        } else if (fromZoom == minLabelZoom) {
+            node.addLayer(marker);
+        }
+        map.on('zoomend', function (e) {
+            if (map.getZoom() >= minLabelZoom && map.getZoom() <= toZoom) {
+                if (!node.hasLayer(marker)) {
+                    node.addLayer(marker);
                 }
-            );
-            if (popup != undefined) {
-                marker.bindPopup(popup);
+            } else {
+                node.removeLayer(marker);
             }
-            if (label != undefined) {
-                marker.bindLabel(label, {direction: "auto", opacity: 1});
-            }
-            z2label[z] = marker;
-            if (size == 14) {
-                for (var zz = z + 1; zz <= toZoom; zz++) {
-                    z2label[zz] = marker;
-                }
-                break;
-            }
-        }
+        });
     }
-    if (typeof map.getZoom() !== 'undefined') {
-        if (z2label.hasOwnProperty(map.getZoom())) {
-            node.addLayer(z2label[map.getZoom()]);
-        }
-    } else if (z2label.hasOwnProperty(fromZoom)) {
-        node.addLayer(z2label[fromZoom]);
-    }
+
     if (popup != undefined) {
         node.bindPopup(popup);
     }
     if (label != undefined) {
         node.bindLabel(label, {direction: "auto", opacity: 1});
     }
-    map.on('zoomend', function (e) {
-        for (z in z2label) {
-            node.removeLayer(z2label[z]);
-        }
-        z = map.getZoom();
-        if (z2label.hasOwnProperty(z)) {
-            node.addLayer(z2label[z]);
-        }
-    });
 
     if (COMPARTMENT == feature.properties.type) {
         map.on('zoomend', function (e) {

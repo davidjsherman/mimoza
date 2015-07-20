@@ -3,38 +3,50 @@ from sbml_vis.graph.graph_properties import *
 
 def get_short_name(graph, n, onto):
     graph = graph.getRoot()
-    short_name = graph[NAME][n]
+    short_name = graph[NAME][n] if graph[NAME][n] else graph[ID][n]
 
     # remove compartment from the name,
     # e.g. H2O [peroxisome] --> H2O
     short_name.replace("[%s]" % graph[COMPARTMENT_ID][n], '').strip()
+    if graph.isMetaNode(n) and TYPE_COMPARTMENT != graph[TYPE][n]:
+        num = " ({0})".format(graph[VIEW_META_GRAPH][n].numberOfNodes())
+        short_name = short_name.replace(num, '').replace('generalized ', '').strip()
+    min_len = len(short_name)
+
+    formula = graph[FORMULA][n]
+    if formula and (len(formula) < min_len or formula.lower() == short_name.lower()):
+        min_len = len(formula)
+        short_name = convert_formula_to_html(formula)
 
     # replace with a chebi name
     # if it is shorter
     ch_id = graph[TERM][n]
-    if ch_id:
+    if ch_id and onto:
         term = onto.get_term(ch_id)
         if term:
-            alts = [term.get_name()]
-            alts.extend(term.get_synonyms())
-            if not short_name:
-                short_name = term.get_name()
-            for alt in alts:
-                if alt and len(alt) < len(short_name):
+            if not formula:
+                formulas = term.get_formulas()
+                if formulas:
+                    formula = next(iter(formulas))
+                    if len(formula) < min_len:
+                        min_len = len(formula)
+                        short_name = convert_formula_to_html(formula)
+            t_name = term.get_name()
+            if t_name and len(t_name) < min_len:
+                min_len = len(t_name)
+                short_name = t_name
+            for alt in term.get_synonyms():
+                if alt and len(alt) < min_len:
+                    min_len = len(alt)
                     short_name = alt
 
-    # number of factored entities
-    # if this one is a generalized one
-    num = ''
     if graph.isMetaNode(n) and TYPE_COMPARTMENT != graph[TYPE][n]:
-        num = " ({0})".format(graph[VIEW_META_GRAPH][n].numberOfNodes())
-        short_name = short_name.replace(num, '').replace('generalized ', '').strip()
-
-    if TYPE_REACTION == graph[TYPE][n] and short_name.find('(') > 0:
-        short_name = short_name[:short_name.find('(')]
-
-    short_name += num
+        short_name += " ({0})".format(graph[VIEW_META_GRAPH][n].numberOfNodes())
     return short_name
+
+
+def convert_formula_to_html(formula):
+    return ''.join(((('<sub>%s</sub>' % e) if e.isdigit() else e) for e in formula))
 
 
 def split_into_parts(name):

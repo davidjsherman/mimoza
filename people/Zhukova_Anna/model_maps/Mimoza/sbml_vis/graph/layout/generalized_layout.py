@@ -84,6 +84,11 @@ def rotate_generalized_ns(graph):
         else:
             alpha = get_alpha(view_layout[o_n_1[0]], view_layout[o_n_2[0]])
 
+        # if the nodes are aligned horizontally, the labels overlap,
+        # so let's avoid such a situation
+        if abs(alpha % 180) == 90:
+            alpha += 45
+
         mg = root[VIEW_META_GRAPH][n]
 
         # the diagonal length is larger than the side for squares

@@ -146,15 +146,24 @@ ul.menu li
     padding: 0;
     margin: 0;
     position: relative;
-    border:0 solid #ac3131;
+    border:0px solid #ac3131;
     text-align: center;
     vertical-align: middle;
-    display: table-cell;
+    display: table;
     /*overflow:hidden;*/
-    font-size:.6em;
-    line-height: 18px;
-    /*text-overflow: clip;*/
+    /*font-size:.6em;*/
+    /*text-overflow: ellipsis;*/
 }
+.label-span{
+    display: inline-block;
+    border:0px solid blue;
+    margin-left: -15%;
+    margin-right: -15%;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
 #overlay {
     visibility: hidden;
     position: absolute;

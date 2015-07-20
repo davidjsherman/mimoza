@@ -2,6 +2,7 @@ ID = 'id'
 TERM = 'term'
 T = 't'
 NAME = 'name'
+LABEL = 'lbl'
 
 ALL_COMPARTMENTS = 'all_comp_view'
 

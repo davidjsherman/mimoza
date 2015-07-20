@@ -25,17 +25,22 @@ function getPopup(feature, popupW, popupH) {
     if (EDGE == feature.properties.type) {
         return;
     }
-    var content = "<p class='emph centre'>" + feature.properties.name + "</p>" + p(i("id: ") + feature.properties.id);
+    var content = "<p class='emph centre'>" + feature.properties.name + "</p>" + p(i("id: ") + feature.properties.id),
+        tr = (0 != (feature.properties.layer & TRANSPORT_MASK))
+            || (0 != (feature.properties.layer & INNER_TRANSPORT_MASK));
     if (REACTION == feature.properties.type) {
-        var transport = feature.properties.tr ? p(i("Is a transport reaction.")) : "",
+        var transport = tr ? p(i("Is a transport reaction.")) : "",
             ga_res = feature.properties.term ? p(feature.properties.term) : "",
             formula = feature.properties.f ? p(feature.properties.f) : "";
         content += formula + ga_res + transport;
     } else if (SPECIES == feature.properties.type) {
-        var //transported = feature.properties.tr ? p(i("Participates in a transport reaction.")) : "",
+        var transported = tr ? p(i("Participates in a transport reaction.")) : "",
             ch = feature.properties.term ? p(feature.properties.term) : "", //p(formatChebi(feature.properties.term)),
             compartment = p(i("compartment: ") + feature.properties.c_name);
-        content += compartment + ch; // + transported;
+        if (feature.properties.f) {
+            content += p(i("formula: ") + feature.properties.f);
+        }
+        content += compartment + ch + transported;
     } else if (COMPARTMENT == feature.properties.type) {
         content += feature.properties.term ? p(feature.properties.term) : ""; //p(formatGo(feature.properties.term));
         content += p(formatLink(feature.properties.id));
@@ -48,14 +53,16 @@ function getLabel(feature) {
     if (EDGE == feature.properties.type) {
         return null;
     }
-    var label = "<p class='emph centre'>" + feature.properties.name + "</p>" + p(i("id: ") + feature.properties.id);
+    var label = "<p class='emph centre'>" + feature.properties.name + "</p>" + p(i("id: ") + feature.properties.id),
+        tr = (0 != (feature.properties.layer & TRANSPORT_MASK))
+            || (0 != (feature.properties.layer & INNER_TRANSPORT_MASK));
     if (REACTION == feature.properties.type) {
-        var transport = feature.properties.tr ? p(i("Is a transport reaction.")) : "",
+        var transport = tr ? p(i("Is a transport reaction.")) : "",
             formula = feature.properties.f ? p(feature.properties.f) : ""; //p(formatFormula(feature.properties.rev, feature.properties.rs, feature.properties.ps));
         label += formula + transport;
     }
     if (SPECIES == feature.properties.type) {
-        var transported = feature.properties.tr ? p(i("Participates in a transport reaction.")) : "",
+        var transported = tr ? p(i("Participates in a transport reaction.")) : "",
             compartment = p(i("compartment: ") + feature.properties.c_name);
         label += compartment + transported;
     }

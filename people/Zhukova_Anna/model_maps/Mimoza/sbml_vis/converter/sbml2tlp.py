@@ -7,7 +7,7 @@ from mod_sbml.onto import parse_simple
 from mod_sbml.onto.term import Term
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from mod_sbml.annotation.gene_ontology.go_serializer import get_go
-from mod_sbml.sbml.sbml_manager import get_gene_association
+from mod_sbml.sbml.sbml_manager import get_gene_association, get_formulas
 from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi
 from sbml_vis.graph.node_cloner import clone_node
 from sbml_vis.graph.graph_properties import *
@@ -69,6 +69,11 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps, chebi=None):
         graph[UBIQUITOUS][n] = ub
         graph[VIEW_SHAPE][n] = SPECIES_SHAPE
         graph[VIEW_SIZE][n] = get_n_size(graph, n)
+        formulas = get_formulas(s)
+        if formulas:
+            formula = next(iter(formulas))
+            if formula and formula != '.':
+                graph[FORMULA][n] = formula
     return id2n
 
 
@@ -236,6 +241,8 @@ def create_props(graph):
     graph.getBooleanProperty(FAKE)
 
     graph.getStringProperty(CLONE_ID)
+
+    graph.getStringProperty(FORMULA)
 
     graph.getStringVectorProperty(RELATED_COMPARTMENT_IDS)
 
