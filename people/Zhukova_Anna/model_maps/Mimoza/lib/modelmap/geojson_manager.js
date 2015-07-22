@@ -151,7 +151,7 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             Math.ceil(Math.log(Math.max(MIN_LABEL_SIZE / h, lbl.length / (2 * w))) / Math.LN2)
         );
     if (minLabelZoom <= toZoom) {
-        var size = Math.min(Math.max(Math.round(w * Math.pow(2, minLabelZoom - 1)), MIN_LABEL_SIZE), MAX_LABEL_SIZE);
+        var size = MIN_LABEL_SIZE;//Math.min(Math.max(Math.round(w * Math.pow(2, minLabelZoom - 1)), MIN_LABEL_SIZE), MAX_LABEL_SIZE);
 
         var marker = L.marker(centre,
             {

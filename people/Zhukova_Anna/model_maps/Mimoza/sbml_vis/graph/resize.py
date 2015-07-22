@@ -7,9 +7,10 @@ UBIQUITOUS_SPECIES_SIZE = 2
 REACTION_SIZE = 1
 
 UBIQUITOUS_EDGE_SIZE = 1
+TRANSPORT_EDGE_SIZE = 1
 EDGE_SIZE = 1.5
-GENERALIZED_EDGE_SIZE = 2
-COMP_EDGE_SIZE = 2.5
+# GENERALIZED_EDGE_SIZE = 2
+# COMP_EDGE_SIZE = 2.5
 
 
 def get_n_length(graph, n):
@@ -17,9 +18,11 @@ def get_n_length(graph, n):
 
 
 def _get_e_size(root, e):
-    if root.isMetaEdge(e):
-        return sum(_get_e_size(root, edg) for edg in root[VIEW_META_GRAPH][e])
-    return UBIQUITOUS_EDGE_SIZE if root[UBIQUITOUS][e] else EDGE_SIZE
+    if root[UBIQUITOUS][e]:
+        return UBIQUITOUS_EDGE_SIZE
+    if not root.isMetaEdge(e) or not root.isMetaNode(root.source(e)) or not root.isMetaNode(root.target(e)):
+        return TRANSPORT_EDGE_SIZE if root[TRANSPORT][root.source(e)] or root[TRANSPORT][root.target(e)] else EDGE_SIZE
+    return sum(_get_e_size(root, edg) for edg in root[VIEW_META_GRAPH][e])
 
 
 def get_mn_size(n, root):

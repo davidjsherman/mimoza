@@ -30,6 +30,10 @@ DEFAULT_MASK = 1 << 3
 DEFAULT_LAYER2MASK = {DEFAULT_LAYER: DEFAULT_MASK}
 
 
+BETA_UP = 15 * math.pi / 16
+BETA_DOWN = 17 * math.pi / 16
+
+
 def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
     if n_type == TYPE_REACTION:
         edge_angle = degrees(atan2(other_y - y, other_x - x)) if other_y != y or other_x != x else 0
@@ -46,9 +50,9 @@ def get_border_coord((x, y), (other_x, other_y), (w, h), n_type):
         inside_x = c_bottom_x <= other_x <= c_top_x
 
         if inside_x:
-            return other_x, c_bottom_y if abs(other_y - c_bottom_y) < abs(other_y - c_top_y) else c_top_y
+            return other_x, (c_bottom_y if abs(other_y - c_bottom_y) < abs(other_y - c_top_y) else c_top_y)
         elif inside_y:
-            return c_bottom_x if abs(other_x - c_bottom_x) < abs(other_x - c_top_x) else c_top_x, other_y
+            return (c_bottom_x if abs(other_x - c_bottom_x) < abs(other_x - c_top_x) else c_top_x), other_y
         else:
             return max(c_bottom_x, min(other_x, c_top_x)), max(c_bottom_y, min(other_y, c_top_y))
     else:
@@ -64,11 +68,21 @@ def e2feature(graph, e, e_id, transport, e2layout, mask=DEFAULT_LAYER2MASK[DEFAU
 
     xy = lambda n: (layout[n].getX(), layout[n].getY())
     wh = lambda n: (root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2)
-    s_x, s_y = get_border_coord(xy(s), (layout[e][0][0], layout[e][0][1]) if layout[e] else xy(t), wh(s), root[TYPE][s])
-    t_x, t_y = get_border_coord(xy(t), (layout[e][-1][0], layout[e][-1][1]) if layout[e] else xy(s), wh(t),
+    e_lo = layout[e]
+    if e_lo and xy(s) == [e_lo[0][0], e_lo[0][1]]:
+        e_lo = e_lo[1:]
+    if e_lo and xy(t) == [e_lo[-1][0], e_lo[-1][1]]:
+        e_lo = e_lo[:-1]
+    s_x, s_y = get_border_coord(xy(s), (e_lo[0][0], e_lo[0][1]) if e_lo else xy(t), wh(s), root[TYPE][s])
+    t_x, t_y = get_border_coord(xy(t), (e_lo[-1][0], e_lo[-1][1]) if e_lo else xy(s), wh(t),
                                 root[TYPE][t])
-    e2layout[e_id] = [[s_x, s_y]] + [[it[0], it[1]] for it in layout[e]] + [[t_x, t_y]]
-    geom = geojson.MultiPoint([[s_x, s_y]] + [[it[0], it[1]] for it in layout[e]] + [[t_x, t_y]])
+    if e_lo and [s_x, s_y] == [e_lo[0][0], e_lo[0][1]]:
+        e_lo = e_lo[1:]
+    if e_lo and [t_x, t_y] == [e_lo[-1][0], e_lo[-1][1]]:
+        e_lo = e_lo[:-1]
+
+    e2layout[e_id] = [[s_x, s_y]] + [[it[0], it[1]] for it in e_lo] + [[t_x, t_y]]
+    geom = geojson.MultiPoint(e2layout[e_id])
     generalized = graph.isMetaNode(s) or graph.isMetaNode(t)
 
     real_e = e
@@ -94,28 +108,27 @@ def e2feature(graph, e, e_id, transport, e2layout, mask=DEFAULT_LAYER2MASK[DEFAU
     st_x, st_y = None, None
     if t_reaction and root[REVERSIBLE][t_reaction]:
         p_x, p_y = s_x, s_y
-        st_x, st_y = (layout[e][0][0], layout[e][0][1]) if layout[e] else (t_x, t_y)
+        st_x, st_y = (e_lo[0][0], e_lo[0][1]) if e_lo else (t_x, t_y)
     elif s_reaction:
         p_x, p_y = t_x, t_y
-        st_x, st_y = (layout[e][-1][0], layout[e][-1][1]) if layout[e] else (s_x, s_y)
+        st_x, st_y = (e_lo[-1][0], e_lo[-1][1]) if e_lo else (s_x, s_y)
     if p_x is not None and p_y is not None:
         alpha = atan2(p_y - st_y, p_x - st_x)
-        beta_up = 15 * math.pi / 16
-        beta_down = 17 * math.pi / 16
-        l = .4
-        # point (l, 0)
-        # rotate alpha +- beta
-        # move p_x, p_y
-        up_x_y = [p_x + l * cos(alpha + beta_up), p_y + l * sin(alpha + beta_up)]
-        down_x_y = [p_x + l * cos(alpha + beta_down), p_y + l * sin(alpha + beta_down)]
-        arrow_up = geojson.Feature(id=e_id + "_up",
-                                     geometry=geojson.MultiPoint([[p_x, p_y], up_x_y]),
-                                     properties=props.copy())
-        arrow_down = geojson.Feature(id=e_id + "_down",
-                                     geometry=geojson.MultiPoint([[p_x, p_y], down_x_y]),
-                                     properties=props.copy())
-        features.append(arrow_down)
-        features.append(arrow_up)
+        if not math.isnan(alpha):
+            l = .4
+            # point (l, 0)
+            # rotate alpha +- beta
+            # move p_x, p_y
+            up_x_y = [p_x + l * cos(alpha + BETA_UP), p_y + l * sin(alpha + BETA_UP)]
+            down_x_y = [p_x + l * cos(alpha + BETA_DOWN), p_y + l * sin(alpha + BETA_DOWN)]
+            arrow_up = geojson.Feature(id=e_id + "_up",
+                                         geometry=geojson.MultiPoint([[p_x, p_y], up_x_y]),
+                                         properties=props.copy())
+            arrow_down = geojson.Feature(id=e_id + "_down",
+                                         geometry=geojson.MultiPoint([[p_x, p_y], down_x_y]),
+                                         properties=props.copy())
+            features.append(arrow_down)
+            features.append(arrow_up)
     return features
 
 

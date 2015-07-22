@@ -5,9 +5,6 @@ def get_short_name(graph, n, onto):
     graph = graph.getRoot()
     short_name = graph[NAME][n] if graph[NAME][n] else graph[ID][n]
 
-    # remove compartment from the name,
-    # e.g. H2O [peroxisome] --> H2O
-    short_name.replace("[%s]" % graph[COMPARTMENT_ID][n], '').strip()
     if graph.isMetaNode(n) and TYPE_COMPARTMENT != graph[TYPE][n]:
         num = " ({0})".format(graph[VIEW_META_GRAPH][n].numberOfNodes())
         short_name = short_name.replace(num, '').replace('generalized ', '').strip()
@@ -28,7 +25,7 @@ def get_short_name(graph, n, onto):
                 formulas = term.get_formulas()
                 if formulas:
                     formula = next(iter(formulas))
-                    if len(formula) < min_len:
+                    if formula and (len(formula) < min_len or formula.lower() == short_name.lower()):
                         min_len = len(formula)
                         short_name = convert_formula_to_html(formula)
             t_name = term.get_name()
@@ -41,12 +38,26 @@ def get_short_name(graph, n, onto):
                     short_name = alt
 
     if graph.isMetaNode(n) and TYPE_COMPARTMENT != graph[TYPE][n]:
-        short_name += " ({0})".format(graph[VIEW_META_GRAPH][n].numberOfNodes())
+        short_name += "({0})".format(graph[VIEW_META_GRAPH][n].numberOfNodes())
     return short_name
 
 
 def convert_formula_to_html(formula):
-    return ''.join(((('<sub>%s</sub>' % e) if e.isdigit() else e) for e in formula))
+    result = []
+    sub_started = False
+    sub_start_tag, sub_end_tag = '<sub>', '</sub>'
+    for e in formula:
+        if e.isdigit():
+            if not sub_started:
+                sub_started = True
+                result.append(sub_start_tag)
+        elif sub_started:
+            sub_started = False
+            result.append(sub_end_tag)
+        result.append(e)
+    if sub_started:
+        result.append(sub_end_tag)
+    return ''.join(result)
 
 
 def split_into_parts(name):

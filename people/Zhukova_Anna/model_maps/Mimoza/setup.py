@@ -35,6 +35,6 @@ setup(name='Mimoza',
           'Topic :: Software Development',
       ],
       download_url='http://mimoza.bordeaux.inria.fr/',
-      requires=['tulip', 'sympy', 'geojson', 'jinja2', 'mod_sbml']
+      requires=['tulip', 'sympy', 'geojson', 'jinja2', 'mod_sbml', 'tarjan']
 
 )

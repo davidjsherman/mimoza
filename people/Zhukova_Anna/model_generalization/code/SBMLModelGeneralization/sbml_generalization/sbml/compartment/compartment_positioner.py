@@ -44,11 +44,7 @@ def get_comp2go(model, onto):
         if not term:
             term = get_go_term(comp, libsbml.BQB_IS_VERSION_OF, onto)
         if not term:
-            term_ids = onto.get_ids_by_name(comp.getName())
-            if term_ids:
-                term = onto.get_term(term_ids.pop())
-            else:
-                term = None
+            term = onto.get_term(comp.getName(), check_only_ids=False)
         comp2go[comp.getId()] = term.get_id() if term else ''
     return comp2go
 
@@ -70,9 +66,9 @@ def comp2level(model, onto):
             if term:
                 term2comp[term] = comp
                 continue
-            term_ids = onto.get_ids_by_name(comp.getName())
-            if term_ids:
-                term2comp[onto.get_term(set(term_ids).pop())] = comp
+            term = onto.get_term(comp.getName(), check_only_ids=False)
+            if term:
+                term2comp[term] = comp
         in2out = nest_compartments_with_gene_ontology({it.get_id() for it in term2comp.iterkeys()}, onto)
         for in_term, out_term in in2out.iteritems():
             if out_term:

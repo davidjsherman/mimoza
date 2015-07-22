@@ -197,6 +197,38 @@ def bend_edges(graph):
                     root[VIEW_LAYOUT][e] = root[VIEW_LAYOUT][e] + [reactant_lo]
 
 
+def straighten_edges_inside_compartments(graph, c_id2borders):
+    root = graph.getRoot()
+    for n in graph.getNodes():
+        c_id = root[COMPARTMENT_ID][n]
+        if c_id not in c_id2borders:
+            continue
+        (c_left_x, c_bottom_y, c_right_x, c_top_y) = c_id2borders[c_id]
+        n_x, n_y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
+        for e in graph.getInOutEdges(n):
+            v = graph.opposite(e, n)
+            v_x, v_y = root[VIEW_LAYOUT][v].getX(), root[VIEW_LAYOUT][v].getY()
+            if root[VIEW_LAYOUT][e]:
+                xy = root[VIEW_LAYOUT][e][0] if n == root.source(e) else root[VIEW_LAYOUT][e][-1]
+                v_x, v_y = xy[0], xy[1]
+            # if the node v is outside of the n's compartment (c_id)
+            if v_x > c_right_x or v_x < c_left_x or v_y > c_top_y or v_y < c_bottom_y:
+                # if v is closer to the bottom/top than to the left/right border of the compartment
+                if c_left_x < v_x and v_x < c_right_x or \
+                        (v_y > c_top_y or v_y < c_bottom_y) and \
+                                        min(abs(v_x - c_right_x), abs(v_x - c_left_x)) \
+                                        > min(abs(v_y - c_top_y), abs(v_y - c_bottom_y)):
+                    # then keep n's x coordinate and set y to the v's y
+                    bend = tlp.Coord(n_x, v_y)
+                else:
+                    bend = tlp.Coord(v_x, n_y)
+                if [bend.getX(), bend.getY()] != [v_x, v_y] and [bend.getX(), bend.getY()] != [n_x, n_y]:
+                    if n == root.source(e):
+                        root[VIEW_LAYOUT][e] = ([bend] + root[VIEW_LAYOUT][e]) if root[VIEW_LAYOUT][e] else [bend]
+                    else:
+                        root[VIEW_LAYOUT][e] = (root[VIEW_LAYOUT][e] + [bend]) if root[VIEW_LAYOUT][e] else [bend]
+
+
 def bend_edges_around_compartments(graph, es):
     root = graph.getRoot()
     comps = sorted((c for c in graph.getNodes() if TYPE_COMPARTMENT == root[TYPE][c]),
@@ -215,21 +247,21 @@ def bend_edges_around_compartments(graph, es):
         for c in comps:
             if s == c or t == c:
                 continue
-            c_bottom_x, c_bottom_y, c_top_x, c_top_y = get_comp_borders(c, root)
-            if max_x <= c_bottom_x + w or min_x >= c_top_x - w \
+            c_left_x, c_bottom_y, c_right_x, c_top_y = get_comp_borders(c, root)
+            if max_x <= c_left_x + w or min_x >= c_right_x - w \
                     or max_y <= c_bottom_y + h or min_y >= c_top_y - h:
                 continue
             alpha = atan2(t_y - s_y, t_x - s_x)
             c_alphas = [atan2(c_y - s_y, c_x - s_x) for (c_x, c_y) in \
-                        [(c_bottom_x + w, c_bottom_y + h), (c_bottom_x + w, c_top_y - h),
-                         (c_top_x - w, c_top_y - h), (c_top_x - w, c_bottom_y + h)]]
+                        [(c_left_x + w, c_bottom_y + h), (c_left_x + w, c_top_y - h),
+                         (c_right_x - w, c_top_y - h), (c_right_x - w, c_bottom_y + h)]]
             if min(c_alphas) < alpha < max(c_alphas):
                 bends = []
-                if c_bottom_x < min_x <= max_x < c_top_x:
-                    if (min_x - c_bottom_x) < (c_top_x - max_x):
-                        min_x = c_bottom_x - w * 2
+                if c_left_x < min_x <= max_x < c_right_x:
+                    if (min_x - c_left_x) < (c_right_x - max_x):
+                        min_x = c_left_x - w * 2
                     else:
-                        max_x = c_top_x + w * 2
+                        max_x = c_right_x + w * 2
                 elif c_bottom_y < min_y <= max_y < c_top_y:
                     if (min_y - c_bottom_y) < (c_top_y - max_y):
                         min_y = c_bottom_y - h * 2
@@ -237,7 +269,7 @@ def bend_edges_around_compartments(graph, es):
                         max_y = c_top_y + h * 2
 
                 for (x, y) in [(min_x, min_y), (min_x, max_y), (max_x, max_y), (max_x, min_y)]:
-                    if (x < c_bottom_x or x > c_top_x) and (y < c_bottom_y or y > c_top_y):
+                    if (x < c_left_x or x > c_right_x) and (y < c_bottom_y or y > c_top_y):
                         if (x, y) != (s_x, s_y) and (x, y) != (t_x, t_y):
                             bends.append((x, y))
                 if len(bends) == 2:

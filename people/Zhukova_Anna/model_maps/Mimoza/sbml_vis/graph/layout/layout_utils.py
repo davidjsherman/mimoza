@@ -1,8 +1,9 @@
 from tulip import tlp
+
+from tarjan import tarjan_iter
+
 from sbml_vis.graph.resize import get_mn_size, SPECIES_SIZE
-
 from sbml_vis.graph.graph_properties import *
-
 
 COMPONENT_PACKING = "Connected Component Packing"
 
@@ -73,14 +74,18 @@ def remove_overlaps(graph, margin=1):
     graph.applyLayoutAlgorithm(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
-def layout_components(graph, cycle_number_threshold=70, node_number_threshold=200, margin=5):
+def layout_components(graph, cycle_number_threshold=80, node_number_threshold=200, margin=5):
     root = graph.getRoot()
     comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
     for ns in comp_list:
         gr = graph.inducedSubGraph(ns)
         meta_ns = []
-        for scc in strongly_connected_components_iterative(gr):
-            if len(scc) > 1:
+        # iterate over strongly connected components
+        for scc in tarjan_iter({n: [gr.opposite(e, n) for e in gr.getInOutEdges(n)
+                                    if gr[REVERSIBLE][e] or n == gr.source(e)
+                                    or (gr.isMetaNode(n) and gr.isMetaNode(gr.opposite(e, n)))]
+                                for n in gr.getNodes()}):
+            if len(scc) > 2:
                 scc_node = gr.createMetaNode(scc, False)
                 scc_graph = root[VIEW_META_GRAPH][scc_node]
                 cycles_num = dfs(list(scc)[0], scc_graph, set(), None, cycle_number_threshold)
@@ -122,75 +127,3 @@ def dfs(n, graph, visited, prev, limit=3, indent=''):
             if num > limit:
                 return num
     return num
-
-
-def strongly_connected_components_iterative(graph):
-    """
-    Find the strongly connected components of a directed graph.
-
-    Uses a recursive linear-time algorithm described by Gabow [1]_ to find all
-    strongly connected components of a directed graph.
-
-    Parameters
-    ----------
-    graph : Graph
-        A Tulip graph.
-
-    Returns
-    -------
-    components : iterator
-        An iterator that yields sets of vertices.  Each set produced gives the
-        vertices of one strongly connected component.
-
-    Raises
-    ------
-    RuntimeError
-        If the graph is deep enough that the algorithm exceeds Python's
-        recursion limit.
-
-    Notes
-    -----
-    The algorithm has running time proportional to the total number of vertices
-    and edges.  It's practical to use this algorithm on graphs with hundreds of
-    thousands of vertices and edges.
-
-    References
-    ----------
-    .. [1] Harold N. Gabow, "Path-based depth-first search for strong and
-       biconnected components," Inf. Process. Lett. 74 (2000) 107--114.
-
-    """
-    identified = set()
-    stack = []
-    index = {}
-    boundaries = []
-
-    for v in graph.getNodes():
-        if v not in index:
-            to_do = [('VISIT', v)]
-            while to_do:
-                operation_type, v = to_do.pop()
-                if operation_type == 'VISIT':
-                    index[v] = len(stack)
-                    stack.append(v)
-                    boundaries.append(index[v])
-                    to_do.append(('POSTVISIT', v))
-                    to_do.extend([('VISITEDGE', w) for w in set(graph.getOutNodes(v)) |
-                                  {graph.source(e) for e in graph.getInEdges(v) if
-                                   graph[REVERSIBLE][e]}]) # and graph.isMetaNode(v)}])
-                elif operation_type == 'VISITEDGE':
-                    if v not in index:
-                        to_do.append(('VISIT', v))
-                    elif v not in identified:
-                        while index[v] < boundaries[-1]:
-                            boundaries.pop()
-                else:
-                    # operation_type == 'POSTVISIT'
-                    if boundaries[-1] == index[v]:
-                        boundaries.pop()
-                        scc = set(stack[index[v]:])
-                        del stack[index[v]:]
-                        identified.update(scc)
-                        yield scc
-
-

@@ -12,7 +12,7 @@ from sbml_vis.graph.graph_properties import ID, COMPARTMENT_ID, \
     CLONE_ID, WIDTH, HEIGHT, VIEW_LAYOUT, VIEW_SIZE, UBIQUITOUS, ALL_COMPARTMENTS, VIEW_META_GRAPH
 from sbml_vis.graph.layout.generalized_layout import rotate_generalized_ns, align_generalized_ns
 from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_edges, layout_inner_elements, \
-    get_comp_borders, bend_edges_around_compartments, layout, open_meta_ns
+    get_comp_borders, layout, open_meta_ns, straighten_edges_inside_compartments
 
 DIMENSION = 512
 MAX_FEATURE_NUMBER = 6000
@@ -267,10 +267,9 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None, id
     c_id2level2features = {}
     processed = set()
     c_id2c_borders = {}
-    get_id = lambda n: "%s_%s" % (root[ID][n], root[CLONE_ID][n])
-    get_e_id = lambda e: "-".join(sorted([get_id(meta_graph.source(e)), get_id(meta_graph.target(e))]))
     n2layout, e2layout = {}, {}
 
+    all_c_id2c_borders = {}
     while True:
         for c_id, sizes in c_id2c_borders.iteritems():
             layout_inner_elements(meta_graph, c_id, sizes)
@@ -278,8 +277,9 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None, id
         if n2xy:
             apply_node_coordinates(meta_graph, n2xy)
 
-        bend_edges_around_compartments(meta_graph, (e for e in meta_graph.getEdges() if not get_e_id(e) in processed))
         bend_edges(meta_graph)
+        straighten_edges_inside_compartments(meta_graph, all_c_id2c_borders)
+        # bend_edges_around_compartments(meta_graph, (e for e in meta_graph.getEdges() if not get_e_id(e) in processed))
         # bend_species_edges(meta_graph)
         color_edges(meta_graph)
         export_elements(c_id2info, c_id2outs, c_id2level2features, meta_graph, processed, r2rs_ps, n2layout, e2layout,
@@ -296,6 +296,7 @@ def meta_graph2features(c_id2info, c_id2outs, meta_graph, r2rs_ps, n2xy=None, id
             bend_ubiquitous_edges(meta_graph, metas)
         else:
             c_id2c_borders = {root[ID][c]: get_comp_borders(c, root) for c in metas}
+            all_c_id2c_borders.update(c_id2c_borders)
         open_meta_ns(meta_graph, metas)
 
     for c_id in c_id2info.iterkeys():
@@ -410,6 +411,9 @@ def rescale(c_id2level2features):
                     max_x = x + w
                 if max_y is None or max_y < y + h:
                     max_y = y + h
+        if min_x is None:
+            continue
+
         scale_coefficient = float(DIMENSION / max(max_x - min_x, max_y - min_y))
         if scale_coefficient == 1.0:
             continue

@@ -18,30 +18,7 @@ __author__ = 'anna'
 SKIP_UBS = False
 
 
-def get_short_name(name, ch_id, onto, comp_name):
-    short_name = name
-
-    # remove compartment from the name,
-    # e.g. H2O [peroxisome] --> H2O
-    if comp_name:
-        short_name.replace("[%s]" % comp_name, '').strip()
-
-    # replace with a chebi name
-    # if it is shorter
-    if ch_id:
-        term = onto.get_term(ch_id)
-        if term:
-            alts = [term.get_name()]
-            # alts.extend(term.get_synonyms())
-            if not short_name:
-                short_name = term.get_name()
-            for alt in alts:
-                if alt and len(alt) < len(short_name):
-                    short_name = alt
-    return short_name
-
-
-def species2nodes(graph, input_model, species_id2chebi_id, ub_sps, chebi=None):
+def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
     id2n = {}
     for s in input_model.getListOfSpecies():
         _id = s.getId()
@@ -56,15 +33,17 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps, chebi=None):
         graph[COMPARTMENT_ID][n] = comp.getId()
         graph[ID][n] = _id
         id2n[_id] = n
-        chebi_id = None
 
         if _id in species_id2chebi_id:
-            chebi_id = species_id2chebi_id[_id]
-            graph[TERM][n] = chebi_id
+            graph[TERM][n] = species_id2chebi_id[_id]
         name = s.getName()
-        if chebi:
-            name = get_short_name(name, chebi_id, chebi, comp.getName())
-        graph[NAME][n] = name
+        if name:
+            # remove compartment from the name,
+            # e.g. H2O [peroxisome] --> H2O
+            if comp.getName():
+                name = name.replace('[%s]' % comp.getName(), '').strip()
+                name = name.replace('[%s]' % comp.getId(), '').strip()
+            graph[NAME][n] = name
         graph[TYPE][n] = TYPE_SPECIES
         graph[UBIQUITOUS][n] = ub
         graph[VIEW_SHAPE][n] = SPECIES_SHAPE
@@ -185,7 +164,7 @@ def import_sbml(input_model, sbml_file):
         outer_most = min(all_comp_ids, key=get_level)
         inner_most = max(all_comp_ids, key=get_level)
         outer_level, inner_level = get_level(outer_most), get_level(inner_most)
-        if outer_level == inner_level or (not outer_most in c_id2outs[inner_most]):
+        if outer_level == inner_level or (outer_most not in c_id2outs[inner_most]):
             return max(set(c_id2outs[inner_most]) & set(c_id2outs[outer_most]), key=get_level)
         if inner_level - outer_level > 1:
             return max(c_id2outs[inner_most], key=get_level)
@@ -197,7 +176,7 @@ def import_sbml(input_model, sbml_file):
     create_props(graph)
 
     logging.info('adding species nodes')
-    id2n = species2nodes(graph, input_model, species_id2chebi_id, ub_sps, chebi)
+    id2n = species2nodes(graph, input_model, species_id2chebi_id, ub_sps)
 
     logging.info('adding reaction nodes')
     reactions2nodes(get_r_comp, graph, id2n, input_model)
