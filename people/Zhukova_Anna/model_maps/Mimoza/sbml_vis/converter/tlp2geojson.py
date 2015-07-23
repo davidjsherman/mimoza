@@ -69,16 +69,16 @@ def e2feature(graph, e, e_id, transport, e2layout, mask=DEFAULT_LAYER2MASK[DEFAU
     xy = lambda n: (layout[n].getX(), layout[n].getY())
     wh = lambda n: (root[VIEW_SIZE][n].getW() / 2, root[VIEW_SIZE][n].getH() / 2)
     e_lo = layout[e]
-    if e_lo and xy(s) == [e_lo[0][0], e_lo[0][1]]:
+    while e_lo and xy(s) == [e_lo[0][0], e_lo[0][1]]:
         e_lo = e_lo[1:]
-    if e_lo and xy(t) == [e_lo[-1][0], e_lo[-1][1]]:
+    while e_lo and xy(t) == [e_lo[-1][0], e_lo[-1][1]]:
         e_lo = e_lo[:-1]
     s_x, s_y = get_border_coord(xy(s), (e_lo[0][0], e_lo[0][1]) if e_lo else xy(t), wh(s), root[TYPE][s])
     t_x, t_y = get_border_coord(xy(t), (e_lo[-1][0], e_lo[-1][1]) if e_lo else xy(s), wh(t),
                                 root[TYPE][t])
-    if e_lo and [s_x, s_y] == [e_lo[0][0], e_lo[0][1]]:
+    while e_lo and [s_x, s_y] == [e_lo[0][0], e_lo[0][1]]:
         e_lo = e_lo[1:]
-    if e_lo and [t_x, t_y] == [e_lo[-1][0], e_lo[-1][1]]:
+    while e_lo and [t_x, t_y] == [e_lo[-1][0], e_lo[-1][1]]:
         e_lo = e_lo[:-1]
 
     e2layout[e_id] = [[s_x, s_y]] + [[it[0], it[1]] for it in e_lo] + [[t_x, t_y]]
