@@ -22,7 +22,7 @@ CYTOSOL = 'go:0005829'
 
 def update_model_element_ids(m_id, model, go2c_id, go, chebi):
     id2id = {}
-    s_id2chebi = get_species_to_chebi(model, chebi, guess=True)
+    s_id2chebi = get_species_to_chebi(model, chebi)
     if need_boundary_compartment(model, s_id2chebi):
         separate_boundary_species(model)
 

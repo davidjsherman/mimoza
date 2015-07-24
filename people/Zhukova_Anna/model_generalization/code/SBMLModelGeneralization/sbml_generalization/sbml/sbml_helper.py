@@ -4,7 +4,7 @@ import logging
 import libsbml
 
 from sbml_vis.graph.transformation_manager import scale, get_layout_characteristics, shift, MARGIN
-from mod_sbml.annotation.chebi.chebi_annotator import get_term
+from mod_sbml.annotation.chebi.chebi_annotator import get_term, CHEBI_PREFIX
 from mod_sbml.utils.misc import invert_map
 from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
 from mod_sbml.annotation.rdf_annotation_helper import add_annotation, get_qualifier_values
@@ -358,7 +358,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                 if out_sbml:
                     new_species = create_species(generalized_model, comp.getId(), type_id=None,
                                                  name="{0} ({1}) [{2}]".format(t_name, len(s_ids), comp.getName()))
-                    add_annotation(new_species, libsbml.BQB_IS, to_identifiers_org_format(t_id))
+                    add_annotation(new_species, libsbml.BQB_IS, to_identifiers_org_format(t_id, CHEBI_PREFIX))
                     new_s_id = new_species.getId()
                 else:
                     s_id_increment += 1
@@ -376,7 +376,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                     s_group.setName(g_name)
                     # logging.info("%s: %d" % (g_name, len(s_ids)))
                     if t_id:
-                        add_annotation(s_group, libsbml.BQB_IS, to_identifiers_org_format(t_id))
+                        add_annotation(s_group, libsbml.BQB_IS, to_identifiers_org_format(t_id, CHEBI_PREFIX))
                     for s_id in s_ids:
                         member = s_group.createMember()
                         member.setIdRef(s_id)

@@ -5,6 +5,7 @@ import sys
 import libsbml
 
 from orangecontrib.bio.ontology import OBOOntology
+from mod_sbml.annotation.chebi.chebi_annotator import CHEBI_PREFIX
 
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
@@ -102,14 +103,13 @@ def to_sbml(r_ids, r2rsps, sbml, onto):
         # term = onto.get_term(c_id)
         name = onto.term(c_id).name if c_id in onto else c_id
         species = create_species(model, comp_id, None, name)
-        add_annotation(species, libsbml.BQB_IS, to_identifiers_org_format(c_id))
+        add_annotation(species, libsbml.BQB_IS, to_identifiers_org_format(c_id, CHEBI_PREFIX))
         c_id2id[c_id] = species.getId()
     for r_id in r_ids:
         rs, ps = r2rsps[r_id]
         reactants = [c_id2id[c_id] for c_id in rs]
         products = [c_id2id[c_id] for c_id in ps]
         reaction = create_reaction(model, reactants, products, r_id, "r_" + r_id)
-        add_annotation(reaction, libsbml.BQB_IS, to_identifiers_org_format(r_id))
     if model:
         save_as_sbml(model, sbml)
 
