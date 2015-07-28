@@ -215,3 +215,31 @@ a:disabled{
 .boxclose:before {
     content: "x";
 }
+
+.up-button {
+    display: inline-block;
+    cursor: pointer;
+    background-color: #ac3131;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+    color: #FFF;
+    /*text-transform: uppercase;*/
+    /*letter-spacing: 2px;*/
+    font-size: 1em;
+    padding: 10px 30px;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border: 1px solid rgba(0,0,0,0.3);
+    border-bottom-width: 3px;
+}
+
+.up-button:hover {
+    background-color: #773131;
+    border-color: rgba(0,0,0,0.5);
+}
+
+.up-button:active {
+    background-color: #ac3131;
+    border-color: rgba(0,0,0,0.9);
+}
+

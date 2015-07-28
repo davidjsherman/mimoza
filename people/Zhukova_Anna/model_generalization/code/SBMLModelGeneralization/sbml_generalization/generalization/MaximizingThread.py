@@ -49,7 +49,9 @@ class MaximizingThread(threading.Thread):
                     t_id2rs[s_id].append(r)
         for t_id in self.term_ids:
             neighbours = {
-                ("in" if is_reactant(t_id, r, self.s_id2clu, self.species_id2term_id, self.ubiquitous_chebi_ids) else "out",
+                ("in"
+                 if is_reactant(self.model, t_id, r, self.s_id2clu, self.species_id2term_id, self.ubiquitous_chebi_ids)
+                 else "out",
                  self.r_id2clu[r.getId()]) for r in t_id2rs[t_id]}
             if neighbours:
                 key = tuple(sorted(neighbours))

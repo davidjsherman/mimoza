@@ -1,13 +1,14 @@
 from collections import defaultdict
 from itertools import chain
 from mod_sbml.sbml.sbml_manager import get_products, get_reactants
+from mod_sbml.sbml.ubiquitous_manager import get_proton_ch_ids
 
 __author__ = 'anna'
 
 
-def get_vertical_key(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
+def get_vertical_key(model, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
     ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes = \
-        get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
+        get_key_elements(model, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
     if r.getReversible() and need_to_reverse(
             (ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes,)):
         return ubiquitous_products, ubiquitous_reactants, specific_product_classes, specific_reactant_classes
@@ -29,26 +30,24 @@ def get_r_compartments(model, r):
 
 
 def vk2s_vk(vk):
-    (u_rs, u_ps, rs, ps), comps = vk
+    u_rs, u_ps, rs, ps = vk
     s_rs = u_rs, len(rs)
     s_ps = u_ps, len(ps)
     if s_rs > s_ps:
         s_rs, s_ps = s_ps, s_rs
-    return s_rs, s_ps, comps
+    return s_rs, s_ps
 
 
 def get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
     vk2r = defaultdict(set)
     for r in model.getListOfReactions():
-        vk2r[(get_vertical_key(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids),
-              get_r_compartments(model, r))].add(
-            r.getId())
+        vk2r[get_vertical_key(model, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)].add(r.getId())
     return vk2r
 
 
-def is_reactant(t_id, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
+def is_reactant(model, t_id, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
     ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes = \
-        get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
+        get_key_elements(model, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
     if r.getReversible() and need_to_reverse(
             (ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes,)):
         return t_id in {s_id2term_id[s_id] if s_id in s_id2term_id else s_id for s_id in get_products(r)}
@@ -56,20 +55,27 @@ def is_reactant(t_id, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
         return t_id in {s_id2term_id[s_id] if s_id in s_id2term_id else s_id for s_id in get_reactants(r)}
 
 
-def get_key_elements(r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
+def get_key_elements(model, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, ignore_ch_ids=get_proton_ch_ids()):
 
     def classify(s_ids):
-        specific, ubiquitous = [], []
+        specific, ubiquitous, ignored_ubs = [], [], []
         for s_id in s_ids:
+            c_id = model.getSpecies(s_id).getCompartment()
             if ubiquitous_chebi_ids and s_id in s_id2term_id and s_id2term_id[s_id] in ubiquitous_chebi_ids:
-                ubiquitous.append(s_id2term_id[s_id])
+                if s_id2term_id[s_id] in ignore_ch_ids:
+                    ignored_ubs.append((s_id2term_id[s_id], c_id))
+                else:
+                    ubiquitous.append((s_id2term_id[s_id], c_id))
             else:
-                specific.append(s_id2clu[s_id] if s_id in s_id2clu
-                                else (s_id2term_id[s_id] if s_id in s_id2term_id else s_id))
+                specific.append((s_id2clu[s_id] if s_id in s_id2clu
+                                else (s_id2term_id[s_id] if s_id in s_id2term_id else s_id), c_id))
         transform = lambda collection: tuple(sorted(collection))
-        return transform(specific), transform(ubiquitous)
+        return transform(specific), transform(ubiquitous), transform(ignored_ubs)
 
-    specific_reactant_classes, ubiquitous_reactants = classify(get_reactants(r))
-    specific_product_classes, ubiquitous_products = classify(get_products(r))
+    specific_reactant_classes, ubiquitous_reactants, ignored_reactants = classify(get_reactants(r))
+    specific_product_classes, ubiquitous_products, ignored_products = classify(get_products(r))
+    if not ubiquitous_reactants and not ubiquitous_products \
+            and not specific_reactant_classes and not specific_product_classes:
+        ubiquitous_reactants, ubiquitous_products = ignored_reactants, ignored_products
     return ubiquitous_reactants, ubiquitous_products, specific_reactant_classes, specific_product_classes
 
