@@ -128,33 +128,10 @@
                     and <a href="http://www.jetbrains.com/pycharm/" target="_blank">PyCharm</a>.
             </p>
 		</div>
+        </div>
 		<script src="lib/FullWidthTabs/cbpFWTabs.min.js"></script>
 		<script type="text/javascript">
             new CBPFWTabs(document.getElementById('tabs'));
-        </script>
-        <script type="text/javascript">
-            function checkSBML() {
-                var file = $('#model_file')[0].files[0];
-                var re = /(\.sbml|\.xml)$/i;
-                if (file && re.exec(file.name)) {
-                    document.getElementById("path").innerHTML = file.name;
-                    document.getElementById("select-button").style.visibility = "hidden";
-                    document.getElementById("submit-button").style.visibility = "visible";
-                    return true;
-                } else {
-                    alert('Please choose an SBML file (.xml or .sbml).');
-                    document.getElementById("path").innerHTML = '';
-                    return false;
-                }
-            }
-            function progress() {
-                var img = document.getElementById("img");
-                img.style.visibility = "visible";
-                img.style.height = "auto";
-                var expl = document.getElementById("input");
-                expl.style.visibility = "hidden";
-                expl.style.height = "0px";
-            }
         </script>
 	</body>
 </html>

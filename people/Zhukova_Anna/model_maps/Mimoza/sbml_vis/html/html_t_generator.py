@@ -1,35 +1,28 @@
 import io
+import logging
 import os
 
 from jinja2 import Environment, PackageLoader
-import libsbml
+
 from mimoza.mimoza_path import PROGRESS_ICON
 from sbml_vis.converter.tlp2geojson import DEFAULT_LAYER2MASK
-from sbml_vis.graph.graph_properties import ALL_COMPARTMENTS
 
 __author__ = 'anna'
 
 
-def create_html(model, directory, embed_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
+def create_html(non_empty, notes, model_name, model_id, c_id2name,
+                directory, embed_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
                 map_id, c_id2out_c_id, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=''):
-    m_name = model.getName()
-    if not m_name:
-        m_name = model.getId()
-    if not m_name:
-        m_name = 'an anonymous model'
-    model.setName(m_name)
-
-    c_id2name = {c.getId(): c.getName() for c in model.getListOfCompartments() if c.getId() in c_id2json_vars}
-    if ALL_COMPARTMENTS in c_id2json_vars:
-        c_id2name[ALL_COMPARTMENTS] = "All compartment view"
-
     env = Environment(loader=PackageLoader('sbml_vis.html', 'templates'))
     template = env.get_template('comp.html')
     c_id2json_vars = '{%s}' % ", ".join(
         ("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems()))
-    page = template.render(model=model,
-                           notes=model.getNotes().toXMLString().decode('utf-8')
-                           if model.getNotes() and model.getNotes().toXMLString().strip() else False,
+    logging.info('Rendering the model...')
+    logging.info(c_id2name)
+    page = template.render(non_empty=non_empty,
+                           notes=notes,
+                           model_name=model_name,
+                           model_id=model_id,
                            json_files=json_files,
                            c_id2json_vars=c_id2json_vars,
                            groups_sbml_url=groups_sbml_url, archive_url=archive_url, map_id=map_id,
@@ -45,30 +38,12 @@ def create_html(model, directory, embed_url, json_files, c_id2json_vars, groups_
     with open(os.path.join(directory, 'index.html'), 'w+') as f:
         f.write(page)
 
+    logging.info('Rendering the mini model...')
     template = env.get_template('comp_min.html')
-    page = template.render(model=model, json_files=json_files, c_id2json_vars=c_id2json_vars,
+    page = template.render(model_name=model_name, json_files=json_files, c_id2json_vars=c_id2json_vars,
                            map_id=map_id, c_id2out_c_id=c_id2out_c_id, c_id2name=c_id2name,
                            layer2mask=layer2mask)
     with io.open(os.path.join(directory, 'comp_min.html'), 'w+', encoding='utf-8') as f:
-        f.write(page)
-
-
-def create_multi_html(model_data, title, description, directory):
-    model_data = [(t,
-                   {ALL_COMPARTMENTS: "All compartment view"} if ALL_COMPARTMENTS in c_id2json_vars
-                   else {c.getId(): c.getName()
-                         for c in libsbml.SBMLReader().readSBML(sbml).getModel().getListOfCompartments()
-                         if c.getId() in c_id2json_vars},
-                   json_files,
-                   '{%s}' % ", ".join(("'%s':[%s]" % (c_id, ", ".join(json_vars))
-                                       for (c_id, json_vars) in c_id2json_vars.iteritems())),
-                   {} if ALL_COMPARTMENTS in c_id2json_vars else c_id2out_c_id, map_id, descr)
-                  for (t, sbml, json_files, c_id2json_vars, c_id2out_c_id, map_id, descr) in model_data]
-
-    env = Environment(loader=PackageLoader('sbml_vis.html', 'templates'))
-    template = env.get_template('multi_comp.html')
-    page = template.render(model_data=model_data, title=title, description=description)
-    with io.open(os.path.join(directory, 'index.html'), 'w+', encoding='utf-8') as f:
         f.write(page)
 
 

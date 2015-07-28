@@ -17,6 +17,32 @@
 		<![endif]-->
         <script src="lib/jquery/jquery-2.1.4.min.js" type="text/javascript"></script>
         <link rel="stylesheet" type="text/css" href="lib/jquery/jquery-ui.min.css" />
+        <script type="text/javascript">
+            function checkSBML() {
+                var file = $('#model_file')[0].files[0];
+                var re = /(\.sbml|\.xml)$/i;
+                if (file && re.exec(file.name)) {
+                    document.getElementById("path").innerHTML = file.name;
+                    document.getElementById("select-button").style.visibility = "hidden";
+                    document.getElementById("submit-button").style.visibility = "visible";
+                    return true;
+                } else {
+                    alert('Please choose an SBML file (.xml or .sbml).');
+                    document.getElementById("path").innerHTML = '';
+                    return false;
+                }
+            }
+            function progress() {
+                var img = document.getElementById("img");
+                img.style.visibility = "visible";
+                img.style.height = "auto";
+                var inputDiv = document.getElementById("input_div");
+                inputDiv.style.visibility = "hidden";
+                inputDiv.style.height = "0px";
+                document.getElementById("input_form").style.visibility = "hidden";
+                document.getElementById("submit-button").style.visibility = "hidden";
+            }
+        </script>
 	</head>
 	<body>
 		<div class="container">
@@ -42,9 +68,9 @@
                                 model (in <a href="http://sbml.org/" target="_blank">SBML</a>
                                 format): </p>
 
-                            <div class="centre" id="input">
+                            <div class="centre" id="input_div">
                                 <form style="margin: 4%" name="input_form" enctype="multipart/form-data" action="/cgi-bin/upload.py"
-                                      method="POST">
+                                      method="POST" id="input_form">
                                     <span id='select-button' class="up-button" onclick="document.getElementById('model_file').click();">
                                         Select SBML file</span><span class='explanation' id="path" style="padding: 2px"></span>
                                     <input type="file" name="file_input" id="model_file"
@@ -126,7 +152,7 @@
                         <p>This is a <a href="http://mimoza.bordeaux.inria.fr/yali_pero/comp.html?id=c_14" target="blank">
                             peroxisome</a> of a yeast <i>Y. lipolytica</i>. Zoom in to see the details.</p>
                         <iframe src="http://mimoza.bordeaux.inria.fr/yali_pero/comp_min.html?id=c_14"
-                                            width="1024" height="1024" frameborder="0" style="border:0"></iframe>
+                                            width="2048" height="1024" frameborder="0" style="border:0"></iframe>
                         </div>
                     </section>
 				</section><!-- /content -->
@@ -146,33 +172,10 @@
                     and <a href="http://www.jetbrains.com/pycharm/" target="_blank">PyCharm</a>.
             </p>
 		</div>
+        </div>
 		<script src="lib/FullWidthTabs/cbpFWTabs.min.js"></script>
 		<script type="text/javascript">
             new CBPFWTabs(document.getElementById('tabs'));
-        </script>
-        <script type="text/javascript">
-            function checkSBML() {
-                var file = $('#model_file')[0].files[0];
-                var re = /(\.sbml|\.xml)$/i;
-                if (file && re.exec(file.name)) {
-                    document.getElementById("path").innerHTML = file.name;
-                    document.getElementById("select-button").style.visibility = "hidden";
-                    document.getElementById("submit-button").style.visibility = "visible";
-                    return true;
-                } else {
-                    alert('Please choose an SBML file (.xml or .sbml).');
-                    document.getElementById("path").innerHTML = '';
-                    return false;
-                }
-            }
-            function progress() {
-                var img = document.getElementById("img");
-                img.style.visibility = "visible";
-                img.style.height = "auto";
-                var expl = document.getElementById("input");
-                expl.style.visibility = "hidden";
-                expl.style.height = "0px";
-            }
         </script>
 	</body>
 </html>

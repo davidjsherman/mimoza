@@ -18,7 +18,7 @@
         {% if title %}
             {{title}}
         {% else %}
-            {{model.getName()}}
+            {{model_name}}
         {% endif %}
     </title>
 
@@ -44,7 +44,7 @@
                 {% if title %}
                     {{title}}
                 {% else %}
-                    Visualization of <a href="http://www.ebi.ac.uk/biomodels-main/{{model.getId()}}">{{model.getName()}}</a>
+                    Visualization of <a href="http://www.ebi.ac.uk/biomodels-main/{{model_id}}">{{model_name}}</a>
                 {% endif %}
             </h1>
             <nav>
@@ -65,14 +65,14 @@
                             {% set i = i + 1 %}
                         {% endfor %}
                     {% endif %}
-                    {% if model.getNumReactions() > 0 %}
+                    {% if non_empty %}
                         <li><a href="#tab-down" class="icon-floppy-disk"><span>Download/Embed</span></a></li>
                     {% endif %}
                 </ul>
             </nav>
             <div class="content">
                 <section id="tab-viz">
-                    {% if model.getNumReactions() > 0 %}
+                    {% if non_empty %}
                         {% if comp_c_id2name %}
                             <ul class="menu margin centre">
                             {% for (c_id, c_name) in comp_c_id2name %}
@@ -115,7 +115,7 @@
                     {% endfor %}
                 {% endif %}
 
-                {% if model.getNumReactions() > 0 %}
+                {% if non_empty %}
                     <section style="min-height: 200px;" id="tab-down">
                         <div id="overlay">
                             <div>

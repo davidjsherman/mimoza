@@ -65,7 +65,9 @@ print '''Content-Type: text/html;charset=utf-8
           </head>
 
           <body>
-          <p class="centre indent">We are visualizing your model now...</p>
+          <br/>
+          <p class="centre">We are visualizing your model now...</p>
+          <br/>
           <img class="img-centre" src="http://mimoza.bordeaux.inria.fr/lib/modelmap/ajax-loader.gif" id="img" />
           <div id="hidden" style="visibility:hidden;height:0px;">'''
 

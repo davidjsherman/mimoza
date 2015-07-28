@@ -51,7 +51,9 @@ print '''Content-Type: text/html;charset=utf-8
           </head>
 
           <body>
-          <p class="centre indent">Please, be patient while we are generalizing your model...</p>
+          <br/>
+          <p class="centre">Please, be patient while we are generalizing your model...</p>
+          <br/>
           <img class="img-centre" src="http://mimoza.bordeaux.inria.fr/lib/modelmap/method.gif" id="img" />
           <div id="hidden" style="visibility:hidden;height:0px;">'''
 
