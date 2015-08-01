@@ -54,11 +54,11 @@ def factor_nodes(graph, ns=None):
         root[NAME][meta_n] = root[ANCESTOR_NAME][sample_n]
 
         if TYPE_REACTION == type_:
-            root[REVERSIBLE][meta_n] = True
+            root[REVERSIBLE][meta_n] = False
             root[TRANSPORT][meta_n] = False
             for sample_n in nodes:
-                if not root[REVERSIBLE][sample_n]:
-                    root[REVERSIBLE][meta_n] = False
+                if root[REVERSIBLE][sample_n]:
+                    root[REVERSIBLE][meta_n] = True
                 if root[TRANSPORT][sample_n]:
                     root[TRANSPORT][meta_n] = True
             root[TERM][meta_n] = "\nor\n".join({root[TERM][it] for it in nodes})

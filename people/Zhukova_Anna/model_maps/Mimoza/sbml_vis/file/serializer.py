@@ -15,8 +15,8 @@ from sbml_vis.file.combine_archive_creator import archive
 __author__ = 'anna'
 
 
-def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_id, groups_sbml, main_url, map_id=None,
-              layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None):
+def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_id, hidden_c_ids, c_id_hidden_ubs,
+              groups_sbml, main_url, map_id=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None):
     if not map_id:
         map_id = m_dir_id
 
@@ -43,7 +43,6 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     archive_url = "%s.zip" % m_dir_id
 
     geojson_files = reduce(lambda l1, l2: l1 + l2, c_id2geojson_files.itervalues(), [])
-    logging.info(input_model)
     model_id = input_model.getId()
     model_name = input_model.getName()
     if not model_name:
@@ -52,14 +51,19 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     model_notes = input_model.getNotes().toXMLString().decode('utf-8')\
         if input_model.getNotes() and input_model.getNotes().toXMLString().strip() else False
 
-    c_id2name = {c.getId(): c.getName() for c in input_model.getListOfCompartments() if c.getId() in c_id2geojson_names}
+    c_id2name = {c.getId(): c.getName() for c in input_model.getListOfCompartments()} # if c.getId() in c_id2geojson_names}
     if ALL_COMPARTMENTS in c_id2geojson_names:
         c_id2name[ALL_COMPARTMENTS] = "All compartment view"
+    hidden_c_ids -= {ALL_COMPARTMENTS}
+
+    c_id_hidden_ubs = list(c_id_hidden_ubs)
+    hidden_c_ids = list(hidden_c_ids)
+
     create_html(non_empty=non_empty, notes=model_notes, model_name=model_name, model_id=model_id, c_id2name=c_id2name,
                 directory=directory, embed_url=embed_url,
                 json_files=geojson_files, c_id2json_vars=c_id2geojson_names, groups_sbml_url=groups_sbml_url,
                 archive_url=archive_url, map_id=map_id, c_id2out_c_id=c_id2out_c_id, layer2mask=layer2mask,
-                tab2html=tab2html, title=title)
+                tab2html=tab2html, title=title, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs)
 
     temp_copy = os.path.join(directory, m_dir_id)
     archive_path = os.path.join(directory, "%s.zip" % m_dir_id)

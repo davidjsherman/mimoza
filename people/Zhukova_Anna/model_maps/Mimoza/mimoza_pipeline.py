@@ -97,7 +97,8 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
                         n2xy[n_id] = value
     except LoPlError:
         n2xy = None
-    fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, root, n2xy, id2mask=id2mask, onto=chebi)
+    fc, (n2lo, e2lo), hidden_c_ids, c_id_hidden_ubs = \
+        graph2geojson(c_id2info, c_id2outs, root, n2xy, id2mask=id2mask, onto=chebi)
     if n2lo:
         groups_document = reader.readSBML(groups_sbml)
         groups_model = groups_document.getModel()
@@ -114,10 +115,8 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
         if gen_model:
             save_as_sbgn(n2lo, e2lo, gen_model, gen_sbgn)
 
-    c_id2geojson_files, c_id2geojson_names = serialize(directory=directory, m_dir_id=m_id, input_model=input_model,
-                                                       c_id2level2features=fc, c_id2out_c_id=c_id2out_c_id,
-                                                       groups_sbml=groups_sbml, main_url=MIMOZA_URL,
-                                                       layer2mask=layer2mask, tab2html=tab2html, title=title)
-
-    return c_id2geojson_files, c_id2geojson_names, c_id2out_c_id, m_id, directory, groups_sbml
+    serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc,
+              c_id2out_c_id=c_id2out_c_id, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs,
+              groups_sbml=groups_sbml, main_url=MIMOZA_URL,
+              layer2mask=layer2mask, tab2html=tab2html, title=title)
 

@@ -29,7 +29,7 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
         var props = {
             color: feature.properties.color,
             opacity: 1,
-            weight: Math.max(Math.min(w / 2, 10), 1),
+            weight: Math.max(Math.min(w / 2, 10), 2),
             lineCap: 'round',
             lineJoin: 'round',
             clickable: false,
@@ -38,8 +38,9 @@ function pnt2layer(map, compLayer, ubLayer, feature, fromZoom, toZoom, coords, m
             riseOnHover: false
         };
         if (0 != (feature.properties.layer & TRANSPORT_MASK)) {
-            props.dashArray = '2, 2';
-            props.weight = Math.max(Math.min(w / 4, 10), 1)
+            props.opacity = 0.5;
+            props.dashArray = '2, 3';
+            props.weight = Math.max(Math.min(w / 4, 8), 1.5)
         }
         return L.polyline(e.map(function (coord) {
             return map.unproject(coord, 1);

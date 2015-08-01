@@ -12,13 +12,13 @@ __author__ = 'anna'
 
 def create_html(non_empty, notes, model_name, model_id, c_id2name,
                 directory, embed_url, json_files, c_id2json_vars, groups_sbml_url, archive_url,
-                map_id, c_id2out_c_id, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=''):
+                map_id, c_id2out_c_id, hidden_c_ids, c_id_hidden_ubs, layer2mask=DEFAULT_LAYER2MASK,
+                tab2html=None, title=''):
     env = Environment(loader=PackageLoader('sbml_vis.html', 'templates'))
     template = env.get_template('comp.html')
     c_id2json_vars = '{%s}' % ", ".join(
         ("'%s':[%s]" % (c_id, ", ".join(json_vars)) for (c_id, json_vars) in c_id2json_vars.iteritems()))
     logging.info('Rendering the model...')
-    logging.info(c_id2name)
     page = template.render(non_empty=non_empty,
                            notes=notes,
                            model_name=model_name,
@@ -29,7 +29,8 @@ def create_html(non_empty, notes, model_name, model_id, c_id2name,
                            c_id2out_c_id=c_id2out_c_id, embed_url=embed_url,
                            comp_c_id2name=sorted(c_id2name.iteritems(), key=lambda (_, c_name): c_name)
                            if len(c_id2name) > 1 else None,
-                           c_id2name=c_id2name, layer2mask=layer2mask, tab2html=tab2html, title=title)
+                           c_id2name=c_id2name, layer2mask=layer2mask, tab2html=tab2html, title=title,
+                           hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs)
     with io.open(os.path.join(directory, 'comp.html'), 'w+', encoding='utf-8') as f:
         f.write(page)
 
@@ -42,7 +43,8 @@ def create_html(non_empty, notes, model_name, model_id, c_id2name,
     template = env.get_template('comp_min.html')
     page = template.render(model_name=model_name, json_files=json_files, c_id2json_vars=c_id2json_vars,
                            map_id=map_id, c_id2out_c_id=c_id2out_c_id, c_id2name=c_id2name,
-                           layer2mask=layer2mask)
+                           layer2mask=layer2mask, c_id_hidden_ubs=c_id_hidden_ubs,
+                           hidden_c_ids=hidden_c_ids)
     with io.open(os.path.join(directory, 'comp_min.html'), 'w+', encoding='utf-8') as f:
         f.write(page)
 

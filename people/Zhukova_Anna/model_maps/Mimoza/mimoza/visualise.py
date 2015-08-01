@@ -92,7 +92,7 @@ try:
         except LoPlError:
             n2xy = None
 
-        fc, (n2lo, e2lo) = graph2geojson(c_id2info, c_id2outs, graph, n2xy, onto=chebi)
+        fc, (n2lo, e2lo), hidden_c_ids, c_id_hidden_ubs = graph2geojson(c_id2info, c_id2outs, graph, n2xy, onto=chebi)
         c_id2out_c_id = {}
         for c_id, info in c_id2info.iteritems():
             if c_id not in fc:
@@ -123,7 +123,8 @@ try:
             except Exception as e:
                 logging.info(e.message)
 
-        serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, groups_sbml, MIMOZA_URL)
+        serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, hidden_c_ids, c_id_hidden_ubs,
+                  groups_sbml, MIMOZA_URL)
 
 except Exception as e:
     logging.info(e.message)

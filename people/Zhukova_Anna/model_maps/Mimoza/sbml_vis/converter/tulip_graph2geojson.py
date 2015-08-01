@@ -15,8 +15,8 @@ from sbml_vis.graph.layout.ubiquitous_layout import bend_ubiquitous_edges, bend_
     get_comp_borders, layout, open_meta_ns, straighten_edges_inside_compartments
 
 DIMENSION = 512
-MAX_FEATURE_NUMBER = 6000
-MAX_TOTAL_FEATURE_NUMBER = 8000
+MAX_FEATURE_NUMBER = 30000
+MAX_TOTAL_FEATURE_NUMBER = 50000
 
 __author__ = 'anna'
 
@@ -364,27 +364,33 @@ def graph2geojson(c_id2info, c_id2outs, graph, n2xy=None, colorer=color, id2mask
 
     geometry = geojson.Polygon([[0, DIMENSION], [0, 0], [DIMENSION, 0], [DIMENSION, DIMENSION]])
 
-    filter_features(c_id2level2features)
+    hidden_c_ids, c_id_hidden_ubs = filter_features(c_id2level2features)
     rescale(c_id2level2features)
     get_l2fs = lambda l2fs: {lev: geojson.FeatureCollection(features, geometry=geometry) for (lev, features) in
                              l2fs.iteritems()}
-    return {c_id: get_l2fs(l2fs) for (c_id, l2fs) in c_id2level2features.iteritems()}, (n2lo, e2lo)
+    return {c_id: get_l2fs(l2fs) for (c_id, l2fs) in c_id2level2features.iteritems()}, (n2lo, e2lo), \
+           hidden_c_ids, c_id_hidden_ubs
 
 
 def filter_features(c_id2level2features):
     c_ids = c_id2level2features.keys()
+    c_id_hidden_ubs, hidden_c_ids = set(), set()
     for c_id in c_ids:
         l2fs = c_id2level2features[c_id]
         total_f_number = 0
         levels = l2fs.keys()
         f_num = (len(l2fs[0]) if 0 in l2fs else 0) + (len(l2fs[2]) if 2 in l2fs else 0)
         if f_num > MAX_FEATURE_NUMBER:
+            c_id_hidden_ubs.add(c_id)
             for l in levels:
                 l2fs[l] = [f for f in l2fs[l] if 0 == (UBIQUITOUS_MASK & f.properties[LAYER])]
-                total_f_number += len(l2fs)
+                total_f_number += len(l2fs[l])
         if total_f_number > MAX_TOTAL_FEATURE_NUMBER:
+            c_id_hidden_ubs -= {c_id}
+            hidden_c_ids.add(c_id)
             logging.info("deleting compartment %s view, as it's too big" % c_id)
             del c_id2level2features[c_id]
+    return hidden_c_ids, c_id_hidden_ubs
 
 
 def rescale(c_id2level2features):

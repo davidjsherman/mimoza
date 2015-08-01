@@ -55,12 +55,12 @@ def get_conflict_num(t_set, conflicts):
     return res
 
 
-def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitous_chebi_ids):
+def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=None):
     if not unmapped_s_ids:
         return
     s_id2clu = compute_s_id2clu(set(), model, s_id2term_id, term_id2clu)
     term_id2s_ids = invert_map(s_id2term_id)
-    vk2r_ids = get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
+    vk2r_ids = get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=r_ids_to_ignore)
     vk2r_ids = {vk: r_ids for (vk, r_ids) in vk2r_ids.iteritems() if len(r_ids) > 1}
     processed_r_ids = reduce(lambda s1, s2: s1 | s2, vk2r_ids.itervalues(), set())
 
@@ -70,6 +70,8 @@ def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitou
 
     s_id2r_ids = defaultdict(list)
     for r in (r for r in model.getListOfReactions() if r.getNumReactants() + r.getNumProducts() > 2):
+        if r_ids_to_ignore and r.getId() in r_ids_to_ignore:
+            continue
         r_id = r.getId()
         for s_id in chain((species_ref.getSpecies() for species_ref in r.getListOfReactants()),
                           (species_ref.getSpecies() for species_ref in r.getListOfProducts())):
@@ -77,6 +79,8 @@ def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitou
 
     for r in model.getListOfReactions():
         if r.getId() in processed_r_ids or not unmapped_s_ids & get_metabolites(r):
+            continue
+        if r_ids_to_ignore and r.getId() in r_ids_to_ignore:
             continue
         ub_rs, ub_ps, rs, ps = get_vertical_key(model, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
         vk = ub_rs, ub_ps, rs, ps
@@ -132,12 +136,12 @@ def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitou
                         unmapped_s_ids -= {s_id}
 
 
-def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
+def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=None):
     if not unmapped_s_ids:
         return
     term_id2s_ids = invert_map(s_id2term_id)
     clu2s_ids = invert_map(s_id2clu)
-    vk2r_ids = get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
+    vk2r_ids = get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=r_ids_to_ignore)
     vk2r_ids = {vk: r_ids for (vk, r_ids) in vk2r_ids.iteritems() if len(r_ids) > 1}
     processed_r_ids = reduce(lambda s1, s2: s1 | s2, vk2r_ids.itervalues(), set())
 
@@ -147,6 +151,8 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
 
     s_id2r_ids = defaultdict(list)
     for r in (r for r in model.getListOfReactions() if r.getNumReactants() + r.getNumProducts() > 2):
+        if r_ids_to_ignore and r.getId() in r_ids_to_ignore:
+            continue
         r_id = r.getId()
         for s_id in chain((species_ref.getSpecies() for species_ref in r.getListOfReactants()),
                           (species_ref.getSpecies() for species_ref in r.getListOfProducts())):
@@ -165,6 +171,8 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
 
     for r in model.getListOfReactions():
         if r.getId() in processed_r_ids or not unmapped_s_ids & get_metabolites(r):
+            continue
+        if r_ids_to_ignore and r.getId() in r_ids_to_ignore:
             continue
         ub_rs, ub_ps, rs, ps = get_vertical_key(model, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
         vk = ub_rs, ub_ps, rs, ps
@@ -228,7 +236,8 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
 
 
 class StoichiometryFixingThread(threading.Thread):
-    def __init__(self, model, s_id2term_id, ub_chebi_ids, unmapped_s_ids, term_ids, conflicts, onto, clu, term_id2clu):
+    def __init__(self, model, s_id2term_id, ub_chebi_ids, unmapped_s_ids, term_ids, conflicts, onto, clu, term_id2clu,
+                 r_ids_to_ignore=None):
         threading.Thread.__init__(self)
         self.ub_chebi_ids = ub_chebi_ids
         self.s_id2term_id = s_id2term_id
@@ -239,6 +248,7 @@ class StoichiometryFixingThread(threading.Thread):
         self.clu = clu
         self.term_id2clu = term_id2clu
         self.conflicts = conflicts
+        self.r_ids_to_ignore = r_ids_to_ignore
 
     def get_common_roots(self, relationships=None):
         # the least common ancestors, or roots if there are none
@@ -333,7 +343,8 @@ class StoichiometryFixingThread(threading.Thread):
                 for t in ts:
                     self.term_id2clu[t] = n_clu
         s_id2clu = compute_s_id2clu(set(), self.model, self.s_id2term_id, self.term_id2clu)
-        infer_clusters(self.model, self.unmapped_s_ids, s_id2clu, self.s_id2term_id, self.ub_chebi_ids)
+        infer_clusters(self.model, self.unmapped_s_ids, s_id2clu, self.s_id2term_id, self.ub_chebi_ids,
+                       r_ids_to_ignore=self.r_ids_to_ignore)
         for s_id in self.unmapped_s_ids:
             with st_fix_lock:
                 if s_id in s_id2clu:

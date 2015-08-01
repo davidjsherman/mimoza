@@ -15,8 +15,8 @@ from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD, get_frequent_
 __author__ = 'anna'
 
 
-def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
-    vk2r = get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)
+def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=None):
+    vk2r = get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=r_ids_to_ignore)
     r_id2clu, i = {}, 0
     for r_ids in vk2r.itervalues():
         for r_id in r_ids:
@@ -25,11 +25,11 @@ def generalize_reactions(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
     return r_id2clu
 
 
-def maximize(unmapped_s_ids, model, term_id2clu, species_id2term_id, ub_chebi_ids):
+def maximize(unmapped_s_ids, model, term_id2clu, species_id2term_id, ub_chebi_ids, r_ids_to_ignore=None):
     clu2term_ids = invert_map(term_id2clu)
     s_id2clu = compute_s_id2clu(unmapped_s_ids, model, species_id2term_id, term_id2clu)
 
-    r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id, ub_chebi_ids)
+    r_id2clu = generalize_reactions(model, s_id2clu, species_id2term_id, ub_chebi_ids, r_ids_to_ignore=r_ids_to_ignore)
 
     thrds = []
     for (clu, term_ids) in clu2term_ids.iteritems():
@@ -37,7 +37,7 @@ def maximize(unmapped_s_ids, model, term_id2clu, species_id2term_id, ub_chebi_id
             continue
 
         thread = MaximizingThread(model, term_ids, species_id2term_id, clu, term_id2clu,
-                                  s_id2clu, ub_chebi_ids, r_id2clu)
+                                  s_id2clu, ub_chebi_ids, r_id2clu, r_ids_to_ignore=r_ids_to_ignore)
         thrds.append(thread)
         thread.start()  # This actually causes the thread to run
     for th in thrds:
@@ -45,7 +45,7 @@ def maximize(unmapped_s_ids, model, term_id2clu, species_id2term_id, ub_chebi_id
     return term_id2clu
 
 
-def cover_t_ids(model, species_id2term_id, ubiquitous_chebi_ids, t_ids, onto, clu=None):
+def cover_t_ids(model, species_id2term_id, ubiquitous_chebi_ids, t_ids, onto, clu=None, r_ids_to_ignore=None):
     term_id2clu = {}
     real_terms = {onto.get_term(t_id) for t_id in t_ids if onto.get_term(t_id)}
     unmapped_s_ids = {s_id for s_id in t_ids if not onto.get_term(s_id)}
@@ -63,7 +63,8 @@ def cover_t_ids(model, species_id2term_id, ubiquitous_chebi_ids, t_ids, onto, cl
         term_id2clu.update({t_id: new_clu for t_id in t_set})
 
     s_id2clu = compute_s_id2clu(set(), model, species_id2term_id, term_id2clu)
-    infer_clusters(model, unmapped_s_ids, s_id2clu, species_id2term_id, ubiquitous_chebi_ids)
+    infer_clusters(model, unmapped_s_ids, s_id2clu, species_id2term_id, ubiquitous_chebi_ids,
+                   r_ids_to_ignore=r_ids_to_ignore)
     for s_id in unmapped_s_ids:
         if s_id in s_id2clu:
             term_id2clu[s_id] = s_id2clu[s_id][1]
@@ -94,11 +95,13 @@ def update_onto(onto, term_id2clu):
     return removed_something
 
 
-def fix_stoichiometry(model, term_id2clu, species_id2term_id, ub_chebi_ids, onto):
+def fix_stoichiometry(model, term_id2clu, species_id2term_id, ub_chebi_ids, onto, r_ids_to_ignore=None):
     clu2term_ids = invert_map(term_id2clu)
     thrds = []
     conflicts = []
     for r in model.getListOfReactions():
+        if r_ids_to_ignore and r.getId() in r_ids_to_ignore:
+            continue
         t_ids = {species_id2term_id[s_id] if s_id in species_id2term_id else s_id
                  for s_id in chain((species_ref.getSpecies() for species_ref in r.getListOfReactants()),
                                    (species_ref.getSpecies() for species_ref in r.getListOfProducts()))}
@@ -112,7 +115,7 @@ def fix_stoichiometry(model, term_id2clu, species_id2term_id, ub_chebi_ids, onto
         unmapped_s_ids = {s_id for s_id in term_ids if not onto.get_term(s_id)}
         if clu_conflicts:
             thread = StoichiometryFixingThread(model, species_id2term_id, ub_chebi_ids, unmapped_s_ids, real_term_ids,
-                                               clu_conflicts, onto, clu, term_id2clu)
+                                               clu_conflicts, onto, clu, term_id2clu, r_ids_to_ignore=r_ids_to_ignore)
             thrds.append(thread)
             thread.start()  # This actually causes the thread to run
     for th in thrds:
@@ -159,14 +162,15 @@ def filter_clu_to_terms(term2clu):
             del term2clu[terms.pop()]
 
 
-def cover_with_onto_terms(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids):
+def cover_with_onto_terms(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, r_ids_to_ignore=None):
     onto_updated = update_onto(onto, term_id2clu)
     if onto_updated:
         for clu, t_ids in invert_map(term_id2clu).iteritems():
             if len(t_ids) == 1:
                 del term_id2clu[t_ids.pop()]
             else:
-                new_t_id2clu = cover_t_ids(model, species_id2chebi_id, ubiquitous_chebi_ids, t_ids, onto, clu)
+                new_t_id2clu = cover_t_ids(model, species_id2chebi_id, ubiquitous_chebi_ids, t_ids, onto, clu,
+                                           r_ids_to_ignore=r_ids_to_ignore)
                 for t_id in t_ids:
                     if t_id in new_t_id2clu:
                         term_id2clu[t_id] = new_t_id2clu[t_id]
@@ -175,45 +179,54 @@ def cover_with_onto_terms(model, onto, species_id2chebi_id, term_id2clu, ubiquit
     return onto_updated
 
 
-def maximization_step(model, onto, species_id2chebi_id, term_id2clu, ub_term_ids, unmapped_s_ids):
+def maximization_step(model, onto, species_id2chebi_id, term_id2clu, ub_term_ids, unmapped_s_ids, r_ids_to_ignore=None):
     onto_updated = True
     while onto_updated:
         logging.info("  satisfying metabolite diversity...")
-        term_id2clu = maximize(unmapped_s_ids, model, term_id2clu, species_id2chebi_id, ub_term_ids)
-        onto_updated = cover_with_onto_terms(model, onto, species_id2chebi_id, term_id2clu, ub_term_ids)
+        term_id2clu = maximize(unmapped_s_ids, model, term_id2clu, species_id2chebi_id, ub_term_ids,
+                               r_ids_to_ignore=r_ids_to_ignore)
+        onto_updated = cover_with_onto_terms(model, onto, species_id2chebi_id, term_id2clu, ub_term_ids,
+                                             r_ids_to_ignore=r_ids_to_ignore)
 
 
-def fix_incompatibilities(unmapped_s_ids, model, onto, species_id2chebi_id, ubiquitous_chebi_ids):
+def fix_incompatibilities(unmapped_s_ids, model, onto, species_id2chebi_id, ubiquitous_chebi_ids, r_ids_to_ignore=None):
     if not ubiquitous_chebi_ids:
         ubiquitous_chebi_ids = set()
     chebi_ids = set(species_id2chebi_id.itervalues()) - ubiquitous_chebi_ids
 
     logging.info("  aggressive metabolite grouping...")
-    term_id2clu = cover_t_ids(model, species_id2chebi_id, ubiquitous_chebi_ids, chebi_ids, onto)
+    term_id2clu = cover_t_ids(model, species_id2chebi_id, ubiquitous_chebi_ids, chebi_ids, onto,
+                              r_ids_to_ignore=r_ids_to_ignore)
     onto.trim({it[0] for it in term_id2clu.itervalues()}, relationships=EQUIVALENT_RELATIONSHIPS)
-    suggest_clusters(model, unmapped_s_ids, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids)
+    suggest_clusters(model, unmapped_s_ids, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids,
+                     r_ids_to_ignore=r_ids_to_ignore)
     # filter_clu_to_terms(term_id2clu)
     # _log_clusters(term_id2clu, onto, model)
 
-    maximization_step(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, unmapped_s_ids)
+    maximization_step(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, unmapped_s_ids,
+                      r_ids_to_ignore=r_ids_to_ignore)
     # filter_clu_to_terms(term_id2clu)
     # _log_clusters(term_id2clu, onto, model)
 
     logging.info("  preserving stoichiometry...")
-    fix_stoichiometry(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids, onto)
+    fix_stoichiometry(model, term_id2clu, species_id2chebi_id, ubiquitous_chebi_ids, onto,
+                      r_ids_to_ignore=r_ids_to_ignore)
     # filter_clu_to_terms(term_id2clu)
     # _log_clusters(term_id2clu, onto, model)
 
-    maximization_step(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, unmapped_s_ids)
+    maximization_step(model, onto, species_id2chebi_id, term_id2clu, ubiquitous_chebi_ids, unmapped_s_ids,
+                      r_ids_to_ignore=r_ids_to_ignore)
     # filter_clu_to_terms(term_id2clu)
     # _log_clusters(term_id2clu, onto, model)
 
     return term_id2clu
 
 
-def generalize_species(model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, threshold=UBIQUITOUS_THRESHOLD):
+def generalize_species(model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, threshold=UBIQUITOUS_THRESHOLD,
+                       r_ids_to_ignore=None):
     unmapped_s_ids = {s.getId() for s in model.getListOfSpecies() if s.getId() not in s_id2chebi_id}
-    term_id2clu = fix_incompatibilities(unmapped_s_ids, model, onto, s_id2chebi_id, ub_chebi_ids)
+    term_id2clu = fix_incompatibilities(unmapped_s_ids, model, onto, s_id2chebi_id, ub_chebi_ids,
+                                        r_ids_to_ignore=r_ids_to_ignore)
     if term_id2clu:
         term_id2clu = update(term_id2clu, onto)
         s_id2clu = compute_s_id2clu(unmapped_s_ids, model, s_id2chebi_id, term_id2clu)

@@ -59,6 +59,8 @@ def layout_force(qo, margin=1):
     ds["Unit edge length"] = 2 * SPECIES_SIZE + margin
     qo.applyLayoutAlgorithm(FM3, root[VIEW_LAYOUT], ds)
 
+    remove_overlaps(qo, margin)
+
 
 def pack_cc(graph):
     root = graph.getRoot()
@@ -74,39 +76,52 @@ def remove_overlaps(graph, margin=1):
     graph.applyLayoutAlgorithm(OVERLAP_REMOVAL, root[VIEW_LAYOUT], ds)
 
 
-def layout_components(graph, cycle_number_threshold=80, node_number_threshold=200, margin=5):
+def layout_components(graph, cycle_number_threshold=40, node_number_threshold=300, margin=5):
     root = graph.getRoot()
     comp_list = tlp.ConnectedTest.computeConnectedComponents(graph)
+    followers_rev_or_gen = lambda n, gr: (gr.opposite(e, n) for e in gr.getInOutEdges(n) if n == gr.source(e)
+                                          or gr[REVERSIBLE][e] or gr.isMetaNode(n) and gr.isMetaNode(gr.opposite(e, n)))
+    followers_rev = lambda n, gr: (gr.opposite(e, n) for e in gr.getInOutEdges(n) if n == gr.source(e)
+                                   or gr[REVERSIBLE][e])
+    followers_irrev = lambda n, gr: gr.getOutNodes(n)
+    followers_irrev_gen_only = lambda n, gr: (m for m in gr.getOutNodes(n) if gr.isMetaNode(m))
+
+    def process_cc(gr, ns, meta_ns, follower_method_iterator):
+        try:
+            follower_method = next(follower_method_iterator)
+        except StopIteration:
+            if len(ns) < node_number_threshold:
+                mn = gr.createMetaNode(ns, False)
+                cc_graph = root[VIEW_META_GRAPH][mn]
+                layout_hierarchically(cc_graph)
+                meta_ns.append(mn)
+            return
+        # iterate over strongly connected components
+        for cc in tarjan_iter({n: list(follower_method(n, gr)) for n in ns}):
+            if len(cc) > 3:
+                if dfs(cc[0], gr, set(), None, cycle_number_threshold, follower_method) \
+                        <= cycle_number_threshold:
+                    mn = gr.createMetaNode(cc, False)
+                    cc_graph = root[VIEW_META_GRAPH][mn]
+                    layout_circle(cc_graph, margin)
+                    meta_ns.append(mn)
+                else:
+                    process_cc(gr, cc, meta_ns, follower_method_iterator)
+
     for ns in comp_list:
         gr = graph.inducedSubGraph(ns)
         meta_ns = []
-        # iterate over strongly connected components
-        for scc in tarjan_iter({n: [gr.opposite(e, n) for e in gr.getInOutEdges(n)
-                                    if gr[REVERSIBLE][e] or n == gr.source(e)
-                                    or (gr.isMetaNode(n) and gr.isMetaNode(gr.opposite(e, n)))]
-                                for n in gr.getNodes()}):
-            if len(scc) > 2:
-                scc_node = gr.createMetaNode(scc, False)
-                scc_graph = root[VIEW_META_GRAPH][scc_node]
-                cycles_num = dfs(list(scc)[0], scc_graph, set(), None, cycle_number_threshold)
-                if cycles_num > cycle_number_threshold \
-                        or next((n for n in scc_graph.getNodes() if root[TYPE][n] == TYPE_COMPARTMENT), False):
-                    layout_force(scc_graph, margin)
-                    remove_overlaps(scc_graph, margin)
-                else:
-                    layout_circle(scc_graph, margin)
-                root[VIEW_SHAPE][scc_node] = COMPARTMENT_SHAPE
-                w, h = get_mn_size(scc_node, root)
-                root[VIEW_SIZE][scc_node] = tlp.Size(w, h)
-                meta_ns.append(scc_node)
-        if gr.numberOfNodes() < node_number_threshold and not next(
-                (n for n in gr.getNodes() if root[TYPE][n] == TYPE_COMPARTMENT), False):
+        process_cc(gr, (n for n in gr.getNodes() if gr[TYPE][n] != TYPE_COMPARTMENT), meta_ns,
+                   iter((followers_rev_or_gen, followers_rev, followers_irrev, followers_irrev_gen_only)))
+        for mn in meta_ns:
+            root[VIEW_SHAPE][mn] = COMPARTMENT_SHAPE
+            w, h = get_mn_size(mn, root)
+            root[VIEW_SIZE][mn] = tlp.Size(w, h)
+        if gr.numberOfNodes() < node_number_threshold and \
+                not next((n for n in gr.getNodes() if root[TYPE][n] == TYPE_COMPARTMENT), False):
             layout_hierarchically(gr)
-            # layout_force(gr, margin)
-            # remove_overlaps(gr, margin)
         else:
             layout_force(gr, margin)
-            remove_overlaps(gr, margin)
         for mn in meta_ns:
             gr.openMetaNode(mn)
 
@@ -114,16 +129,16 @@ def layout_components(graph, cycle_number_threshold=80, node_number_threshold=20
 # deep-first search
 # every cycle will be counted twice
 # as every node of a cycle can be approached from two sides
-def dfs(n, graph, visited, prev, limit=3, indent=''):
+def dfs(n, graph, visited, prev, limit, followers):
     if n in visited:
         return 1
     num = 0
     visited.add(n)
-    for m in graph.getInOutNodes(n):
+    for m in followers(n, graph):
         if m == prev:
             continue
         else:
-            num += dfs(m, graph, visited, n, limit, indent + ' ')
+            num += dfs(m, graph, visited, n, limit, followers)
             if num > limit:
                 return num
     return num

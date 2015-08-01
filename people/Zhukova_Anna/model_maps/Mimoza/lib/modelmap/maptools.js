@@ -10,7 +10,7 @@ var UB_LAYER_NAME = "<i>Ubiquitous metabolites</i>",
 
 function adjustMapSize(mapId) {
     "use strict";
-    var MIN_DIMENTION_SIZE = 256,
+    var MIN_DIMENTION_SIZE = 512,
         width = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).width() * 0.7))),
         height = Math.max(MIN_DIMENTION_SIZE, Math.round(($(window).height() * 0.6)));
     return adjustMapDivSize(mapId, width, height);
@@ -94,14 +94,12 @@ function addAttribution(map) {
     });
     attrControl.addAttribution(
         //'<p><span style="background-color:#E37B6F">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>/<span style="background-color:#B4B4B4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> - not generalized/ubiquitous metabolites; <span style="background-color:#79A8C9">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> - not generalized reactions.</p>' +
-        '<p><b>Zoom in/out</b> to see more/less details.</p>' +
-        '<p><b>Click</b> on elements to see their annotations.</p>' +
-        '<p><b>Show/Hide</b> elements in the map settings <span class="explanation">(on top right)</span>.</p>'
+        '<p>Ubiquitous metabolites are not shown in order to improve the performance.</p>'
     );
     attrControl.addTo(map);
 }
 
-function initializeMap(cId2jsonData, mapId, compIds, cId2outside, layer2mask) {
+function initializeMap(cId2jsonData, mapId, compIds, cId2outside, CIdsWOUbs, hiddenCIds, layer2mask) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
@@ -121,6 +119,12 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside, layer2mask) {
     if (compIds && typeof Object.keys(compIds) !== 'undefined' && Object.keys(compIds).length > 0
         && (cId == null || !compIds.hasOwnProperty(cId))) {
         cId = compIds.hasOwnProperty(ALL_COMPARTMENTS) ? ALL_COMPARTMENTS: Object.keys(compIds)[0];
+    }
+    if (hiddenCIds.indexOf(cId) > - 1) {
+        $("#" + mapId).hide();
+        $("#search").hide();
+        $("#explanations").html('<p>We could not visualize this compartment as it is too huge ;(</p>');
+        return;
     }
     if (cId != null) {
         cIds[cId] = compIds[cId];
@@ -159,7 +163,9 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside, layer2mask) {
         crs: L.CRS.Simple
     });
 
-    //addAttribution(map);
+    if (CIdsWOUbs.indexOf(cId) > - 1) {
+        addAttribution(map);
+    }
     handlePopUpClosing(map);
     var name2popup = {},
         name2zoom = {},

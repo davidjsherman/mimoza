@@ -38,9 +38,11 @@ def vk2s_vk(vk):
     return s_rs, s_ps
 
 
-def get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids):
+def get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=None):
     vk2r = defaultdict(set)
     for r in model.getListOfReactions():
+        if r_ids_to_ignore and r.getId() in r_ids_to_ignore:
+            continue
         vk2r[get_vertical_key(model, r, s_id2clu, s_id2term_id, ubiquitous_chebi_ids)].add(r.getId())
     return vk2r
 
