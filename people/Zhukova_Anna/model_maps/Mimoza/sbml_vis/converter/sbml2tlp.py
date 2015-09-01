@@ -2,7 +2,7 @@ import logging
 from tulip import tlp
 
 from sbml_generalization.sbml.sbml_helper import check_names, check_compartments, parse_group_sbml, GrPlError
-from sbml_generalization.sbml.compartment.compartment_positioner import get_comp2go, comp2level
+from mod_sbml.sbml.compartment.compartment_positioner import get_comp2go, comp2level
 from mod_sbml.onto import parse_simple
 from mod_sbml.onto.term import Term
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
@@ -126,7 +126,7 @@ def compute_c_id2info(c_id2level, comp2go_term, input_model):
         c_name = comp.getName()
         if not c_name:
             c_name = c_id
-        c_id2info[c_id] = (c_name, comp2go_term[c_id] if c_id in comp2go_term else None, c_id2level[c_id])
+        c_id2info[c_id] = (c_name, comp2go_term[c_id] if c_id in comp2go_term else '', c_id2level[c_id])
 
     c_id2outs = {}
     for c_id in c_id2info.iterkeys():
@@ -165,7 +165,11 @@ def import_sbml(input_model, sbml_file):
         inner_most = max(all_comp_ids, key=get_level)
         outer_level, inner_level = get_level(outer_most), get_level(inner_most)
         if outer_level == inner_level or (outer_most not in c_id2outs[inner_most]):
-            return max(set(c_id2outs[inner_most]) & set(c_id2outs[outer_most]), key=get_level)
+            candidates = set(c_id2outs[inner_most]) & set(c_id2outs[outer_most])
+            if candidates:
+                return max(candidates, key=get_level)
+            else:
+                return outer_most
         if inner_level - outer_level > 1:
             return max(c_id2outs[inner_most], key=get_level)
         return outer_most

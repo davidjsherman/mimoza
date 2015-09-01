@@ -4,10 +4,10 @@ import libsbml
 
 from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi
 from mod_sbml.annotation.gene_ontology.go_serializer import get_go
-from sbml_generalization.sbml.compartment.compartment_manager import need_boundary_compartment, \
+from mod_sbml.sbml.compartment.compartment_manager import need_boundary_compartment, \
     separate_boundary_species
 from mod_sbml.annotation.rdf_annotation_helper import get_qualifier_values, add_annotation
-from sbml_generalization.sbml.compartment.compartment_positioner import get_comp2go
+from mod_sbml.sbml.compartment.compartment_positioner import get_comp2go
 from mod_sbml.onto import parse_simple
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from sbml_generalization.sbml.sbml_helper import set_consistency_level
@@ -30,7 +30,7 @@ def update_model_element_ids(m_id, model, go2c_id, go, chebi):
 
     for c in model.getListOfCompartments():
         c_id = c.getId()
-        go_id = comp2go_term[c_id]
+        go_id = comp2go_term[c_id] if c_id in comp2go_term else None
         if not go_id:
             go_id = c.getName()
         if go_id:
