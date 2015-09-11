@@ -124,7 +124,7 @@ try:
                 logging.info(e.message)
 
         serialize(directory, m_dir_id, input_model, fc, c_id2out_c_id, hidden_c_ids, c_id_hidden_ubs,
-                  groups_sbml, MIMOZA_URL)
+                  groups_sbml)
 
 except Exception as e:
     logging.info(e.message)

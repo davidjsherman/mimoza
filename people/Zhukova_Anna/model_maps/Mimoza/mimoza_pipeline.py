@@ -4,13 +4,15 @@ from os.path import dirname, abspath
 from shutil import copytree
 
 import libsbml
+from sbml_vis.graph.color.color import color_by_id
+from sbml_vis.graph.color.color import color
 
 from sbml_vis.converter.tlp2geojson import DEFAULT_LAYER2MASK
 from sbml_vis.graph.resize import REACTION_SIZE
 from sbml_vis.converter.sbml2tlp import import_sbml
 from sbml_vis.converter.tulip_graph2geojson import graph2geojson
 from sbml_vis.file.md5_checker import check_md5
-from sbml_vis.file.serializer import serialize
+from sbml_vis.file.serializer import serialize, ABOUT_TAB, DOWNLOAD_TAB
 from sbml_generalization.generalization.sbml_generalizer import generalize_model, ubiquitize_model
 from mimoza.mimoza_path import MIMOZA_URL
 import mimoza
@@ -29,7 +31,8 @@ def get_lib():
 
 
 def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_file=None,
-                 id2mask=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None):
+                 id2mask=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None,
+                 id2color=None, tabs={ABOUT_TAB, DOWNLOAD_TAB}, info=''):
     reader = libsbml.SBMLReader()
     doc = reader.readSBML(sbml)
     model = doc.getModel()
@@ -62,9 +65,11 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
     else:
         chebi = parse_simple(get_chebi())
         if generalize:
+            logging.info('Generalizing the model...')
             generalize_model(groups_sbml, gen_sbml, sbml, chebi, ub_chebi_ids=ub_ch_ids)
         else:
             gen_sbml = None
+            logging.info('Ubiquitizing the model...')
             ubiquitize_model(groups_sbml, sbml, chebi, ub_chebi_ids=ub_ch_ids)
 
     reader = libsbml.SBMLReader()
@@ -74,13 +79,14 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
     root, c_id2info, c_id2outs, chebi, ub_sps = import_sbml(input_model, groups_sbml)
 
     c_id2out_c_id = {}
-    for c_id, info in c_id2info.iteritems():
-        _, _, (_, out_c_id) = info
+    for c_id, c_info in c_id2info.iteritems():
+        _, _, (_, out_c_id) = c_info
         if out_c_id:
             c_id2out_c_id[c_id] = out_c_id
     try:
         n2xy = parse_layout_sbml(sbml)
         if n2xy:
+            logging.info('Found layout in the model...')
             r_size = next((n2xy[r.getId()][1][0] for r in input_model.getListOfReactions() if r.getId() in n2xy), None)
             if r_size:
                 scale_factor = REACTION_SIZE / r_size
@@ -98,7 +104,8 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
     except LoPlError:
         n2xy = None
     fc, (n2lo, e2lo), hidden_c_ids, c_id_hidden_ubs = \
-        graph2geojson(c_id2info, c_id2outs, root, n2xy, id2mask=id2mask, onto=chebi)
+        graph2geojson(c_id2info, c_id2outs, root, n2xy, id2mask=id2mask, onto=chebi,
+                      colorer=color if not id2color else lambda graph: color_by_id(graph, id2color))
     if n2lo:
         groups_document = reader.readSBML(groups_sbml)
         groups_model = groups_document.getModel()
@@ -117,6 +124,5 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
 
     serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc,
               c_id2out_c_id=c_id2out_c_id, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs,
-              groups_sbml=groups_sbml, main_url=MIMOZA_URL,
-              layer2mask=layer2mask, tab2html=tab2html, title=title)
+              groups_sbml=groups_sbml, layer2mask=layer2mask, tab2html=tab2html, title=title, tabs=tabs, info=info)
 

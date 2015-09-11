@@ -55,18 +55,16 @@
             <nav>
                 <ul>
                     <li><a href="#tab-viz" id="a-{{map_id}}" class="icon-happy"><span>Visualization</span></a></li>
-                    {% if notes %}
-                        <li><a href="#tab-descr" class="icon-quill"><span>About the model</span></a></li>
-                    {% endif %}
                     {% if tab2html %}
                         {% set i = 0 %}
-                        {% for (tab, html) in tab2html.iteritems() %}
-                            <li><a href="#tab-{{i}}" class="icon-stats-dots"><span>{{tab}}</span></a></li>
+                        {% for (tab, (html, class)) in tab2html.iteritems() %}
+                            <li>
+                                <a href="#tab-{{i}}" class="{% if class %}{{class}}{% else %}icon-stats-dots{% endif %}">
+                                    <span>{{tab}}</span>
+                                </a>
+                            </li>
                             {% set i = i + 1 %}
                         {% endfor %}
-                    {% endif %}
-                    {% if non_empty %}
-                        <li><a href="#tab-down" class="icon-floppy-disk"><span>Download/Embed</span></a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -93,49 +91,25 @@
                                 <span class="emph">Click</span> on elements to see their annotations.
                                 <span class="emph">Show/Hide</span> elements in the map settings <span class="explanation">(top right of the map view)</span>.
                             </p>
+                            {% if info %}
+                                <p class="info">{{info}}</p>
+                            {% endif %}
                         </div>
                     {% else %}
                         <p class="centre">Your model does not contain any reactions and thus could not be visualized.</p>
                     {% endif %}
                 </section>
 
-                {% if notes %}
-                    <section id="tab-descr">
-                        <div class="just">
-                            {{ notes }}
-                        </div>
-                    </section>
-                {% endif %}
-
                 {% if tab2html %}
                     {% set i = 0 %}
-                    {% for (tab, html) in tab2html.iteritems() %}
-                        <section id="tab-{{i}}">{{html}}</section>
+                    {% for (tab, (html, class)) in tab2html.iteritems() %}
+                        <section id="tab-{{i}}">
+                            <div class="just">
+                                {{html}}
+                            </div>
+                        </section>
                         {% set i = i + 1 %}
                     {% endfor %}
-                {% endif %}
-
-                {% if non_empty %}
-                    <section style="min-height: 200px;" id="tab-down">
-                        <div id="overlay">
-                            <div>
-                                <a class="boxclose" id="boxclose" onclick="overlay()"></a>
-                            <p class="margin">
-                                <span>Size: </span>
-                                <input class="embed_size" type="text" name="width" value="800" id="embed-size-width" />
-                                <span> x </span>
-                                <input class="embed_size" type="text" name="height" value="400" id="embed-size-height" />
-                            </p>
-                            <p class="margin">
-                                <input class="embed_url" type="text" name="embedHtml" value="&lt;iframe src=&quot;http://mimoza.bordeaux.inria.fr/{{map_id}}/comp_min.html&quot; width=&quot;800&quot; height=&quot;400&quot; frameborder=&quot;0&quot; style=&quot;border:0&quot;&gt;&lt;/iframe&gt;" id="embed-html-snippet" />
-                            </p>
-                                <input type="hidden" name="url" value="http://mimoza.bordeaux.inria.fr/{{map_id}}/comp_min.html" id="embed-url" />
-                            </div>
-                        </div>
-                        <p id="download">Download the <a href={{groups_sbml}} download>generalized model</a>.</p>
-                        <p>Download everything as a <a href={{archive_url}} download>COMBINE archive</a>.</p>
-                        <p>Embed the <a onclick="overlay()" href="#">Mimoza view</a> into your page</p>
-                    </section>
                 {% endif %}
             </div><!-- /content -->
         </div><!-- /tabs -->

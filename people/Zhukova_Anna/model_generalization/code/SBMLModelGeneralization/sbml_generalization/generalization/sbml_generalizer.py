@@ -11,7 +11,7 @@ from sbml_generalization.generalization.model_generalizer import generalize_spec
 from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi, add_equivalent_chebi_ids, \
     EQUIVALENT_RELATIONSHIPS
 from mod_sbml.utils.misc import invert_map
-from mod_sbml.sbml.submodel_manager import get_biomass_r_ids
+# from mod_sbml.sbml.submodel_manager import get_biomass_r_ids
 
 __author__ = 'anna'
 

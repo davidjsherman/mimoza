@@ -7,16 +7,26 @@ import shutil
 import geojson
 from sbml_vis.graph.graph_properties import ALL_COMPARTMENTS
 from sbml_vis.converter.tlp2geojson import DEFAULT_LAYER2MASK
-from sbml_vis.html.html_t_generator import create_html
+from sbml_vis.html.html_t_generator import create_html, get_download_tab
 
 from sbml_vis.file.combine_archive_creator import archive
 
+DOWNLOAD_CSS_CLASS = 'icon-floppy-disk'
+
+ABOUT_CSS_CLASS = 'icon-quill'
 
 __author__ = 'anna'
 
+ABOUT_TAB = 'About the model'
+DOWNLOAD_TAB = 'Download/Embed'
+
 
 def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_id, hidden_c_ids, c_id_hidden_ubs,
-              groups_sbml, main_url, map_id=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None):
+              groups_sbml, map_id=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None,
+              tabs={ABOUT_TAB, DOWNLOAD_TAB}, info=''):
+    if not tab2html:
+        tab2html = {}
+
     if not map_id:
         map_id = m_dir_id
 
@@ -37,10 +47,6 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
             c_id2geojson_names[c_id].append(json_name)
 
     logging.info('create html')
-    groups_sbml_url = os.path.basename(groups_sbml)
-
-    embed_url = '%s/%s/comp_min.html' % (main_url, m_dir_id)
-    archive_url = "%s.zip" % m_dir_id
 
     geojson_files = reduce(lambda l1, l2: l1 + l2, c_id2geojson_files.itervalues(), [])
     model_id = input_model.getId()
@@ -48,8 +54,12 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     if not model_name:
         model_name = model_id if model_id else 'an anonymous model'
     non_empty = input_model.getNumReactions() > 0
-    model_notes = input_model.getNotes().toXMLString().decode('utf-8')\
-        if input_model.getNotes() and input_model.getNotes().toXMLString().strip() else False
+    if tabs and ABOUT_TAB in tabs and input_model.getNotes() and input_model.getNotes().toXMLString().strip():
+        tab2html[ABOUT_TAB] = input_model.getNotes().toXMLString().decode('utf-8'), ABOUT_CSS_CLASS
+    if non_empty and tabs and DOWNLOAD_TAB in tabs:
+        groups_sbml_url = os.path.basename(groups_sbml)
+        archive_url = "%s.zip" % m_dir_id
+        tab2html[DOWNLOAD_TAB] = get_download_tab(map_id, groups_sbml_url, archive_url), DOWNLOAD_CSS_CLASS
 
     c_id2name = {c.getId(): c.getName() for c in input_model.getListOfCompartments()} # if c.getId() in c_id2geojson_names}
     if ALL_COMPARTMENTS in c_id2geojson_names:
@@ -59,17 +69,16 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     c_id_hidden_ubs = list(c_id_hidden_ubs)
     hidden_c_ids = list(hidden_c_ids)
 
-    create_html(non_empty=non_empty, notes=model_notes, model_name=model_name, model_id=model_id, c_id2name=c_id2name,
-                directory=directory, embed_url=embed_url,
-                json_files=geojson_files, c_id2json_vars=c_id2geojson_names, groups_sbml_url=groups_sbml_url,
-                archive_url=archive_url, map_id=map_id, c_id2out_c_id=c_id2out_c_id, layer2mask=layer2mask,
-                tab2html=tab2html, title=title, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs)
-
-    temp_copy = os.path.join(directory, m_dir_id)
-    archive_path = os.path.join(directory, "%s.zip" % m_dir_id)
-    if not os.path.exists(temp_copy):
-        copytree(directory, temp_copy)
-    if os.path.exists(temp_copy):
-        archive(temp_copy, archive_path)
-        shutil.rmtree(temp_copy)
+    create_html(non_empty=non_empty, model_name=model_name, model_id=model_id, c_id2name=c_id2name,
+                directory=directory, json_files=geojson_files, c_id2json_vars=c_id2geojson_names, map_id=map_id, c_id2out_c_id=c_id2out_c_id,
+                layer2mask=layer2mask,
+                tab2html=tab2html, title=title, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs, info=info)
+    if non_empty and tabs and DOWNLOAD_TAB in tabs:
+        temp_copy = os.path.join(directory, m_dir_id)
+        archive_path = os.path.join(directory, "%s.zip" % m_dir_id)
+        if not os.path.exists(temp_copy):
+            copytree(directory, temp_copy)
+        if os.path.exists(temp_copy):
+            archive(temp_copy, archive_path)
+            shutil.rmtree(temp_copy)
     return c_id2geojson_files, c_id2geojson_names
