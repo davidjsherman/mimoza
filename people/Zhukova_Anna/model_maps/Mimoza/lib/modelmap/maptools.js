@@ -99,7 +99,7 @@ function addAttribution(map) {
     attrControl.addTo(map);
 }
 
-function initializeMap(cId2jsonData, mapId, compIds, cId2outside, CIdsWOUbs, hiddenCIds, layer2mask) {
+function initializeMap(cId2jsonData, mapId, compIds, cId2outside, CIdsWOUbs, hiddenCIds, layer2mask, invisibleLayers) {
     "use strict";
     var size = adjustMapSize(mapId),
         layers = [],
@@ -148,7 +148,9 @@ function initializeMap(cId2jsonData, mapId, compIds, cId2outside, CIdsWOUbs, hid
     for (var i = 0; i < layer2mask.length; i++) {
         var l = L.layerGroup();
         name2layer[layer2mask[i][0]] = l;
-        layers.push(l);
+        if (invisibleLayers == null || $.inArray(layer2mask[i][0], invisibleLayers) == -1) {
+            layers.push(l);
+        }
     }
     layers.push(ubLayer);
     layers.push(tiles);

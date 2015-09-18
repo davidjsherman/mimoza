@@ -32,7 +32,7 @@ def get_lib():
 
 def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_file=None,
                  id2mask=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None,
-                 id2color=None, tabs={ABOUT_TAB, DOWNLOAD_TAB}, info=''):
+                 id2color=None, tabs={ABOUT_TAB, DOWNLOAD_TAB}, info='', invisible_layers=None):
     reader = libsbml.SBMLReader()
     doc = reader.readSBML(sbml)
     model = doc.getModel()
@@ -124,5 +124,6 @@ def process_sbml(sbml, verbose, ub_ch_ids=None, path=None, generalize=True, log_
 
     serialize(directory=directory, m_dir_id=m_id, input_model=input_model, c_id2level2features=fc,
               c_id2out_c_id=c_id2out_c_id, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs,
-              groups_sbml=groups_sbml, layer2mask=layer2mask, tab2html=tab2html, title=title, tabs=tabs, info=info)
+              groups_sbml=groups_sbml, layer2mask=layer2mask, tab2html=tab2html, title=title, tabs=tabs, info=info,
+              invisible_layers=invisible_layers)
 

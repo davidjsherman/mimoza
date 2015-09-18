@@ -23,7 +23,7 @@ DOWNLOAD_TAB = 'Download/Embed'
 
 def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_id, hidden_c_ids, c_id_hidden_ubs,
               groups_sbml, map_id=None, layer2mask=DEFAULT_LAYER2MASK, tab2html=None, title=None,
-              tabs={ABOUT_TAB, DOWNLOAD_TAB}, info=''):
+              tabs={ABOUT_TAB, DOWNLOAD_TAB}, info='', invisible_layers=None):
     if not tab2html:
         tab2html = {}
 
@@ -72,7 +72,8 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     create_html(non_empty=non_empty, model_name=model_name, model_id=model_id, c_id2name=c_id2name,
                 directory=directory, json_files=geojson_files, c_id2json_vars=c_id2geojson_names, map_id=map_id, c_id2out_c_id=c_id2out_c_id,
                 layer2mask=layer2mask,
-                tab2html=tab2html, title=title, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs, info=info)
+                tab2html=tab2html, title=title, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs, info=info,
+                invisible_layers=invisible_layers)
     if non_empty and tabs and DOWNLOAD_TAB in tabs:
         temp_copy = os.path.join(directory, m_dir_id)
         archive_path = os.path.join(directory, "%s.zip" % m_dir_id)
