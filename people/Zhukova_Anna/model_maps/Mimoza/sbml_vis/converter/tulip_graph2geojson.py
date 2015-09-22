@@ -184,10 +184,10 @@ def export_nodes(c_id2info, c_id2outs, c_id2level2features, meta_graph, processe
             if root[UBIQUITOUS][n] and root[CLONE_ID][n]:
                 clone_ids = root[CLONE_ID][n].split(",")
                 if clone_ids:
+                    mask = 0
                     for cl_id in clone_ids:
                         if cl_id in id2mask:
-                            mask = id2mask[cl_id]
-                            break
+                            mask |= id2mask[cl_id]
 
         x, y = root[VIEW_LAYOUT][n].getX(), root[VIEW_LAYOUT][n].getY()
         w, h = root[VIEW_SIZE][n].getW(), root[VIEW_SIZE][n].getH()
