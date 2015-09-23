@@ -8,7 +8,8 @@ from mod_sbml.annotation.chebi.chebi_annotator import get_term, CHEBI_PREFIX
 from mod_sbml.utils.misc import invert_map
 from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
 from mod_sbml.annotation.rdf_annotation_helper import add_annotation, get_qualifier_values
-from mod_sbml.sbml.sbml_manager import get_products, get_reactants, get_metabolites, generate_unique_id
+from mod_sbml.sbml.sbml_manager import get_products, get_reactants, get_metabolites, generate_unique_id, create_reaction, \
+    create_compartment, create_species
 
 GROUP_TYPE_EQUIV = "equivalent"
 
@@ -84,60 +85,6 @@ def flatten(t):
         return ()
     else:
         return flatten(t[0]) + flatten(t[1:])
-
-
-def create_compartment(model, name, outside=None, term_id=None, id_=None):
-    new_comp = model.createCompartment()
-    id_ = generate_unique_id(model, id_ if id_ else "c_")
-    new_comp.setId(id_)
-    new_comp.setName(name)
-    if outside:
-        new_comp.setOutside(outside)
-    if term_id:
-        add_annotation(new_comp, libsbml.BQB_IS, to_identifiers_org_format(term_id, "obo.go"))
-    return new_comp
-
-
-def create_species(model, compartment_id, type_id=None, name=None, id_=None, sbo_id=None):
-    new_species = model.createSpecies()
-    id_ = generate_unique_id(model, id_ if id_ else "s_")
-    if libsbml.LIBSBML_OPERATION_SUCCESS != new_species.setId(id_):
-        logging.error("species  %s creation error" % id_)
-    if not name:
-        if type_id:
-            s_type = model.getSpeciesType(type_id)
-            if s_type:
-                type_name = s_type.getName()
-                if type_name:
-                    name = type_name
-        if compartment_id:
-            compartment = model.getCompartment(compartment_id)
-            if compartment:
-                compartment_name = compartment.getName()
-                if compartment_name:
-                    name = "{0} [{1}]".format(name, compartment_name)
-    new_species.setName(name)
-    new_species.setCompartment(compartment_id)
-    if type_id:
-        new_species.setSpeciesType(type_id)
-    new_species.setSBOTerm(sbo_id if sbo_id else SBO_MATERIAL_ENTITY)
-    return new_species
-
-
-def create_reaction(model, reactants, products, name=None, id_=None):
-    reaction = model.createReaction()
-    id_ = generate_unique_id(model, id_ if id_ else "r_")
-    if libsbml.LIBSBML_OPERATION_SUCCESS != reaction.setId(id_):
-        logging.error("reaction  ", id_, " creation error")
-    for sp_id in reactants:
-        reactant = model.createReactant()
-        reactant.setSpecies(sp_id)
-    for sp_id in products:
-        product = model.createProduct()
-        product.setSpecies(sp_id)
-    if name:
-        reaction.setName(name)
-    return reaction
 
 
 def remove_is_a_reactions(input_model):
@@ -356,7 +303,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                     t = t_name
 
                 if out_sbml:
-                    new_species = create_species(generalized_model, comp.getId(), type_id=None,
+                    new_species = create_species(model=generalized_model, compartment_id=comp.getId(), type_id=None,
                                                  name="{0} ({1}) [{2}]".format(t_name, len(s_ids), comp.getName()))
                     add_annotation(new_species, libsbml.BQB_IS, to_identifiers_org_format(t_id, CHEBI_PREFIX))
                     new_s_id = new_species.getId()
@@ -389,20 +336,20 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
             representative = input_model.getReaction(list(r_ids)[0])
             r_name = "generalized %s" % representative.getName()
             if out_sbml:
-                reactants = set(get_reactants(representative))
-                products = set(get_products(representative))
-                if (len(r_ids) == 1) and not ((reactants | products) & s_id_to_generalize):
+                reactants = dict(get_reactants(representative, stoichiometry=True))
+                products = dict(get_products(representative, stoichiometry=True))
+                if (len(r_ids) == 1) and \
+                        not ((set(reactants.iterkeys()) | set(products.iterkeys())) & s_id_to_generalize):
                     generalized_model.addReaction(representative)
                     continue
-                reactants = {generalize_species(it) for it in reactants}
-                products = {generalize_species(it) for it in products}
-                new_reaction = create_reaction(generalized_model, reactants, products, r_name,
-                                               representative.getId() if len(r_ids) == 1 else None)
-                new_r_id = new_reaction.getId()
+                r_id2st = {generalize_species(it): st for (it, st) in reactants.iteritems()}
+                p_id2st = {generalize_species(it): st for (it, st) in products.iteritems()}
+                reversible = next((False for r_id in r_ids if not input_model.getReaction(r_id).getReversible()), True)
+                new_r_id = create_reaction(generalized_model, r_id2st, p_id2st, name=r_name, reversible=reversible,
+                                           id_=representative.getId() if len(r_ids) == 1 else None).getId()
             elif len(r_ids) > 1:
                 r_id_increment += 1
                 new_r_id = generate_unique_id(input_model, "r_g_", r_id_increment)
-
             if len(r_ids) > 1:
                 for r_id in r_ids:
                     r_id2g_eq[r_id] = new_r_id, r_name
@@ -413,7 +360,6 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                     r_group.setKind(libsbml.GROUP_KIND_COLLECTION)
                     r_group.setSBOTerm(SBO_BIOCHEMICAL_REACTION)
                     r_group.setName(r_name)
-                    # logging.info("%s: %d" % (r_name, len(r_ids)))
                     for r_id in r_ids:
                         member = r_group.createMember()
                         member.setIdRef(r_id)
