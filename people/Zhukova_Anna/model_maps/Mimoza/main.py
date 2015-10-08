@@ -3,7 +3,7 @@
 
 import getopt
 
-from mimoza_pipeline import process_sbml
+from sbml_vis.mimoza_pipeline import process_sbml
 
 __author__ = 'anna'
 help_message = '''
