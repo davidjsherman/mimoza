@@ -200,7 +200,7 @@ L.Control.FuseSearch = L.Control.extend({
             // as this might already have been cleared up by removeFrom()
             if (null !== this._map) {
                 this._map.panBy([this.getOffset() * -0.5, 0], {duration: 0.5});
-            };
+            }
             this.fire('hide');
             if(e) {
                 L.DomEvent.stopPropagation(e);
@@ -295,8 +295,7 @@ L.Control.FuseSearch = L.Control.extend({
                 str += '<br/>' + props[this._keys[i]];
             }
             resultItem.innerHTML = str;
-        };
-
+        }
         return resultItem;
     },
     

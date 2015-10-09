@@ -19,7 +19,7 @@ from sbml_generalization.generalization.sbml_generalizer import generalize_model
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from mod_sbml.onto import parse_simple
 from mod_sbml.utils.misc import invert_map
-from mod_sbml.serialization.serialization_manager import get_sbml_r_formula
+from mod_sbml.serialization import get_sbml_r_formula
 
 __author__ = 'anna'
 

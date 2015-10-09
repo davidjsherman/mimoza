@@ -49,10 +49,12 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     logging.info('create html')
 
     geojson_files = reduce(lambda l1, l2: l1 + l2, c_id2geojson_files.itervalues(), [])
+
     model_id = input_model.getId()
     model_name = input_model.getName()
     if not model_name:
         model_name = model_id if model_id else 'an anonymous model'
+
     non_empty = input_model.getNumReactions() > 0
     if tabs and ABOUT_TAB in tabs and input_model.getNotes() and input_model.getNotes().toXMLString().strip():
         tab2html[ABOUT_TAB] = input_model.getNotes().toXMLString().decode('utf-8'), ABOUT_CSS_CLASS
@@ -70,8 +72,8 @@ def serialize(directory, m_dir_id, input_model, c_id2level2features, c_id2out_c_
     hidden_c_ids = list(hidden_c_ids)
 
     create_html(non_empty=non_empty, model_name=model_name, model_id=model_id, c_id2name=c_id2name,
-                directory=directory, json_files=geojson_files, c_id2json_vars=c_id2geojson_names, map_id=map_id, c_id2out_c_id=c_id2out_c_id,
-                layer2mask=layer2mask,
+                directory=directory, json_files=geojson_files, c_id2json_vars=c_id2geojson_names, map_id=map_id,
+                c_id2out_c_id=c_id2out_c_id, layer2mask=layer2mask,
                 tab2html=tab2html, title=title, hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs, info=info,
                 invisible_layers=invisible_layers)
     if non_empty and tabs and DOWNLOAD_TAB in tabs:

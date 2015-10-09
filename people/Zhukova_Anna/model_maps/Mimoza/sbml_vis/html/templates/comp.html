@@ -120,8 +120,25 @@
         <script src="{{json}}" type="text/javascript"></script>
     {% endfor %}
     <script type="text/javascript">
-        initializeMap({{c_id2json_vars}}, "{{map_id}}", {{c_id2name}}, {{c_id2out_c_id}}, {{c_id_hidden_ubs}},
-        {{hidden_c_ids}}, {{layer2mask}}, {{invisible_layers}});
+        initializeMap({{c_id2json_vars};}, "{{map_id}}", {{c_id2name};}, {{c_id2out_c_id}}, {{c_id_hidden_ubs}},
+        {
+            {
+                hidden_c_ids
+            }
+        }
+        ,
+        {
+            {
+                layer2mask
+            }
+        }
+        ,
+        {
+            {
+                invisible_layers
+            }
+        }
+        )
     </script>
     <script>$(function() {$("#{{map_id}}").resizable();});</script>
 </body>

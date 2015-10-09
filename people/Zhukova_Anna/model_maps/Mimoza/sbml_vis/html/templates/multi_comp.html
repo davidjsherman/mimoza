@@ -78,7 +78,28 @@
             <script src="{{json}}" type="text/javascript"></script>
         {% endfor %}
         <script type="text/javascript">
-            initializeMap({{c_id2json_vars}}, "{{map_id}}", {{c_id2name}}, {{c_id2out_c_id}}, {{invisible_layers}});
+            initializeMap({
+            {
+                c_id2json_vars
+            };
+            },
+            "{{map_id}}", {
+            {
+                c_id2name
+            };
+            },
+            {
+                {
+                    c_id2out_c_id
+                }
+            }
+            ,
+            {
+                {
+                    invisible_layers
+                }
+            }
+            )
             $(function() {$("#{{map_id}}").resizable();});
         </script>
 

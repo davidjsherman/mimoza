@@ -27,8 +27,8 @@ def create_html(non_empty, model_name, model_id, c_id2name,
     if not invisible_layers:
         invisible_layers = []
     page = template.render(non_empty=non_empty,
-                           model_name=model_name,
-                           model_id=model_id,
+                           model_name=model_name.decode('utf-8') if model_name else '',
+                           model_id=model_id.decode('utf-8') if model_id else '',
                            json_files=json_files,
                            c_id2json_vars=c_id2json_vars,
                            map_id=map_id,
@@ -36,7 +36,8 @@ def create_html(non_empty, model_name, model_id, c_id2name,
                            comp_c_id2name=sorted(c_id2name.iteritems(), key=lambda (_, c_name): c_name)
                            if len(c_id2name) > 1 else None,
                            c_id2name=c_id2name, layer2mask=layer2mask, tab2html=tab2html, title=title,
-                           hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs, info=info, invisible_layers=invisible_layers)
+                           hidden_c_ids=hidden_c_ids, c_id_hidden_ubs=c_id_hidden_ubs, info=info,
+                           invisible_layers=invisible_layers)
     with io.open(os.path.join(directory, 'comp.html'), 'w+', encoding='utf-8') as f:
         f.write(page)
 
