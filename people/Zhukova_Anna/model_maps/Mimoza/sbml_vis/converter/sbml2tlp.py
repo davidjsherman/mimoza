@@ -1,7 +1,8 @@
 import logging
 from tulip import tlp
 
-from sbml_generalization.sbml.sbml_helper import check_names, check_compartments, parse_group_sbml, GrPlError
+from sbml_generalization.sbml.sbml_helper import parse_group_sbml, GrPlError
+from sbml_vis.converter.sbml_manager import check_names, check_compartments
 from mod_sbml.sbml.compartment.compartment_positioner import get_comp2go, comp2level
 from mod_sbml.onto import parse_simple
 from mod_sbml.onto.term import Term

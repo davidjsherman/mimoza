@@ -10,12 +10,12 @@ import sys
 import libsbml
 
 try:
-    from sbml_generalization.sbml.sbgn_helper import save_as_sbgn
+    from sbml_vis.converter.sbgn_helper import save_as_sbgn
     sbgn_export_available = True
 except ImportError:
     sbgn_export_available = False
 
-from sbml_generalization.sbml.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml
+from sbml_vis.converter.sbml_manager import parse_layout_sbml, LoPlError, save_as_layout_sbml
 from sbml_vis.file.serializer import serialize
 from sbml_vis.converter.sbml2tlp import import_sbml
 from mimoza.mimoza_path import *

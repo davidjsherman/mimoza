@@ -29,5 +29,5 @@ setup(name='SBMLModelGeneralization',
           'Topic :: Software Development :: Libraries :: Python Modules',
       ],
       download_url='http://metamogen.gforge.inria.fr',
-      requires=['libsbml', 'sympy', 'libsbgnpy', 'openpyxl', 'mod_sbml']
+      requires=['python-libsbml-experimental', 'mod_sbml']
 )

@@ -52,30 +52,11 @@ if in the network there is no reaction whose stoichiometry would be changed by s
 (metabolite diversity restriction).
 
 
-Dependencies
-=======================
-
-**Model Generalization** uses `libSBML <http://sbml.org/Software/libSBML>`_ library for python with the groups and layout extensions.
-To install it:
-  * sudo pip install python-libsbml-experimental
-
-Make sure you also have the following libraries installed:
-  * libxml2-dev
-  * xml2
-  * libxml2
-  * cmake
-
-**Model Generalization** also uses `ChEBI Ontology <http://www.ebi.ac.uk/chebi/>`_, but you do not need to install it.
-
-**Model Generalization** was developed using `PyCharm <http://www.jetbrains.com/pycharm/>`_.
-
 Installing Model Generalization
 ===============================
 
 From the directory where you have extracted this archive, execute:
   * python setup.py
-
-Do not forget to install the dependencies (see above).
 
 
 Running Model Generalization

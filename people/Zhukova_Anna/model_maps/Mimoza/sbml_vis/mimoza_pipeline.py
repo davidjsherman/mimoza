@@ -4,9 +4,9 @@ from os.path import dirname, abspath
 from shutil import copytree
 
 import libsbml
+
 from sbml_vis.graph.color.color import color_by_id
 from sbml_vis.graph.color.color import color
-
 from sbml_vis.converter.tlp2geojson import DEFAULT_LAYER2MASK
 from sbml_vis.graph.resize import REACTION_SIZE
 from sbml_vis.converter.sbml2tlp import import_sbml
@@ -18,9 +18,9 @@ from mimoza.mimoza_path import MIMOZA_URL
 import mimoza
 from mod_sbml.onto import parse_simple
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
-from sbml_generalization.sbml.sbgn_helper import save_as_sbgn
-from sbml_generalization.sbml.sbml_helper import parse_layout_sbml, LoPlError, save_as_layout_sbml, check_for_groups, \
-    SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
+from sbml_vis.converter.sbgn_helper import save_as_sbgn
+from sbml_generalization.sbml.sbml_helper import check_for_groups, SBO_CHEMICAL_MACROMOLECULE, GROUP_TYPE_UBIQUITOUS
+from sbml_vis.converter.sbml_manager import parse_layout_sbml, LoPlError, save_as_layout_sbml
 from sbml_vis.graph.transformation_manager import scale
 
 __author__ = 'anna'

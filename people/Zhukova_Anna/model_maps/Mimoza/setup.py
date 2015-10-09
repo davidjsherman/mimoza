@@ -31,6 +31,7 @@ setup(name='Mimoza',
           'Topic :: Software Development :: Libraries :: Python Modules',
       ],
       download_url='http://mimoza.bordeaux.inria.fr/',
-      requires=['tulip', 'sympy', 'geojson', 'jinja2', 'mod_sbml', 'tarjan']
+      requires=['sympy', 'geojson', 'jinja2', 'mod_sbml', 'tarjan', 'sbml_generalization',
+                'libsbgnpy', 'tulip-python', 'python-libsbml-experimental']
 
 )
