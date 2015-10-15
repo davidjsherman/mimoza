@@ -26,9 +26,12 @@ def create_html(non_empty, model_name, model_id, c_id2name,
     logging.info('Rendering the model...')
     if not invisible_layers:
         invisible_layers = []
+    model_name = model_name.decode('utf-8') if model_name else ''
+    model_id = model_id.decode('utf-8') if model_id else ''
+    map_id = map_id.decode('utf-8') if map_id else ''
     page = template.render(non_empty=non_empty,
-                           model_name=model_name.decode('utf-8') if model_name else '',
-                           model_id=model_id.decode('utf-8') if model_id else '',
+                           model_name=model_name,
+                           model_id=model_id,
                            json_files=json_files,
                            c_id2json_vars=c_id2json_vars,
                            map_id=map_id,

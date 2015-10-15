@@ -25,6 +25,10 @@
 .capitalize {
     text-transform:capitalize;
 }
+div.scrollingDiv
+{
+   overflow:scroll;
+}
 p {
     vertical-align: middle;
 }
@@ -241,5 +245,25 @@ a:disabled{
 .up-button:active {
     background-color: #ac3131;
     border-color: rgba(0,0,0,0.9);
+}
+
+table, tr, td, th {
+    border: 1px solid black;
+    border-collapse:collapse;
+}
+tr.header {
+    cursor:pointer;
+    background-color: lightblue;
+    font-size: 1.1em;
+}
+tr.subheader {
+    cursor:pointer;
+    background-color: lightcoral;
+    font-size: 1.05em;
+}
+tr.subsubheader {
+    cursor:pointer;
+    background-color: lightyellow;
+    font-size: 1.05em;
 }
 
