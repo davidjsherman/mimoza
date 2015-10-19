@@ -4,6 +4,7 @@ from sympy.logic.boolalg import disjuncts, conjuncts
 import math
 
 import geojson
+from jinja2 import Environment, PackageLoader
 
 from sbml_vis.graph.rename import get_short_name, convert_formula_to_html
 from sbml_vis.graph.color.colorer import get_edge_color, get_reaction_color, get_compartment_color, get_species_color, \
@@ -257,7 +258,7 @@ def get_reaction_participants_inside_compartment(n, r, root):
 def get_formula(graph, r, r2rs_ps, reversible):
     root = graph.getRoot()
     name_prop = NAME
-    format_st = lambda st: "" if st == 1 else ("%f" % st if st % 1 != 0 else "%d" % int(st))
+    format_st = lambda st: "" if st == 1 else ("%g" % st)
     formatter = lambda (st, n), prop: [root[prop if root[prop][n] else NAME][n], format_st(float(st))]
     if graph.isMetaNode(r):
         r = root[VIEW_META_GRAPH][r].getOneNode()
@@ -265,18 +266,9 @@ def get_formula(graph, r, r2rs_ps, reversible):
     rs, ps = r2rs_ps[r]
     rs, ps = sorted(formatter(it, name_prop) for it in rs), sorted(formatter(it, name_prop) for it in ps)
 
-    res = '<table class="p_table" border="0" width="100%"><tr><td width="45%"><table border="0">'
-    if rs:
-        for [r, st] in rs:
-            res += '<tr><td class="main">%s&nbsp;</td><td>%s</td></tr>' % (st, r)
-    res += '</table></td>'
-    res += '<th class="centre" width="10%%">%s</th>' % ("&#8596;" if reversible else "&#8594;")
-    res += '<td  width="45%"><table border="0">'
-    if ps:
-        for [p, st] in ps:
-            res += '<tr><td class="main">%s&nbsp;</td><td>%s</td></tr>' % (st, p)
-    res += '</table></td></tr></table>'
-    return res
+    env = Environment(loader=PackageLoader('sbml_vis.html', 'templates'))
+    template = env.get_template('formula.html')
+    return template.render(rs=rs, ps=ps, reversible=reversible)
 
 
 def rgb(rrggbb):
