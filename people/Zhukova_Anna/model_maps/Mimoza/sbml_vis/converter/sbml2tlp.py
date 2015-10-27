@@ -1,15 +1,16 @@
 import logging
 from tulip import tlp
 
+from mod_sbml.annotation.gene_ontology.go_annotator import annotate_compartments, get_go_id
 from sbml_generalization.sbml.sbml_helper import parse_group_sbml, GrPlError
 from sbml_vis.converter.sbml_manager import check_names, check_compartments
-from mod_sbml.sbml.compartment.compartment_positioner import get_comp2go, comp2level
+from mod_sbml.sbml.compartment.compartment_positioner import comp2level
 from mod_sbml.onto import parse_simple
 from mod_sbml.onto.term import Term
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from mod_sbml.annotation.gene_ontology.go_serializer import get_go
 from mod_sbml.sbml.sbml_manager import get_gene_association, get_formulas
-from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi
+from mod_sbml.annotation.chebi.chebi_annotator import get_chebi_id
 from sbml_vis.graph.node_cloner import clone_node
 from sbml_vis.graph.graph_properties import *
 from sbml_vis.graph.resize import get_n_size
@@ -19,7 +20,7 @@ __author__ = 'anna'
 SKIP_UBS = False
 
 
-def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
+def species2nodes(graph, input_model, ub_sps):
     id2n = {}
     for s in input_model.getListOfSpecies():
         _id = s.getId()
@@ -35,8 +36,9 @@ def species2nodes(graph, input_model, species_id2chebi_id, ub_sps):
         graph[ID][n] = _id
         id2n[_id] = n
 
-        if _id in species_id2chebi_id:
-            graph[TERM][n] = species_id2chebi_id[_id]
+        chebi_id = get_chebi_id(s)
+        if chebi_id:
+            graph[TERM][n] = get_chebi_id(s)
         name = s.getName()
         if name:
             # remove compartment from the name,
@@ -110,24 +112,24 @@ def reactions2nodes(get_r_comp, graph, id2n, input_model):
         graph[COMPARTMENT_ID][n] = get_r_comp(all_comps)
 
 
-def get_quotient_maps(chebi, input_model, sbml_file):
+def get_quotient_maps(chebi, sbml_file):
     try:
         r_id2g_id, s_id2gr_id, ub_sps = parse_group_sbml(sbml_file, chebi)
-        species_id2chebi_id = get_species_to_chebi(input_model, chebi, False) if (r_id2g_id or ub_sps) else {}
-        return r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps
+        return r_id2g_id, s_id2gr_id, ub_sps
     except GrPlError as e:
         logging.error("Could not parse the groups SBML %s: %s" % (sbml_file, e.msg))
-        return None, None, None, None
+        return None, None, None
 
 
-def compute_c_id2info(c_id2level, comp2go_term, input_model):
+def compute_c_id2info(c_id2level, input_model):
     c_id2info = {}
     for comp in input_model.getListOfCompartments():
         c_id = comp.getId()
         c_name = comp.getName()
         if not c_name:
             c_name = c_id
-        c_id2info[c_id] = (c_name, comp2go_term[c_id] if c_id in comp2go_term else '', c_id2level[c_id])
+        go_id = get_go_id(comp)
+        c_id2info[c_id] = (c_name, go_id if go_id else '', c_id2level[c_id])
 
     c_id2outs = {}
     for c_id in c_id2info.iterkeys():
@@ -146,7 +148,7 @@ def import_sbml(input_model, sbml_file):
     chebi = parse_simple(get_chebi())
 
     logging.info('reading generalized model from %s' % sbml_file)
-    r_id2g_id, s_id2gr_id, species_id2chebi_id, ub_sps = get_quotient_maps(chebi, input_model, sbml_file)
+    r_id2g_id, s_id2gr_id, ub_sps = get_quotient_maps(chebi, sbml_file)
 
     logging.info('fixing labels and compartments')
     check_names(input_model)
@@ -154,9 +156,9 @@ def import_sbml(input_model, sbml_file):
 
     logging.info('annotating with GO')
     go = parse_simple(get_go())
-    comp2go_term = get_comp2go(input_model, go)
+    annotate_compartments(input_model, go)
     c_id2level = comp2level(input_model, go)
-    c_id2info, c_id2outs = compute_c_id2info(c_id2level, comp2go_term, input_model)
+    c_id2info, c_id2outs = compute_c_id2info(c_id2level, input_model)
 
     def get_r_comp(all_comp_ids):
         if len(all_comp_ids) == 1:
@@ -181,7 +183,7 @@ def import_sbml(input_model, sbml_file):
     create_props(graph)
 
     logging.info('adding species nodes')
-    id2n = species2nodes(graph, input_model, species_id2chebi_id, ub_sps)
+    id2n = species2nodes(graph, input_model, ub_sps)
 
     logging.info('adding reaction nodes')
     reactions2nodes(get_r_comp, graph, id2n, input_model)

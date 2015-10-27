@@ -6,7 +6,6 @@ import libsbml
 
 from mod_sbml.annotation.chebi.chebi_annotator import CHEBI_PREFIX
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
-from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
 from mod_sbml.annotation.rdf_annotation_helper import add_annotation
 from mod_sbml.onto import parse
 from sbml_generalization.sbml.sbml_helper import create_species, save_as_sbml
@@ -102,7 +101,7 @@ def to_sbml(r_ids, r2m_id2st, sbml, onto):
         # term = onto.get_term(c_id)
         name = onto.get_term(c_id).get_name() if c_id in onto else c_id
         species = create_species(model, compartment_id=comp_id, name=name)
-        add_annotation(species, libsbml.BQB_IS, to_identifiers_org_format(c_id, CHEBI_PREFIX))
+        add_annotation(species, libsbml.BQB_IS, c_id, CHEBI_PREFIX)
         c_id2id[c_id] = species.getId()
     for r_id in r_ids:
         r_id2st, p_id2st = r2m_id2st[r_id]

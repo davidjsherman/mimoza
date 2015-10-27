@@ -1,5 +1,7 @@
 import logging
 import libsbml
+from mod_sbml.annotation.gene_ontology.go_annotator import GO_PREFIX
+from mod_sbml.annotation.rdf_annotation_helper import add_annotation
 
 from sbml_generalization.sbml.sbml_helper import convert_to_lev3_v1
 from mod_sbml.sbml.sbml_manager import create_compartment, generate_unique_id
@@ -65,9 +67,10 @@ def save_as_sbml(input_model, out_sbml):
 
 def check_compartments(model):
     if not model.getListOfCompartments():
-        cell_id = create_compartment(model, "cell", outside=None, term_id="GO:0005623").getId()
+        cell = create_compartment(model, "cell", outside=None)
+        add_annotation(cell, libsbml.BQB_IS, "GO:0005623", GO_PREFIX)
         for sp in model.getListOfSpecies():
-            sp.setCompartment(cell_id)
+            sp.setCompartment(cell.getId())
 
 
 def check_names(model):
